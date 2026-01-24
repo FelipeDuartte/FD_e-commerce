@@ -15,19 +15,19 @@ export default function ProductList({
   return (
     <section id="produtos" className="py-5">
       <div className="container">
-        <div className="d-flex justify-content-between align-items-center mb-5">
+        <div className="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-3">
           <div>
             <h2 className="section-title">Nossos Produtos</h2>
           </div>
           <div className="text-end">
-              {/* Products count badge */}
+            {/* Products count badge */}
             <span className="badge bg-dark">
               {filteredProducts.length} produtos disponíveis
             </span>
           </div>
         </div>
 
-         {/* Category Filters */}
+        {/* Category Filters */}
         <div className="filter-container">
           <div className="overflow-x-auto">
             {categories.map((cat) => (
@@ -46,7 +46,7 @@ export default function ProductList({
         </div>
 
         {/* Products Grid */}
-        <div className="row row-cols-2 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-4">
+        <div className="row row-cols-2 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3 g-md-4">
           {filteredProducts.length > 0 ? (
             filteredProducts.map((produto, index) => (
               <ProductCard

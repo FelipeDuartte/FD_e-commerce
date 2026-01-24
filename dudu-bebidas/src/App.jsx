@@ -264,6 +264,7 @@ export default function DuduBebidas() {
         scrolled={scrolled}
         onCartClick={() => setCartOpen(true)}
         onLoginClick={() => setLoginOpen(true)}
+        onCategoryClick={setSelectedCategory}
       />
       {/*====Hero Component====*/}
       <Hero />

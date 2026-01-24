@@ -179,6 +179,7 @@
   gap: 0;
 }
 
+/* Estilos atualizados para botões de categoria */
 .category-item {
   display: flex;
   align-items: center;
@@ -190,12 +191,29 @@
   font-size: 14px;
   transition: all 0.2s ease;
   border-bottom: 2px solid transparent;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  cursor: pointer;
+  font-family: inherit;
 }
 
 .category-item:hover {
   color: #ffd700;
   border-bottom-color: #ffd700;
   background: rgba(255, 215, 0, 0.05);
+  opacity: 1;
+}
+
+.category-item:focus {
+  outline: none;
+  color: #ffd700;
+  border-bottom-color: #ffd700;
+}
+
+.category-item:active {
+  transform: scale(0.98);
 }
 
 .category-item svg {

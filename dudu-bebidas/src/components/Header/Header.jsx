@@ -1,4 +1,3 @@
-import React from "react";
 import logo from "../../assets/logo_dudu-bebidas.png";
 import { ShoppingCart, User, Search, Wine, Beer, Coffee, Droplets } from "lucide-react";
 import "./Header.css";
@@ -12,13 +11,32 @@ export default function Header({
   scrolled,
   onCartClick,
   onLoginClick,
+  onCategoryClick,
 }) {
   const categories = [
-    { name: "Vinhos", icon: Wine, href: "#vinhos" },
-    { name: "Cervejas", icon: Beer, href: "#cervejas" },
-    { name: "Destilados", icon: Droplets, href: "#destilados" },
-    { name: "Refrigerantes", icon: Coffee, href: "#refrigerantes" },
+    { name: "Vinhos", icon: Wine, categoryId: "vinho" },
+    { name: "Cervejas", icon: Beer, categoryId: "cerveja" },
+    { name: "Destilados", icon: Droplets, categoryId: "destilado" },
+    { name: "Refrigerantes", icon: Coffee, categoryId: "refrigerante" },
   ];
+
+  const handleCategoryClick = (categoryId) => {
+    // Primeiro atualiza a categoria
+    if (onCategoryClick) {
+      onCategoryClick(categoryId);
+    }
+    
+    // Depois faz o scroll suave até a seção de produtos
+    setTimeout(() => {
+      const produtosSection = document.getElementById('produtos');
+      if (produtosSection) {
+        produtosSection.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    }, 50);
+  };
 
   return (
     <header
@@ -49,19 +67,21 @@ export default function Header({
           >
             <div className="search-box w-100">
               <Search className="search-icon" size={22} />
-              <input
-                type="search"
-                placeholder="Buscar bebidas..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="form-control border-0"
-                style={{
-                  background: "transparent",
-                  outline: "none",
-                  boxShadow: "none",
-                  fontSize: "15px",
-                }}
-              />
+                <input
+                  href="products"
+                  type="search"
+                  placeholder="Buscar bebidas..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="form-control border-0"
+                  style={{
+                    background: "transparent",
+                    outline: "none",
+                    boxShadow: "none",
+                    fontSize: "15px",
+                    color: "#fff",
+                  }}
+                />
             </div>
           </div>
 
@@ -100,14 +120,14 @@ export default function Header({
               {categories.map((category, index) => {
                 const IconComponent = category.icon;
                 return (
-                  <a
+                  <button
                     key={index}
-                    href={category.href}
+                    onClick={() => handleCategoryClick(category.categoryId)}
                     className="category-item"
                   >
                     <IconComponent size={18} />
                     <span>{category.name}</span>
-                  </a>
+                  </button>
                 );
               })}
             </div>
