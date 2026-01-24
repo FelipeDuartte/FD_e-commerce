@@ -1,100 +1,126 @@
 @import url('https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Bebas+Neue&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
-/* Footer Styles */
-.footer-custom {
-  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0d0d0d 100%);
-  position: relative;
-  overflow: hidden;
-  padding: 4rem 0 2rem 0 !important;
+
+/* =====================
+   VARIABLES
+===================== */
+:root {
+  --gold: #ffd700;
+  --gold-light: #ffed4e;
+
+  --black-900: #0a0a0a;
+  --black-800: #1a1a1a;
+  --black-700: #0d0d0d;
+
+  --text-light: #e0e0e0;
+  --text-muted: #b0b0b0;
+
+  --transition: 0.3s ease;
+  --radius-md: 12px;
 }
 
-/* Background Pattern */
+/* =====================
+   FOOTER
+===================== */
+.footer-custom {
+  position: relative;
+  overflow: hidden;
+  padding: 4rem 0 2rem !important;
+  background: linear-gradient(
+    135deg,
+    var(--black-900),
+    var(--black-800),
+    var(--black-700)
+  );
+}
+
+/* Background accents (lighter gradients) */
 .footer-custom::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: 
-    radial-gradient(circle at 20% 50%, rgba(255, 215, 0, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(255, 215, 0, 0.02) 0%, transparent 50%);
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 50%, rgba(255, 215, 0, 0.03), transparent 55%),
+    radial-gradient(circle at 80% 80%, rgba(255, 215, 0, 0.02), transparent 55%);
   pointer-events: none;
 }
 
-/* Top Border Decorative */
 .footer-custom::after {
   content: '';
   position: absolute;
   top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, transparent, #ffd700, transparent);
+  inset-inline: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
   opacity: 0.5;
 }
 
-/* Logo do Footer */
+/* =====================
+   LOGO
+===================== */
 .footer-custom .logo {
   font-size: 1.8rem;
   font-weight: 800;
-  color: #ffffff;
-  text-transform: uppercase;
+  color: #fff;
   letter-spacing: 2px;
-  text-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
   margin-bottom: 1.5rem;
+  text-transform: uppercase;
 }
 
 .footer-custom .logo span {
-  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
-/* Texto Descritivo */
+/* =====================
+   TEXT
+===================== */
 .footer-custom .text-light {
-  line-height: 1.8;
   font-size: 14px;
+  line-height: 1.8;
+  color: var(--text-light);
   opacity: 0.85;
-  color: #e0e0e0;
   margin-bottom: 1.5rem;
 }
 
-/* Social Links */
+/* =====================
+   SOCIAL LINKS
+===================== */
 .footer-social-link {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   width: 45px;
   height: 45px;
+  display: grid;
+  place-items: center;
+
+  color: var(--gold);
   background: rgba(255, 215, 0, 0.08);
-  border-radius: 12px;
-  color: #ffd700;
-  transition: all 0.3s ease;
-  text-decoration: none;
-  border: 1px solid rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.12);
+  border-radius: var(--radius-md);
+
+  transition: transform var(--transition), background var(--transition), color var(--transition);
 }
 
 .footer-social-link:hover {
-  background: #ffd700;
+  background: var(--gold);
   color: #000;
   transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(255, 215, 0, 0.3);
-  border-color: #ffd700;
 }
 
 .footer-social-link i {
   font-size: 20px;
 }
 
-/* Section Titles */
+/* =====================
+   SECTION TITLES
+===================== */
 .footer-section-title {
-  color: #ffd700;
   font-size: 18px;
   font-weight: 700;
+  color: var(--gold);
   margin-bottom: 1.5rem;
-  position: relative;
   padding-bottom: 0.75rem;
+  position: relative;
 }
 
 .footer-section-title::after {
@@ -104,79 +130,74 @@
   left: 0;
   width: 40px;
   height: 2px;
-  background: linear-gradient(90deg, #ffd700, transparent);
+  background: linear-gradient(90deg, var(--gold), transparent);
 }
 
-/* Links List */
+/* =====================
+   LINKS
+===================== */
 .footer-custom ul {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
-.footer-custom ul li {
+.footer-custom li {
   margin-bottom: 0.75rem;
 }
 
 .footer-link {
-  color: #e0e0e0;
-  text-decoration: none;
   display: flex;
   align-items: center;
+  gap: 0.5rem;
+
   font-size: 14px;
-  transition: all 0.3s ease;
+  color: var(--text-light);
   opacity: 0.85;
+  text-decoration: none;
+  transition: color var(--transition), transform var(--transition);
 }
 
 .footer-link:hover {
-  color: #ffd700;
-  opacity: 1;
+  color: var(--gold);
   transform: translateX(5px);
 }
 
 .footer-link i {
-  color: #ffd700;
-  margin-right: 0.5rem;
-  transition: transform 0.3s ease;
+  color: var(--gold);
+  font-size: 14px;
 }
 
-.footer-link:hover i {
-  transform: translateX(3px);
-}
-
-/* Contact Info */
+/* =====================
+   CONTACT
+===================== */
 .footer-contact-item {
-  margin-bottom: 1.25rem;
   display: flex;
-  align-items: start;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
   font-size: 14px;
 }
 
 .footer-contact-item i {
-  color: #ffd700;
   font-size: 18px;
-  margin-right: 1rem;
+  color: var(--gold);
   margin-top: 0.25rem;
-  flex-shrink: 0;
 }
 
-.footer-contact-item .contact-content {
+.contact-content {
+  color: var(--text-light);
   opacity: 0.85;
-  color: #e0e0e0;
 }
 
-.footer-contact-item .contact-label {
+.contact-label {
   font-weight: 600;
+  color: #fff;
   margin-bottom: 0.25rem;
-  color: #ffffff;
-  opacity: 1;
 }
 
-.footer-contact-item .contact-info {
-  opacity: 0.85;
-}
-
-/* Bottom Bar */
+/* =====================
+   BOTTOM BAR
+===================== */
 .footer-bottom {
   margin-top: 3rem;
   padding-top: 2rem;
@@ -185,50 +206,42 @@
 
 .footer-bottom p {
   font-size: 14px;
+  color: var(--text-muted);
   opacity: 0.7;
-  color: #b0b0b0;
   margin: 0;
 }
 
-/* Responsive */
+/* =====================
+   RESPONSIVE
+===================== */
 @media (max-width: 768px) {
   .footer-custom {
-    padding: 3rem 0 1.5rem 0 !important;
+    padding: 3rem 0 1.5rem !important;
   }
-  
+
   .footer-custom .logo {
     font-size: 1.5rem;
-    margin-bottom: 1rem;
   }
-  
+
   .footer-section-title {
     font-size: 16px;
     margin-bottom: 1rem;
   }
-  
+
+  .footer-link,
   .footer-contact-item {
-    margin-bottom: 1rem;
     font-size: 13px;
   }
-  
-  .footer-link {
-    font-size: 13px;
-  }
-  
-  .footer-bottom {
-    margin-top: 2rem;
-    padding-top: 1.5rem;
-  }
-  
+
   .footer-bottom p {
     font-size: 12px;
   }
-  
+
   .footer-social-link {
     width: 42px;
     height: 42px;
   }
-  
+
   .footer-social-link i {
     font-size: 18px;
   }
@@ -238,11 +251,7 @@
   .footer-custom .text-light {
     font-size: 13px;
   }
-  
-  .d-flex.gap-3 {
-    gap: 0.75rem !important;
-  }
-  
+
   .footer-social-link {
     width: 40px;
     height: 40px;
