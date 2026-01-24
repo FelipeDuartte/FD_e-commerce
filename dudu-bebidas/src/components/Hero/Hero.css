@@ -1,31 +1,34 @@
-@import url('https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Bebas+Neue&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Bebas+Neue&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Poppins:ital,wght@0,100..900;1,100..900&display=swap');
 
 /* =====================
-   VARIABLES
+   ROOT VARIABLES
 ===================== */
 :root {
-  --gold: #ffd700;
-  --gold-light: #ffed4e;
-  --black: #000;
-  --white: #fff;
+  /* Colors */
+  --color-gold: #ffd700;
+  --color-gold-light: #ffed4e;
+  --color-black: #000;
+  --color-white: #fff;
 
-  --transition-default: 0.3s ease;
+  /* Transitions */
+  --transition-fast: 0.3s ease;
   --transition-slow: 1s ease-in-out;
 
+  /* Shadows */
   --shadow-gold-sm: 0 4px 15px rgba(255, 215, 0, 0.4);
   --shadow-gold-lg: 0 15px 40px rgba(255, 215, 0, 0.6);
   --shadow-text: 0 4px 20px rgba(0, 0, 0, 0.8);
 }
 
 /* =====================
-   HERO CAROUSEL
+   HERO / CAROUSEL
 ===================== */
 .hero-carousel {
   position: relative;
-  min-height: 100vh;
   width: 100%;
+  min-height: 100vh;
+  background: var(--color-black);
   overflow: hidden;
-  background: var(--black);
 }
 
 .carousel-wrapper {
@@ -40,11 +43,11 @@
 .carousel-slide {
   position: absolute;
   inset: 0;
-  background: center / 100% 100% no-repeat;
-  opacity: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: center / 100% 100% no-repeat;
+  opacity: 0;
   transition: opacity var(--transition-slow);
 }
 
@@ -59,13 +62,13 @@
 .carousel-overlay {
   position: absolute;
   inset: 0;
+  z-index: 1;
   background: linear-gradient(
     135deg,
     rgba(0, 0, 0, 0.75) 0%,
     rgba(0, 0, 0, 0.5) 50%,
     rgba(0, 0, 0, 0.75) 100%
   );
-  z-index: 1;
 }
 
 .carousel-content {
@@ -80,13 +83,17 @@
 ===================== */
 .banner-badge {
   display: inline-block;
-  padding: 8px 20px;
   margin-bottom: 1.5rem;
-  background: linear-gradient(135deg, var(--gold), var(--gold-light));
-  color: var(--black);
+  padding: 8px 20px;
   font-size: 13px;
   font-weight: 800;
   letter-spacing: 1.5px;
+  color: var(--color-black);
+  background: linear-gradient(
+    135deg,
+    var(--color-gold),
+    var(--color-gold-light)
+  );
   border-radius: 20px;
   box-shadow: var(--shadow-gold-sm);
   animation: slideInDown 0.6s ease-out;
@@ -96,12 +103,12 @@
    TITLE
 ===================== */
 .banner-title {
+  margin-bottom: 1rem;
   font-size: clamp(2.5rem, 6vw, 5rem);
   font-weight: 900;
   line-height: 1.2;
-  color: var(--white);
-  margin-bottom: 1rem;
   letter-spacing: -1px;
+  color: var(--color-white);
   text-shadow: var(--shadow-text);
   animation: slideInUp 0.6s ease-out 0.1s both;
 }
@@ -109,9 +116,13 @@
 .banner-highlight {
   display: block;
   margin-top: 0.5rem;
-  background: linear-gradient(135deg, var(--gold), var(--gold-light));
-  background-clip: text;
+  background: linear-gradient(
+    135deg,
+    var(--color-gold),
+    var(--color-gold-light)
+  );
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   filter: drop-shadow(0 2px 10px rgba(255, 215, 0, 0.5));
 }
@@ -137,14 +148,19 @@
   align-items: center;
   gap: 10px;
   padding: 1.2rem 3rem;
-  background: linear-gradient(135deg, var(--gold), var(--gold-light));
-  color: var(--black);
   font-size: 1.1rem;
   font-weight: 800;
+  color: var(--color-black);
+  background: linear-gradient(
+    135deg,
+    var(--color-gold),
+    var(--color-gold-light)
+  );
   border-radius: 50px;
   text-decoration: none;
   box-shadow: 0 10px 30px rgba(255, 215, 0, 0.4);
-  transition: transform var(--transition-default), box-shadow var(--transition-default);
+  transition: transform var(--transition-fast),
+              box-shadow var(--transition-fast);
   animation: slideInUp 0.6s ease-out 0.3s both;
 }
 
@@ -154,7 +170,7 @@
 }
 
 .btn-banner svg {
-  transition: transform var(--transition-default);
+  transition: transform var(--transition-fast);
 }
 
 .btn-banner:hover svg {
@@ -178,10 +194,10 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
+  cursor: pointer;
   background: rgba(255, 255, 255, 0.3);
   border: 2px solid rgba(255, 255, 255, 0.5);
-  cursor: pointer;
-  transition: all var(--transition-default);
+  transition: all var(--transition-fast);
 }
 
 .dot:hover {
@@ -192,8 +208,12 @@
 .dot.active {
   width: 32px;
   border-radius: 10px;
-  background: linear-gradient(135deg, var(--gold), var(--gold-light));
-  border-color: var(--gold);
+  background: linear-gradient(
+    135deg,
+    var(--color-gold),
+    var(--color-gold-light)
+  );
+  border-color: var(--color-gold);
 }
 
 /* =====================
@@ -227,21 +247,21 @@
 @media (max-width: 991px) {
   .hero-carousel,
   .carousel-wrapper {
-    min-height: 90vh;
     height: 90vh;
+    min-height: 90vh;
   }
 }
 
 @media (max-width: 768px) {
   .hero-carousel,
   .carousel-wrapper {
-    min-height: 85vh;
     height: 85vh;
+    min-height: 85vh;
   }
 
   .banner-badge {
-    font-size: 11px;
     padding: 6px 16px;
+    font-size: 11px;
   }
 
   .btn-banner {
@@ -257,8 +277,8 @@
 @media (max-width: 576px) {
   .hero-carousel,
   .carousel-wrapper {
-    min-height: 80vh;
     height: 80vh;
+    min-height: 80vh;
   }
 
   .carousel-content {

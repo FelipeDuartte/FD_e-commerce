@@ -1,159 +1,183 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { ShoppingCart } from "lucide-react";
 import "./Hero.css";
 
-// Importações das imagens pequenas
+// Imagens pequenas
 import bannerCerveja from "../../assets/CervejaBanner.png";
-import Bannerwisky from "../../assets/WiskyBanner.png";
-import Bannervinhos from "../../assets/vinhoBanner.png";
-import BannerGin from "../../assets/ginBanner.png";
+import bannerWisky from "../../assets/WiskyBanner.png";
+import bannerVinhos from "../../assets/vinhoBanner.png";
+import bannerGin from "../../assets/ginBanner.png";
 
-// Importações das imagens grandes
+// Imagens grandes
 import bannerCervejaLg from "../../assets/cervejaBanner-lg.png";
-import BannerwiskyLg from "../../assets/wiskyBanner-lg.png";
-import BannervinhosLg from "../../assets/vinhoBanner-lg.png";
-import BannerGinLg from "../../assets/ginBanner-lg.png";
+import bannerWiskyLg from "../../assets/wiskyBanner-lg.png";
+import bannerVinhosLg from "../../assets/vinhoBanner-lg.png";
+import bannerGinLg from "../../assets/ginBanner-lg.png";
 
-export default function Hero() {
+// Configurações
+const AUTO_PLAY_DELAY = 5000;
+const MIN_SWIPE_DISTANCE = 50;
+const LARGE_SCREEN_WIDTH = 1080;
+
+// Dados do banner
+const BANNERS = [
+  {
+    id: 1,
+    title: "Mega Promoção",
+    subtitle: "Cervejas Premium",
+    description: "Até 40% OFF em cervejas importadas",
+    badge: "OFERTA",
+    imageSmall: bannerCerveja,
+    imageLarge: bannerCervejaLg,
+    ctaText: "Ver Ofertas",
+    category: "cerveja",
+  },
+  {
+    id: 2,
+    title: "Novidades",
+    subtitle: "Vinhos Selecionados",
+    description: "Acabou de chegar - Importados direto da Europa",
+    badge: "NOVO",
+    imageSmall: bannerVinhos,
+    imageLarge: bannerVinhosLg,
+    ctaText: "Conferir Novidades",
+    category: "vinho",
+  },
+  {
+    id: 3,
+    title: "Super Desconto",
+    subtitle: "Whisky & Destilados",
+    description: "Descontos imperdíveis em destilados premium",
+    badge: "HOT",
+    imageSmall: bannerWisky,
+    imageLarge: bannerWiskyLg,
+    ctaText: "Aproveitar Agora",
+    category: "destilado",
+  },
+  {
+    id: 4,
+    title: "Lançamento",
+    subtitle: "Gin Artesanal",
+    description: "Sabores exclusivos direto do produtor",
+    badge: "EXCLUSIVO",
+    imageSmall: bannerGin,
+    imageLarge: bannerGinLg,
+    ctaText: "Conhecer Produtos",
+    category: "destilado",
+  },
+];
+
+export default function Hero({ onCategorySelect }) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isLargeScreen, setIsLargeScreen] = useState(false);
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
+
   const carouselRef = useRef(null);
 
-  // Distância mínima para considerar um swipe (em pixels)
-  const minSwipeDistance = 50;
+  const totalSlides = BANNERS.length;
 
-  const banners = [
-    {
-      id: 1,
-      title: "Mega Promoção",
-      subtitle: "Cervejas Premium",
-      description: "Até 40% OFF em cervejas importadas",
-      badge: "OFERTA",
-      imageSmall: bannerCerveja,
-      imageLarge: bannerCervejaLg,
-      ctaText: "Ver Ofertas",
-    },
-    {
-      id: 2,
-      title: "Novidades",
-      subtitle: "Vinhos Selecionados",
-      description: "Acabou de chegar - Importados direto da Europa",
-      badge: "NOVO",
-      imageSmall: Bannervinhos,
-      imageLarge: BannervinhosLg,
-      ctaText: "Conferir Novidades",
-    },
-    {
-      id: 3,
-      title: "Super Desconto",
-      subtitle: "Whisky & Destilados",
-      description: "Descontos imperdíveis em destilados premium",
-      badge: "HOT",
-      imageSmall: Bannerwisky,
-      imageLarge: BannerwiskyLg,
-      ctaText: "Aproveitar Agora",
-    },
-    {
-      id: 4,
-      title: "Lançamento",
-      subtitle: "Gin Artesanal",
-      description: "Sabores exclusivos direto do produtor",
-      badge: "EXCLUSIVO",
-      imageSmall: BannerGin,
-      imageLarge: BannerGinLg,
-      ctaText: "Conhecer Produtos",
-    },
-  ];
+  const nextSlide = useCallback(() => {
+    setCurrentSlide((prev) => (prev + 1) % totalSlides);
+  }, [totalSlides]);
 
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % banners.length);
-  };
+  const prevSlide = useCallback(() => {
+    setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
+  }, [totalSlides]);
 
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + banners.length) % banners.length);
-  };
+  const handleBannerClick = useCallback(
+    (category) => {
+      onCategorySelect?.(category);
 
-  // Handlers para touch/swipe
-  const onTouchStart = (e) => {
+      const produtosSection = document.getElementById("produtos");
+      produtosSection?.scrollIntoView({ behavior: "smooth" });
+    },
+    [onCategorySelect],
+  );
+
+  // Touch handlers
+  const handleTouchStart = (e) => {
     setTouchEnd(null);
     setTouchStart(e.targetTouches[0].clientX);
   };
 
-  const onTouchMove = (e) => {
+  const handleTouchMove = (e) => {
     setTouchEnd(e.targetTouches[0].clientX);
   };
 
-  const onTouchEnd = () => {
+  const handleTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
-    
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
 
-    if (isLeftSwipe) {
-      nextSlide();
-    }
-    if (isRightSwipe) {
-      prevSlide();
-    }
+    const distance = touchStart - touchEnd;
+
+    if (distance > MIN_SWIPE_DISTANCE) nextSlide();
+    if (distance < -MIN_SWIPE_DISTANCE) prevSlide();
   };
 
-  // Detecta tamanho da tela inicial e mudanças
+  // Detecta tamanho da tela
   useEffect(() => {
-    const checkScreenSize = () => {
-      setIsLargeScreen(window.innerWidth >= 1080);
+    const handleResize = () => {
+      setIsLargeScreen(window.innerWidth >= LARGE_SCREEN_WIDTH);
     };
 
-    checkScreenSize();
-    window.addEventListener("resize", checkScreenSize);
-    
-    return () => window.removeEventListener("resize", checkScreenSize);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Auto-play do carrossel
+  // Auto-play
   useEffect(() => {
-    const interval = setInterval(nextSlide, 5000);
+    const interval = setInterval(nextSlide, AUTO_PLAY_DELAY);
     return () => clearInterval(interval);
-  }, []);
+  }, [nextSlide]);
 
   return (
     <section id="hero" className="hero-carousel">
-      <div 
+      <div
         className="carousel-wrapper"
         ref={carouselRef}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
-        {banners.map((banner, index) => {
-          const currentImage = isLargeScreen ? banner.imageLarge : banner.imageSmall;
-          
+        {BANNERS.map((banner, index) => {
+          const backgroundImage = isLargeScreen
+            ? banner.imageLarge
+            : banner.imageSmall;
+
           return (
             <div
               key={banner.id}
-              className={`carousel-slide ${index === currentSlide ? "active" : ""}`}
-              style={{ backgroundImage: `url(${currentImage})` }}
+              className={`carousel-slide ${
+                index === currentSlide ? "active" : ""
+              }`}
+              style={{ backgroundImage: `url(${backgroundImage})` }}
             >
-              <div className="carousel-overlay"></div>
+              <div className="carousel-overlay" />
 
               <div className="container">
                 <div className="row justify-content-center">
                   <div className="col-lg-10 col-xl-8">
                     <div className="carousel-content">
                       <span className="banner-badge">{banner.badge}</span>
+
                       <h1 className="banner-title">
                         {banner.title}
                         <span className="banner-highlight">
                           {banner.subtitle}
                         </span>
                       </h1>
+
                       <p className="banner-description">{banner.description}</p>
-                      <a href="#produtos" className="btn-banner">
+
+                      <button
+                        onClick={() => handleBannerClick(banner.category)}
+                        className="btn-banner border-none"
+                      >
                         <ShoppingCart size={20} />
                         <span>{banner.ctaText}</span>
-                      </a>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -163,9 +187,9 @@ export default function Hero() {
         })}
       </div>
 
-      {/* Dots Indicator */}
+      {/* Indicadores */}
       <div className="carousel-dots">
-        {banners.map((_, index) => (
+        {BANNERS.map((_, index) => (
           <button
             key={index}
             className={`dot ${index === currentSlide ? "active" : ""}`}

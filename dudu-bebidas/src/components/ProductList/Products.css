@@ -1,43 +1,51 @@
+/* =====================================================
+   FONTS
+===================================================== */
 @import url('https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Bebas+Neue&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 
-/* =====================
-   VARIABLES
-===================== */
+/* =====================================================
+   DESIGN TOKENS (VARIABLES)
+===================================================== */
 :root {
+  /* Colors */
   --gold: #ffd700;
   --gold-light: #ffed4e;
   --gold-dark: #ffb700;
 
   --black: #000;
   --black-soft: #1a1a1a;
+
   --gray-100: #f8f9fa;
   --gray-200: #e9ecef;
   --gray-400: #6c757d;
 
+  /* Radius */
   --radius-sm: 8px;
   --radius-md: 16px;
   --radius-lg: 20px;
 
+  /* Motion */
   --transition-fast: 0.3s ease;
   --transition-smooth: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 
+  /* Shadows */
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
   --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
   --shadow-gold: 0 4px 15px rgba(255, 215, 0, 0.4);
 }
 
-/* =====================
+/* =====================================================
    PRODUCTS SECTION
-===================== */
+===================================================== */
 #produtos {
   position: relative;
   background: linear-gradient(to bottom, var(--gray-100) 0%, #ffffff 100%);
 }
 
-/* =====================
+/* =====================================================
    SECTION TITLE
-===================== */
+===================================================== */
 .section-title {
   font-size: 2.5rem;
   font-weight: 800;
@@ -57,9 +65,9 @@
   background: linear-gradient(135deg, var(--gold), var(--gold-dark));
 }
 
-/* =====================
-   BADGE (BOOTSTRAP)
-===================== */
+/* =====================================================
+   BOOTSTRAP BADGE
+===================================================== */
 .badge.bg-dark {
   font-size: 14px;
   padding: 0.5rem 0.75rem;
@@ -67,9 +75,9 @@
   background-color: #212529 !important;
 }
 
-/* =====================
+/* =====================================================
    FILTER CONTAINER
-===================== */
+===================================================== */
 .filter-container {
   position: relative;
   margin-bottom: 3rem;
@@ -101,7 +109,7 @@
   border-radius: 10px;
 }
 
-/* Fade edges */
+/* Scroll fade */
 .overflow-x-auto::before,
 .overflow-x-auto::after {
   content: '';
@@ -123,9 +131,9 @@
   background: linear-gradient(to left, var(--gray-100), transparent);
 }
 
-/* =====================
-   FILTER BUTTONS
-===================== */
+/* =====================================================
+   FILTER BUTTON
+===================================================== */
 .filter-btn {
   flex: 0 0 auto;
   display: flex;
@@ -135,6 +143,7 @@
   font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
+
   cursor: pointer;
   position: relative;
   overflow: hidden;
@@ -145,6 +154,7 @@
   border-radius: var(--radius-md);
   backdrop-filter: blur(10px);
   box-shadow: var(--shadow-sm);
+
   transition: all var(--transition-smooth);
 }
 
@@ -189,9 +199,9 @@
   transform: translateY(-2px);
 }
 
-/* =====================
+/* =====================================================
    PRODUCT CARD
-===================== */
+===================================================== */
 .produto-card {
   height: 100%;
   display: flex;
@@ -202,6 +212,7 @@
   border: 2px solid #f0f0f0;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
+
   transition: all var(--transition-smooth);
   animation: fadeInUp 0.6s ease-out backwards;
 }
@@ -212,9 +223,9 @@
   box-shadow: var(--shadow-lg);
 }
 
-/* =====================
-   IMAGE
-===================== */
+/* =====================================================
+   PRODUCT IMAGE
+===================================================== */
 .produto-img-container {
   position: relative;
   height: 220px;
@@ -227,14 +238,15 @@
   height: 100%;
   object-fit: cover;
 }
-/* =====================
+
+/* =====================================================
    BADGES
-===================== */
+===================================================== */
 .badge-promo {
   position: absolute;
   top: 12px;
   right: 12px;
-  background: linear-gradient(135deg, #ff4757 0%, #ff6348 100%);
+  background: linear-gradient(135deg, #ff4757, #ff6348);
   color: #fff;
   font-size: 11px;
   font-weight: 700;
@@ -272,9 +284,9 @@
   color: #fff;
 }
 
-/* =====================
-   INFO
-===================== */
+/* =====================================================
+   PRODUCT INFO
+===================================================== */
 .produto-info {
   padding: 20px;
   display: flex;
@@ -295,9 +307,9 @@
   overflow: hidden;
 }
 
-/* =====================
+/* =====================================================
    PRICE
-===================== */
+===================================================== */
 .preco-atual {
   font-size: 24px;
   font-weight: bold;
@@ -310,9 +322,9 @@
   text-decoration: line-through;
 }
 
-/* =====================
-   ADD TO CART
-===================== */
+/* =====================================================
+   ADD TO CART BUTTON
+===================================================== */
 .btn-add-cart {
   width: 100%;
   padding: 14px;
@@ -324,6 +336,7 @@
   background: linear-gradient(135deg, var(--black), var(--black-soft));
   color: var(--gold) !important;
   border: 2px solid transparent;
+
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   transition: all var(--transition-fast);
 }
@@ -346,9 +359,9 @@
   pointer-events: none;
 }
 
-/* =====================
+/* =====================================================
    TOAST NOTIFICATION
-===================== */
+===================================================== */
 .cart-notification-toast {
   position: fixed;
   bottom: 30px;
@@ -359,6 +372,7 @@
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(40, 167, 69, 0.4);
   z-index: 9999;
+
   opacity: 0;
   transform: translateY(100px);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -377,18 +391,18 @@
   font-size: 15px;
 }
 
-/* =====================
+/* =====================================================
    EMPTY STATE
-===================== */
+===================================================== */
 .empty-state-icon {
   font-size: 80px;
   color: var(--gray-400);
   opacity: 0.5;
 }
 
-/* =====================
+/* =====================================================
    ANIMATIONS
-===================== */
+===================================================== */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -401,244 +415,29 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
 }
 
-/* =====================
-   RESPONSIVE - TABLET
-===================== */
+/* =====================================================
+   RESPONSIVE
+===================================================== */
 @media (max-width: 991px) {
-  .section-title {
-    font-size: 2rem;
-  }
-
-  .produto-img-container {
-    height: 200px;
-  }
-
-  .produto-info {
-    padding: 16px;
-  }
-
-  .btn-add-cart {
-    padding: 12px;
-    font-size: 14px;
-  }
+  .section-title { font-size: 2rem; }
+  .produto-img-container { height: 200px; }
 }
 
-/* =====================
-   RESPONSIVE - MOBILE
-===================== */
 @media (max-width: 768px) {
-  #produtos {
-    padding: 2rem 0 !important;
-  }
-
-  .section-title {
-    font-size: 1.75rem;
-  }
-
-  .section-title::after {
-    width: 50px;
-    height: 3px;
-  }
-
-  .badge.bg-dark {
-    font-size: 12px;
-    padding: 0.4rem 0.6rem;
-  }
-
-  .filter-container {
-    margin-bottom: 2rem;
-  }
-
-  .filter-btn {
-    padding: 10px 18px;
-    font-size: 12px;
-  }
-
-  .filter-btn i {
-    font-size: 14px;
-  }
-
-  .produto-card {
-    border-radius: 16px;
-  }
-
-  .produto-card:hover {
-    transform: translateY(-8px) scale(1.01);
-  }
-
-  .produto-img-container {
-    height: 180px;
-  }
-
-  .badge-promo {
-    font-size: 10px;
-    padding: 5px 10px;
-    top: 10px;
-    right: 10px;
-  }
-
-  .badge-estoque {
-    font-size: 9px;
-    padding: 4px 8px;
-    bottom: 10px;
-    left: 10px;
-  }
-
-  .produto-info {
-    padding: 14px;
-  }
-
-  .produto-nome {
-    font-size: 14px;
-    margin-bottom: 0.75rem;
-  }
-
-  .preco-atual {
-    font-size: 20px;
-  }
-
-  .preco-antigo {
-    font-size: 12px;
-  }
-
-  .badge-desconto {
-    font-size: 10px;
-    padding: 2px 6px;
-  }
-
-  .btn-add-cart {
-    padding: 12px;
-    font-size: 13px;
-    border-radius: 12px;
-  }
-
-  .cart-notification-toast {
-    bottom: 20px;
-    right: 20px;
-    left: 20px;
-    padding: 14px 20px;
-  }
-
-  .notification-content {
-    font-size: 14px;
-    gap: 10px;
-  }
+  .section-title { font-size: 1.75rem; }
+  .produto-img-container { height: 180px; }
 }
 
-/* =====================
-   RESPONSIVE - SMALL MOBILE
-===================== */
 @media (max-width: 576px) {
-  #produtos {
-    padding: 1.5rem 0 !important;
-  }
-
-  .section-title {
-    font-size: 1.5rem;
-  }
-
-  .badge.bg-dark {
-    font-size: 11px;
-    padding: 0.35rem 0.5rem;
-  }
-
-  .filter-btn {
-    padding: 8px 14px;
-    font-size: 11px;
-    gap: 6px;
-  }
-
-  .produto-img-container {
-    height: 160px;
-  }
-
-  .produto-info {
-    padding: 12px;
-  }
-
-  .produto-nome {
-    font-size: 13px;
-    margin-bottom: 0.6rem;
-  }
-
-  .preco-atual {
-    font-size: 18px;
-  }
-
-  .preco-antigo {
-    font-size: 11px;
-  }
-
-  .badge-desconto {
-    font-size: 9px;
-  }
-
-  .btn-add-cart {
-    padding: 10px;
-    font-size: 12px;
-    gap: 4px;
-  }
-
-  .btn-add-cart svg {
-    width: 16px;
-    height: 16px;
-  }
-
-  .empty-state-icon {
-    font-size: 60px;
-  }
-
-  .cart-notification-toast {
-    bottom: 15px;
-    right: 15px;
-    left: 15px;
-    padding: 12px 16px;
-  }
-
-  .notification-content {
-    font-size: 13px;
-  }
-
-  .notification-content svg {
-    width: 18px;
-    height: 18px;
-  }
+  .section-title { font-size: 1.5rem; }
+  .produto-img-container { height: 160px; }
 }
 
-/* =====================
-   RESPONSIVE - EXTRA SMALL
-===================== */
 @media (max-width: 400px) {
-  .section-title {
-    font-size: 1.3rem;
-  }
-
-  .produto-img-container {
-    height: 140px;
-  }
-
-  .produto-info {
-    padding: 10px;
-  }
-
-  .produto-nome {
-    font-size: 12px;
-  }
-
-  .preco-atual {
-    font-size: 16px;
-  }
-
-  .btn-add-cart {
-    padding: 8px;
-    font-size: 11px;
-  }
+  .section-title { font-size: 1.3rem; }
+  .produto-img-container { height: 140px; }
 }

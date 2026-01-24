@@ -1,5 +1,5 @@
 import logo from "../../assets/logo_dudu-bebidas.png";
-import { ShoppingCart, User, Search, Wine, Beer, Coffee, Droplets } from "lucide-react";
+import { ShoppingCart, User, Search, Wine, Beer, Coffee, Droplets, CupSoda, Zap } from "lucide-react";
 import "./Header.css";
 
 export default function Header({
@@ -17,7 +17,8 @@ export default function Header({
     { name: "Vinhos", icon: Wine, categoryId: "vinho" },
     { name: "Cervejas", icon: Beer, categoryId: "cerveja" },
     { name: "Destilados", icon: Droplets, categoryId: "destilado" },
-    { name: "Refrigerantes", icon: Coffee, categoryId: "refrigerante" },
+    { name: "Refrigerantes", icon: CupSoda, categoryId: "refrigerante" },
+    { name: "Energeticos", icon: Zap, categoryId: "energetico" },
   ];
 
   const handleCategoryClick = (categoryId) => {
@@ -171,13 +172,7 @@ export default function Header({
               href="#produtos"
               className="d-block text-white text-decoration-none py-2 px-3 rounded mb-1"
             >
-              <i className="bi bi-tag-fill me-2"></i>Promoções
-            </a>
-            <a
-              href="#produtos"
-              className="d-block text-white text-decoration-none py-2 px-3 rounded mb-1"
-            >
-              <i className="bi bi-grid-fill me-2"></i>Categorias
+              <i className="bi bi-grid-fill me-2"></i>Bebidas
             </a>
             <a
               href="#contato"

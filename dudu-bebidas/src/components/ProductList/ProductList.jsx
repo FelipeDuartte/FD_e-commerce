@@ -5,12 +5,30 @@ import "./Products.css";
 
 export default function ProductList({
   filteredProducts,
-  categories,
   selectedCategory,
   setSelectedCategory,
   addToCart,
-  favorites,
 }) {
+  const hasProducts = filteredProducts.length > 0;
+  const productsCount = filteredProducts.length;
+
+  const handleCategorySelect = (categoryId) => {
+    setSelectedCategory(categoryId);
+  };
+
+const categories = [
+  { id: "todos", label: "Todos", icon: "bi-grid-fill" },
+  { id: "cerveja", label: "Cervejas", icon: "bi-cup-straw" },
+  { id: "vinho", label: "Vinhos", icon: "bi-cup" },
+  { id: "destilado", label: "Destilados", icon: "bi-droplet-fill" },
+  { id: "refrigerante", label: "Refrigerantes", icon: "bi-cup-hot-fill" },
+  {
+    id: "energetico",
+    label: "Energéticos",
+    icon: "bi-lightning-charge-fill",
+  },
+];
+  
   //==== Main return ====
   return (
     <section id="produtos" className="py-5">
@@ -19,10 +37,11 @@ export default function ProductList({
           <div>
             <h2 className="section-title">Nossos Produtos</h2>
           </div>
+
           <div className="text-end">
             {/* Products count badge */}
             <span className="badge bg-dark">
-              {filteredProducts.length} produtos disponíveis
+              {productsCount} produtos disponíveis
             </span>
           </div>
         </div>
@@ -30,16 +49,16 @@ export default function ProductList({
         {/* Category Filters */}
         <div className="filter-container">
           <div className="overflow-x-auto">
-            {categories.map((cat) => (
+            {categories.map(({ id, icon, label }) => (
               <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
+                key={id}
+                onClick={() => handleCategorySelect(id)}
                 className={`filter-btn ${
-                  selectedCategory === cat.id ? "active" : ""
+                  selectedCategory === id ? "active" : ""
                 }`}
               >
-                <i className={cat.icon}></i>
-                {cat.label}
+                <i className={icon}></i>
+                {label}
               </button>
             ))}
           </div>
@@ -47,14 +66,13 @@ export default function ProductList({
 
         {/* Products Grid */}
         <div className="row row-cols-2 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3 g-md-4">
-          {filteredProducts.length > 0 ? (
+          {hasProducts ? (
             filteredProducts.map((produto, index) => (
               <ProductCard
                 key={produto.id}
                 produto={produto}
                 index={index}
                 addToCart={addToCart}
-                favorites={favorites}
               />
             ))
           ) : (
