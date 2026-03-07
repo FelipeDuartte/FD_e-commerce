@@ -1,5 +1,5 @@
 import logo from "../../assets/logo_dudu-bebidas.png";
-import { ShoppingCart, User, Search, Wine, Beer, Coffee, Droplets, CupSoda, Zap } from "lucide-react";
+import { ShoppingCart, User, Search, Wine, Beer, Coffee, Droplets, CupSoda, Zap, LogOut } from "lucide-react";
 import "./Header.css";
 
 export default function Header({
@@ -12,6 +12,8 @@ export default function Header({
   onCartClick,
   onLoginClick,
   onCategoryClick,
+  user,
+  onLogout,
 }) {
   const categories = [
     { name: "Vinhos", icon: Wine, categoryId: "vinho" },
@@ -22,22 +24,21 @@ export default function Header({
   ];
 
   const handleCategoryClick = (categoryId) => {
-    // Primeiro atualiza a categoria
     if (onCategoryClick) {
       onCategoryClick(categoryId);
     }
-    
-    // Depois faz o scroll suave até a seção de produtos
     setTimeout(() => {
-      const produtosSection = document.getElementById('produtos');
+      const produtosSection = document.getElementById("produtos");
       if (produtosSection) {
-        produtosSection.scrollIntoView({ 
-          behavior: 'smooth',
-          block: 'start'
-        });
+        produtosSection.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     }, 50);
   };
+
+  // Pega primeiro nome do usuário
+  const firstName = user?.user_metadata?.full_name
+    ? user.user_metadata.full_name.split(" ")[0]
+    : user?.email?.split("@")[0] ?? "";
 
   return (
     <header
@@ -46,16 +47,9 @@ export default function Header({
       <nav className="navbar navbar-dark">
         <div className="container-fluid px-3 px-lg-4">
           <a href="#" className="navbar-brand logo d-flex align-items-center gap-2">
-            {/* Logo Image */}
             <div className="logo-image-wrapper">
-              <img 
-                src={logo} 
-                alt="Dudu Bebidas Logo" 
-                className="logo-image"
-              />
+              <img src={logo} alt="Dudu Bebidas Logo" className="logo-image" />
             </div>
-            
-            {/* Brand Name */}
             <div className="brand-text">
               Dudu <span>Bebidas</span>
             </div>
@@ -68,39 +62,61 @@ export default function Header({
           >
             <div className="search-box w-100">
               <Search className="search-icon" size={22} />
-                <input
-                  href="products"
-                  type="search"
-                  placeholder="Buscar bebidas..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="form-control border-0"
-                  style={{
-                    background: "transparent",
-                    outline: "none",
-                    boxShadow: "none",
-                    fontSize: "15px",
-                    color: "#fff",
-                  }}
-                />
+              <input
+                type="search"
+                placeholder="Buscar bebidas..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="form-control border-0"
+                style={{
+                  background: "transparent",
+                  outline: "none",
+                  boxShadow: "none",
+                  fontSize: "15px",
+                  color: "#fff",
+                }}
+              />
             </div>
           </div>
 
           <div className="d-flex align-items-center gap-2">
-            <button
-              onClick={onLoginClick}
-              className="user-btn d-flex align-items-center gap-2"
-            >
-              <User size={20} />
-              <span className="d-none d-lg-inline">Entrar</span>
-            </button>
+            {user ? (
+              /* ── LOGADO: avatar inicial + nome + botão sair ── */
+              <div className="d-flex align-items-center gap-2">
+                <div className="user-avatar">
+                  {firstName.charAt(0).toUpperCase()}
+                </div>
+                <span className="user-name d-none d-lg-inline">
+                  {firstName}
+                </span>
+                <button
+                  onClick={onLogout}
+                  className="user-btn logout-btn d-flex align-items-center gap-1"
+                  title="Sair"
+                >
+                  <LogOut size={18} />
+                  <span className="d-none d-lg-inline">Sair</span>
+                </button>
+              </div>
+            ) : (
+              /* ── DESLOGADO: botão entrar ── */
+              <button
+                onClick={onLoginClick}
+                className="user-btn d-flex align-items-center gap-2"
+              >
+                <User size={20} />
+                <span className="d-none d-lg-inline">Entrar</span>
+              </button>
+            )}
 
-            <button 
-              className="user-btn position-relative d-flex align-items-center gap-2" 
+            <button
+              className="user-btn position-relative d-flex align-items-center gap-2"
               onClick={onCartClick}
             >
               <ShoppingCart size={20} />
-              {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
+              {cartCount > 0 && (
+                <span className="cart-badge">{cartCount}</span>
+              )}
               <span className="d-none d-lg-inline">Carrinho</span>
             </button>
 
@@ -180,6 +196,16 @@ export default function Header({
             >
               <i className="bi bi-envelope-fill me-2"></i>Contato
             </a>
+            {/* Mobile: logout se logado */}
+            {user && (
+              <button
+                onClick={onLogout}
+                className="d-block text-white text-decoration-none py-2 px-3 rounded mt-1 w-100 text-start border-0 bg-transparent"
+              >
+                <LogOut size={16} className="me-2" />
+                Sair ({firstName})
+              </button>
+            )}
           </div>
         </div>
       )}

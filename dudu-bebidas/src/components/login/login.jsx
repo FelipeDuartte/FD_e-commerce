@@ -1,69 +1,143 @@
 import React, { useState } from "react";
+import { createClient } from "@supabase/supabase-js";
 import { X, Mail, Lock, Eye, EyeOff, User, Phone } from "lucide-react";
 import "./Login.css";
+
+// Supabase client
+const supabase = createClient(
+  "https://ixjhyzzocdsufcqgbbvf.supabase.co",
+  "sb_publishable_kA5ukt5jIQMlUGAw7PVfSA_wsoJIhL_"
+);
 
 export default function Login({ isOpen, onClose }) {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     name: "",
     phone: "",
-    confirmPassword: ""
+    confirmPassword: "",
   });
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    setErrorMsg("");
+    setSuccessMsg("");
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
+    setErrorMsg("");
+    setSuccessMsg("");
+
     if (isLogin) {
-      // Login
+      // ── LOGIN ──────────────────────────────────────────────
       if (!formData.email || !formData.password) {
-        alert("Por favor, preencha todos os campos!");
+        setErrorMsg("Por favor, preencha todos os campos!");
         return;
       }
-      alert(`Login realizado com sucesso!\n\nBem-vindo de volta!`);
+
+      setLoading(true);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
+      setLoading(false);
+
+      if (error) {
+        setErrorMsg(
+          error.message === "Invalid login credentials"
+            ? "E-mail ou senha incorretos."
+            : error.message
+        );
+        return;
+      }
+
+      setSuccessMsg(`Bem-vindo de volta, ${data.user.email}!`);
+      setTimeout(() => {
+        resetForm();
+        onClose();
+      }, 1200);
+
     } else {
-      // Cadastro
-      if (!formData.name || !formData.email || !formData.phone || !formData.password || !formData.confirmPassword) {
-        alert("Por favor, preencha todos os campos!");
+      // ── CADASTRO ───────────────────────────────────────────
+      if (
+        !formData.name ||
+        !formData.email ||
+        !formData.phone ||
+        !formData.password ||
+        !formData.confirmPassword
+      ) {
+        setErrorMsg("Por favor, preencha todos os campos!");
         return;
       }
       if (formData.password !== formData.confirmPassword) {
-        alert("As senhas não coincidem!");
+        setErrorMsg("As senhas não coincidem!");
         return;
       }
-      alert(`Cadastro realizado com sucesso!\n\nBem-vindo, ${formData.name}!`);
+      if (formData.password.length < 6) {
+        setErrorMsg("A senha deve ter pelo menos 6 caracteres.");
+        return;
+      }
+
+      setLoading(true);
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            full_name: formData.name,
+            phone: formData.phone,
+          },
+        },
+      });
+      setLoading(false);
+
+      if (error) {
+        setErrorMsg(
+          error.message === "User already registered"
+            ? "Este e-mail já está cadastrado."
+            : error.message
+        );
+        return;
+      }
+
+      // Supabase pode exigir confirmação de e-mail
+      if (data.user && data.user.identities?.length === 0) {
+        setErrorMsg("Este e-mail já está cadastrado.");
+        return;
+      }
+
+      setSuccessMsg(
+        `Cadastro realizado! Verifique seu e-mail para confirmar a conta, ${formData.name}.`
+      );
+      setTimeout(() => {
+        resetForm();
+        onClose();
+      }, 2000);
     }
-    
-    // Limpar formulário
+  };
+
+  const resetForm = () => {
     setFormData({
       email: "",
       password: "",
       name: "",
       phone: "",
-      confirmPassword: ""
+      confirmPassword: "",
     });
-    onClose();
+    setErrorMsg("");
+    setSuccessMsg("");
+    setShowPassword(false);
   };
 
   const toggleMode = () => {
     setIsLogin(!isLogin);
-    setFormData({
-      email: "",
-      password: "",
-      name: "",
-      phone: "",
-      confirmPassword: ""
-    });
-    setShowPassword(false);
+    resetForm();
   };
 
   return (
@@ -91,14 +165,29 @@ export default function Login({ isOpen, onClose }) {
             {isLogin ? "Bem-vindo!" : "Crie sua conta"}
           </h2>
           <p className="login-subtitle">
-            {isLogin 
-              ? "Entre para continuar suas compras" 
+            {isLogin
+              ? "Entre para continuar suas compras"
               : "Cadastre-se e aproveite nossas ofertas"}
           </p>
         </div>
 
         {/* Form */}
         <div className="login-form">
+
+          {/* Mensagem de erro */}
+          {errorMsg && (
+            <div className="form-message error">
+              {errorMsg}
+            </div>
+          )}
+
+          {/* Mensagem de sucesso */}
+          {successMsg && (
+            <div className="form-message success">
+              {successMsg}
+            </div>
+          )}
+
           {/* Nome - apenas no cadastro */}
           {!isLogin && (
             <div className="form-group">
@@ -202,8 +291,14 @@ export default function Login({ isOpen, onClose }) {
           )}
 
           {/* Submit Button */}
-          <button onClick={handleSubmit} className="login-submit-btn">
-            {isLogin ? "Entrar" : "Cadastrar"}
+          <button
+            onClick={handleSubmit}
+            className="login-submit-btn"
+            disabled={loading}
+          >
+            {loading
+              ? isLogin ? "Entrando..." : "Cadastrando..."
+              : isLogin ? "Entrar" : "Cadastrar"}
           </button>
 
           {/* Divider */}

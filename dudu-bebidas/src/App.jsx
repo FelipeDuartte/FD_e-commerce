@@ -7,6 +7,9 @@ import "./App.css";
 // ==== Icons ====
 import { Truck, Award, Zap, TrendingUp } from "lucide-react";
 
+// ==== Supabase ====
+import { supabase } from "./supabase/Supabaseclient";
+
 // ==== Components ====
 import Header from "./components/Header/Header";
 import Banner from "./components/Banner/Banner";
@@ -171,6 +174,9 @@ export default function DuduBebidas() {
   const [loginOpen, setLoginOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
+  // ==== Auth ====
+  const [user, setUser] = useState(null);
+
   // ==== Filters ====
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("todos");
@@ -180,6 +186,21 @@ export default function DuduBebidas() {
 
   // ==== Banner ====
   const [currentBanner, setCurrentBanner] = useState(0);
+
+  // ==== Supabase: escuta mudanças de sessão ====
+  useEffect(() => {
+    // Pega sessão atual ao carregar
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    // Escuta login/logout em tempo real
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // ==== Scroll effect ====
   useEffect(() => {
@@ -211,7 +232,6 @@ export default function DuduBebidas() {
         return matchesSearch && matchesCategory;
       })
       .sort((a, b) => {
-        // Promoções primeiro
         if (a.promocao && !b.promocao) return -1;
         if (!a.promocao && b.promocao) return 1;
         return 0;
@@ -222,7 +242,6 @@ export default function DuduBebidas() {
   const addToCart = (produto) => {
     setCartItems((prev) => {
       const itemExists = prev.find((item) => item.id === produto.id);
-
       if (itemExists) {
         return prev.map((item) =>
           item.id === produto.id
@@ -230,18 +249,14 @@ export default function DuduBebidas() {
             : item
         );
       }
-
       return [...prev, { ...produto, quantity: 1 }];
     });
   };
 
   const updateQuantity = (id, quantity) => {
     if (quantity < 1) return;
-
     setCartItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, quantity } : item
-      )
+      prev.map((item) => (item.id === id ? { ...item, quantity } : item))
     );
   };
 
@@ -255,6 +270,11 @@ export default function DuduBebidas() {
     () => cartItems.reduce((sum, item) => sum + item.quantity, 0),
     [cartItems]
   );
+
+  // ==== Logout ====
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
 
   // ==== Render ====
   return (
@@ -275,6 +295,8 @@ export default function DuduBebidas() {
         onCartClick={() => setCartOpen(true)}
         onLoginClick={() => setLoginOpen(true)}
         onCategoryClick={setSelectedCategory}
+        user={user}
+        onLogout={handleLogout}
       />
 
       <Hero onCategorySelect={setSelectedCategory} />

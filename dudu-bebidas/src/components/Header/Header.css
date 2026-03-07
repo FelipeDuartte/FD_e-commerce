@@ -138,6 +138,43 @@
   box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
 }
 
+/* ── User login ── */
+
+.user-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffd700, #ffaa00);
+  color: #000;
+  font-weight: 700;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.user-name {
+  color: #ffd700;
+  font-weight: 600;
+  font-size: 14px;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logout-btn {
+  color: #aaa !important;
+  font-size: 13px;
+  padding: 6px 10px !important;
+  transition: color 0.2s ease;
+}
+
+.logout-btn:hover {
+  color: #ff6b6b !important;
+}
+
 /* Cart Badge */
 .cart-badge {
   position: absolute !important;
