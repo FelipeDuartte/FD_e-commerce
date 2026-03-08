@@ -39,6 +39,7 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .login-modal.open {
@@ -48,7 +49,7 @@
 }
 
 .login-modal::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 
 .login-modal::-webkit-scrollbar-track {
@@ -63,61 +64,56 @@
 /* Close Button */
 .login-close-btn {
   position: absolute;
-  top: 20px;
-  right: 20px;
-  background: rgba(0, 0, 0, 0.05);
+  top: 16px;
+  right: 16px;
+  background: rgba(0, 0, 0, 0.08);
   border: none;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  color: #6b7280;
+  color: #333;
   z-index: 10;
 }
 
 .login-close-btn:hover {
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.15);
   transform: rotate(90deg);
   color: #000;
 }
 
 /* Header */
 .login-header {
-  padding: 40px 40px 30px;
+  padding: 36px 40px 28px;
   text-align: center;
   background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
   border-radius: 24px 24px 0 0;
 }
 
 .login-logo {
-  font-size: 32px;
+  font-size: 30px;
   font-weight: 900;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   letter-spacing: -1px;
 }
 
-.logo-dudu {
-  color: #000;
-}
-
-.logo-bebidas {
-  color: #333;
-}
+.logo-dudu  { color: #000; }
+.logo-bebidas { color: #333; }
 
 .login-title {
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 800;
   color: #000;
-  margin: 0 0 8px;
+  margin: 0 0 6px;
   letter-spacing: -0.5px;
 }
 
 .login-subtitle {
-  font-size: 15px;
+  font-size: 14px;
   color: #333;
   margin: 0;
   font-weight: 500;
@@ -125,19 +121,19 @@
 
 /* Form */
 .login-form {
-  padding: 30px 40px 40px;
+  padding: 24px 36px 32px;
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .form-label {
   display: block;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: #374151;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   letter-spacing: 0.3px;
 }
 
@@ -149,7 +145,7 @@
 
 .input-icon {
   position: absolute;
-  left: 16px;
+  left: 14px;
   color: #9ca3af;
   pointer-events: none;
   z-index: 1;
@@ -157,10 +153,10 @@
 
 .form-input {
   width: 100%;
-  padding: 14px 16px 14px 48px;
+  padding: 12px 14px 12px 44px;
   border: 2px solid #e5e7eb;
   border-radius: 12px;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
   transition: all 0.2s ease;
   background: #f9fafb;
@@ -170,7 +166,7 @@
   outline: none;
   border-color: #ffd700;
   background: #fff;
-  box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.1);
+  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.12);
 }
 
 .form-input::placeholder {
@@ -180,11 +176,11 @@
 /* Password Toggle */
 .password-toggle {
   position: absolute;
-  right: 12px;
+  right: 10px;
   background: none;
   border: none;
   cursor: pointer;
-  padding: 8px;
+  padding: 6px;
   display: flex;
   align-items: center;
   color: #6b7280;
@@ -197,15 +193,37 @@
   color: #374151;
 }
 
+/* Messages */
+.form-message {
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+.form-message.error {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.form-message.success {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
 /* Forgot Password */
 .forgot-password-wrapper {
   text-align: right;
-  margin-bottom: 24px;
+  margin-bottom: 18px;
+  margin-top: -6px;
 }
 
 .forgot-password-link {
-  font-size: 14px;
-  color: #ffd700;
+  font-size: 13px;
+  color: #b8960c;
   text-decoration: none;
   font-weight: 600;
   transition: color 0.2s ease;
@@ -219,29 +237,29 @@
 /* Submit Button */
 .login-submit-btn {
   width: 100%;
-  padding: 16px;
+  padding: 14px;
   background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
   color: #000;
   border: none;
   border-radius: 12px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 800;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3);
+  box-shadow: 0 4px 14px rgba(255, 215, 0, 0.3);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 24px;
+  margin-bottom: 18px;
 }
 
-.login-submit-btn:hover {
+.login-submit-btn:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
-  background: linear-gradient(135deg, #ffed4e 0%, #ffd700 100%);
 }
 
-.login-submit-btn:active {
-  transform: translateY(0);
+.login-submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 /* Divider */
@@ -249,9 +267,9 @@
   display: flex;
   align-items: center;
   text-align: center;
-  margin: 24px 0;
+  margin: 0 0 16px;
   color: #9ca3af;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -263,30 +281,31 @@
 }
 
 .login-divider span {
-  padding: 0 16px;
+  padding: 0 14px;
 }
 
 /* Social Login */
 .social-login {
   display: flex;
-  gap: 12px;
-  margin-bottom: 24px;
+  gap: 10px;
+  margin-bottom: 18px;
 }
 
 .social-btn {
   flex: 1;
-  padding: 12px;
+  padding: 10px 8px;
   border: 2px solid #e5e7eb;
   border-radius: 12px;
   background: #fff;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 7px;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .social-btn:hover {
@@ -294,33 +313,19 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.social-btn.google {
-  color: #5f6368;
-}
-
-.social-btn.google:hover {
-  border-color: #4285F4;
-  background: #f8f9fa;
-}
-
-.social-btn.facebook {
-  color: #1877f2;
-}
-
-.social-btn.facebook:hover {
-  border-color: #1877f2;
-  background: #e7f3ff;
-}
+.social-btn.google:hover  { border-color: #4285F4; background: #f8f9fa; color: #5f6368; }
+.social-btn.facebook      { color: #1877f2; }
+.social-btn.facebook:hover { border-color: #1877f2; background: #e7f3ff; }
 
 /* Toggle Mode */
 .toggle-mode {
   text-align: center;
-  padding-top: 20px;
+  padding-top: 16px;
   border-top: 2px solid #f3f4f6;
 }
 
 .toggle-mode p {
-  font-size: 14px;
+  font-size: 13px;
   color: #6b7280;
   margin: 0;
   font-weight: 500;
@@ -329,12 +334,11 @@
 .toggle-link {
   background: none;
   border: none;
-  color: #ffd700;
+  color: #b8960c;
   font-weight: 700;
   cursor: pointer;
-  margin-left: 6px;
-  font-size: 14px;
-  text-decoration: none;
+  margin-left: 5px;
+  font-size: 13px;
   transition: color 0.2s ease;
 }
 
@@ -346,15 +350,16 @@
 /* Footer */
 .login-footer {
   text-align: center;
-  padding: 20px 40px 30px;
+  padding: 14px 36px 20px;
   background: #f9fafb;
   border-radius: 0 0 24px 24px;
+  border-top: 1px solid #f3f4f6;
 }
 
 .login-footer p {
-  font-size: 12px;
+  font-size: 11px;
   color: #9ca3af;
-  margin: 0 0 6px;
+  margin: 0 0 5px;
 }
 
 .footer-links {
@@ -362,7 +367,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .footer-links a {
@@ -372,67 +377,153 @@
   transition: color 0.2s ease;
 }
 
-.footer-links a:hover {
-  color: #ffd700;
-}
+.footer-links a:hover { color: #ffd700; }
+.footer-links span    { color: #d1d5db; }
 
-.footer-links span {
-  color: #d1d5db;
-}
-
-/* Responsive */
+/* ══════════════════════════════════════════
+   RESPONSIVE — TABLET (≤ 640px)
+══════════════════════════════════════════ */
 @media (max-width: 640px) {
   .login-modal {
-    width: 95%;
-    max-height: 95vh;
+    width: 94%;
+    max-height: 92vh;
+    border-radius: 20px;
   }
 
   .login-header {
-    padding: 30px 24px 24px;
+    padding: 28px 24px 20px;
+    border-radius: 20px 20px 0 0;
   }
 
-  .login-logo {
-    font-size: 28px;
-  }
-
-  .login-title {
-    font-size: 22px;
-  }
-
-  .login-subtitle {
-    font-size: 14px;
-  }
+  .login-logo   { font-size: 26px; margin-bottom: 8px; }
+  .login-title  { font-size: 20px; }
+  .login-subtitle { font-size: 13px; }
 
   .login-form {
-    padding: 24px 24px 30px;
+    padding: 20px 20px 24px;
   }
 
+  .form-group   { margin-bottom: 13px; }
+  .form-label   { font-size: 12px; margin-bottom: 5px; }
+
   .form-input {
-    padding: 12px 12px 12px 44px;
+    padding: 11px 12px 11px 40px;
+    font-size: 14px;
+    border-radius: 10px;
   }
 
   .login-submit-btn {
-    padding: 14px;
-    font-size: 15px;
+    padding: 13px;
+    font-size: 14px;
+    margin-bottom: 14px;
   }
 
-  .social-login {
-    flex-direction: column;
+  .social-login { gap: 8px; }
+
+  .social-btn {
+    padding: 9px 6px;
+    font-size: 12px;
+    gap: 5px;
+    border-radius: 10px;
   }
 
   .login-footer {
-    padding: 16px 24px 24px;
+    padding: 12px 20px 16px;
+    border-radius: 0 0 20px 20px;
   }
+}
+
+/* ══════════════════════════════════════════
+   RESPONSIVE — SMALL MOBILE (≤ 480px)
+   Modal ocupa quase toda a tela verticalmente
+══════════════════════════════════════════ */
+@media (max-width: 480px) {
+  .login-modal {
+    width: 96%;
+    max-height: 95vh;
+    /* Sobe levemente para não ficar colado na barra de status */
+    top: 50%;
+  }
+
+  .login-header {
+    padding: 22px 18px 16px;
+  }
+
+  .login-logo   { font-size: 22px; margin-bottom: 6px; }
+  .login-title  { font-size: 18px; }
+  .login-subtitle { font-size: 12px; }
+
+  .login-close-btn {
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+  }
+
+  .login-form {
+    padding: 16px 16px 20px;
+  }
+
+  .form-group   { margin-bottom: 11px; }
+  .form-label   { font-size: 12px; }
+
+  .form-input {
+    padding: 10px 10px 10px 38px;
+    font-size: 13px;
+    border-width: 1.5px;
+  }
+
+  .input-icon { left: 12px; }
+
+  .forgot-password-wrapper { margin-bottom: 12px; }
+
+  .login-submit-btn {
+    padding: 12px;
+    font-size: 13px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+  }
+
+  .login-divider { margin-bottom: 12px; font-size: 12px; }
+
+  /* Botões sociais lado a lado menores */
+  .social-login  { gap: 7px; margin-bottom: 12px; }
+  .social-btn {
+    padding: 8px 4px;
+    font-size: 11px;
+    gap: 4px;
+    border-radius: 9px;
+  }
+  .social-btn svg { width: 16px; height: 16px; }
+
+  .toggle-mode   { padding-top: 12px; }
+  .toggle-mode p { font-size: 12px; }
+  .toggle-link   { font-size: 12px; }
+
+  .login-footer  { padding: 10px 16px 14px; }
+  .login-footer p, .footer-links { font-size: 10px; }
+}
+
+/* ══════════════════════════════════════════
+   RESPONSIVE — VERY SMALL (≤ 360px)
+══════════════════════════════════════════ */
+@media (max-width: 360px) {
+  .login-modal  { width: 98%; }
+
+  .login-header { padding: 18px 14px 14px; }
+  .login-logo   { font-size: 20px; }
+  .login-title  { font-size: 16px; }
+
+  .login-form   { padding: 14px 14px 18px; }
+  .form-input   { padding: 9px 9px 9px 36px; font-size: 13px; }
+
+  /* Socials empilhados em telas minúsculas */
+  .social-login { flex-direction: column; }
+  .social-btn   { padding: 9px; font-size: 12px; }
 }
 
 /* Animation */
 @keyframes modalFadeIn {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
