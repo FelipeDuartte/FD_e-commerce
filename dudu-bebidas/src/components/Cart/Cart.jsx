@@ -1,10 +1,13 @@
 import React, { useState } from "react";
+import {useNavigate} from 'react-router-dom'
 import { X, Plus, Minus, Trash2, ShoppingBag, Tag } from "lucide-react";
 import "./Cart.css";
 
 export default function Cart({ isOpen, onClose, cartItems, updateQuantity, removeItem, clearCart }) {
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState(null);
+  //navegaçao
+  const navigate = useNavigate();
 
   // Calcular totais
   const subtotal = cartItems.reduce((sum, item) => sum + (item.preco * item.quantity), 0);
@@ -21,9 +24,8 @@ export default function Cart({ isOpen, onClose, cartItems, updateQuantity, remov
 
   const handleCheckout = () => {
     if (cartItems.length === 0) return;
-    alert(`Pedido finalizado!\n\nTotal: R$ ${total.toFixed(2)}\n\nObrigado pela compra!`);
-    clearCart();
     onClose();
+    navigate('/checkout')
   };
 
   return (

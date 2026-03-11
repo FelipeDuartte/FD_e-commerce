@@ -1,5 +1,6 @@
 // ==== React imports ====
 import { useEffect, useMemo, useState } from "react";
+import { Route, Routes } from "react-router-dom";
 
 // ==== Styles ====
 import "./App.css";
@@ -19,7 +20,9 @@ import ProductList from "./components/ProductList/ProductList";
 import Footer from "./components/Footer/Footer";
 import Cart from "./components/Cart/Cart";
 import Login from "./components/Login/Login";
-
+import { BrowserRouter } from "react-router-dom";
+import Checkout from "./components/Checkout/Checkout";
+import Scrolltotop from "./components/scrolltotop/Scrolltotop";
 // ==== Produtos (mock/data local) ====
 const produtosData = [
   {
@@ -279,7 +282,13 @@ export default function DuduBebidas() {
   // ==== Render ====
   return (
     <div style={{ minHeight: "100vh", background: "#201e0dff" }}>
-      <Banner
+     <Scrolltotop />
+  <Routes>
+    <Route
+    path="/"
+    element={
+      <>
+       <Banner
         banners={banners}
         currentBanner={currentBanner}
         setCurrentBanner={setCurrentBanner}
@@ -298,7 +307,6 @@ export default function DuduBebidas() {
         user={user}
         onLogout={handleLogout}
       />
-
       <Hero onCategorySelect={setSelectedCategory} />
 
       <ProductList
@@ -309,9 +317,12 @@ export default function DuduBebidas() {
       />
 
       <Benefits benefits={benefits} />
-
+      </>
+      }/>
+      <Route path="/checkout" element={<Checkout cartItems={cartItems} />} />
+      </Routes>
       <Footer />
-
+      
       <Cart
         isOpen={cartOpen}
         onClose={() => setCartOpen(false)}
@@ -320,7 +331,8 @@ export default function DuduBebidas() {
         removeItem={removeItem}
         clearCart={clearCart}
       />
-
+        
+    
       <Login isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
     </div>
   );
