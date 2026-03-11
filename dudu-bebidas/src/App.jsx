@@ -1,7 +1,7 @@
 // ==== React imports ====
 import { useEffect, useMemo, useState } from "react";
 import { Route, Routes } from "react-router-dom";
-
+import { useLocation, useNavigate } from "react-router-dom";
 // ==== Styles ====
 import "./App.css";
 
@@ -20,7 +20,6 @@ import ProductList from "./components/ProductList/ProductList";
 import Footer from "./components/Footer/Footer";
 import Cart from "./components/Cart/Cart";
 import Login from "./components/Login/Login";
-import { BrowserRouter } from "react-router-dom";
 import Checkout from "./components/Checkout/Checkout";
 import Scrolltotop from "./components/scrolltotop/Scrolltotop";
 // ==== Produtos (mock/data local) ====
@@ -71,8 +70,7 @@ const produtosData = [
     preco: 8.99,
     precoAntigo: 10.99,
     desconto: 18,
-    imagem:
-      "https://images.unsplash.com/photo-1554866585-cd94860890b7?w=400",
+    imagem: "https://images.unsplash.com/photo-1554866585-cd94860890b7?w=400",
     estoque: 100,
     promocao: true,
     destaque: false,
@@ -110,8 +108,7 @@ const produtosData = [
     preco: 39.9,
     precoAntigo: 54.9,
     desconto: 27,
-    imagem:
-      "https://images.unsplash.com/photo-1560148489-2f77f8e4f48e?w=400",
+    imagem: "https://images.unsplash.com/photo-1560148489-2f77f8e4f48e?w=400",
     estoque: 15,
     promocao: false,
     destaque: false,
@@ -176,7 +173,14 @@ export default function DuduBebidas() {
   const [cartOpen, setCartOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-
+  const location = useLocation();
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (location.state?.openCart) {
+      setCartOpen(true);
+      navigate("/dudu-bebidas/", { replace: true, state: {} });
+    }
+  }, [location.state]);
   // ==== Auth ====
   const [user, setUser] = useState(null);
 
@@ -198,7 +202,9 @@ export default function DuduBebidas() {
     });
 
     // Escuta login/logout em tempo real
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
 
@@ -249,7 +255,7 @@ export default function DuduBebidas() {
         return prev.map((item) =>
           item.id === produto.id
             ? { ...item, quantity: item.quantity + 1 }
-            : item
+            : item,
         );
       }
       return [...prev, { ...produto, quantity: 1 }];
@@ -259,7 +265,7 @@ export default function DuduBebidas() {
   const updateQuantity = (id, quantity) => {
     if (quantity < 1) return;
     setCartItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, quantity } : item))
+      prev.map((item) => (item.id === id ? { ...item, quantity } : item)),
     );
   };
 
@@ -271,7 +277,7 @@ export default function DuduBebidas() {
 
   const cartCount = useMemo(
     () => cartItems.reduce((sum, item) => sum + item.quantity, 0),
-    [cartItems]
+    [cartItems],
   );
 
   // ==== Logout ====
@@ -282,47 +288,48 @@ export default function DuduBebidas() {
   // ==== Render ====
   return (
     <div style={{ minHeight: "100vh", background: "#201e0dff" }}>
-     <Scrolltotop />
-  <Routes>
-    <Route
-    path="/"
-    element={
-      <>
-       <Banner
-        banners={banners}
-        currentBanner={currentBanner}
-        setCurrentBanner={setCurrentBanner}
-      />
+      <Scrolltotop />
+      <Routes>
+        <Route
+          path="/dudu-bebidas/"
+          element={
+            <>
+              <Banner
+                banners={banners}
+                currentBanner={currentBanner}
+                setCurrentBanner={setCurrentBanner}
+              />
 
-      <Header
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        cartCount={cartCount}
-        menuOpen={menuOpen}
-        setMenuOpen={setMenuOpen}
-        scrolled={scrolled}
-        onCartClick={() => setCartOpen(true)}
-        onLoginClick={() => setLoginOpen(true)}
-        onCategoryClick={setSelectedCategory}
-        user={user}
-        onLogout={handleLogout}
-      />
-      <Hero onCategorySelect={setSelectedCategory} />
+              <Header
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                cartCount={cartCount}
+                menuOpen={menuOpen}
+                setMenuOpen={setMenuOpen}
+                scrolled={scrolled}
+                onCartClick={() => setCartOpen(true)}
+                onLoginClick={() => setLoginOpen(true)}
+                onCategoryClick={setSelectedCategory}
+                user={user}
+                onLogout={handleLogout}
+              />
+              <Hero onCategorySelect={setSelectedCategory} />
 
-      <ProductList
-        filteredProducts={filteredProducts}
-        selectedCategory={selectedCategory}
-        setSelectedCategory={setSelectedCategory}
-        addToCart={addToCart}
-      />
+              <ProductList
+                filteredProducts={filteredProducts}
+                selectedCategory={selectedCategory}
+                setSelectedCategory={setSelectedCategory}
+                addToCart={addToCart}
+              />
 
-      <Benefits benefits={benefits} />
-      </>
-      }/>
-      <Route path="/checkout" element={<Checkout cartItems={cartItems} />} />
+              <Benefits benefits={benefits} />
+              <Footer />
+            </>
+          }
+        />
+        <Route path="/checkout" element={<Checkout cartItems={cartItems} />} />
       </Routes>
-      <Footer />
-      
+
       <Cart
         isOpen={cartOpen}
         onClose={() => setCartOpen(false)}
@@ -331,8 +338,7 @@ export default function DuduBebidas() {
         removeItem={removeItem}
         clearCart={clearCart}
       />
-        
-    
+
       <Login isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
     </div>
   );

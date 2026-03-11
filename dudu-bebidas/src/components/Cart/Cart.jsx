@@ -1,16 +1,26 @@
 import React, { useState } from "react";
-import {useNavigate} from 'react-router-dom'
+import { useNavigate } from "react-router-dom";
 import { X, Plus, Minus, Trash2, ShoppingBag, Tag } from "lucide-react";
 import "./Cart.css";
 
-export default function Cart({ isOpen, onClose, cartItems, updateQuantity, removeItem, clearCart }) {
+export default function Cart({
+  isOpen,
+  onClose,
+  cartItems,
+  updateQuantity,
+  removeItem,
+  clearCart,
+}) {
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   //navegaçao
   const navigate = useNavigate();
 
   // Calcular totais
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.preco * item.quantity), 0);
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + item.preco * item.quantity,
+    0,
+  );
   const desconto = appliedCoupon ? subtotal * 0.1 : 0;
   const frete = subtotal >= 50 ? 0 : 8.99;
   const total = subtotal - desconto + frete;
@@ -25,7 +35,7 @@ export default function Cart({ isOpen, onClose, cartItems, updateQuantity, remov
   const handleCheckout = () => {
     if (cartItems.length === 0) return;
     onClose();
-    navigate('/checkout')
+    navigate("/checkout");
   };
 
   return (
@@ -60,7 +70,12 @@ export default function Cart({ isOpen, onClose, cartItems, updateQuantity, remov
         <div className="cart-body">
           {cartItems.length === 0 ? (
             <div className="cart-empty">
-              <ShoppingBag size={64} color="#d1d5db" strokeWidth={1.5} className="cart-empty-icon" />
+              <ShoppingBag
+                size={64}
+                color="#d1d5db"
+                strokeWidth={1.5}
+                className="cart-empty-icon"
+              />
               <h4>Carrinho vazio</h4>
               <p>Adicione produtos para começar suas compras</p>
             </div>
@@ -78,7 +93,7 @@ export default function Cart({ isOpen, onClose, cartItems, updateQuantity, remov
                   {/* Info */}
                   <div className="cart-item-details">
                     <h4 className="cart-item-name">{item.nome}</h4>
-                    
+
                     <div className="cart-item-price-row">
                       <span className="cart-item-price">
                         R$ {item.preco.toFixed(2)}
@@ -94,14 +109,21 @@ export default function Cart({ isOpen, onClose, cartItems, updateQuantity, remov
                     {/* Quantity Controls */}
                     <div className="quantity-controls">
                       <button
-                        onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                        onClick={() =>
+                          updateQuantity(
+                            item.id,
+                            Math.max(1, item.quantity - 1),
+                          )
+                        }
                         className="quantity-btn"
                       >
                         <Minus size={16} />
                       </button>
                       <span className="quantity-value">{item.quantity}</span>
                       <button
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        onClick={() =>
+                          updateQuantity(item.id, item.quantity + 1)
+                        }
                         className="quantity-btn"
                       >
                         <Plus size={16} />
@@ -134,17 +156,23 @@ export default function Cart({ isOpen, onClose, cartItems, updateQuantity, remov
                     type="text"
                     placeholder="Código do cupom"
                     value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    onChange={(e) =>
+                      setCouponCode(e.target.value.toUpperCase())
+                    }
                     className="coupon-input"
                   />
                 </div>
-                <button onClick={handleApplyCoupon} className="coupon-apply-btn">
+                <button
+                  onClick={handleApplyCoupon}
+                  className="coupon-apply-btn"
+                >
                   Aplicar
                 </button>
               </div>
               {appliedCoupon && (
                 <div className="coupon-applied">
-                  ✓ Cupom {appliedCoupon.code} aplicado ({appliedCoupon.discount}% OFF)
+                  ✓ Cupom {appliedCoupon.code} aplicado (
+                  {appliedCoupon.discount}% OFF)
                 </div>
               )}
               <div className="coupon-hint">
@@ -164,7 +192,9 @@ export default function Cart({ isOpen, onClose, cartItems, updateQuantity, remov
                   <span>- R$ {desconto.toFixed(2)}</span>
                 </div>
               )}
-              <div className={`summary-row ${frete === 0 ? "free-shipping" : ""}`}>
+              <div
+                className={`summary-row ${frete === 0 ? "free-shipping" : ""}`}
+              >
                 <span>Frete:</span>
                 <span>{frete === 0 ? "GRÁTIS" : `R$ ${frete.toFixed(2)}`}</span>
               </div>

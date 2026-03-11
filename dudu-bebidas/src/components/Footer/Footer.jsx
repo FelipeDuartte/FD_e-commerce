@@ -48,12 +48,7 @@ export default function Footer() {
                   Sobre Nós
                 </a>
               </li>
-              <li>
-                <a href="#" className="footer-link">
-                  <i className="bi bi-chevron-right"></i>
-                  Termos de Uso
-                </a>
-              </li>
+              
             </ul>
           </div>
 
