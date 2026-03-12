@@ -9,9 +9,9 @@ const stats = [
 ];
 
 const chips = [
-  { icon: "📍", text: "Rua Edgar Torres, 650" },
+  { icon: "📍", text: "Rua Edgar Torres,650" },
   { icon: "🛵", text: "Delivery disponível" },
-  { icon: "🍺", text: "Todos os tipos de bebidas" },
+  { icon: "🍺", text: "Melhores Bebidas" },
   { icon: "⭐", text: "Desde 2000" },
 ];
 
@@ -43,7 +43,7 @@ export default function SobreDuduBebidas() {
               <div className="title-underline" />
               <p className="section-text">
                 Nascemos em Belo Horizonte com uma missão simples: reunir as melhores
-                marcas da região em um só lugar, com o atendimento caloroso que só
+                marcas de bebidas da região em um só lugar, com o atendimento caloroso que só
                 o mineiro sabe dar. Cervejas, vinhos, destilados e muito mais —
                 na loja ou direto na sua porta pelo delivery. 🍻
               </p>

@@ -149,12 +149,6 @@
   align-items: start;
 }
 
-@media (max-width: 768px) {
-  .co-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
 /* ─── CARD ──────────────────────────────────────────── */
 .co-card {
   background: #111;
@@ -332,12 +326,16 @@
 
 .co-item-info {
   flex: 1;
+  min-width: 0;
 }
 
 .co-item-name {
   font-size: 13px;
   font-weight: 500;
   color: #ddd;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .co-item-qty {
@@ -351,6 +349,7 @@
   font-weight: 600;
   color: #fff;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .co-summary-rows {
@@ -436,4 +435,97 @@
   margin-top: 12px;
   font-size: 11px;
   color: #333;
+}
+
+/* ══════════════════════════════════════════
+   MOBILE (≤ 768px)
+══════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .co-root {
+    padding: 24px 16px 120px; /* padding-bottom grande para o botão fixo não cobrir conteúdo */
+  }
+
+  /* Header menor */
+  .co-header {
+    margin-bottom: 28px;
+  }
+
+  .co-title {
+    font-size: 22px;
+  }
+
+  .co-step-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+  }
+
+  /* Progress: esconde labels, só dots + linha */
+  .co-progress {
+    margin-bottom: 28px;
+  }
+
+  .co-prog-label {
+    display: none;
+  }
+
+  .co-prog-line {
+    max-width: 40px;
+    margin: 0 10px;
+  }
+
+  /* Grid: coluna única, summary vem depois do form */
+  .co-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  /* Card form com padding menor */
+  .co-card {
+    padding: 20px 16px;
+    border-radius: 16px;
+  }
+
+  /* Campos do form: coluna única em mobile */
+  .co-field-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  /* Exceto Bairro + Complemento que cabem lado a lado */
+  .co-field-row.two-col-mobile {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Summary sem sticky no mobile */
+  .co-summary {
+    position: static;
+    padding: 20px 16px;
+    border-radius: 16px;
+  }
+
+  /* Botão CTA fixo na parte inferior */
+  .co-cta-wrap {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 12px 16px 24px;
+    background: linear-gradient(to top, #0a0a0a 70%, transparent);
+    z-index: 100;
+  }
+
+  /* Esconde o botão e o "seguro" dentro do summary no mobile */
+  .co-summary .co-cta,
+  .co-summary .co-secure {
+    display: none;
+  }
+}
+
+/* ══════════════════════════════════════════
+   DESKTOP: esconde o wrap fixo
+══════════════════════════════════════════ */
+@media (min-width: 769px) {
+  .co-cta-wrap {
+    display: none;
+  }
 }

@@ -356,7 +356,6 @@
 
 /* ══════════════════════════════════════════
    RESPONSIVE — MOBILE (≤ 768px)
-   Layout: [Logo] ............. [Avatar/Entrar] [Cart] [Menu]
 ══════════════════════════════════════════ */
 @media (max-width: 768px) {
   .navbar-custom {
@@ -364,75 +363,50 @@
   }
 
   .brand-text {
-    font-size: 1.3rem;
-    letter-spacing: 1px;
+    font-size: 1.2rem;
+    letter-spacing: 0.5px;
   }
 
   .logo-image-wrapper {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
   }
 
-  /* Botões viram ícone circular */
-  .user-btn {
-    padding: 0;
-    border-radius: 50%;
-    width: 38px;
-    height: 38px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
+  /* Todos os botões: ícone circular sem texto */
+  .user-btn,
+  .logout-btn {
+    padding: 0 !important;
+    border-radius: 50% !important;
+    width: 36px !important;
+    height: 36px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     flex-shrink: 0;
   }
 
-  /* Esconde labels de texto nos botões */
-  .user-btn .d-none {
-    display: none !important;
-  }
-
-  /* Avatar menor no mobile */
-  .user-avatar {
-    width: 38px;
-    height: 38px;
-    font-size: 16px;
-    border-radius: 50%;
-  }
-
-  /* Nome some no mobile — só avatar fica visível */
   .user-name {
     display: none !important;
   }
 
-  /* Botão logout vira ícone circular */
-  .logout-btn {
-    padding: 0 !important;
-    width: 38px !important;
-    height: 38px !important;
-    border-radius: 50% !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 15px;
   }
 
-  /* Badge do carrinho */
   .cart-badge {
-    top: -3px !important;
-    right: -3px !important;
+    top: -4px !important;
+    right: -4px !important;
     font-size: 10px !important;
     padding: 2px 5px !important;
-    min-width: 17px !important;
+    min-width: 16px !important;
   }
 
-  /* Search mobile com padding correto */
   .search-box {
     padding: 7px 14px 7px 38px;
     border-radius: 20px;
-  }
-
-  .search-box .search-icon {
-    left: 12px;
   }
 
   .search-box input {
@@ -445,46 +419,28 @@
    RESPONSIVE — SMALL MOBILE (≤ 480px)
 ══════════════════════════════════════════ */
 @media (max-width: 480px) {
+  /* Esconde o texto da marca — só logo-img fica */
   .brand-text {
-    font-size: 1.1rem;
-    letter-spacing: 0.5px;
+    display: none !important;
   }
 
   .logo-image-wrapper {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
     border-width: 1.5px;
   }
 
   .user-btn,
   .logout-btn {
-    width: 34px !important;
-    height: 34px !important;
+    width: 32px !important;
+    height: 32px !important;
   }
 
   .user-avatar {
-    width: 34px;
-    height: 34px;
-    font-size: 14px;
-  }
-
-  .user-btn svg,
-  .logout-btn svg {
-    width: 17px;
-    height: 17px;
-  }
-
-  .cart-badge {
-    font-size: 9px !important;
-    padding: 2px 4px !important;
-    min-width: 15px !important;
-    top: -2px !important;
-    right: -2px !important;
-  }
-
-  .navbar-toggler {
-    padding: 6px 9px;
+    width: 32px;
+    height: 32px;
+    font-size: 13px;
   }
 
   .container-fluid {
@@ -492,9 +448,8 @@
     padding-right: 10px !important;
   }
 
-  /* Reduz gap entre itens */
   .d-flex.gap-2 {
-    gap: 0.35rem !important;
+    gap: 0.3rem !important;
   }
 }
 
@@ -502,15 +457,6 @@
    RESPONSIVE — VERY SMALL (≤ 360px)
 ══════════════════════════════════════════ */
 @media (max-width: 360px) {
-  .brand-text {
-    font-size: 0.95rem;
-  }
-
-  .logo-image-wrapper {
-    width: 32px;
-    height: 32px;
-  }
-
   .user-btn,
   .logout-btn {
     width: 30px !important;
@@ -520,7 +466,7 @@
   .user-avatar {
     width: 30px;
     height: 30px;
-    font-size: 13px;
+    font-size: 12px;
   }
 
   .container-fluid {

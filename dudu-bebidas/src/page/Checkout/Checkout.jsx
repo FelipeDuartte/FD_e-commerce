@@ -1,6 +1,7 @@
 import { useState } from "react";
 import "./Checkout.css";
 import { useNavigate } from "react-router-dom";
+
 const items = [
   { icon: "🍺", name: "Heineken", qty: "2 unidades", price: "R$ 17,00" },
   { icon: "⚡", name: "Red Bull", qty: "1 unidade", price: "R$ 12,00" },
@@ -13,14 +14,15 @@ const paymentOptions = [
   { value: "cash", icon: "💵", name: "Dinheiro" },
 ];
 
-export default function Checkout({ openCart }) {
+export default function Checkout() {
   const [payment, setPayment] = useState("pix");
-  //navegação
   const navigate = useNavigate();
+
   return (
     <div className="co-root">
       <div className="co-wrap">
-        {/* HEADER */}
+
+        {/* ── HEADER ── */}
         <div className="co-header">
           <button
             className="co-back"
@@ -34,7 +36,7 @@ export default function Checkout({ openCart }) {
           </div>
         </div>
 
-        {/* PROGRESS */}
+        {/* ── PROGRESS ── */}
         <div className="co-progress">
           <div className="co-prog-step">
             <div className="co-prog-dot">✓</div>
@@ -52,12 +54,14 @@ export default function Checkout({ openCart }) {
           </div>
         </div>
 
-        {/* MAIN GRID */}
+        {/* ── MAIN GRID ── */}
         <div className="co-grid">
+
           {/* FORM */}
           <div className="co-card">
             <div className="co-section-label">📍 Entrega</div>
 
+            {/* Nome + Telefone — coluna única no mobile */}
             <div className="co-field-row">
               <div className="co-field">
                 <label>Nome completo</label>
@@ -65,10 +69,11 @@ export default function Checkout({ openCart }) {
               </div>
               <div className="co-field">
                 <label>Telefone</label>
-                <input type="text" placeholder="(00) 00000-0000" />
+                <input type="tel" placeholder="(00) 00000-0000" />
               </div>
             </div>
 
+            {/* Endereço + Número — coluna única no mobile */}
             <div className="co-field-row">
               <div className="co-field">
                 <label>Endereço</label>
@@ -80,7 +85,8 @@ export default function Checkout({ openCart }) {
               </div>
             </div>
 
-            <div className="co-field-row">
+            {/* Bairro + Complemento — ficam lado a lado mesmo no mobile */}
+            <div className="co-field-row two-col-mobile">
               <div className="co-field">
                 <label>Bairro</label>
                 <input type="text" placeholder="Bairro" />
@@ -148,11 +154,17 @@ export default function Checkout({ openCart }) {
               <span className="co-total-value">R$ 154,00</span>
             </div>
 
+            {/* Botão visível só no desktop (no mobile fica fixo abaixo) */}
             <button className="co-cta">Confirmar Pedido →</button>
-
             <div className="co-secure">🔒 Pagamento 100% seguro</div>
           </div>
         </div>
+      </div>
+
+      {/* ── BOTÃO FIXO — só aparece no mobile ── */}
+      <div className="co-cta-wrap">
+        <button className="co-cta">Confirmar Pedido →</button>
+        <div className="co-secure">🔒 Pagamento 100% seguro</div>
       </div>
     </div>
   );

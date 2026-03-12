@@ -83,24 +83,29 @@
   margin: 32px 0 24px;
 }
 
+/* ── CHIPS ── */
 .dudu-sobre .info-row {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 10px;
 }
 
 .dudu-sobre .info-chip {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 7px;
   background: transparent;
   border: 1px solid rgba(232,160,32,0.3);
   border-radius: 100px;
-  padding: 5px 14px;
+  padding: 8px 14px;
   font-size: 0.78rem;
   font-weight: 700;
   color: rgba(245,200,66,0.85);
   transition: background 0.2s, border-color 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .dudu-sobre .info-chip:hover {
@@ -108,6 +113,22 @@
   border-color: rgba(232,160,32,0.55);
 }
 
+/* Desktop: volta para linha única */
+@media (min-width: 768px) {
+  .dudu-sobre .info-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dudu-sobre .info-chip {
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: unset;
+  }
+}
+
+/* ── FADE IN ── */
 .dudu-sobre .fade-in {
   opacity: 0;
   transform: translateY(16px);
