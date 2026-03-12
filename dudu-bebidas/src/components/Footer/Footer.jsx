@@ -43,7 +43,7 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="#" className="footer-link">
+                <a href="#about" className="footer-link">
                   <i className="bi bi-chevron-right"></i>
                   Sobre Nós
                 </a>

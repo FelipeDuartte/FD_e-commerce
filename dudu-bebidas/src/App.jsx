@@ -19,9 +19,10 @@ import Benefits from "./components/Benefits/Benefits";
 import ProductList from "./components/ProductList/ProductList";
 import Footer from "./components/Footer/Footer";
 import Cart from "./components/Cart/Cart";
-import Login from "./components/Login/Login";
-import Checkout from "./components/Checkout/Checkout";
-import Scrolltotop from "./components/scrolltotop/Scrolltotop";
+import Login from "./page/login/Login";
+import Checkout from "./page/Checkout/Checkout";
+import Scrolltotop from "./data/scrolltotop/Scrolltotop";
+import About from "./components/About/About"
 // ==== Produtos (mock/data local) ====
 const produtosData = [
   {
@@ -321,7 +322,7 @@ export default function DuduBebidas() {
                 setSelectedCategory={setSelectedCategory}
                 addToCart={addToCart}
               />
-
+              <About/>
               <Benefits benefits={benefits} />
               <Footer />
             </>

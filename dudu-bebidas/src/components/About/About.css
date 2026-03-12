@@ -1,0 +1,120 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;800&display=swap');
+
+.dudu-sobre {
+  font-family: 'Nunito', sans-serif;
+  background: transparent;
+  width: 100%;
+  padding: 60px 0;
+}
+
+.dudu-sobre .body-wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.dudu-sobre .section-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #E8A020;
+  margin-bottom: 10px;
+}
+
+.dudu-sobre .section-title {
+  font-family: 'Bebas Neue', cursive;
+  font-size: clamp(2.4rem, 4.5vw, 3.2rem);
+  color: #fff;
+  line-height: 1.02;
+  margin-bottom: 0;
+}
+
+.dudu-sobre .title-underline {
+  width: 48px;
+  height: 3px;
+  background: #E8A020;
+  border-radius: 2px;
+  margin: 14px 0 20px;
+}
+
+.dudu-sobre .section-text {
+  font-size: 0.93rem;
+  line-height: 1.78;
+  color: rgba(255,255,255,0.55);
+  margin-bottom: 0;
+  max-width: 480px;
+}
+
+.dudu-sobre .stat-box {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(232,160,32,0.2);
+  border-radius: 12px;
+  padding: 22px 12px;
+  text-align: center;
+  transition: border-color 0.25s, transform 0.25s, background 0.25s;
+}
+
+.dudu-sobre .stat-box:hover {
+  border-color: rgba(232,160,32,0.6);
+  background: rgba(232,160,32,0.06);
+  transform: translateY(-4px);
+}
+
+.dudu-sobre .stat-num {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 2.4rem;
+  color: #E8A020;
+  line-height: 1;
+}
+
+.dudu-sobre .stat-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(255,255,255,0.38);
+  margin-top: 6px;
+}
+
+.dudu-sobre .divider {
+  border: none;
+  border-top: 1px solid rgba(232,160,32,0.1);
+  margin: 32px 0 24px;
+}
+
+.dudu-sobre .info-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.dudu-sobre .info-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: transparent;
+  border: 1px solid rgba(232,160,32,0.3);
+  border-radius: 100px;
+  padding: 5px 14px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: rgba(245,200,66,0.85);
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.dudu-sobre .info-chip:hover {
+  background: rgba(232,160,32,0.1);
+  border-color: rgba(232,160,32,0.55);
+}
+
+.dudu-sobre .fade-in {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+}
+
+.dudu-sobre .fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
