@@ -1,0 +1,560 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ─── ROOT ─────────────────────────────────────────── */
+.cf-root {
+  background: #0a0a0a;
+  min-height: 100vh;
+  font-family: 'DM Sans', sans-serif;
+  color: #fff;
+  padding: 48px 24px 80px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Glow decorativo — mesmo padrão do Checkout */
+.cf-root::before {
+  content: '';
+  position: fixed;
+  top: -200px;
+  right: -200px;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(255, 208, 0, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.cf-root::after {
+  content: '';
+  position: fixed;
+  bottom: -100px;
+  left: -100px;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(255, 208, 0, 0.04) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ─── PARTÍCULAS ────────────────────────────────────── */
+.cf-particle {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  animation: cf-float 6s ease-in-out infinite;
+}
+
+.cf-p1 {
+  width: 6px; height: 6px;
+  background: #ffd000;
+  top: 20%; left: 15%;
+  animation-delay: 0s;
+}
+.cf-p2 {
+  width: 4px; height: 4px;
+  background: #ffd000;
+  top: 35%; right: 20%;
+  animation-delay: 1.5s;
+}
+.cf-p3 {
+  width: 8px; height: 8px;
+  background: rgba(255,208,0,0.4);
+  top: 60%; left: 70%;
+  animation-delay: 3s;
+}
+
+@keyframes cf-float {
+  0%   { opacity: 0; transform: translateY(0) scale(0.5); }
+  20%  { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-80px) scale(1); }
+}
+
+/* ─── WRAP ──────────────────────────────────────────── */
+.cf-wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.cf-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 20px;
+  text-align: center;
+}
+
+.cf-not-found {
+  color: #555;
+  font-size: 16px;
+}
+
+/* ─── HERO ──────────────────────────────────────────── */
+.cf-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 56px;
+  animation: cf-fade-up 0.6s ease both;
+}
+
+@keyframes cf-fade-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Anel pulsante ao redor do check */
+.cf-check-ring {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin-bottom: 28px;
+}
+
+.cf-check-ring::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 208, 0, 0.2);
+  animation: cf-ring-pulse 2s ease-in-out infinite;
+}
+
+.cf-check-ring::after {
+  content: '';
+  position: absolute;
+  inset: -16px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 208, 0, 0.08);
+  animation: cf-ring-pulse 2s ease-in-out infinite 0.4s;
+}
+
+@keyframes cf-ring-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%       { transform: scale(1.06); opacity: 0.6; }
+}
+
+.cf-check-circle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: #ffd000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 40px rgba(255, 208, 0, 0.35);
+  animation: cf-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+@keyframes cf-pop {
+  from { transform: scale(0); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+/* SVG checkmark animado */
+.cf-checkmark {
+  width: 52px;
+  height: 52px;
+}
+
+.cf-checkmark circle {
+  stroke: none;
+}
+
+.cf-checkmark path {
+  stroke: #000;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: cf-draw-check 0.5s ease 0.4s forwards;
+}
+
+@keyframes cf-draw-check {
+  to { stroke-dashoffset: 0; }
+}
+
+.cf-tag {
+  font-size: 10px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: #ffd000;
+  font-weight: 700;
+  margin-bottom: 10px;
+  animation: cf-fade-up 0.5s ease 0.2s both;
+}
+
+.cf-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 42px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -1px;
+  margin-bottom: 10px;
+  animation: cf-fade-up 0.5s ease 0.3s both;
+}
+
+.cf-subtitle {
+  font-size: 15px;
+  color: #555;
+  max-width: 420px;
+  line-height: 1.6;
+  animation: cf-fade-up 0.5s ease 0.4s both;
+}
+
+/* Badge do ID do pedido */
+.cf-order-id {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: 28px;
+  padding: 16px 32px;
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 14px;
+  animation: cf-fade-up 0.5s ease 0.5s both;
+}
+
+.cf-order-id-label {
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #444;
+  font-weight: 600;
+}
+
+.cf-order-id-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: #ffd000;
+  letter-spacing: 2px;
+}
+
+/* ─── GRID PRINCIPAL ────────────────────────────────── */
+.cf-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
+  align-items: start;
+}
+
+.cf-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ─── CARD ──────────────────────────────────────────── */
+.cf-card {
+  background: #111;
+  border: 1px solid #1e1e1e;
+  border-radius: 20px;
+  padding: 28px;
+  animation: cf-fade-up 0.5s ease 0.6s both;
+}
+
+.cf-card-label {
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #ffd000;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+/* ─── ITENS ─────────────────────────────────────────── */
+.cf-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.cf-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #181818;
+}
+
+.cf-item:last-child {
+  border-bottom: none;
+}
+
+.cf-item-img {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #181818;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.cf-item-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cf-item-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cf-item-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #ddd;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cf-item-qty {
+  font-size: 11px;
+  color: #444;
+}
+
+.cf-item-price {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.cf-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #222;
+  font-size: 13px;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.cf-total-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: #ffd000;
+}
+
+/* ─── ENDEREÇO ──────────────────────────────────────── */
+.cf-address {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cf-address p {
+  font-size: 14px;
+  color: #888;
+  line-height: 1.5;
+}
+
+.cf-address-name {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: #ddd !important;
+}
+
+.cf-address-phone {
+  color: #555 !important;
+  font-size: 13px !important;
+  margin-top: 4px;
+}
+
+/* ─── PAGAMENTO ─────────────────────────────────────── */
+.cf-card-payment {
+  animation-delay: 0.65s;
+}
+
+.cf-payment {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  background: rgba(255, 208, 0, 0.05);
+  border: 1px solid rgba(255, 208, 0, 0.15);
+  border-radius: 12px;
+}
+
+.cf-payment-icon {
+  font-size: 26px;
+}
+
+.cf-payment-label {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffd000;
+}
+
+/* ─── TIMELINE ──────────────────────────────────────── */
+.cf-timeline {
+  display: flex;
+  flex-direction: column;
+}
+
+.cf-tl-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.cf-tl-line {
+  width: 1px;
+  height: 20px;
+  background: #ffd000;
+  margin-left: 13px;
+}
+
+.cf-tl-line-inactive {
+  background: #222;
+}
+
+.cf-tl-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #ffd000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #000;
+  flex-shrink: 0;
+}
+
+.cf-tl-dot-active {
+  background: #ffd000;
+  box-shadow: 0 0 12px rgba(255, 208, 0, 0.4);
+  animation: cf-dot-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes cf-dot-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(255, 208, 0, 0.4); }
+  50%       { box-shadow: 0 0 20px rgba(255, 208, 0, 0.7); }
+}
+
+.cf-tl-dot-inactive {
+  background: #1e1e1e;
+  color: #444;
+  border: 1px solid #2a2a2a;
+  box-shadow: none;
+}
+
+.cf-tl-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 4px;
+}
+
+.cf-tl-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ddd;
+}
+
+.cf-tl-inactive .cf-tl-title {
+  color: #333;
+}
+
+.cf-tl-desc {
+  font-size: 11px;
+  color: #444;
+}
+
+.cf-tl-inactive .cf-tl-desc {
+  color: #282828;
+}
+
+/* ─── BOTÃO HOME ────────────────────────────────────── */
+.cf-btn-home {
+  width: 100%;
+  padding: 16px;
+  background: #ffd000;
+  color: #000;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  animation: cf-fade-up 0.5s ease 0.8s both;
+}
+
+.cf-btn-home:hover {
+  background: #ffe033;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(255, 208, 0, 0.25);
+}
+
+.cf-btn-home:active {
+  transform: translateY(0);
+}
+
+/* ══════════════════════════════════════════
+   MOBILE (≤ 768px)
+══════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .cf-root {
+    padding: 32px 16px 60px;
+  }
+
+  .cf-hero {
+    margin-bottom: 36px;
+  }
+
+  .cf-title {
+    font-size: 30px;
+  }
+
+  .cf-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .cf-card {
+    padding: 20px 16px;
+    border-radius: 16px;
+  }
+
+  .cf-order-id {
+    padding: 12px 24px;
+  }
+
+  .cf-order-id-value {
+    font-size: 18px;
+  }
+}
