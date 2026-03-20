@@ -1,4 +1,6 @@
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { supabase } from "../../supabase/Supabaseclient";
 import "./Confirm.css";
 
 const paymentLabels = {
@@ -6,6 +8,41 @@ const paymentLabels = {
   card: { icon: "💳", label: "Cartão" },
   cash: { icon: "💵", label: "Dinheiro" },
 };
+
+const STATUS_STEP = {
+  pending:    0,
+  preparing:  1,
+  on_the_way: 2,
+  delivered:  3,
+};
+
+// Dados completos de cada etapa
+const STEPS = [
+  {
+    icon: "✅",
+    title: "Pedido confirmado",
+    desc: "Recebemos seu pedido",
+    activeDesc: "Seu pedido foi registrado com sucesso!",
+  },
+  {
+    icon: "👨‍🍳",
+    title: "Em preparação",
+    desc: "Separando seus produtos",
+    activeDesc: "Estamos preparando tudo com cuidado para você.",
+  },
+  {
+    icon: "🛵",
+    title: "Saiu para entrega",
+    desc: "A caminho do seu endereço",
+    activeDesc: "Seu pedido está a caminho! Fique de olho.",
+  },
+  {
+    icon: "🎉",
+    title: "Entregue",
+    desc: "Pedido finalizado",
+    activeDesc: "Pedido entregue. Bom proveito! 🍺",
+  },
+];
 
 export default function Confirmacao() {
   const location = useLocation();
@@ -19,7 +56,48 @@ export default function Confirmacao() {
     address   = {},
   } = location.state ?? {};
 
-  // Se não tem orderId, redireciona para home
+  const [status, setStatus]               = useState("pending");
+  const [statusLoading, setStatusLoading] = useState(true);
+  const [prevStep, setPrevStep]           = useState(null);
+  const [animating, setAnimating]         = useState(false);
+
+  useEffect(() => {
+    if (!orderId) return;
+
+    const fetchStatus = async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("status")
+        .eq("id", orderId)
+        .single();
+
+      if (!error && data?.status) setStatus(data.status);
+      setStatusLoading(false);
+    };
+
+    fetchStatus();
+
+    const channel = supabase
+      .channel(`order-status-${orderId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${orderId}` },
+        (payload) => {
+          if (payload.new?.status) {
+            setPrevStep(STATUS_STEP[status] ?? 0);
+            setAnimating(true);
+            setStatus(payload.new.status);
+            setTimeout(() => setAnimating(false), 600);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
+  }, [orderId]);
+
+  const currentStep = STATUS_STEP[status] ?? 0;
+
   if (!orderId) {
     return (
       <div className="cf-root">
@@ -34,21 +112,17 @@ export default function Confirmacao() {
   }
 
   const paymentInfo = paymentLabels[payment] ?? { icon: "💳", label: payment };
-
-  // Formata o ID curto para exibição: últimos 8 caracteres
-  const shortId = orderId.slice(-8).toUpperCase();
+  const shortId     = orderId.slice(-8).toUpperCase();
 
   return (
     <div className="cf-root">
-
-      {/* Partículas decorativas */}
       <div className="cf-particle cf-p1" />
       <div className="cf-particle cf-p2" />
       <div className="cf-particle cf-p3" />
 
       <div className="cf-wrap">
 
-        {/* ── HERO DE SUCESSO ── */}
+        {/* ── HERO ── */}
         <div className="cf-hero">
           <div className="cf-check-ring">
             <div className="cf-check-circle">
@@ -58,7 +132,6 @@ export default function Confirmacao() {
               </svg>
             </div>
           </div>
-
           <div className="cf-hero-text">
             <div className="cf-tag">PEDIDO CONFIRMADO</div>
             <h1 className="cf-title">Pedido recebido!</h1>
@@ -66,29 +139,88 @@ export default function Confirmacao() {
               Seu pedido foi registrado com sucesso e já está sendo preparado.
             </p>
           </div>
-
           <div className="cf-order-id">
             <span className="cf-order-id-label">Nº DO PEDIDO</span>
             <span className="cf-order-id-value">#{shortId}</span>
           </div>
         </div>
 
-        {/* ── GRID PRINCIPAL ── */}
+        {/* ── TRACKER HORIZONTAL (destaque) ── */}
+        <div className="cf-tracker-card">
+          <div className="cf-tracker-header">
+            <span className="cf-tracker-label">📦 Acompanhe seu pedido</span>
+            {!statusLoading && (
+              <span className={`cf-status-badge cf-status-${status}`}>
+                {STEPS[currentStep].icon} {STEPS[currentStep].title}
+              </span>
+            )}
+          </div>
+
+          {statusLoading ? (
+            <div className="cf-tracker-loading">
+              <div className="cf-loading-bar" />
+              <p>Carregando status...</p>
+            </div>
+          ) : (
+            <>
+              {/* Barra de progresso */}
+              <div className="cf-progress-track">
+                <div
+                  className="cf-progress-fill"
+                  style={{ width: `${(currentStep / 3) * 100}%` }}
+                />
+              </div>
+
+              {/* Steps */}
+              <div className="cf-steps">
+                {STEPS.map((step, i) => {
+                  const isDone   = i < currentStep;
+                  const isActive = i === currentStep;
+                  const isPending = i > currentStep;
+
+                  return (
+                    <div
+                      key={i}
+                      className={`cf-step ${isDone ? "cf-step-done" : ""} ${isActive ? "cf-step-active" : ""} ${isPending ? "cf-step-pending" : ""} ${animating && i === currentStep ? "cf-step-entering" : ""}`}
+                    >
+                      <div className="cf-step-icon-wrap">
+                        <div className="cf-step-icon">
+                          {isDone ? "✓" : step.icon}
+                        </div>
+                        {isActive && <div className="cf-step-pulse" />}
+                      </div>
+                      <div className="cf-step-info">
+                        <span className="cf-step-title">{step.title}</span>
+                        <span className="cf-step-desc">
+                          {isActive ? step.activeDesc : step.desc}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Mensagem de status atual */}
+              <div className={`cf-status-msg cf-status-msg-${status}`}>
+                <span className="cf-status-msg-icon">{STEPS[currentStep].icon}</span>
+                <span className="cf-status-msg-text">{STEPS[currentStep].activeDesc}</span>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* ── GRID ── */}
         <div className="cf-grid">
 
           {/* COLUNA ESQUERDA */}
           <div className="cf-col">
-
-            {/* Itens do pedido */}
             <div className="cf-card">
               <div className="cf-card-label">🛒 Itens do Pedido</div>
               <div className="cf-items">
                 {cartItems.map((item, i) => (
                   <div className="cf-item" key={i}>
                     <div className="cf-item-img">
-                      {item.icon
-                        ? <img src={item.icon} alt={item.name} />
-                        : "🍺"}
+                      {item.icon ? <img src={item.icon} alt={item.name} /> : "🍺"}
                     </div>
                     <div className="cf-item-info">
                       <span className="cf-item-name">{item.name}</span>
@@ -100,7 +232,6 @@ export default function Confirmacao() {
                   </div>
                 ))}
               </div>
-
               <div className="cf-total-row">
                 <span>Total pago</span>
                 <span className="cf-total-value">
@@ -109,25 +240,19 @@ export default function Confirmacao() {
               </div>
             </div>
 
-            {/* Endereço */}
             <div className="cf-card">
               <div className="cf-card-label">📍 Endereço de Entrega</div>
               <div className="cf-address">
                 <p className="cf-address-name">{address.name}</p>
-                <p>{address.street}, {address.number}
-                  {address.complement ? ` — ${address.complement}` : ""}
-                </p>
+                <p>{address.street}, {address.number}{address.complement ? ` — ${address.complement}` : ""}</p>
                 <p>{address.district}</p>
                 <p className="cf-address-phone">📞 {address.phone}</p>
               </div>
             </div>
-
           </div>
 
           {/* COLUNA DIREITA */}
           <div className="cf-col">
-
-            {/* Pagamento */}
             <div className="cf-card cf-card-payment">
               <div className="cf-card-label">💳 Forma de Pagamento</div>
               <div className="cf-payment">
@@ -136,52 +261,9 @@ export default function Confirmacao() {
               </div>
             </div>
 
-            {/* Timeline de status */}
-            <div className="cf-card">
-              <div className="cf-card-label">📦 Status do Pedido</div>
-              <div className="cf-timeline">
-                <div className="cf-tl-item cf-tl-done">
-                  <div className="cf-tl-dot">✓</div>
-                  <div className="cf-tl-content">
-                    <span className="cf-tl-title">Pedido confirmado</span>
-                    <span className="cf-tl-desc">Seu pedido foi recebido</span>
-                  </div>
-                </div>
-                <div className="cf-tl-line" />
-                <div className="cf-tl-item cf-tl-active">
-                  <div className="cf-tl-dot cf-tl-dot-active">2</div>
-                  <div className="cf-tl-content">
-                    <span className="cf-tl-title">Em preparação</span>
-                    <span className="cf-tl-desc">Separando seus produtos</span>
-                  </div>
-                </div>
-                <div className="cf-tl-line cf-tl-line-inactive" />
-                <div className="cf-tl-item cf-tl-inactive">
-                  <div className="cf-tl-dot cf-tl-dot-inactive">3</div>
-                  <div className="cf-tl-content">
-                    <span className="cf-tl-title">Saiu para entrega</span>
-                    <span className="cf-tl-desc">A caminho do seu endereço</span>
-                  </div>
-                </div>
-                <div className="cf-tl-line cf-tl-line-inactive" />
-                <div className="cf-tl-item cf-tl-inactive">
-                  <div className="cf-tl-dot cf-tl-dot-inactive">4</div>
-                  <div className="cf-tl-content">
-                    <span className="cf-tl-title">Entregue</span>
-                    <span className="cf-tl-desc">Pedido finalizado</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Botão voltar */}
-            <button
-              className="cf-btn-home"
-              onClick={() => navigate("/dudu-bebidas/")}
-            >
+            <button className="cf-btn-home" onClick={() => navigate("/dudu-bebidas/")}>
               🏠 Voltar para a loja
             </button>
-
           </div>
         </div>
       </div>
