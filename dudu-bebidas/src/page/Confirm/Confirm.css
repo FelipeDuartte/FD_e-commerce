@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -6,7 +6,7 @@
 .cf-root {
   background: #0a0a0a;
   min-height: 100vh;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
   color: #fff;
   padding: 48px 24px 80px;
   position: relative;
@@ -134,7 +134,7 @@
 }
 
 .cf-title {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 42px; font-weight: 800;
   color: #fff; letter-spacing: -1px;
   margin-bottom: 10px;
@@ -142,7 +142,7 @@
 }
 
 .cf-subtitle {
-  font-size: 15px; color: #555;
+  font-size: 15px; color: #777;
   max-width: 420px; line-height: 1.6;
   animation: cf-fade-up 0.5s ease 0.4s both;
 }
@@ -157,18 +157,18 @@
 }
 
 .cf-order-id-label {
-  font-size: 9px; letter-spacing: 3px;
-  text-transform: uppercase; color: #444; font-weight: 600;
+  font-size: 10px; letter-spacing: 3px;
+  text-transform: uppercase; color: #555; font-weight: 600;
 }
 
 .cf-order-id-value {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 22px; font-weight: 800;
   color: #ffd000; letter-spacing: 2px;
 }
 
 /* ═══════════════════════════════════════════════════
-   TRACKER CARD — peça principal do acompanhamento
+   TRACKER CARD
 ═══════════════════════════════════════════════════ */
 .cf-tracker-card {
   background: #111;
@@ -181,7 +181,6 @@
   overflow: hidden;
 }
 
-/* Glow sutil no tracker */
 .cf-tracker-card::before {
   content: '';
   position: absolute;
@@ -209,14 +208,10 @@
   font-weight: 700;
 }
 
-/* Badge de status atual */
 .cf-status-badge {
-  font-size: 12px;
-  font-weight: 700;
-  padding: 6px 14px;
-  border-radius: 20px;
-  letter-spacing: 0.3px;
-  transition: all 0.4s ease;
+  font-size: 12px; font-weight: 700;
+  padding: 6px 14px; border-radius: 20px;
+  letter-spacing: 0.3px; transition: all 0.4s ease;
 }
 
 .cf-status-pending    { background: rgba(255,208,0,0.1);  color: #ffd000; border: 1px solid rgba(255,208,0,0.25); }
@@ -226,12 +221,9 @@
 
 /* ─── BARRA DE PROGRESSO ────────────────────────── */
 .cf-progress-track {
-  width: 100%;
-  height: 4px;
-  background: #1e1e1e;
-  border-radius: 99px;
-  margin-bottom: 32px;
-  overflow: hidden;
+  width: 100%; height: 4px;
+  background: #1e1e1e; border-radius: 99px;
+  margin-bottom: 32px; overflow: hidden;
 }
 
 .cf-progress-fill {
@@ -242,7 +234,7 @@
   box-shadow: 0 0 8px rgba(255,208,0,0.4);
 }
 
-/* ─── STEPS HORIZONTAIS ─────────────────────────── */
+/* ─── STEPS ─────────────────────────────────────── */
 .cf-steps {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -250,39 +242,17 @@
 }
 
 .cf-step {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 12px;
-  padding: 20px 12px;
-  border-radius: 16px;
-  border: 1px solid transparent;
-  transition: all 0.4s ease;
-  position: relative;
+  display: flex; flex-direction: column;
+  align-items: center; text-align: center;
+  gap: 12px; padding: 20px 12px;
+  border-radius: 16px; border: 1px solid transparent;
+  transition: all 0.4s ease; position: relative;
 }
 
-/* Step concluído */
-.cf-step-done {
-  background: rgba(255,208,0,0.04);
-  border-color: rgba(255,208,0,0.1);
-}
+.cf-step-done    { background: rgba(255,208,0,0.04); border-color: rgba(255,208,0,0.1); }
+.cf-step-active  { background: rgba(255,208,0,0.08); border-color: rgba(255,208,0,0.3); box-shadow: 0 0 24px rgba(255,208,0,0.08); }
+.cf-step-pending { background: transparent; border-color: #1a1a1a; opacity: 0.4; }
 
-/* Step ativo */
-.cf-step-active {
-  background: rgba(255,208,0,0.08);
-  border-color: rgba(255,208,0,0.3);
-  box-shadow: 0 0 24px rgba(255,208,0,0.08);
-}
-
-/* Step pendente */
-.cf-step-pending {
-  background: transparent;
-  border-color: #1a1a1a;
-  opacity: 0.4;
-}
-
-/* Animação ao entrar no step */
 .cf-step-entering {
   animation: cf-step-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
 }
@@ -292,47 +262,24 @@
   100% { transform: scale(1);   opacity: 1; }
 }
 
-/* Ícone do step */
 .cf-step-icon-wrap {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
 }
 
 .cf-step-icon {
-  width: 52px; height: 52px;
-  border-radius: 50%;
+  width: 52px; height: 52px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 22px;
-  transition: all 0.4s ease;
+  font-size: 22px; transition: all 0.4s ease;
 }
 
-.cf-step-done .cf-step-icon {
-  background: #ffd000;
-  color: #000;
-  font-size: 18px;
-  font-weight: 900;
-  box-shadow: 0 4px 16px rgba(255,208,0,0.3);
-}
+.cf-step-done .cf-step-icon    { background: #ffd000; color: #000; font-size: 18px; font-weight: 900; box-shadow: 0 4px 16px rgba(255,208,0,0.3); }
+.cf-step-active .cf-step-icon  { background: rgba(255,208,0,0.15); border: 2px solid #ffd000; box-shadow: 0 0 20px rgba(255,208,0,0.2); }
+.cf-step-pending .cf-step-icon { background: #181818; border: 1px solid #252525; filter: grayscale(1); }
 
-.cf-step-active .cf-step-icon {
-  background: rgba(255,208,0,0.15);
-  border: 2px solid #ffd000;
-  box-shadow: 0 0 20px rgba(255,208,0,0.2);
-}
-
-.cf-step-pending .cf-step-icon {
-  background: #181818;
-  border: 1px solid #252525;
-  filter: grayscale(1);
-}
-
-/* Pulso no step ativo */
 .cf-step-pulse {
   position: absolute;
-  width: 52px; height: 52px;
-  border-radius: 50%;
+  width: 52px; height: 52px; border-radius: 50%;
   border: 2px solid rgba(255,208,0,0.4);
   animation: cf-pulse-ring 1.8s ease-out infinite;
 }
@@ -342,146 +289,83 @@
   100% { transform: scale(1.7); opacity: 0; }
 }
 
-/* Texto do step */
-.cf-step-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
+.cf-step-info { display: flex; flex-direction: column; gap: 4px; }
 
-.cf-step-title {
-  font-size: 12px;
-  font-weight: 700;
-  color: #ddd;
-  line-height: 1.3;
-  transition: color 0.3s;
-}
-
-.cf-step-done .cf-step-title  { color: #ffd000; }
-.cf-step-active .cf-step-title { color: #fff; }
+.cf-step-title { font-size: 12px; font-weight: 700; color: #ddd; line-height: 1.3; transition: color 0.3s; }
+.cf-step-done .cf-step-title    { color: #ffd000; }
+.cf-step-active .cf-step-title  { color: #fff; }
 .cf-step-pending .cf-step-title { color: #333; }
 
-.cf-step-desc {
-  font-size: 10px;
-  color: #444;
-  line-height: 1.4;
-  transition: color 0.3s;
-}
-
-.cf-step-active .cf-step-desc { color: #888; }
+.cf-step-desc { font-size: 10px; color: #555; line-height: 1.4; transition: color 0.3s; }
+.cf-step-active .cf-step-desc  { color: #888; }
 .cf-step-pending .cf-step-desc { color: #2a2a2a; }
 
 /* ─── MENSAGEM DE STATUS ────────────────────────── */
 .cf-status-msg {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 24px;
-  padding: 16px 20px;
-  border-radius: 14px;
-  border: 1px solid;
+  display: flex; align-items: center; gap: 12px;
+  margin-top: 24px; padding: 16px 20px;
+  border-radius: 14px; border: 1px solid;
   transition: all 0.5s ease;
   animation: cf-fade-up 0.4s ease both;
 }
 
-.cf-status-msg-pending    { background: rgba(255,208,0,0.05); border-color: rgba(255,208,0,0.15); }
-.cf-status-msg-preparing  { background: rgba(255,140,0,0.05); border-color: rgba(255,140,0,0.15); }
+.cf-status-msg-pending    { background: rgba(255,208,0,0.05);  border-color: rgba(255,208,0,0.15); }
+.cf-status-msg-preparing  { background: rgba(255,140,0,0.05);  border-color: rgba(255,140,0,0.15); }
 .cf-status-msg-on_the_way { background: rgba(80,200,120,0.05); border-color: rgba(80,200,120,0.15); }
-.cf-status-msg-delivered  { background: rgba(255,208,0,0.08); border-color: rgba(255,208,0,0.2); }
+.cf-status-msg-delivered  { background: rgba(255,208,0,0.08);  border-color: rgba(255,208,0,0.2); }
 
 .cf-status-msg-icon { font-size: 22px; flex-shrink: 0; }
-
-.cf-status-msg-text {
-  font-size: 14px;
-  font-weight: 500;
-  color: #bbb;
-  line-height: 1.5;
-}
+.cf-status-msg-text { font-size: 14px; font-weight: 500; color: #bbb; line-height: 1.5; }
 
 /* ─── LOADING ───────────────────────────────────── */
 .cf-tracker-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  padding: 32px 0;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 16px; padding: 32px 0;
 }
 
 .cf-loading-bar {
-  width: 100%;
-  height: 4px;
-  background: #1e1e1e;
-  border-radius: 99px;
-  overflow: hidden;
-  position: relative;
+  width: 100%; height: 4px;
+  background: #1e1e1e; border-radius: 99px;
+  overflow: hidden; position: relative;
 }
 
 .cf-loading-bar::after {
   content: '';
-  position: absolute;
-  left: -40%;
-  width: 40%;
-  height: 100%;
+  position: absolute; left: -40%; width: 40%; height: 100%;
   background: linear-gradient(90deg, transparent, #ffd000, transparent);
   animation: cf-shimmer 1.2s ease-in-out infinite;
 }
 
-@keyframes cf-shimmer {
-  to { left: 140%; }
-}
+@keyframes cf-shimmer { to { left: 140%; } }
 
-.cf-tracker-loading p {
-  font-size: 13px;
-  color: #444;
-}
+.cf-tracker-loading p { font-size: 13px; color: #555; }
 
 /* ─── GRID ──────────────────────────────────────── */
-.cf-grid {
-  display: grid;
-  grid-template-columns: 1fr 340px;
-  gap: 24px;
-  align-items: start;
-}
-
-.cf-col {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
+.cf-grid { display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start; }
+.cf-col  { display: flex; flex-direction: column; gap: 20px; }
 
 /* ─── CARD ──────────────────────────────────────── */
 .cf-card {
-  background: #111;
-  border: 1px solid #1e1e1e;
-  border-radius: 20px;
-  padding: 28px;
+  background: #111; border: 1px solid #1e1e1e;
+  border-radius: 20px; padding: 28px;
   animation: cf-fade-up 0.5s ease 0.6s both;
 }
 
 .cf-card-label {
-  font-size: 10px;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  color: #ffd000;
-  font-weight: 700;
-  margin-bottom: 20px;
+  font-size: 10px; letter-spacing: 3px;
+  text-transform: uppercase; color: #ffd000;
+  font-weight: 700; margin-bottom: 20px;
 }
 
 /* ─── ITENS ─────────────────────────────────────── */
 .cf-items { display: flex; flex-direction: column; }
 
-.cf-item {
-  display: flex; align-items: center; gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid #181818;
-}
+.cf-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #181818; }
 .cf-item:last-child { border-bottom: none; }
 
 .cf-item-img {
-  width: 38px; height: 38px;
-  border-radius: 10px;
-  background: #181818;
-  overflow: hidden;
+  width: 38px; height: 38px; border-radius: 10px;
+  background: #181818; overflow: hidden;
   display: flex; align-items: center; justify-content: center;
   font-size: 18px; flex-shrink: 0;
 }
@@ -489,36 +373,26 @@
 
 .cf-item-info { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
 
-.cf-item-name {
-  font-size: 13px; font-weight: 500; color: #ddd;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-
-.cf-item-qty { font-size: 11px; color: #444; }
-
-.cf-item-price {
-  font-size: 14px; font-weight: 600; color: #fff;
-  white-space: nowrap; flex-shrink: 0;
-}
+.cf-item-name  { font-size: 14px; font-weight: 500; color: #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cf-item-qty   { font-size: 12px; color: #666; }
+.cf-item-price { font-size: 15px; font-weight: 700; color: #fff; white-space: nowrap; flex-shrink: 0; }
 
 .cf-total-row {
   display: flex; justify-content: space-between; align-items: center;
-  margin-top: 16px; padding-top: 16px;
-  border-top: 1px solid #222;
-  font-size: 13px; color: #555;
-  text-transform: uppercase; letter-spacing: 1px;
+  margin-top: 16px; padding-top: 16px; border-top: 1px solid #222;
+  font-size: 14px; color: #aaa; text-transform: uppercase; letter-spacing: 1px;
 }
 
 .cf-total-value {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 24px; font-weight: 800; color: #ffd000;
 }
 
 /* ─── ENDEREÇO ──────────────────────────────────── */
 .cf-address { display:flex; flex-direction:column; gap:6px; }
 .cf-address p { font-size:14px; color:#888; line-height:1.5; }
-.cf-address-name { font-size:15px !important; font-weight:600 !important; color:#ddd !important; }
-.cf-address-phone { color:#555 !important; font-size:13px !important; margin-top:4px; }
+.cf-address-name  { font-size:15px !important; font-weight:600 !important; color:#ddd !important; }
+.cf-address-phone { color:#666 !important; font-size:13px !important; margin-top:4px; }
 
 /* ─── PAGAMENTO ─────────────────────────────────── */
 .cf-card-payment { animation-delay: 0.65s; }
@@ -531,18 +405,15 @@
   border-radius: 12px;
 }
 
-.cf-payment-icon { font-size: 26px; }
-.cf-payment-label {
-  font-family: 'Syne', sans-serif;
-  font-size: 18px; font-weight: 700; color: #ffd000;
-}
+.cf-payment-icon  { font-size: 26px; }
+.cf-payment-label { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 18px; font-weight: 700; color: #ffd000; }
 
 /* ─── BOTÃO HOME ────────────────────────────────── */
 .cf-btn-home {
   width: 100%; padding: 16px;
   background: #ffd000; color: #000;
   border: none; border-radius: 12px;
-  font-family: 'Syne', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 15px; font-weight: 800;
   cursor: pointer; letter-spacing: 0.5px;
   transition: all 0.2s;
@@ -550,12 +421,7 @@
   animation: cf-fade-up 0.5s ease 0.8s both;
 }
 
-.cf-btn-home:hover {
-  background: #ffe033;
-  transform: translateY(-2px);
-  box-shadow: 0 10px 28px rgba(255,208,0,0.25);
-}
-
+.cf-btn-home:hover { background: #ffe033; transform: translateY(-2px); box-shadow: 0 10px 28px rgba(255,208,0,0.25); }
 .cf-btn-home:active { transform: translateY(0); }
 
 /* ══════════════════════════════════════════
@@ -565,30 +431,17 @@
   .cf-root { padding: 32px 16px 60px; }
   .cf-hero { margin-bottom: 28px; }
   .cf-title { font-size: 30px; }
-
   .cf-tracker-card { padding: 20px 16px; border-radius: 18px; }
-
-  /* Steps vira 2x2 no mobile */
-  .cf-steps {
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-
+  .cf-steps { grid-template-columns: 1fr 1fr; gap: 10px; }
   .cf-step { padding: 16px 10px; }
-
   .cf-step-icon { width: 44px; height: 44px; font-size: 20px; }
   .cf-step-pulse { width: 44px; height: 44px; }
-
   .cf-step-title { font-size: 11px; }
   .cf-step-desc  { font-size: 9px; }
-
   .cf-status-msg { padding: 14px 16px; }
   .cf-status-msg-text { font-size: 13px; }
-
   .cf-grid { grid-template-columns: 1fr; gap: 16px; }
-
   .cf-card { padding: 20px 16px; border-radius: 16px; }
-
   .cf-order-id { padding: 12px 24px; }
   .cf-order-id-value { font-size: 18px; }
 }

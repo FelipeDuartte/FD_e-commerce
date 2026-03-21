@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -6,7 +6,7 @@
 .adm-root {
   background: #0a0a0a;
   min-height: 100vh;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
   color: #fff;
   padding: 0 0 80px;
 }
@@ -37,7 +37,7 @@
 }
 
 .adm-logo {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 22px;
   font-weight: 800;
 }
@@ -64,7 +64,7 @@
 
 .adm-admin-email {
   font-size: 12px;
-  color: #444;
+  color: #555;
 }
 
 .adm-btn-back {
@@ -74,7 +74,7 @@
   border-radius: 10px;
   color: #888;
   font-size: 13px;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -95,7 +95,7 @@
 }
 
 .adm-title {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 36px;
   font-weight: 800;
   color: #fff;
@@ -104,7 +104,7 @@
 
 .adm-subtitle {
   font-size: 13px;
-  color: #444;
+  color: #555;
   margin-top: 4px;
 }
 
@@ -168,16 +168,16 @@
   background: rgba(255,208,0,0.05) !important;
 }
 
-.adm-stat-all      { border-color: #222; }
-.adm-stat-pending  { }
-.adm-stat-preparing { }
+.adm-stat-all        { border-color: #222; }
+.adm-stat-pending    { }
+.adm-stat-preparing  { }
 .adm-stat-on_the_way { }
-.adm-stat-delivered { }
+.adm-stat-delivered  { }
 
 .adm-stat-icon { font-size: 20px; }
 
 .adm-stat-num {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 28px;
   font-weight: 800;
   color: #ffd000;
@@ -186,7 +186,7 @@
 
 .adm-stat-label {
   font-size: 11px;
-  color: #555;
+  color: #666;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -205,17 +205,17 @@
   background: #111;
   border: 1px solid #222;
   border-radius: 20px;
-  color: #555;
+  color: #666;
   font-size: 12px;
   font-weight: 600;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .adm-filter-btn:hover {
   border-color: #333;
-  color: #888;
+  color: #aaa;
 }
 
 .adm-filter-btn.active {
@@ -231,7 +231,7 @@
   align-items: center;
   gap: 16px;
   padding: 80px 0;
-  color: #444;
+  color: #555;
 }
 
 .adm-spinner {
@@ -248,7 +248,7 @@
 .adm-empty {
   text-align: center;
   padding: 80px 0;
-  color: #333;
+  color: #444;
   font-size: 15px;
 }
 
@@ -273,7 +273,6 @@
 .adm-order-on_the_way { border-left: 3px solid #50c878; }
 .adm-order-delivered  { border-left: 3px solid #333; }
 
-/* Linha clicável principal */
 .adm-order-main {
   display: grid;
   grid-template-columns: 130px 1fr auto auto auto 24px;
@@ -286,7 +285,6 @@
 
 .adm-order-main:hover { background: #161616; }
 
-/* Status */
 .adm-order-status {
   display: flex;
   align-items: center;
@@ -302,7 +300,6 @@
   letter-spacing: 0.5px;
 }
 
-/* Info */
 .adm-order-info {
   display: flex;
   flex-direction: column;
@@ -310,7 +307,7 @@
 }
 
 .adm-order-id {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 13px;
   font-weight: 700;
   color: #555;
@@ -325,34 +322,31 @@
 
 .adm-order-district {
   font-size: 12px;
-  color: #444;
+  color: #555;
 }
 
-/* Pagamento */
 .adm-order-payment {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 4px;
   font-size: 13px;
-  color: #555;
+  color: #666;
 }
 
 .adm-order-total {
-  font-family: 'Syne', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 16px;
   font-weight: 800;
   color: #ffd000;
 }
 
-/* Data */
 .adm-order-date {
   font-size: 11px;
-  color: #333;
+  color: #444;
   white-space: nowrap;
 }
 
-/* Chevron */
 .adm-chevron {
   font-size: 16px;
   color: #333;
@@ -390,7 +384,6 @@
   font-weight: 700;
 }
 
-/* Itens */
 .adm-items { display: flex; flex-direction: column; gap: 8px; }
 
 .adm-item {
@@ -403,16 +396,14 @@
   border: 1px solid #1a1a1a;
 }
 
-.adm-item-name { flex: 1; font-size: 13px; color: #ccc; }
-.adm-item-qty  { font-size: 12px; color: #555; }
+.adm-item-name  { flex: 1; font-size: 13px; color: #ccc; }
+.adm-item-qty   { font-size: 12px; color: #666; }
 .adm-item-price { font-size: 13px; font-weight: 700; color: #ffd000; }
 
-/* Endereço */
 .adm-address { display: flex; flex-direction: column; gap: 5px; }
-.adm-address p { font-size: 13px; color: #777; line-height: 1.5; }
+.adm-address p { font-size: 13px; color: #888; line-height: 1.5; }
 .adm-address strong { color: #ccc; }
 
-/* Pills de status */
 .adm-status-pills {
   display: flex;
   flex-wrap: wrap;
@@ -424,10 +415,10 @@
   border-radius: 20px;
   border: 1px solid #222;
   background: #111;
-  color: #555;
+  color: #666;
   font-size: 12px;
   font-weight: 600;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -445,7 +436,6 @@
 
 .adm-pill:disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* Botão avançar */
 .adm-btn-advance {
   width: 100%;
   padding: 13px 16px;
@@ -453,7 +443,7 @@
   color: #000;
   border: none;
   border-radius: 12px;
-  font-family: 'Syne', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 13px;
   font-weight: 800;
   cursor: pointer;
@@ -493,10 +483,8 @@
 }
 
 @media (max-width: 768px) {
-  .adm-wrap { padding: 0 16px; }
-
+  .adm-wrap  { padding: 0 16px; }
   .adm-title { font-size: 26px; }
-
   .adm-stats { grid-template-columns: repeat(2, 1fr); }
 
   .adm-order-main {
@@ -505,11 +493,11 @@
     gap: 10px;
   }
 
-  .adm-order-status { grid-column: 1; }
+  .adm-order-status  { grid-column: 1; }
   .adm-order-payment { grid-column: 2; align-items: flex-end; }
-  .adm-order-info { grid-column: 1 / -1; }
-  .adm-order-date { grid-column: 1; font-size: 10px; }
-  .adm-chevron { grid-column: 2; justify-self: end; }
+  .adm-order-info    { grid-column: 1 / -1; }
+  .adm-order-date    { grid-column: 1; font-size: 10px; }
+  .adm-chevron       { grid-column: 2; justify-self: end; }
 
   .adm-order-detail {
     grid-template-columns: 1fr;
