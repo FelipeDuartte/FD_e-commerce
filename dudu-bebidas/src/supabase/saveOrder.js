@@ -9,11 +9,11 @@ const supabase = createClient(
  * Salva um pedido completo no Supabase.
  *
  * @param {Object} params
- * @param {string} params.userId        - ID do usuário autenticado
- * @param {number} params.total         - Total do carrinho
- * @param {string} params.paymentMethod - Forma de pagamento selecionada
- * @param {Object} params.address       - Objeto com os dados de endereço
- * @param {Array}  params.cartItems     - Array de { id, name, price, quantity }
+ * @param {string} params.userId       
+ * @param {number} params.total         
+ * @param {string} params.paymentMethod 
+ * @param {Object} params.address       
+ * @param {Array}  params.cartItems     
  *
  * @returns {{ orderId: string } | { error: string }}
  */

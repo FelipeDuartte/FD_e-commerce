@@ -15,7 +15,6 @@ export default function Login({ isOpen, onClose }) {
     email: "",
     password: "",
     name: "",
-    phone: "",
     confirmPassword: "",
   });
 
@@ -62,7 +61,6 @@ export default function Login({ isOpen, onClose }) {
       if (
         !formData.name ||
         !formData.email ||
-        !formData.phone ||
         !formData.password ||
         !formData.confirmPassword
       ) {
@@ -85,7 +83,6 @@ export default function Login({ isOpen, onClose }) {
         options: {
           data: {
             full_name: formData.name,
-            phone: formData.phone,
           },
         },
       });
@@ -120,7 +117,6 @@ export default function Login({ isOpen, onClose }) {
       email: "",
       password: "",
       name: "",
-      phone: "",
       confirmPassword: "",
     });
     setErrorMsg("");
@@ -201,23 +197,6 @@ export default function Login({ isOpen, onClose }) {
               />
             </div>
           </div>
-
-          {!isLogin && (
-            <div className="form-group">
-              <label className="form-label">Telefone</label>
-              <div className="input-wrapper">
-                <Phone size={20} className="input-icon" />
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  placeholder="(11) 99999-9999"
-                  className="form-input"
-                />
-              </div>
-            </div>
-          )}
 
           <div className="form-group">
             <label className="form-label">Senha</label>

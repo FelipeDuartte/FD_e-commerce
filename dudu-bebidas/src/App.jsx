@@ -23,7 +23,8 @@ import Login from "./page/login/Login";
 import Checkout from "./page/Checkout/Checkout";
 import Scrolltotop from "./data/scrolltotop/Scrolltotop";
 import About from "./components/About/About";
-import Confirm from "./page/Confirm/Confirm"
+import Confirm from "./page/Confirm/Confirm";
+import Admin from "./page/admin/Admin";
 // ==== Produtos (mock/data local) ====
 const produtosData = [
   {
@@ -33,7 +34,8 @@ const produtosData = [
     preco: 4.99,
     precoAntigo: 6.99,
     desconto: 29,
-    imagem: "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=400",
+    imagem:
+      "https://images.unsplash.com/photo-1608270586620-248524c67de9?w=400",
     estoque: 45,
     promocao: true,
     destaque: true,
@@ -45,7 +47,8 @@ const produtosData = [
     preco: 45.9,
     precoAntigo: 65.9,
     desconto: 30,
-    imagem: "https://images.unsplash.com/photo-1586370434639-0fe43b2d32d6?w=400",
+    imagem:
+      "https://images.unsplash.com/photo-1586370434639-0fe43b2d32d6?w=400",
     estoque: 12,
     promocao: true,
     destaque: false,
@@ -57,7 +60,8 @@ const produtosData = [
     preco: 129.9,
     precoAntigo: 159.9,
     desconto: 19,
-    imagem: "https://images.unsplash.com/photo-1527281400560-55df5b937f55?w=400",
+    imagem:
+      "https://images.unsplash.com/photo-1527281400560-55df5b937f55?w=400",
     estoque: 8,
     promocao: false,
     destaque: true,
@@ -81,7 +85,8 @@ const produtosData = [
     preco: 7.99,
     precoAntigo: 9.99,
     desconto: 20,
-    imagem: "https://images.unsplash.com/photo-1622543925917-763c34f6e099?w=400",
+    imagem:
+      "https://images.unsplash.com/photo-1622543925917-763c34f6e099?w=400",
     estoque: 50,
     promocao: false,
     destaque: false,
@@ -93,7 +98,8 @@ const produtosData = [
     preco: 5.99,
     precoAntigo: 7.99,
     desconto: 25,
-    imagem: "https://images.unsplash.com/photo-1618885472179-5e474019f2a9?w=400",
+    imagem:
+      "https://images.unsplash.com/photo-1618885472179-5e474019f2a9?w=400",
     estoque: 60,
     promocao: true,
     destaque: false,
@@ -117,7 +123,8 @@ const produtosData = [
     preco: 89.9,
     precoAntigo: 119.9,
     desconto: 25,
-    imagem: "https://images.unsplash.com/photo-1591367600861-1f6a762e4bb4?w=400",
+    imagem:
+      "https://images.unsplash.com/photo-1591367600861-1f6a762e4bb4?w=400",
     estoque: 20,
     promocao: true,
     destaque: true,
@@ -165,10 +172,10 @@ const benefits = [
 
 export default function DuduBebidas() {
   // ==== UI States ====
-  const [menuOpen, setMenuOpen]   = useState(false);
-  const [cartOpen, setCartOpen]   = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
-  const [scrolled, setScrolled]   = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -184,7 +191,7 @@ export default function DuduBebidas() {
   const [user, setUser] = useState(null);
 
   // ==== Filters ====
-  const [searchTerm, setSearchTerm]           = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("todos");
 
   // ==== Cart ====
@@ -199,7 +206,9 @@ export default function DuduBebidas() {
       setUser(session?.user ?? null);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
 
@@ -229,7 +238,8 @@ export default function DuduBebidas() {
           .toLowerCase()
           .includes(searchTerm.toLowerCase());
         const matchesCategory =
-          selectedCategory === "todos" || produto.categoria === selectedCategory;
+          selectedCategory === "todos" ||
+          produto.categoria === selectedCategory;
         return matchesSearch && matchesCategory;
       })
       .sort((a, b) => {
@@ -304,6 +314,7 @@ export default function DuduBebidas() {
                 user={user}
                 onLogout={handleLogout}
               />
+
               <Hero onCategorySelect={setSelectedCategory} />
               <ProductList
                 filteredProducts={filteredProducts}
@@ -317,18 +328,17 @@ export default function DuduBebidas() {
             </>
           }
         />
-
-        
         <Route
           path="/dudu-bebidas/checkout"
           element={<Checkout user={user} />}
         />
-
-        <Route path="/dudu-bebidas/confirmacao" 
-      element={<Confirm/>}/>
+        <Route
+          path="/dudu-bebidas/confirmacao"
+          element={<Confirm user={user} />}
+        />{" "}
+        <Route path="/dudu-bebidas/admin" element={<Admin user={user} />} />
       </Routes>
 
-      
       <Cart
         isOpen={cartOpen}
         onClose={() => setCartOpen(false)}
@@ -336,7 +346,7 @@ export default function DuduBebidas() {
         updateQuantity={updateQuantity}
         removeItem={removeItem}
         clearCart={clearCart}
-        user={user}                              
+        user={user}
         onLoginClick={() => setLoginOpen(true)}
       />
 
