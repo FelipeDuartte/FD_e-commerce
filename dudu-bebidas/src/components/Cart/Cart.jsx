@@ -41,7 +41,7 @@ export default function Cart({
       return;
     }
     onClose();
-    navigate("/dudu-bebidas/checkout", {
+    navigate("/checkout", {
       state: {
         cartItems: cartItems.map((item) => ({
           id:       item.id,

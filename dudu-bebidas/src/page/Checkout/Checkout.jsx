@@ -80,7 +80,7 @@ export default function Checkout({ user }) {
       setErrorMsg(error);
       return;
     }
-    navigate("/dudu-bebidas/confirmacao", {
+    navigate("/confirmacao", {
       state: { orderId, cartItems, total: cartTotal + DELIVERY, payment, address },
     });
   };
