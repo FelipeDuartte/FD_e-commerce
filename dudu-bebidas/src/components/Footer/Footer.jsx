@@ -18,10 +18,10 @@ export default function Footer() {
               <a href="#" className="footer-social-link">
                 <i className="bi bi-envelope"></i>
               </a>
-              <a href="#" className="footer-social-link">
+              <a href="https://www.instagram.com/dudu_bebidas_vn_/" className="footer-social-link">
                 <i className="bi bi-instagram"></i>
               </a>
-              <a href="#" className="footer-social-link">
+              <a href="https://wa.me/5531934510200" className="footer-social-link">
                 <i className="bi bi-whatsapp"></i>
               </a>
             </div>
@@ -58,14 +58,14 @@ export default function Footer() {
               <i className="bi bi-whatsapp"></i>
               <div className="contact-content">
                 <div className="contact-label">WhatsApp</div>
-                <div className="contact-info">(11) 99999-9999</div>
+                <div className="contact-info">(31) 3451-0200</div>
               </div>
             </div>
             <div className="footer-contact-item">
               <i className="bi bi-envelope"></i>
               <div className="contact-content">
                 <div className="contact-label">Email</div>
-                <div className="contact-info">contato@dudububebidas.com.br</div>
+                <div className="contact-info">vendavovavirtual@yaoo.com.br</div>
               </div>
             </div>
             <div className="footer-contact-item">
@@ -86,7 +86,7 @@ export default function Footer() {
                 Moderação.
               </p>
               <p className="text-warning mt-2 fst-italic"> <span className="fw-bold">Desenvolvido por</span> 
-              <span><img src={logoDev} alt="" /></span> , Crie seu site e-commerce. <a href="" className="text-warning">clique aqui!</a>
+              <span><img src={logoDev} alt="" /></span> , Crie seu site e-commerce. <a href="https://felipeduartte.github.io/Portfolio/" className="text-warning">clique aqui!</a>
               </p>
             </div>
           </div>

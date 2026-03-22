@@ -74,7 +74,6 @@ export default function Hero({ onCategorySelect }) {
   const [touchEnd, setTouchEnd] = useState(null);
 
   const carouselRef = useRef(null);
-
   const totalSlides = BANNERS.length;
 
   const nextSlide = useCallback(() => {
@@ -88,11 +87,10 @@ export default function Hero({ onCategorySelect }) {
   const handleBannerClick = useCallback(
     (category) => {
       onCategorySelect?.(category);
-
       const produtosSection = document.getElementById("produtos");
       produtosSection?.scrollIntoView({ behavior: "smooth" });
     },
-    [onCategorySelect],
+    [onCategorySelect]
   );
 
   // Touch handlers
@@ -107,9 +105,7 @@ export default function Hero({ onCategorySelect }) {
 
   const handleTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
-
     const distance = touchStart - touchEnd;
-
     if (distance > MIN_SWIPE_DISTANCE) nextSlide();
     if (distance < -MIN_SWIPE_DISTANCE) prevSlide();
   };
@@ -119,10 +115,8 @@ export default function Hero({ onCategorySelect }) {
     const handleResize = () => {
       setIsLargeScreen(window.innerWidth >= LARGE_SCREEN_WIDTH);
     };
-
     handleResize();
     window.addEventListener("resize", handleResize);
-
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
@@ -149,35 +143,38 @@ export default function Hero({ onCategorySelect }) {
           return (
             <div
               key={banner.id}
-              className={`carousel-slide ${
-                index === currentSlide ? "active" : ""
-              }`}
+              className={`carousel-slide ${index === currentSlide ? "active" : ""}`}
               style={{ backgroundImage: `url(${backgroundImage})` }}
             >
               <div className="carousel-overlay" />
 
               <div className="container">
                 <div className="row justify-content-center">
-                  <div className="col-lg-10 col-xl-8">
+                  <div className="col-10 col-sm-9 col-md-8 col-lg-7 col-xl-6">
                     <div className="carousel-content">
+
+                      {/* Badge */}
                       <span className="banner-badge">{banner.badge}</span>
 
-                      <h1 className="banner-title">
+                      {/* Título */}
+                      <h2 className="banner-title">
                         {banner.title}
-                        <span className="banner-highlight">
-                          {banner.subtitle}
-                        </span>
-                      </h1>
+                        <span className="banner-highlight">{banner.subtitle}</span>
+                      </h2>
 
+                      {/* Descrição (oculta em tablet/mobile via CSS) */}
                       <p className="banner-description">{banner.description}</p>
 
+                      {/* CTA */}
                       <button
+                        className="btn-banner"
                         onClick={() => handleBannerClick(banner.category)}
-                        className="btn-banner border-none"
+                        aria-label={`${banner.ctaText} - ${banner.subtitle}`}
                       >
-                        <ShoppingCart size={20} />
-                        <span>{banner.ctaText}</span>
+                        <ShoppingCart size={18} />
+                        {banner.ctaText}
                       </button>
+
                     </div>
                   </div>
                 </div>

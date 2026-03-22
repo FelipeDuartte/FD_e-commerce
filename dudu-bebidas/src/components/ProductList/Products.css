@@ -1,78 +1,8 @@
 /* =====================================================
-   FONTS
-===================================================== */
-@import url('https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Bebas+Neue&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
-
-/* =====================================================
-   DESIGN TOKENS (VARIABLES)
-===================================================== */
-:root {
-  /* Colors */
-  --gold: #ffd700;
-  --gold-light: #ffed4e;
-  --gold-dark: #ffb700;
-
-  --black: #000;
-  --black-soft: #1a1a1a;
-
-  --gray-100: #f8f9fa;
-  --gray-200: #e9ecef;
-  --gray-400: #6c757d;
-
-  /* Radius */
-  --radius-sm: 8px;
-  --radius-md: 16px;
-  --radius-lg: 20px;
-
-  /* Motion */
-  --transition-fast: 0.3s ease;
-  --transition-smooth: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-
-  /* Shadows */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
-  --shadow-gold: 0 4px 15px rgba(255, 215, 0, 0.4);
-}
-
-/* =====================================================
    PRODUCTS SECTION
 ===================================================== */
 #produtos {
-  position: relative;
-  background: linear-gradient(to bottom, var(--gray-100) 0%, #ffffff 100%);
-}
-
-/* =====================================================
-   SECTION TITLE
-===================================================== */
-.section-title {
-  font-size: 2.5rem;
-  font-weight: 800;
-  color: var(--black);
-  position: relative;
-  display: inline-block;
-}
-
-.section-title::after {
-  content: '';
-  position: absolute;
-  bottom: -8px;
-  left: 0;
-  width: 60px;
-  height: 4px;
-  border-radius: 2px;
-  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
-}
-
-/* =====================================================
-   BOOTSTRAP BADGE
-===================================================== */
-.badge.bg-dark {
-  font-size: 14px;
-  padding: 0.5rem 0.75rem;
-  border-radius: var(--radius-sm);
-  background-color: #212529 !important;
+  background: #fff;
 }
 
 /* =====================================================
@@ -83,52 +13,60 @@
   margin-bottom: 3rem;
 }
 
-.overflow-x-auto {
-  display: flex;
-  gap: 10px;
-  padding: 12px 0;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
+/* Wrapper que cria o fade nas bordas sem interferir no scroll */
+.filter-scroll-wrapper {
   position: relative;
 }
 
-.overflow-x-auto::-webkit-scrollbar {
-  height: 4px;
-}
-
-.overflow-x-auto::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 10px;
-}
-
-.overflow-x-auto::-webkit-scrollbar-thumb {
-  background: linear-gradient(90deg, var(--gold), var(--gold-light));
-  border-radius: 10px;
-}
-
-/* Scroll fade */
-.overflow-x-auto::before,
-.overflow-x-auto::after {
+/* Os fades ficam no WRAPPER, não dentro do scroll — nunca se movem */
+.filter-scroll-wrapper::before,
+.filter-scroll-wrapper::after {
   content: '';
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 60px;
+  width: 48px;
   pointer-events: none;
   z-index: 2;
 }
 
-.overflow-x-auto::before {
+.filter-scroll-wrapper::before {
   left: 0;
-  background: linear-gradient(to right, var(--gray-100), transparent);
+  background: linear-gradient(to right, #fff 20%, transparent 100%);
 }
 
-.overflow-x-auto::after {
+.filter-scroll-wrapper::after {
   right: 0;
-  background: linear-gradient(to left, var(--gray-100), transparent);
+  background: linear-gradient(to left, #fff 20%, transparent 100%);
+}
+
+/* A área de scroll em si — sem pseudo-elementos */
+.overflow-x-auto {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 4px 14px;
+  overflow-x: auto;
+  overflow-y: visible;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+
+  /* Scrollbar fina e dourada */
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold) transparent;
+}
+
+.overflow-x-auto::-webkit-scrollbar {
+  height: 3px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, var(--gold-dark), var(--gold-light));
+  border-radius: 10px;
 }
 
 /* =====================================================
@@ -136,308 +74,91 @@
 ===================================================== */
 .filter-btn {
   flex: 0 0 auto;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 24px;
+  gap: 7px;
+  padding: 10px 20px;
+  font-family: 'Montserrat', sans-serif;
   font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
-
   cursor: pointer;
+
+  color: #444;
+  background: #fff;
+  border: 1.5px solid rgba(0, 0, 0, 0.09);
+  border-radius: 50px;           /* pílula — mais leve visualmente */
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+
+  transition: color 0.25s ease,
+              background 0.25s ease,
+              border-color 0.25s ease,
+              transform 0.25s ease,
+              box-shadow 0.25s ease;
+
+  /* Garante que o botão não seja afetado pelo overflow do pai */
   position: relative;
-  overflow: hidden;
-
-  color: #333;
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: var(--radius-md);
-  backdrop-filter: blur(10px);
-  box-shadow: var(--shadow-sm);
-
-  transition: all var(--transition-smooth);
+  overflow: visible;
 }
 
-.filter-btn::after {
-  content: '';
-  position: absolute;
-  inset: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: rgba(255, 215, 0, 0.15);
-  transform: translate(-50%, -50%);
-  transition: width 0.5s ease, height 0.5s ease;
-}
-
-.filter-btn:hover::after {
-  width: 200px;
-  height: 200px;
+.filter-btn i {
+  font-size: 14px;
+  transition: transform 0.25s ease;
 }
 
 .filter-btn:hover {
   color: var(--black);
-  border-color: rgba(255, 215, 0, 0.3);
-  background: #fff;
-  box-shadow: var(--shadow-md);
-}
-
-.filter-btn.active {
-  background: linear-gradient(135deg, var(--black), var(--black-soft));
-  color: var(--gold);
-  border-color: var(--black);
+  background: #fffbea;
+  border-color: rgba(255, 215, 0, 0.5);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-}
-
-.filter-btn i {
-  font-size: 15px;
-  transition: transform var(--transition-fast);
 }
 
 .filter-btn:hover i {
+  transform: scale(1.2);
+}
+
+.filter-btn:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.filter-btn.active {
+  background: linear-gradient(135deg, var(--black) 0%, #2a2a2a 100%);
+  color: var(--gold);
+  border-color: var(--black);
   transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18),
+              0 0 0 3px rgba(255, 215, 0, 0.15);
+}
+
+.filter-btn.active i {
+  color: var(--gold);
 }
 
 /* =====================================================
-   PRODUCT CARD
+   RESPONSIVE FILTER
 ===================================================== */
-.produto-card {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
 
-  background: #fff;
-  border: 2px solid #f0f0f0;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-
-  transition: all var(--transition-smooth);
-  animation: fadeInUp 0.6s ease-out backwards;
-}
-
-.produto-card:hover {
-  transform: translateY(-15px) scale(1.02);
-  border-color: var(--gold);
-  box-shadow: var(--shadow-lg);
-}
-
-/* =====================================================
-   PRODUCT IMAGE
-===================================================== */
-.produto-img-container {
-  position: relative;
-  height: 220px;
-  overflow: hidden;
-  background: linear-gradient(135deg, var(--gray-100), var(--gray-200));
-}
-
-.produto-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* =====================================================
-   BADGES
-===================================================== */
-.badge-promo {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  background: linear-gradient(135deg, #ff4757, #ff6348);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 6px 12px;
-  border-radius: 20px;
-  box-shadow: 0 4px 12px rgba(255, 71, 87, 0.4);
-  z-index: 2;
-}
-
-.badge-estoque {
-  position: absolute;
-  bottom: 12px;
-  left: 12px;
-  background: rgba(255, 152, 0, 0.95);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 600;
-  padding: 5px 10px;
-  border-radius: 15px;
-  backdrop-filter: blur(10px);
-  z-index: 2;
-}
-
-.badge-estoque.baixo {
-  background: rgba(255, 71, 87, 0.95);
-  animation: pulse 2s infinite;
-}
-
-.badge-desconto {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 6px;
-  background: linear-gradient(135deg, #28a745, #20c997);
-  color: #fff;
-}
-
-/* =====================================================
-   PRODUCT INFO
-===================================================== */
-.produto-info {
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-}
-
-.produto-nome {
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 1.4;
-  color: var(--black);
-  margin-bottom: 1rem;
-
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* =====================================================
-   PRICE
-===================================================== */
-.preco-atual {
-  font-size: 24px;
-  font-weight: bold;
-  color: var(--gold-dark);
-}
-
-.preco-antigo {
-  font-size: 13px;
-  color: var(--gray-400);
-  text-decoration: line-through;
-}
-
-/* =====================================================
-   ADD TO CART BUTTON
-===================================================== */
-.btn-add-cart {
-  width: 100%;
-  padding: 14px;
-  font-size: 15px;
-  font-weight: 700;
-  border-radius: 15px;
-  margin-top: auto;
-
-  background: linear-gradient(135deg, var(--black), var(--black-soft));
-  color: var(--gold) !important;
-  border: 2px solid transparent;
-
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  transition: all var(--transition-fast);
-}
-
-.btn-add-cart:hover:not(:disabled) {
-  background: var(--gold) !important;
-  color: var(--black) !important;
-  border-color: var(--black-soft);
-  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.3);
-  transform: translateY(-2px);
-}
-
-.btn-add-cart:active:not(:disabled) {
-  transform: scale(0.97);
-}
-
-.btn-add-cart.added {
-  background: linear-gradient(135deg, #28a745, #20c997) !important;
-  color: #fff !important;
-  pointer-events: none;
-}
-
-/* =====================================================
-   TOAST NOTIFICATION
-===================================================== */
-.cart-notification-toast {
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  background: linear-gradient(135deg, #28a745, #20c997);
-  color: #fff;
-  padding: 16px 24px;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(40, 167, 69, 0.4);
-  z-index: 9999;
-
-  opacity: 0;
-  transform: translateY(100px);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.cart-notification-toast.show {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.notification-content {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-weight: 600;
-  font-size: 15px;
-}
-
-/* =====================================================
-   EMPTY STATE
-===================================================== */
-.empty-state-icon {
-  font-size: 80px;
-  color: var(--gray-400);
-  opacity: 0.5;
-}
-
-/* =====================================================
-   ANIMATIONS
-===================================================== */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-
-/* =====================================================
-   RESPONSIVE
-===================================================== */
-@media (max-width: 991px) {
-  .section-title { font-size: 2rem; }
-  .produto-img-container { height: 200px; }
-}
-
-@media (max-width: 768px) {
-  .section-title { font-size: 1.75rem; }
-  .produto-img-container { height: 180px; }
-}
-
+/* Em mobile: botões um pouco menores, sem fades laterais pra não cortar ícone */
 @media (max-width: 576px) {
-  .section-title { font-size: 1.5rem; }
-  .produto-img-container { height: 160px; }
-}
+  .filter-btn {
+    padding: 8px 16px;
+    font-size: 12px;
+    gap: 6px;
+  }
 
-@media (max-width: 400px) {
-  .section-title { font-size: 1.3rem; }
-  .produto-img-container { height: 140px; }
+  .filter-btn i {
+    font-size: 13px;
+  }
+
+  /* Fades menores pra não esconder o primeiro/último botão */
+  .filter-scroll-wrapper::before,
+  .filter-scroll-wrapper::after {
+    width: 28px;
+  }
+
+  .overflow-x-auto {
+    gap: 7px;
+    padding: 8px 2px 12px;
+  }
 }
