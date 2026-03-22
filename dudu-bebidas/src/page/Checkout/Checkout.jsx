@@ -93,7 +93,7 @@ export default function Checkout({ user }) {
         <div className="co-header">
           <button
             className="co-back"
-            onClick={() => navigate("/dudu-bebidas/", { state: { openCart: true } })}
+            onClick={() => navigate("/", { state: { openCart: true } })}
           >
             ←
           </button>
