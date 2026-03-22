@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { supabase, loginGoogle } from "../../supabase/Supabaseclient"; // ✅ importa instância única
 import { X, Mail, Lock, Eye, EyeOff, User, Phone } from "lucide-react";
-import "./Login.css";
+import "./login.css";
 
 // ❌ REMOVIDO: createClient duplicado — use sempre a instância central
 
