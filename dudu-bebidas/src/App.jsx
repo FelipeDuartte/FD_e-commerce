@@ -19,7 +19,7 @@ import Benefits from "./components/Benefits/Benefits";
 import ProductList from "./components/ProductList/ProductList";
 import Footer from "./components/Footer/Footer";
 import Cart from "./components/Cart/Cart";
-import Login from "./page/login/Login";
+import Login from "./page/login/login";
 import Checkout from "./page/Checkout/Checkout";
 import Scrolltotop from "./data/scrolltotop/Scrolltotop";
 import About from "./components/About/About";
@@ -293,7 +293,7 @@ export default function DuduBebidas() {
       <Scrolltotop />
       <Routes>
         <Route
-          path="/dudu-bebidas/"
+          path="/"
           element={
             <>
               <Banner
@@ -329,14 +329,14 @@ export default function DuduBebidas() {
           }
         />
         <Route
-          path="/dudu-bebidas/checkout"
+          path="/checkout"
           element={<Checkout user={user} />}
         />
         <Route
-          path="/dudu-bebidas/confirmacao"
+          path="/confirmacao"
           element={<Confirm user={user} />}
         />{" "}
-        <Route path="/dudu-bebidas/admin" element={<Admin user={user} />} />
+        <Route path="/admin" element={<Admin user={user} />} />
       </Routes>
 
       <Cart
