@@ -183,7 +183,7 @@ export default function DuduBebidas() {
   useEffect(() => {
     if (location.state?.openCart) {
       setCartOpen(true);
-      navigate("/dudu-bebidas/", { replace: true, state: {} });
+      navigate("/", { replace: true, state: {} });
     }
   }, [location.state]);
 
