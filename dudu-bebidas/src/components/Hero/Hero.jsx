@@ -4,7 +4,7 @@ import "./Hero.css";
 
 // Imagens pequenas
 import bannerCerveja from "../../assets/CervejaBanner.png";
-import bannerWisky from "../../assets/WiskyBanner.png";
+import bannerWisky from "../../assets/wiskyBanner.png";
 import bannerVinhos from "../../assets/vinhoBanner.png";
 import bannerGin from "../../assets/ginBanner.png";
 
