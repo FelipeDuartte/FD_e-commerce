@@ -8,6 +8,9 @@ export const supabase = createClient(
 export const loginGoogle = async () => {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "google",
+    options: {
+    redirectTo: "https://dudu-bebidas.vercel.app"
+  }
   });
 
   if (error) console.log(error);
