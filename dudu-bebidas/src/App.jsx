@@ -26,6 +26,7 @@ import About from "./components/About/About";
 import Confirm from "./page/Confirm/Confirm";
 import Admin from "./page/admin/Admin";
 import PrivacyPolicy from "./page/privacy-politcy/PrivacyPoclicy";
+import TermsOfService from "./page/terms-service/TermsService";
 // ==== Produtos (mock/data local) ====
 const produtosData = [
   {
@@ -330,7 +331,8 @@ export default function DuduBebidas() {
           }
         />
 
-          <Route path="/privacy-policy" element={<PrivacyPolicy/>} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy/>} />
+         <Route path="/terms-service" element={<TermsOfService/>} />
 
         <Route
           path="/checkout"
