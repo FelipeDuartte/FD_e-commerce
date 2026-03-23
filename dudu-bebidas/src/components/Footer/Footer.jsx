@@ -82,6 +82,9 @@ export default function Footer() {
           <div className="row">
             <div className="col text-center">
               <p>
+                <a href="/privacy-policy">Política de Privacidade</a> - <a href="/terms-service">Termos de Serviço</a>
+              </p>
+              <p>
                 &copy; 2026 Dudu Bebidas. Todos os direitos reservados. | Beba com
                 Moderação.
               </p>
