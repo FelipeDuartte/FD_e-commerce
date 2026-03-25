@@ -103,7 +103,7 @@ export default function Confirmacao() {
       <div className="cf-root">
         <div className="cf-wrap cf-center">
           <p className="cf-not-found">Nenhum pedido encontrado.</p>
-          <button className="cf-btn-home" onClick={() => navigate("/dudu-bebidas/")}>
+          <button className="cf-btn-home" onClick={() => navigate("/")}>
             Voltar para a loja
           </button>
         </div>
@@ -261,7 +261,7 @@ export default function Confirmacao() {
               </div>
             </div>
 
-            <button className="cf-btn-home" onClick={() => navigate("/dudu-bebidas/")}>
+            <button className="cf-btn-home" onClick={() => navigate("/")}>
               🏠 Voltar para a loja
             </button>
           </div>

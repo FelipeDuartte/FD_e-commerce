@@ -332,6 +332,7 @@ export default function DuduBebidas() {
         />
 
         <Route path="/privacy-policy" element={<PrivacyPolicy/>} />
+
          <Route path="/terms-service" element={<TermsOfService/>} />
 
         <Route
@@ -341,7 +342,8 @@ export default function DuduBebidas() {
         <Route
           path="/confirmacao"
           element={<Confirm user={user} />}
-        />{" "}
+        />
+
         <Route path="/admin" element={<Admin user={user} />} />
       </Routes>
 

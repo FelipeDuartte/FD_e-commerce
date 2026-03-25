@@ -1,10 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  "https://ixjhyzzocdsufcqgbbvf.supabase.co",
-  "sb_publishable_kA5ukt5jIQMlUGAw7PVfSA_wsoJIhL_"
-);
-
+//data supaBase
+import { supabase } from "./Supabaseclient";
 /**
  * Salva um pedido completo no Supabase.
  *

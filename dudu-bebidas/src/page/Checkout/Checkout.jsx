@@ -1,34 +1,39 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./Checkout.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import { saveOrder } from "../../supabase/saveOrder";
 
 const paymentOptions = [
-  { value: "pix",  icon: "⚡", name: "PIX" },
+  { value: "pix", icon: "⚡", name: "PIX" },
   { value: "card", icon: "💳", name: "Cartão" },
   { value: "cash", icon: "💵", name: "Dinheiro" },
 ];
 
-
 export default function Checkout({ user }) {
   const navigate = useNavigate();
-  const location = useLocation(); 
+  const location = useLocation();
+
+  useEffect(() => {
+    if (cartItems.length === 0) {
+      navigate("/", { replace: true });
+    }
+  }, []);
 
   // Lê os dados passados pelo Cart via navigate state
   const cartItems = location.state?.cartItems ?? [];
   const cartTotal = location.state?.cartTotal ?? 0;
-  const DELIVERY  = 5;
+  const DELIVERY = 5;
 
-  const [payment, setPayment]   = useState("pix");
-  const [loading, setLoading]   = useState(false);
+  const [payment, setPayment] = useState("pix");
+  const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
   const [address, setAddress] = useState({
-    name:       "",
-    phone:      "",
-    street:     "",
-    number:     "",
-    district:   "",
+    name: "",
+    phone: "",
+    street: "",
+    number: "",
+    district: "",
     complement: "",
   });
 
@@ -37,10 +42,10 @@ export default function Checkout({ user }) {
   };
 
   const validateForm = () => {
-    if (!address.name.trim())     return "Por favor, informe seu nome.";
-    if (!address.phone.trim())    return "Por favor, informe seu telefone.";
-    if (!address.street.trim())   return "Por favor, informe o endereço.";
-    if (!address.number.trim())   return "Por favor, informe o número.";
+    if (!address.name.trim()) return "Por favor, informe seu nome.";
+    if (!address.phone.trim()) return "Por favor, informe seu telefone.";
+    if (!address.street.trim()) return "Por favor, informe o endereço.";
+    if (!address.number.trim()) return "Por favor, informe o número.";
     if (!address.district.trim()) return "Por favor, informe o bairro.";
     return null;
   };
@@ -67,8 +72,8 @@ export default function Checkout({ user }) {
     setLoading(true);
 
     const { orderId, error } = await saveOrder({
-      userId:        user.id,
-      total:         cartTotal + DELIVERY,
+      userId: user.id,
+      total: cartTotal + DELIVERY,
       paymentMethod: payment,
       address,
       cartItems,
@@ -81,14 +86,19 @@ export default function Checkout({ user }) {
       return;
     }
     navigate("/confirmacao", {
-      state: { orderId, cartItems, total: cartTotal + DELIVERY, payment, address },
+      state: {
+        orderId,
+        cartItems,
+        total: cartTotal + DELIVERY,
+        payment,
+        address,
+      },
     });
   };
 
   return (
     <div className="co-root">
       <div className="co-wrap">
-
         {/* ── HEADER ── */}
         <div className="co-header">
           <button
@@ -123,14 +133,11 @@ export default function Checkout({ user }) {
 
         {/* ── MAIN GRID ── */}
         <div className="co-grid">
-
           {/* FORM */}
           <div className="co-card">
             <div className="co-section-label">📍 Entrega</div>
 
-            {errorMsg && (
-              <div className="co-error-msg">⚠️ {errorMsg}</div>
-            )}
+            {errorMsg && <div className="co-error-msg">⚠️ {errorMsg}</div>}
 
             <div className="co-field-row">
               <div className="co-field">
@@ -238,16 +245,32 @@ export default function Checkout({ user }) {
                   <div className="co-item" key={i}>
                     <div className="co-item-icon">
                       {/* icon é a URL da imagem vinda do Cart */}
-                      {item.icon
-                        ? <img src={item.icon} alt={item.name} style={{ width: 36, height: 36, objectFit: "cover", borderRadius: 6 }} />
-                        : "🛒"}
+                      {item.icon ? (
+                        <img
+                          src={item.icon}
+                          alt={item.name}
+                          style={{
+                            width: 36,
+                            height: 36,
+                            objectFit: "cover",
+                            borderRadius: 6,
+                          }}
+                        />
+                      ) : (
+                        "🛒"
+                      )}
                     </div>
                     <div className="co-item-info">
                       <div className="co-item-name">{item.name}</div>
-                      <div className="co-item-qty">{item.quantity} unidade(s)</div>
+                      <div className="co-item-qty">
+                        {item.quantity} unidade(s)
+                      </div>
                     </div>
                     <div className="co-item-price">
-                      R$ {(item.price * item.quantity).toFixed(2).replace(".", ",")}
+                      R${" "}
+                      {(item.price * item.quantity)
+                        .toFixed(2)
+                        .replace(".", ",")}
                     </div>
                   </div>
                 ))
