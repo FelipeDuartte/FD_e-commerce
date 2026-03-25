@@ -4,52 +4,159 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { saveOrder } from "../../supabase/saveOrder";
 
 const paymentOptions = [
-  { value: "pix", icon: "⚡", name: "PIX" },
-  { value: "card", icon: "💳", name: "Cartão" },
+  { value: "pix",  icon: "⚡", name: "PIX"      },
+  { value: "card", icon: "💳", name: "Cartão"   },
   { value: "cash", icon: "💵", name: "Dinheiro" },
+];
+
+// ── Bairros permitidos para entrega ───────────────────
+const BAIRROS_PERMITIDOS = [
+  "minas caixas",
+  "serra verde",
+  "parque são pedro",
+  "parque sao pedro",
+  "venda nova",
 ];
 
 export default function Checkout({ user }) {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const cartItems = location.state?.cartItems ?? [];
+  const cartTotal = location.state?.cartTotal ?? 0;
+  const DELIVERY  = location.state?.frete ?? 5;
+
+  // ── Redireciona se carrinho vazio ─────────────────
   useEffect(() => {
     if (cartItems.length === 0) {
       navigate("/", { replace: true });
     }
   }, []);
 
-  // Lê os dados passados pelo Cart via navigate state
-  const cartItems = location.state?.cartItems ?? [];
-  const cartTotal = location.state?.cartTotal ?? 0;
-  const DELIVERY = 5;
-
-  const [payment, setPayment] = useState("pix");
-  const [loading, setLoading] = useState(false);
+  const [payment, setPayment]   = useState("pix");
+  const [loading, setLoading]   = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
+  // ── CEP ───────────────────────────────────────────
+  const [cep, setCep]             = useState("");
+  const [cepLoading, setCepLoading] = useState(false);
+  const [cepError, setCepError]   = useState("");
+
   const [address, setAddress] = useState({
-    name: "",
-    phone: "",
-    street: "",
-    number: "",
-    district: "",
+    name:       "",
+    phone:      "",
+    street:     "",
+    number:     "",
+    district:   "",
     complement: "",
+    city:       "",
+    state:      "",
   });
 
   const handleAddressChange = (e) => {
     setAddress((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  // ── Busca CEP na API ViaCEP ───────────────────────
+  const handleCepBlur = async () => {
+    const cleaned = cep.replace(/\D/g, "");
+    if (cleaned.length !== 8) {
+      setCepError("CEP inválido. Digite 8 números.");
+      return;
+    }
+
+    setCepLoading(true);
+    setCepError("");
+
+    try {
+      const res  = await fetch(`https://viacep.com.br/ws/${cleaned}/json/`);
+      const data = await res.json();
+
+      if (data.erro) {
+        setCepError("CEP não encontrado. Verifique e tente novamente.");
+        setCepLoading(false);
+        return;
+      }
+
+      // Preenche os campos automaticamente
+      setAddress((prev) => ({
+        ...prev,
+        street:   data.logradouro || prev.street,
+        district: data.bairro     || prev.district,
+        city:     data.localidade || prev.city,
+        state:    data.uf         || prev.state,
+      }));
+
+    } catch {
+      setCepError("Erro ao buscar CEP. Verifique sua conexão.");
+    }
+
+    setCepLoading(false);
+  };
+
+  // ── Formata CEP com máscara ───────────────────────
+  const handleCepChange = (e) => {
+    const value = e.target.value.replace(/\D/g, "").slice(0, 8);
+    const formatted = value.length > 5
+      ? `${value.slice(0, 5)}-${value.slice(5)}`
+      : value;
+    setCep(formatted);
+    setCepError("");
+  };
+
+  // ── Formata telefone com máscara ──────────────────
+  const handlePhoneChange = (e) => {
+    let value = e.target.value.replace(/\D/g, "").slice(0, 11);
+    if (value.length > 6) {
+      value = `(${value.slice(0,2)}) ${value.slice(2,7)}-${value.slice(7)}`;
+    } else if (value.length > 2) {
+      value = `(${value.slice(0,2)}) ${value.slice(2)}`;
+    }
+    setAddress((prev) => ({ ...prev, phone: value }));
+  };
+
+  // ── Validação completa ────────────────────────────
   const validateForm = () => {
-    if (!address.name.trim()) return "Por favor, informe seu nome.";
-    if (!address.phone.trim()) return "Por favor, informe seu telefone.";
-    if (!address.street.trim()) return "Por favor, informe o endereço.";
-    if (!address.number.trim()) return "Por favor, informe o número.";
-    if (!address.district.trim()) return "Por favor, informe o bairro.";
+    if (!address.name.trim())
+      return "Por favor, informe seu nome completo.";
+
+    if (address.name.trim().split(" ").length < 2)
+      return "Por favor, informe nome e sobrenome.";
+
+    const phoneClean = address.phone.replace(/\D/g, "");
+    if (!phoneClean || phoneClean.length < 10)
+      return "Por favor, informe um telefone válido com DDD.";
+
+    const cepClean = cep.replace(/\D/g, "");
+    if (cepClean.length !== 8)
+      return "Por favor, informe um CEP válido.";
+
+    if (cepError)
+      return "Por favor, verifique o CEP informado.";
+
+    if (!address.street.trim())
+      return "Por favor, informe o endereço.";
+
+    if (!address.number.trim())
+      return "Por favor, informe o número.";
+
+    if (!address.district.trim())
+      return "Por favor, informe o bairro.";
+
+    // Valida se o bairro é atendido
+    const bairroNorm = address.district.trim().toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const atendido = BAIRROS_PERMITIDOS.some((b) =>
+      bairroNorm.includes(b.normalize("NFD").replace(/[\u0300-\u036f]/g, ""))
+    );
+
+    if (!atendido)
+      return `Infelizmente não entregamos neste bairro. Atendemos: Minas Caixas, Serra Verde, Parque São Pedro e Venda Nova.`;
+
     return null;
   };
 
+  // ── Confirmar pedido ──────────────────────────────
   const handleConfirmOrder = async () => {
     setErrorMsg("");
 
@@ -72,10 +179,10 @@ export default function Checkout({ user }) {
     setLoading(true);
 
     const { orderId, error } = await saveOrder({
-      userId: user.id,
-      total: cartTotal + DELIVERY,
+      userId:        user.id,
+      total:         cartTotal + DELIVERY,
       paymentMethod: payment,
-      address,
+      address:       { ...address, cep },
       cartItems,
     });
 
@@ -85,13 +192,14 @@ export default function Checkout({ user }) {
       setErrorMsg(error);
       return;
     }
+
     navigate("/confirmacao", {
       state: {
         orderId,
         cartItems,
         total: cartTotal + DELIVERY,
         payment,
-        address,
+        address: { ...address, cep },
       },
     });
   };
@@ -99,6 +207,7 @@ export default function Checkout({ user }) {
   return (
     <div className="co-root">
       <div className="co-wrap">
+
         {/* ── HEADER ── */}
         <div className="co-header">
           <button
@@ -133,12 +242,16 @@ export default function Checkout({ user }) {
 
         {/* ── MAIN GRID ── */}
         <div className="co-grid">
+
           {/* FORM */}
           <div className="co-card">
             <div className="co-section-label">📍 Entrega</div>
 
-            {errorMsg && <div className="co-error-msg">⚠️ {errorMsg}</div>}
+            {errorMsg && (
+              <div className="co-error-msg">⚠️ {errorMsg}</div>
+            )}
 
+            {/* Nome + Telefone */}
             <div className="co-field-row">
               <div className="co-field">
                 <label>Nome completo</label>
@@ -147,7 +260,7 @@ export default function Checkout({ user }) {
                   name="name"
                   value={address.name}
                   onChange={handleAddressChange}
-                  placeholder="Seu nome"
+                  placeholder="Seu nome e sobrenome"
                 />
               </div>
               <div className="co-field">
@@ -156,22 +269,38 @@ export default function Checkout({ user }) {
                   type="tel"
                   name="phone"
                   value={address.phone}
-                  onChange={handleAddressChange}
+                  onChange={handlePhoneChange}
                   placeholder="(00) 00000-0000"
                 />
               </div>
             </div>
 
+            {/* CEP */}
             <div className="co-field-row">
               <div className="co-field">
-                <label>Endereço</label>
-                <input
-                  type="text"
-                  name="street"
-                  value={address.street}
-                  onChange={handleAddressChange}
-                  placeholder="Rua / Av."
-                />
+                <label>CEP</label>
+                <div className="co-cep-wrap">
+                  <input
+                    type="text"
+                    value={cep}
+                    onChange={handleCepChange}
+                    onBlur={handleCepBlur}
+                    placeholder="00000-000"
+                    maxLength={9}
+                    className={cepError ? "co-input-error" : ""}
+                  />
+                  {cepLoading && (
+                    <span className="co-cep-loading">🔍</span>
+                  )}
+                </div>
+                {cepError && (
+                  <span className="co-field-error">{cepError}</span>
+                )}
+                {!cepError && address.city && (
+                  <span className="co-field-success">
+                    ✓ {address.city} — {address.state}
+                  </span>
+                )}
               </div>
               <div className="co-field">
                 <label>Número</label>
@@ -185,6 +314,21 @@ export default function Checkout({ user }) {
               </div>
             </div>
 
+            {/* Endereço — preenchido pelo CEP */}
+            <div className="co-field-row single">
+              <div className="co-field">
+                <label>Endereço</label>
+                <input
+                  type="text"
+                  name="street"
+                  value={address.street}
+                  onChange={handleAddressChange}
+                  placeholder="Rua / Av. — preenchido pelo CEP"
+                />
+              </div>
+            </div>
+
+            {/* Bairro + Complemento */}
             <div className="co-field-row two-col-mobile">
               <div className="co-field">
                 <label>Bairro</label>
@@ -206,6 +350,11 @@ export default function Checkout({ user }) {
                   placeholder="Apto, bloco..."
                 />
               </div>
+            </div>
+
+            {/* Aviso de bairros atendidos */}
+            <div className="co-bairros-info">
+              📍 Entregamos em: Minas Caixas, Serra Verde, Parque São Pedro e Venda Nova
             </div>
 
             <div className="co-divider" />
@@ -236,7 +385,6 @@ export default function Checkout({ user }) {
           <div className="co-summary">
             <div className="co-summary-title">Resumo</div>
 
-            {/* ✅ Renderiza os itens vindos do carrinho */}
             <div className="co-items">
               {cartItems.length === 0 ? (
                 <p className="co-empty-msg">Nenhum item no carrinho.</p>
@@ -244,33 +392,20 @@ export default function Checkout({ user }) {
                 cartItems.map((item, i) => (
                   <div className="co-item" key={i}>
                     <div className="co-item-icon">
-                      {/* icon é a URL da imagem vinda do Cart */}
                       {item.icon ? (
                         <img
                           src={item.icon}
                           alt={item.name}
-                          style={{
-                            width: 36,
-                            height: 36,
-                            objectFit: "cover",
-                            borderRadius: 6,
-                          }}
+                          style={{ width: 36, height: 36, objectFit: "cover", borderRadius: 6 }}
                         />
-                      ) : (
-                        "🛒"
-                      )}
+                      ) : "🛒"}
                     </div>
                     <div className="co-item-info">
                       <div className="co-item-name">{item.name}</div>
-                      <div className="co-item-qty">
-                        {item.quantity} unidade(s)
-                      </div>
+                      <div className="co-item-qty">{item.quantity} unidade(s)</div>
                     </div>
                     <div className="co-item-price">
-                      R${" "}
-                      {(item.price * item.quantity)
-                        .toFixed(2)
-                        .replace(".", ",")}
+                      R$ {(item.price * item.quantity).toFixed(2).replace(".", ",")}
                     </div>
                   </div>
                 ))

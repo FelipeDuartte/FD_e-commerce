@@ -232,6 +232,55 @@
   margin-bottom: 16px;
 }
 
+/* ─── CEP ───────────────────────────────────────────── */
+.co-cep-wrap {
+  position: relative;
+}
+
+.co-cep-loading {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  animation: co-spin 1s linear infinite;
+}
+
+@keyframes co-spin {
+  to { transform: translateY(-50%) rotate(360deg); }
+}
+
+.co-input-error {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.07) !important;
+}
+
+.co-field-error {
+  display: block;
+  font-size: 11px;
+  color: #f87171;
+  margin-top: 5px;
+}
+
+.co-field-success {
+  display: block;
+  font-size: 11px;
+  color: #50c878;
+  margin-top: 5px;
+}
+
+/* ─── BAIRROS INFO ──────────────────────────────────── */
+.co-bairros-info {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: rgba(255, 208, 0, 0.05);
+  border: 1px solid rgba(255, 208, 0, 0.15);
+  border-radius: 10px;
+  font-size: 12px;
+  color: #888;
+  line-height: 1.5;
+}
+
 /* ─── PAYMENT ───────────────────────────────────────── */
 .co-pay-grid {
   display: grid;
