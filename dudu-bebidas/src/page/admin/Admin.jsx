@@ -3,15 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../../supabase/Supabaseclient";
 import "./Admin.css";
 
-// ── Email autorizado como admin ───────────────────────
-const ADMIN_EMAIL = "support.techflow@gmail.com";
-
 // ── Status config ─────────────────────────────────────
 const STATUS_CONFIG = {
-  pending:    { label: "Aguardando",   icon: "🕐", color: "#ffd000", next: "preparing"  },
-  preparing:  { label: "Preparando",   icon: "👨‍🍳", color: "#ff8c00", next: "on_the_way" },
-  on_the_way: { label: "Em entrega",   icon: "🛵", color: "#50c878", next: "delivered"  },
-  delivered:  { label: "Entregue",     icon: "✅", color: "#aaa",    next: null         },
+  pending:    { label: "Aguardando",  icon: "🕐", color: "#ffd000", next: "preparing"  },
+  preparing:  { label: "Preparando",  icon: "👨‍🍳", color: "#ff8c00", next: "on_the_way" },
+  on_the_way: { label: "Em entrega",  icon: "🛵", color: "#50c878", next: "delivered"  },
+  delivered:  { label: "Entregue",    icon: "✅", color: "#aaa",    next: null         },
 };
 
 const PAYMENT_LABEL = {
@@ -25,23 +22,39 @@ const STATUS_ORDER = ["pending", "preparing", "on_the_way", "delivered"];
 export default function Admin({ user }) {
   const navigate = useNavigate();
 
-  const [orders, setOrders]       = useState([]);
-  const [loading, setLoading]     = useState(true);
-  const [updating, setUpdating]   = useState(null); // orderId sendo atualizado
+  const [isAdmin, setIsAdmin]           = useState(null); // null = verificando
+  const [orders, setOrders]             = useState([]);
+  const [loading, setLoading]           = useState(true);
+  const [updating, setUpdating]         = useState(null);
   const [filterStatus, setFilterStatus] = useState("all");
   const [expandedId, setExpandedId]     = useState(null);
 
-  // ── Proteção de rota ──────────────────────────────
- useEffect(() => {
-  if (user === null) return; 
-  if (user.email !== ADMIN_EMAIL) {
-    navigate("/dudu-bebidas/");
-  }
-}, [user]);
+  // ── Verifica is_admin no banco ────────────────────
+  useEffect(() => {
+    if (user === null) return; // ainda carregando
+    if (!user) { navigate("/"); return; }
+
+    const checkAdmin = async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("is_admin")
+        .eq("id", user.id)
+        .single();
+
+      if (error || !data?.is_admin) {
+        navigate("/");
+        return;
+      }
+
+      setIsAdmin(true);
+    };
+
+    checkAdmin();
+  }, [user]);
 
   // ── Busca pedidos + Realtime ──────────────────────
   useEffect(() => {
-    if (!user || user.email !== ADMIN_EMAIL) return;
+    if (!isAdmin) return;
 
     fetchOrders();
 
@@ -54,7 +67,7 @@ export default function Admin({ user }) {
       .subscribe();
 
     return () => supabase.removeChannel(channel);
-  }, [user]);
+  }, [isAdmin]);
 
   const fetchOrders = async () => {
     const { data, error } = await supabase
@@ -69,41 +82,29 @@ export default function Admin({ user }) {
     setLoading(false);
   };
 
-  // ── Avança o status do pedido ─────────────────────
   const handleAdvanceStatus = async (orderId, currentStatus) => {
     const nextStatus = STATUS_CONFIG[currentStatus]?.next;
     if (!nextStatus) return;
-
     setUpdating(orderId);
-    await supabase
-      .from("orders")
-      .update({ status: nextStatus })
-      .eq("id", orderId);
+    await supabase.from("orders").update({ status: nextStatus }).eq("id", orderId);
     setUpdating(null);
   };
 
-  // ── Define status diretamente ─────────────────────
   const handleSetStatus = async (orderId, newStatus) => {
     setUpdating(orderId);
-    await supabase
-      .from("orders")
-      .update({ status: newStatus })
-      .eq("id", orderId);
+    await supabase.from("orders").update({ status: newStatus }).eq("id", orderId);
     setUpdating(null);
   };
 
-  // ── Filtro ────────────────────────────────────────
   const filtered = filterStatus === "all"
     ? orders
     : orders.filter((o) => o.status === filterStatus);
 
-  // ── Contadores por status ─────────────────────────
   const counts = STATUS_ORDER.reduce((acc, s) => {
     acc[s] = orders.filter((o) => o.status === s).length;
     return acc;
   }, {});
 
-  // ── Formata data ──────────────────────────────────
   const formatDate = (iso) => {
     const d = new Date(iso);
     return d.toLocaleDateString("pt-BR", {
@@ -112,7 +113,21 @@ export default function Admin({ user }) {
     });
   };
 
-  if (!user || user.email !== ADMIN_EMAIL) return null;
+  // ── Tela de verificação ───────────────────────────
+  if (isAdmin === null) {
+    return (
+      <div className="adm-root">
+        <div className="adm-wrap">
+          <div className="adm-loading">
+            <div className="adm-spinner" />
+            <p>Verificando acesso...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) return null;
 
   return (
     <div className="adm-root">
@@ -129,7 +144,7 @@ export default function Admin({ user }) {
           </div>
           <div className="adm-header-right">
             <span className="adm-admin-email">👤 {user.email}</span>
-            <button className="adm-btn-back" onClick={() => navigate("/dudu-bebidas/")}>
+            <button className="adm-btn-back" onClick={() => navigate("/")}>
               ← Voltar à loja
             </button>
           </div>
@@ -149,7 +164,10 @@ export default function Admin({ user }) {
 
         {/* ── CARDS DE RESUMO ── */}
         <div className="adm-stats">
-          <div className="adm-stat adm-stat-all" onClick={() => setFilterStatus("all")}>
+          <div
+            className={`adm-stat adm-stat-all ${filterStatus === "all" ? "adm-stat-active" : ""}`}
+            onClick={() => setFilterStatus("all")}
+          >
             <span className="adm-stat-num">{orders.length}</span>
             <span className="adm-stat-label">Total</span>
           </div>
@@ -199,45 +217,33 @@ export default function Admin({ user }) {
         ) : (
           <div className="adm-orders">
             {filtered.map((order) => {
-              const cfg      = STATUS_CONFIG[order.status] ?? STATUS_CONFIG.pending;
-              const payment  = PAYMENT_LABEL[order.payment_method] ?? { icon: "💳", label: order.payment_method };
+              const cfg        = STATUS_CONFIG[order.status] ?? STATUS_CONFIG.pending;
+              const payment    = PAYMENT_LABEL[order.payment_method] ?? { icon: "💳", label: order.payment_method };
               const isExpanded = expandedId === order.id;
               const isUpdating = updating === order.id;
-              const shortId  = order.id.slice(-8).toUpperCase();
+              const shortId    = order.id.slice(-8).toUpperCase();
 
               return (
-                <div
-                  key={order.id}
-                  className={`adm-order adm-order-${order.status}`}
-                >
+                <div key={order.id} className={`adm-order adm-order-${order.status}`}>
+
                   {/* ── LINHA PRINCIPAL ── */}
                   <div
                     className="adm-order-main"
                     onClick={() => setExpandedId(isExpanded ? null : order.id)}
                   >
-                    {/* Status badge */}
                     <div className="adm-order-status">
                       <span className="adm-status-icon">{cfg.icon}</span>
-                      <span
-                        className="adm-status-label"
-                        style={{ color: cfg.color }}
-                      >
+                      <span className="adm-status-label" style={{ color: cfg.color }}>
                         {cfg.label}
                       </span>
                     </div>
 
-                    {/* Info principal */}
                     <div className="adm-order-info">
                       <span className="adm-order-id">#{shortId}</span>
-                      <span className="adm-order-name">
-                        {order.address?.name ?? "—"}
-                      </span>
-                      <span className="adm-order-district">
-                        📍 {order.address?.district ?? "—"}
-                      </span>
+                      <span className="adm-order-name">{order.address?.name ?? "—"}</span>
+                      <span className="adm-order-district">📍 {order.address?.district ?? "—"}</span>
                     </div>
 
-                    {/* Pagamento + total */}
                     <div className="adm-order-payment">
                       <span>{payment.icon} {payment.label}</span>
                       <span className="adm-order-total">
@@ -245,10 +251,7 @@ export default function Admin({ user }) {
                       </span>
                     </div>
 
-                    {/* Data */}
                     <span className="adm-order-date">{formatDate(order.created_at)}</span>
-
-                    {/* Chevron */}
                     <span className={`adm-chevron ${isExpanded ? "open" : ""}`}>▾</span>
                   </div>
 
@@ -256,7 +259,6 @@ export default function Admin({ user }) {
                   {isExpanded && (
                     <div className="adm-order-detail">
 
-                      {/* Itens */}
                       <div className="adm-detail-section">
                         <div className="adm-detail-label">🛒 Itens</div>
                         <div className="adm-items">
@@ -272,12 +274,12 @@ export default function Admin({ user }) {
                         </div>
                       </div>
 
-                      {/* Endereço */}
                       <div className="adm-detail-section">
                         <div className="adm-detail-label">📍 Endereço</div>
                         <div className="adm-address">
                           <p><strong>{order.address?.name}</strong></p>
-                          <p>{order.address?.street}, {order.address?.number}
+                          <p>
+                            {order.address?.street}, {order.address?.number}
                             {order.address?.complement ? ` — ${order.address.complement}` : ""}
                           </p>
                           <p>{order.address?.district}</p>
@@ -285,11 +287,8 @@ export default function Admin({ user }) {
                         </div>
                       </div>
 
-                      {/* Controle de status */}
                       <div className="adm-detail-section">
                         <div className="adm-detail-label">🔄 Alterar Status</div>
-
-                        {/* Seletor rápido */}
                         <div className="adm-status-pills">
                           {STATUS_ORDER.map((s) => (
                             <button
@@ -304,7 +303,6 @@ export default function Admin({ user }) {
                           ))}
                         </div>
 
-                        {/* Botão avançar */}
                         {cfg.next && (
                           <button
                             className="adm-btn-advance"
@@ -318,9 +316,7 @@ export default function Admin({ user }) {
                         )}
 
                         {!cfg.next && (
-                          <div className="adm-delivered-msg">
-                            ✅ Pedido finalizado
-                          </div>
+                          <div className="adm-delivered-msg">✅ Pedido finalizado</div>
                         )}
                       </div>
                     </div>
