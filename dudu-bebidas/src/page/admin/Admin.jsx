@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../supabase/Supabaseclient";
 import "./Admin.css";
-
 // ── Status config ─────────────────────────────────────
 const STATUS_CONFIG = {
   pending:    { label: "Aguardando",  icon: "🕐", color: "#ffd000", next: "preparing"  },
@@ -10,20 +9,17 @@ const STATUS_CONFIG = {
   on_the_way: { label: "Em entrega",  icon: "🛵", color: "#50c878", next: "delivered"  },
   delivered:  { label: "Entregue",    icon: "✅", color: "#aaa",    next: null         },
 };
-
 const PAYMENT_LABEL = {
   pix:  { icon: "⚡", label: "PIX"      },
   card: { icon: "💳", label: "Cartão"   },
   cash: { icon: "💵", label: "Dinheiro" },
 };
-
 const STATUS_ORDER = ["pending", "preparing", "on_the_way", "delivered"];
 const PAGE_SIZE    = 20;
 
-export default function Admin({ user }) {
+export default function Admin({ user, isAdmin }) {
   const navigate = useNavigate();
 
-  const [isAdmin, setIsAdmin]           = useState(null);
   const [orders, setOrders]             = useState([]);
   const [loading, setLoading]           = useState(true);
   const [loadingMore, setLoadingMore]   = useState(false);
@@ -33,29 +29,6 @@ export default function Admin({ user }) {
   const [updating, setUpdating]         = useState(null);
   const [filterStatus, setFilterStatus] = useState("all");
   const [expandedId, setExpandedId]     = useState(null);
-
-  // ── Verifica is_admin no banco ────────────────────
-  useEffect(() => {
-    if (user === null) return;
-    if (!user) { navigate("/"); return; }
-
-    const checkAdmin = async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("is_admin")
-        .eq("id", user.id)
-        .single();
-
-      if (error || !data?.is_admin) {
-        navigate("/");
-        return;
-      }
-
-      setIsAdmin(true);
-    };
-
-    checkAdmin();
-  }, [user]);
 
   // ── Busca pedidos + Realtime ──────────────────────
   useEffect(() => {

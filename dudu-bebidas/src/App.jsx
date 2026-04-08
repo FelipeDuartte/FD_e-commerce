@@ -191,17 +191,37 @@ export default function DuduBebidas() {
 
   // ==== Auth ====
   const [user, setUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(null);
+   // useEffect para verificar se o usuário é admin
+   useEffect(() => {
+  const fetchAdmin = async () => {
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
 
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("is_admin")
+      .eq("id", user.id)
+      .single();
+
+    if (!error && data?.is_admin) {
+      setIsAdmin(true);
+    } else {
+      setIsAdmin(false);
+    }
+  };
+
+  fetchAdmin();
+}, [user]);
   // ==== Filters ====
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("todos");
-
   // ==== Cart ====
   const [cartItems, setCartItems] = useState([]);
-
   // ==== Banner ====
   const [currentBanner, setCurrentBanner] = useState(0);
-
   // ==== Supabase: escuta mudanças de sessão ====
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -216,14 +236,12 @@ export default function DuduBebidas() {
 
     return () => subscription.unsubscribe();
   }, []);
-
   // ==== Scroll effect ====
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
   // ==== Banner carousel ====
   useEffect(() => {
     const timer = setInterval(() => {
@@ -231,7 +249,6 @@ export default function DuduBebidas() {
     }, 5000);
     return () => clearInterval(timer);
   }, []);
-
   // ==== Produtos filtrados + ordenados ====
   const filteredProducts = useMemo(() => {
     return produtosData
@@ -250,7 +267,6 @@ export default function DuduBebidas() {
         return 0;
       });
   }, [searchTerm, selectedCategory]);
-
   // ==== Cart handlers ====
   const addToCart = (produto) => {
     setCartItems((prev) => {
@@ -265,30 +281,24 @@ export default function DuduBebidas() {
       return [...prev, { ...produto, quantity: 1 }];
     });
   };
-
   const updateQuantity = (id, quantity) => {
     if (quantity < 1) return;
     setCartItems((prev) =>
       prev.map((item) => (item.id === id ? { ...item, quantity } : item)),
     );
   };
-
   const removeItem = (id) => {
     setCartItems((prev) => prev.filter((item) => item.id !== id));
   };
-
   const clearCart = () => setCartItems([]);
-
   const cartCount = useMemo(
     () => cartItems.reduce((sum, item) => sum + item.quantity, 0),
     [cartItems],
   );
-
   // ==== Logout ====
   const handleLogout = async () => {
     await supabase.auth.signOut();
   };
-
   // ==== Render ====
   return (
     <div style={{ minHeight: "100vh", background: "#201e0dff" }}>
@@ -314,6 +324,7 @@ export default function DuduBebidas() {
                 onLoginClick={() => setLoginOpen(true)}
                 onCategoryClick={setSelectedCategory}
                 user={user}
+                isAdmin={isAdmin}
                 onLogout={handleLogout}
               />
 
@@ -344,7 +355,7 @@ export default function DuduBebidas() {
           element={<Confirm user={user} />}
         />
 
-        <Route path="/admin" element={<Admin user={user} />} />
+        <Route path="/admin" element={<Admin user={user} isAdmin={isAdmin} />} />
       </Routes>
 
       <Cart

@@ -1,5 +1,15 @@
 import logo from "../../assets/logo_dudu-bebidas.png";
-import { ShoppingCart, User, Search, Wine, Beer, Droplets, CupSoda, Zap, LogOut } from "lucide-react";
+import {
+  ShoppingCart,
+  User,
+  Search,
+  Wine,
+  Beer,
+  Droplets,
+  CupSoda,
+  Zap,
+  LogOut,
+} from "lucide-react";
 import "./Header.css";
 
 export default function Header({
@@ -14,6 +24,7 @@ export default function Header({
   onCategoryClick,
   user,
   onLogout,
+  isAdmin
 }) {
   const categories = [
     { name: "Vinhos", icon: Wine, categoryId: "vinho" },
@@ -37,10 +48,12 @@ export default function Header({
 
   const firstName = user?.user_metadata?.full_name
     ? user.user_metadata.full_name.split(" ")[0]
-    : user?.email?.split("@")[0] ?? "";
+    : (user?.email?.split("@")[0] ?? "");
 
   return (
-    <header className={`sticky-top navbar-custom ${scrolled ? "scrolled" : ""}`}>
+    <header
+      className={`sticky-top navbar-custom ${scrolled ? "scrolled" : ""}`}
+    >
       <nav className="navbar navbar-dark">
         {/* ── BARRA PRINCIPAL ── */}
         <div
@@ -90,6 +103,10 @@ export default function Header({
             className="d-flex align-items-center gap-2"
             style={{ flexShrink: 0 }}
           >
+            {isAdmin && (
+              <button onClick={() => navigate("/admin")}>Admin⚙️</button>
+            )}
+
             {user ? (
               /* ── LOGADO ── */
               <>
@@ -127,9 +144,7 @@ export default function Header({
               title="Carrinho"
             >
               <ShoppingCart size={20} />
-              {cartCount > 0 && (
-                <span className="cart-badge">{cartCount}</span>
-              )}
+              {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
               <span className="d-none d-lg-inline">Carrinho</span>
             </button>
 
