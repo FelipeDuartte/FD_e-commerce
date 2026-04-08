@@ -186,6 +186,34 @@
   border-color: rgba(255, 107, 107, 0.3) !important;
   transform: translateY(-2px);
 }
+ /* ══════════════════════════════════════════
+   ADMIN BUTTON
+══════════════════════════════════════════ */
+.btn-admin {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  color: #ffd700;
+  padding: 8px 18px;
+  border-radius: 18px;
+  font-weight: 500;
+  font-size: 13px;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+/* HOVER */
+.btn-admin:hover {
+  background: rgba(255, 215, 0, 0.15);
+  border-color: #ffd700;
+  color: #ffed4e;
+}
+
+/* CLICK */
+.btn-admin:active {
+  transform: scale(0.97);
+}
+
 
 /* ══════════════════════════════════════════
    CART BADGE
@@ -413,6 +441,21 @@
     padding-left: 0;
     font-size: 14px;
   }
+
+   .btn-admin {
+    padding: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-admin span {
+    display: none;
+  }
+
 }
 
 /* ══════════════════════════════════════════

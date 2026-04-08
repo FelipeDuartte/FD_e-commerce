@@ -105,7 +105,9 @@ export default function Header({
             style={{ flexShrink: 0 }}
           >
             {isAdmin && (
-              <button onClick={() => navigate("/admin")}>Admin⚙️</button>
+              <button onClick={() => navigate("/admin")} className="btn-admin">
+                <span>Admin⚙️</span>
+              </button>
             )}
 
             {user ? (
