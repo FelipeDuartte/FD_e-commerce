@@ -106,7 +106,7 @@ export default function Header({
           >
             {isAdmin && (
               <button onClick={() => navigate("/admin")} className="btn-admin">
-                <span>Admin⚙️</span>
+                <span>Admin</span>  ⚙️
               </button>
             )}
 
