@@ -1,4 +1,5 @@
 import logo from "../../assets/logo_dudu-bebidas.png";
+import { useNavigate } from "react-router-dom";
 import {
   ShoppingCart,
   User,
@@ -26,6 +27,7 @@ export default function Header({
   onLogout,
   isAdmin
 }) {
+  const navigate = useNavigate();
   const categories = [
     { name: "Vinhos", icon: Wine, categoryId: "vinho" },
     { name: "Cervejas", icon: Beer, categoryId: "cerveja" },
@@ -33,7 +35,6 @@ export default function Header({
     { name: "Refrigerantes", icon: CupSoda, categoryId: "refrigerante" },
     { name: "Energéticos", icon: Zap, categoryId: "energetico" },
   ];
-
   const handleCategoryClick = (categoryId) => {
     if (onCategoryClick) {
       onCategoryClick(categoryId);
