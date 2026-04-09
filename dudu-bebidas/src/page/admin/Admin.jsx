@@ -29,18 +29,46 @@ export default function Admin({ user, isAdmin }) {
   const [updating, setUpdating]         = useState(null);
   const [filterStatus, setFilterStatus] = useState("all");
   const [expandedId, setExpandedId]     = useState(null);
+  
+  // ── Novos estados para métricas do dia ───────────────
+  const [todayOrdersCount, setTodayOrdersCount] = useState(0);
+  const [todaySalesTotal, setTodaySalesTotal]   = useState(0);
+
+  // ── Buscar métricas do dia ──────────────────────────
+  const fetchTodayMetrics = async () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const { data, error, count } = await supabase
+      .from("orders")
+      .select("total", { count: "exact" })
+      .gte("created_at", today.toISOString())
+      .lt("created_at", tomorrow.toISOString());
+
+    if (!error && data) {
+      setTodayOrdersCount(count || 0);
+      const total = data.reduce((sum, order) => sum + (order.total || 0), 0);
+      setTodaySalesTotal(total);
+    }
+  };
 
   // ── Busca pedidos + Realtime ──────────────────────
   useEffect(() => {
     if (!isAdmin) return;
 
     fetchOrders(0, true);
+    fetchTodayMetrics(); // Buscar métricas do dia
 
     const channel = supabase
       .channel("admin-orders")
       .on("postgres_changes",
         { event: "*", schema: "public", table: "orders" },
-        () => fetchOrders(0, true) // recarrega do início ao receber novidade
+        () => {
+          fetchOrders(0, true);
+          fetchTodayMetrics(); // Atualizar métricas quando houver mudanças
+        }
       )
       .subscribe();
 
@@ -127,6 +155,11 @@ export default function Admin({ user, isAdmin }) {
     });
   };
 
+  // ── Formatar valor monetário ───────────────────────
+  const formatCurrency = (value) => {
+    return `R$ ${value.toFixed(2).replace(".", ",")}`;
+  };
+
   // ── Tela de verificação ───────────────────────────
   if (isAdmin === null) {
     return (
@@ -175,6 +208,24 @@ export default function Admin({ user, isAdmin }) {
           <div className="adm-realtime-dot">
             <span className="adm-dot-pulse" />
             <span>Ao vivo</span>
+          </div>
+        </div>
+
+        {/* ── NOVOS CARDS DE MÉTRICAS DO DIA ── */}
+        <div className="adm-today-metrics">
+          <div className="adm-metric-card">
+            <div className="adm-metric-icon">📅</div>
+            <div className="adm-metric-content">
+              <span className="adm-metric-value">{todayOrdersCount}</span>
+              <span className="adm-metric-label">Pedidos hoje</span>
+            </div>
+          </div>
+          <div className="adm-metric-card">
+            <div className="adm-metric-icon">💰</div>
+            <div className="adm-metric-content">
+              <span className="adm-metric-value">{formatCurrency(todaySalesTotal)}</span>
+              <span className="adm-metric-label">Vendas hoje</span>
+            </div>
           </div>
         </div>
 

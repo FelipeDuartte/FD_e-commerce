@@ -524,6 +524,55 @@
   font-size: 13px;
   color: #333;
 }
+/* ─── MÉTRICAS DO DIA ───────────────────────────────── */
+.adm-today-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.adm-metric-card {
+  background: linear-gradient(135deg, #111 0%, #0d0d0d 100%);
+  border: 1px solid #1e1e1e;
+  border-radius: 20px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: border-color 0.2s;
+}
+
+.adm-metric-card:hover {
+  border-color: #2a2a2a;
+}
+
+.adm-metric-icon {
+  font-size: 32px;
+  opacity: 0.8;
+}
+
+.adm-metric-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.adm-metric-value {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: #ffd000;
+  line-height: 1;
+}
+
+.adm-metric-label {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
 
 /* ══════════════════════════════════════════
    MOBILE
@@ -552,5 +601,21 @@
   .adm-order-detail {
     grid-template-columns: 1fr;
     gap: 20px;
+  }
+   .adm-today-metrics {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .adm-metric-card {
+    padding: 16px 20px;
+  }
+  
+  .adm-metric-value {
+    font-size: 24px;
+  }
+  
+  .adm-metric-icon {
+    font-size: 28px;
   }
 }
