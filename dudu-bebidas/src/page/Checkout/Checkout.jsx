@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import "./Checkout.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import { saveOrder } from "../../supabase/saveOrder";
@@ -25,6 +25,10 @@ export default function Checkout({ user }) {
   const cartItems = location.state?.cartItems ?? [];
   const cartTotal = location.state?.cartTotal ?? 0;
   const DELIVERY  = location.state?.frete ?? 5;
+
+  // ── Referência para evitar múltiplos envios ─────────
+  const isProcessingRef = useRef(false);
+  const [orderProcessed, setOrderProcessed] = useState(false);
 
   // ── Redireciona se carrinho vazio ─────────────────
   useEffect(() => {
@@ -156,8 +160,14 @@ export default function Checkout({ user }) {
     return null;
   };
 
-  // ── Confirmar pedido ──────────────────────────────
+  // ── Confirmar pedido com prevenção de múltiplos envios ──
   const handleConfirmOrder = async () => {
+    // Verifica se já está processando ou já foi processado
+    if (isProcessingRef.current || orderProcessed || loading) {
+      console.log("Pedido já está sendo processado ou já foi concluído");
+      return;
+    }
+
     setErrorMsg("");
 
     if (!user) {
@@ -176,33 +186,63 @@ export default function Checkout({ user }) {
       return;
     }
 
+    // Marca como processando
+    isProcessingRef.current = true;
     setLoading(true);
 
-    const { orderId, error } = await saveOrder({
-      userId:        user.id,
-      total:         cartTotal + DELIVERY,
-      paymentMethod: payment,
-      address:       { ...address, cep },
-      cartItems,
-    });
-
-    setLoading(false);
-
-    if (error) {
-      setErrorMsg(error);
-      return;
-    }
-
-    navigate("/confirmacao", {
-      state: {
-        orderId,
+    try {
+      const { orderId, error } = await saveOrder({
+        userId:        user.id,
+        total:         cartTotal + DELIVERY,
+        paymentMethod: payment,
+        address:       { ...address, cep },
         cartItems,
-        total: cartTotal + DELIVERY,
-        payment,
-        address: { ...address, cep },
-      },
-    });
+      });
+
+      if (error) {
+        setErrorMsg(error);
+        isProcessingRef.current = false;
+        setLoading(false);
+        return;
+      }
+
+      // Marca como processado com sucesso
+      setOrderProcessed(true);
+      
+      // Navega para a página de confirmação
+      navigate("/confirmacao", {
+        state: {
+          orderId,
+          cartItems,
+          total: cartTotal + DELIVERY,
+          payment,
+          address: { ...address, cep },
+        },
+        replace: true, // Evita voltar para o checkout via botão voltar
+      });
+      
+    } catch (err) {
+      console.error("Erro ao processar pedido:", err);
+      setErrorMsg("Ocorreu um erro ao processar seu pedido. Tente novamente.");
+      isProcessingRef.current = false;
+      setLoading(false);
+    }
   };
+
+  // ── Previne navegação de voltar após pedido confirmado ──
+  useEffect(() => {
+    if (orderProcessed) {
+      // Adiciona um evento para impedir voltar para o checkout
+      const handlePopState = () => {
+        if (orderProcessed) {
+          navigate("/", { replace: true });
+        }
+      };
+      
+      window.addEventListener('popstate', handlePopState);
+      return () => window.removeEventListener('popstate', handlePopState);
+    }
+  }, [orderProcessed, navigate]);
 
   return (
     <div className="co-root">
@@ -212,7 +252,12 @@ export default function Checkout({ user }) {
         <div className="co-header">
           <button
             className="co-back"
-            onClick={() => navigate("/", { state: { openCart: true } })}
+            onClick={() => {
+              if (!orderProcessed && !loading) {
+                navigate("/", { state: { openCart: true } });
+              }
+            }}
+            disabled={loading || orderProcessed}
           >
             ←
           </button>
@@ -261,6 +306,7 @@ export default function Checkout({ user }) {
                   value={address.name}
                   onChange={handleAddressChange}
                   placeholder="Seu nome e sobrenome"
+                  disabled={loading || orderProcessed}
                 />
               </div>
               <div className="co-field">
@@ -271,6 +317,7 @@ export default function Checkout({ user }) {
                   value={address.phone}
                   onChange={handlePhoneChange}
                   placeholder="(00) 00000-0000"
+                  disabled={loading || orderProcessed}
                 />
               </div>
             </div>
@@ -288,6 +335,7 @@ export default function Checkout({ user }) {
                     placeholder="00000-000"
                     maxLength={9}
                     className={cepError ? "co-input-error" : ""}
+                    disabled={loading || orderProcessed}
                   />
                   {cepLoading && (
                     <span className="co-cep-loading">🔍</span>
@@ -310,6 +358,7 @@ export default function Checkout({ user }) {
                   value={address.number}
                   onChange={handleAddressChange}
                   placeholder="123"
+                  disabled={loading || orderProcessed}
                 />
               </div>
             </div>
@@ -324,6 +373,7 @@ export default function Checkout({ user }) {
                   value={address.street}
                   onChange={handleAddressChange}
                   placeholder="Rua / Av. — preenchido pelo CEP"
+                  disabled={loading || orderProcessed}
                 />
               </div>
             </div>
@@ -338,6 +388,7 @@ export default function Checkout({ user }) {
                   value={address.district}
                   onChange={handleAddressChange}
                   placeholder="Bairro"
+                  disabled={loading || orderProcessed}
                 />
               </div>
               <div className="co-field">
@@ -348,6 +399,7 @@ export default function Checkout({ user }) {
                   value={address.complement}
                   onChange={handleAddressChange}
                   placeholder="Apto, bloco..."
+                  disabled={loading || orderProcessed}
                 />
               </div>
             </div>
@@ -371,6 +423,7 @@ export default function Checkout({ user }) {
                     value={opt.value}
                     checked={payment === opt.value}
                     onChange={() => setPayment(opt.value)}
+                    disabled={loading || orderProcessed}
                   />
                   <label className="co-pay-label" htmlFor={opt.value}>
                     <span className="co-pay-icon">{opt.icon}</span>
@@ -433,9 +486,9 @@ export default function Checkout({ user }) {
             <button
               className="co-cta"
               onClick={handleConfirmOrder}
-              disabled={loading}
+              disabled={loading || orderProcessed}
             >
-              {loading ? "Processando..." : "Confirmar Pedido →"}
+              {loading ? "Processando..." : (orderProcessed ? "Pedido Confirmado ✓" : "Confirmar Pedido →")}
             </button>
             <div className="co-secure">🔒 Pagamento 100% seguro</div>
           </div>
@@ -447,9 +500,9 @@ export default function Checkout({ user }) {
         <button
           className="co-cta"
           onClick={handleConfirmOrder}
-          disabled={loading}
+          disabled={loading || orderProcessed}
         >
-          {loading ? "Processando..." : "Confirmar Pedido →"}
+          {loading ? "Processando..." : (orderProcessed ? "Pedido Confirmado ✓" : "Confirmar Pedido →")}
         </button>
         <div className="co-secure">🔒 Pagamento 100% seguro</div>
       </div>

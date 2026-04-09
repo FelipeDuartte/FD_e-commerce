@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { X, Plus, Minus, Trash2, ShoppingBag, MapPin } from "lucide-react";
+import { X, Plus, Minus, Trash2, ShoppingBag, MapPin, ChevronDown, ChevronUp } from "lucide-react";
 import "./Cart.css";
 
 // ── Bairros com frete ──────────────────────────────────
@@ -23,6 +23,9 @@ export default function Cart({
 
   // ── Estado do bairro selecionado ───────────────────
   const [bairroSelecionado, setBairroSelecionado] = useState(null);
+  const [isBairroOpen, setIsBairroOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  const headerRef = useRef(null);
 
   // ── Cálculo de totais ──────────────────────────────
   const subtotal = cartItems.reduce(
@@ -32,6 +35,28 @@ export default function Cart({
 
   const frete = bairroSelecionado ? bairroSelecionado.frete : null;
   const total  = frete !== null ? subtotal + frete : subtotal;
+
+  // ── Fechar dropdown ao clicar fora ─────────────────
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsBairroOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // ── Handlers do dropdown ───────────────────────────
+  const toggleBairroDropdown = () => {
+    setIsBairroOpen(!isBairroOpen);
+  };
+
+  const handleSelectBairro = (bairro) => {
+    setBairroSelecionado(bairro);
+    setIsBairroOpen(false);
+  };
 
   // ── Checkout ───────────────────────────────────────
   const handleCheckout = () => {
@@ -156,24 +181,39 @@ export default function Cart({
         {cartItems.length > 0 && (
           <div className="cart-footer">
 
-            {/* ── Seleção de bairro ── */}
-            <div className="bairro-section">
-              <div className="bairro-label">
-                <MapPin size={14} />
-                Selecione seu bairro
+            {/* ── Seleção de bairro com DROPDOWN ── */}
+            <div className="bairro-dropdown-container" ref={dropdownRef}>
+              <div 
+                className={`bairro-dropdown-header ${isBairroOpen ? "open" : ""}`}
+                onClick={toggleBairroDropdown}
+                ref={headerRef}
+              >
+                <div className="bairro-dropdown-label">
+                  <MapPin size={16} />
+                  <span>{bairroSelecionado ? bairroSelecionado.nome : "Selecione seu bairro"}</span>
+                </div>
+                {isBairroOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
               </div>
-              <div className="bairro-grid">
-                {BAIRROS.map((b) => (
-                  <button
-                    key={b.nome}
-                    className={`bairro-btn ${bairroSelecionado?.nome === b.nome ? "bairro-btn-active" : ""}`}
-                    onClick={() => setBairroSelecionado(b)}
-                  >
-                    <span className="bairro-nome">{b.nome}</span>
-                    <span className="bairro-frete">R$ {b.frete.toFixed(2)}</span>
-                  </button>
-                ))}
-              </div>
+
+              {isBairroOpen && (
+                <div className="bairro-dropdown-menu">
+                  {BAIRROS.map((b) => (
+                    <button
+                      key={b.nome}
+                      className={`bairro-dropdown-item ${bairroSelecionado?.nome === b.nome ? "selected" : ""}`}
+                      onClick={() => handleSelectBairro(b)}
+                    >
+                      <div className="bairro-item-info">
+                        <span className="bairro-item-nome">{b.nome}</span>
+                        <span className="bairro-item-frete">R$ {b.frete.toFixed(2)}</span>
+                      </div>
+                      {bairroSelecionado?.nome === b.nome && (
+                        <span className="bairro-item-check">✓</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Resumo */}
