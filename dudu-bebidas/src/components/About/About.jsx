@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import "./About.css";
 
 const stats = [
-  { num: "25+", label: "Anos de mercado" },
+  { num: "20+", label: "Anos de mercado" },
   { num: "500+", label: "Rótulos" },
   { num: "BH", label: "Delivery" },
   { num: "100%", label: "Qualidade" },
@@ -39,7 +39,7 @@ export default function SobreDuduBebidas() {
             <div className={`col-12 col-md-7 fade-in${visible ? " visible" : ""}`}
                  style={{ transitionDelay: "0s" }}>
               <p className="section-eyebrow">Quem somos</p>
-              <h2 className="section-title">25 anos levando a<br />melhor bebida até você</h2>
+              <h2 className="section-title">20 anos levando a<br />melhor bebida até você</h2>
               <div className="title-underline" />
               <p className="section-text">
                 Nascemos em Belo Horizonte com uma missão simples: reunir as melhores

@@ -299,17 +299,77 @@
   transform: translateY(0);
 }
 
-/* Cart Footer */
+/* ─── Cart Footer ─────────────────────────────────── */
 .cart-footer {
-  padding: 24px;
+  padding: 20px 24px 24px;
   border-top: 2px solid #e5e7eb;
   background: linear-gradient(to bottom, #fafafa 0%, #fff 100%);
   box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
-/* ─── DROPDOWN DE BAIRRO (NOVO ESTILO) ───────────────── */
+/* ─── Horários de funcionamento ───────────────────── */
+.horarios-info {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+}
+
+.horario-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.horario-row svg {
+  flex-shrink: 0;
+  color: #9ca3af;
+}
+
+/* ─── Aviso de horário fora do expediente ─────────── */
+.horario-aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 14px;
+  background: #fff7ed;
+  border: 1.5px solid #fed7aa;
+  border-radius: 12px;
+  color: #92400e;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  animation: avisoSlide 0.3s ease;
+}
+
+.horario-aviso svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: #f97316;
+}
+
+@keyframes avisoSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── DROPDOWN DE BAIRRO ──────────────────────────── */
 .bairro-dropdown-container {
-  margin-bottom: 20px;
   position: relative;
 }
 
@@ -350,6 +410,7 @@
 
 .bairro-dropdown-label svg {
   color: #ffd700;
+  flex-shrink: 0;
 }
 
 .bairro-dropdown-menu {
@@ -366,11 +427,10 @@
   z-index: 10;
   overflow: hidden;
   animation: dropdownSlide 0.25s ease;
-  max-height: 240px; /* Altura máxima */
-  overflow-y: auto;  /* Scroll vertical */
+  max-height: 260px;
+  overflow-y: auto;
 }
 
-/* Custom scroll para o dropdown */
 .bairro-dropdown-menu::-webkit-scrollbar {
   width: 6px;
 }
@@ -400,9 +460,10 @@
   }
 }
 
+/* ─── Item do dropdown ────────────────────────────── */
 .bairro-dropdown-item {
   width: 100%;
-  padding: 14px 16px;
+  padding: 13px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -423,6 +484,26 @@
   padding-left: 20px;
 }
 
+/* ─── Item de retirada na loja ────────────────────── */
+.bairro-dropdown-item.item-retirada {
+  background: #f0fdf4;
+  border-bottom: 2px solid #d1fae5;
+}
+
+.bairro-dropdown-item.item-retirada:hover {
+  background: #dcfce7;
+  padding-left: 20px;
+}
+
+.bairro-dropdown-item.item-retirada .bairro-item-nome {
+  color: #065f46;
+}
+
+.bairro-dropdown-item.item-retirada .retirada-icon {
+  color: #10b981 !important;
+}
+
+/* ─── Item selecionado ────────────────────────────── */
 .bairro-dropdown-item.selected {
   background: #fffbeb;
   position: relative;
@@ -436,13 +517,34 @@
   bottom: 0;
   width: 4px;
   background: #ffd700;
+  border-radius: 0;
+}
+
+.bairro-dropdown-item.item-retirada.selected {
+  background: #ecfdf5;
+}
+
+.bairro-dropdown-item.item-retirada.selected::before {
+  background: #10b981;
+}
+
+/* ─── Conteúdo interno do item ────────────────────── */
+.bairro-item-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.bairro-item-icon {
+  color: #9ca3af;
+  flex-shrink: 0;
 }
 
 .bairro-item-info {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  flex: 1;
+  gap: 2px;
 }
 
 .bairro-item-nome {
@@ -457,11 +559,17 @@
   font-weight: 500;
 }
 
+.bairro-item-frete.gratis {
+  color: #059669;
+  font-weight: 700;
+}
+
 .bairro-item-check {
   color: #10b981;
   font-weight: 700;
   font-size: 16px;
   animation: checkmark 0.2s ease;
+  flex-shrink: 0;
 }
 
 @keyframes checkmark {
@@ -475,12 +583,11 @@
   }
 }
 
-/* Summary Section */
+/* ─── Resumo ──────────────────────────────────────── */
 .summary-section {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: 10px;
 }
 
 .summary-row {
@@ -507,9 +614,9 @@
   justify-content: space-between;
   font-size: 20px;
   font-weight: 800;
-  padding-top: 12px;
+  padding-top: 10px;
   border-top: 2px solid #e5e7eb;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .summary-total .total-label {
@@ -521,7 +628,7 @@
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Checkout Button */
+/* ─── Checkout Button ─────────────────────────────── */
 .checkout-btn {
   width: 100%;
   padding: 18px;
@@ -556,7 +663,7 @@
   box-shadow: none;
 }
 
-/* Responsive */
+/* ─── Responsive ──────────────────────────────────── */
 @media (max-width: 768px) {
   .cart-drawer {
     max-width: 100%;
@@ -571,7 +678,8 @@
   }
 
   .cart-footer {
-    padding: 20px;
+    padding: 16px 16px 20px;
+    gap: 12px;
   }
 
   .cart-item {
@@ -600,29 +708,33 @@
     padding: 16px;
   }
 
-  /* Dropdown responsivo */
+  .horarios-info {
+    flex-direction: column;
+    gap: 6px;
+  }
+
   .bairro-dropdown-header {
     padding: 12px 14px;
   }
-  
+
   .bairro-dropdown-label {
     font-size: 13px;
   }
-  
+
   .bairro-item-nome {
     font-size: 13px;
   }
-  
+
   .bairro-item-frete {
     font-size: 11px;
   }
-  
+
   .bairro-dropdown-item {
     padding: 12px 14px;
   }
 }
 
-/* Animation keyframes */
+/* ─── Keyframes utilitários ───────────────────────── */
 @keyframes slideIn {
   from { transform: translateX(100%); }
   to   { transform: translateX(0); }

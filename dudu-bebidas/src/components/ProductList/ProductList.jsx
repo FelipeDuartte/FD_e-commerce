@@ -2,6 +2,7 @@
 import ProductCard from "../ProductCard/ProductCard";
 // import styles
 import "./Products.css";
+import { useState } from "react";
 
 export default function ProductList({
   filteredProducts,
@@ -9,20 +10,41 @@ export default function ProductList({
   setSelectedCategory,
   addToCart,
 }) {
-  const hasProducts = filteredProducts.length > 0;
+  const [visibleCount, setVisibleCount] = useState(12); // Começa com 12 produtos
   const productsCount = filteredProducts.length;
+  const hasProducts = filteredProducts.length > 0;
+  
+  // Produtos visíveis atualmente
+  const visibleProducts = filteredProducts.slice(0, visibleCount);
+  const hasMore = visibleCount < productsCount;
+  const hasVisibleExcess = visibleCount > 12; // Para mostrar botão "Ver Menos"
 
   const handleCategorySelect = (categoryId) => {
     setSelectedCategory(categoryId);
+    setVisibleCount(12); // Resetar ao mudar categoria
+  };
+
+  const handleLoadMore = () => {
+    setVisibleCount(prev => prev + 12); // Carrega mais 12 produtos
+  };
+
+  const handleShowLess = () => {
+    setVisibleCount(12); // Volta para 12 produtos
+    // Scroll suave para o topo da seção de produtos
+    const produtosSection = document.getElementById('produtos');
+    if (produtosSection) {
+      produtosSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   };
 
   const categories = [
     { id: "todos",        label: "Todos",         icon: "bi-grid-fill" },
     { id: "cerveja",      label: "Cervejas",      icon: "bi-cup-straw" },
-    { id: "vinho",        label: "Vinhos",         icon: "bi-cup" },
+    { id: "vinho",        label: "Vinhos",        icon: "bi-cup" },
     { id: "destilado",    label: "Destilados",    icon: "bi-droplet-fill" },
     { id: "refrigerante", label: "Refrigerantes", icon: "bi-cup-hot-fill" },
     { id: "energetico",   label: "Energéticos",   icon: "bi-lightning-charge-fill" },
+    { id: "outros",       label: "Outros",        icon: "bi-bag" },
   ];
 
   return (
@@ -33,6 +55,9 @@ export default function ProductList({
         <div className="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-3">
           <div>
             <h2 className="section-title fw-bold">Nossos Produtos</h2>
+            {!hasProducts && (
+              <p className="text-muted mt-2">Nenhum produto encontrado</p>
+            )}
           </div>
           <div className="text-end">
             <span className="badge bg-dark">
@@ -41,10 +66,7 @@ export default function ProductList({
           </div>
         </div>
 
-        {/* Category Filters
-            ─ filter-scroll-wrapper tem os fades (::before / ::after)
-            ─ overflow-x-auto faz o scroll, sem pseudo-elementos próprios
-        */}
+        {/* Category Filters */}
         <div className="filter-container">
           <div className="filter-scroll-wrapper">
             <div className="overflow-x-auto">
@@ -65,7 +87,7 @@ export default function ProductList({
         {/* Products Grid */}
         <div className="row row-cols-2 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3 g-md-4">
           {hasProducts ? (
-            filteredProducts.map((produto, index) => (
+            visibleProducts.map((produto, index) => (
               <ProductCard
                 key={produto.id}
                 produto={produto}
@@ -85,6 +107,46 @@ export default function ProductList({
             </div>
           )}
         </div>
+
+        {/* Botões de controle */}
+        {hasProducts && (
+          <div className="text-center mt-5 pt-3">
+            {/* Botão Ver Mais */}
+            {hasMore && (
+              <button 
+                onClick={handleLoadMore}
+                className="btn-ver-mais"
+              >
+                <i className="bi bi-plus-circle me-2"></i>
+                Ver Mais Produtos
+                <span className="ms-2 badge">
+                  +{Math.min(12, productsCount - visibleCount)} de {productsCount - visibleCount} restantes
+                </span>
+              </button>
+            )}
+
+            {/* Botão Ver Menos - aparece apenas se tiver mais de 12 produtos visíveis */}
+            {hasVisibleExcess && (
+              <button 
+                onClick={handleShowLess}
+                className="btn-ver-menos ms-3"
+              >
+                <i className="bi bi-dash-circle me-2"></i>
+                Ver Menos Produtos
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Mensagem quando todos os produtos estão visíveis */}
+        {hasProducts && !hasMore && visibleCount > 12 && (
+          <div className="text-center mt-5 pt-3">
+            <p className="text-muted">
+              <i className="bi bi-check-circle-fill me-2 text-success"></i>
+              Você já visualizou todos os {productsCount} produtos
+            </p>
+          </div>
+        )}
 
       </div>
     </section>

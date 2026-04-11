@@ -30,6 +30,11 @@
   z-index: 2;
 }
 
+.filter-scroll-wrapper::before {
+  left: 0;
+  background: linear-gradient(to right, #fff 20%, transparent 100%);
+}
+
 .filter-scroll-wrapper::after {
   right: 0;
   background: linear-gradient(to left, #fff 20%, transparent 100%);
@@ -46,9 +51,9 @@
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
 
-  /* Scrollbar fina e dourada */
+  /* Scrollbar fina e amarela */
   scrollbar-width: thin;
-  scrollbar-color: var(--gold) transparent;
+  scrollbar-color: #f5c518 transparent;
 }
 
 .overflow-x-auto::-webkit-scrollbar {
@@ -60,7 +65,7 @@
 }
 
 .overflow-x-auto::-webkit-scrollbar-thumb {
-  background: linear-gradient(90deg, var(--gold-dark), var(--gold-light));
+  background: linear-gradient(90deg, #f5c518, #ffd700);
   border-radius: 10px;
 }
 
@@ -79,10 +84,10 @@
   white-space: nowrap;
   cursor: pointer;
 
-  color: #444;
+  color: #333;
   background: #fff;
   border: 1.5px solid rgba(0, 0, 0, 0.09);
-  border-radius: 50px;           /* pílula — mais leve visualmente */
+  border-radius: 50px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.05);
 
   transition: color 0.25s ease,
@@ -91,7 +96,6 @@
               transform 0.25s ease,
               box-shadow 0.25s ease;
 
-  /* Garante que o botão não seja afetado pelo overflow do pai */
   position: relative;
   overflow: visible;
 }
@@ -102,10 +106,10 @@
 }
 
 .filter-btn:hover {
-  color: var(--black);
+  color: #000;
   background: #fffbea;
-  border-color: rgba(255, 215, 0, 0.5);
-  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
+  border-color: #f5c518;
+  box-shadow: 0 4px 12px rgba(245, 197, 24, 0.2);
   transform: translateY(-2px);
 }
 
@@ -118,23 +122,181 @@
 }
 
 .filter-btn.active {
-  background: linear-gradient(135deg, var(--black) 0%, #2a2a2a 100%);
-  color: var(--gold);
-  border-color: var(--black);
+  background: #000;
+  color: #f5c518;
+  border-color: #000;
   transform: translateY(-2px);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18),
-              0 0 0 3px rgba(255, 215, 0, 0.15);
+              0 0 0 3px rgba(245, 197, 24, 0.15);
 }
 
 .filter-btn.active i {
-  color: var(--gold);
+  color: #f5c518;
 }
 
 /* =====================================================
-   RESPONSIVE FILTER
+   BOTÃO VER MAIS - CORES DA LOJA (AMARELO/PRETO)
+===================================================== */
+.btn-ver-mais {
+  background: #000;
+  border: none;
+  padding: 0.875rem 2rem;
+  border-radius: 50px;
+  color: #f5c518;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.btn-ver-mais:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  background: #1a1a1a;
+  color: #ffd700;
+}
+
+.btn-ver-mais:active {
+  transform: translateY(0);
+}
+
+.btn-ver-mais .badge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 50px;
+  background: #f5c518 !important;
+  color: #000 !important;
+  font-weight: 600;
+}
+
+/* =====================================================
+   BOTÃO VER MENOS (opcional)
+===================================================== */
+.btn-ver-menos {
+  background: transparent;
+  border: 2px solid #000;
+  padding: 0.875rem 2rem;
+  border-radius: 50px;
+  color: #000;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-ver-menos:hover {
+  background: #000;
+  color: #f5c518;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  border-color: #000;
+}
+
+.btn-ver-menos:active {
+  transform: translateY(0);
+}
+
+/* =====================================================
+   BADGES DE PROMOÇÃO E ESTOQUE
+===================================================== */
+.badge-promo {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: #f5c518;
+  color: #000;
+  padding: 4px 8px;
+  border-radius: 50px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  z-index: 1;
+}
+
+.badge-estoque {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background: #000;
+  color: #f5c518;
+  padding: 4px 8px;
+  border-radius: 50px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  z-index: 1;
+}
+
+.badge-estoque.baixo {
+  background: #dc2626;
+  color: #fff;
+}
+
+/* =====================================================
+   ANIMAÇÃO DOS CARDS
+===================================================== */
+.produto-card {
+  animation: fadeInUp 0.4s ease forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Delay progressivo para os cards */
+.row-cols-2 .produto-card {
+  animation-delay: calc(var(--index, 0) * 0.05s);
+}
+
+/* =====================================================
+   EMPTY STATE
+===================================================== */
+.empty-state-icon {
+  font-size: 4rem;
+  color: #dee2e6;
+}
+
+/* =====================================================
+   TÍTULO DA SEÇÃO
+===================================================== */
+.section-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #000;
+  position: relative;
+  display: inline-block;
+}
+
+.section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  width: 60px;
+  height: 3px;
+  background: #f5c518;
+  border-radius: 2px;
+}
+
+/* =====================================================
+   RESPONSIVE FILTER & BUTTONS
 ===================================================== */
 
-/* Em mobile: botões um pouco menores, sem fades laterais pra não cortar ícone */
+/* Mobile */
 @media (max-width: 576px) {
   .filter-btn {
     padding: 8px 16px;
@@ -155,5 +317,28 @@
   .overflow-x-auto {
     gap: 7px;
     padding: 8px 2px 12px;
+  }
+
+  /* Botão Ver Mais responsivo */
+  .btn-ver-mais,
+  .btn-ver-menos {
+    padding: 0.7rem 1.5rem;
+    font-size: 0.875rem;
+  }
+
+  /* Esconde o badge em mobile para economizar espaço */
+  .btn-ver-mais .badge {
+    display: none;
+  }
+
+  .section-title {
+    font-size: 1.5rem;
+  }
+}
+
+/* Tablet */
+@media (min-width: 577px) and (max-width: 768px) {
+  .btn-ver-mais .badge {
+    display: inline-flex;
   }
 }
