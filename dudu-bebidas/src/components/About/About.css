@@ -2,15 +2,43 @@
 
 .dudu-sobre {
   font-family: 'Nunito', sans-serif;
-  background: transparent;
+  /* CORREÇÃO: Adicionando fundo escuro */
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
   width: 100%;
   padding: 60px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Adicionando efeito decorativo */
+.dudu-sobre::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 20% 50%, rgba(232, 160, 32, 0.08), transparent 60%);
+  pointer-events: none;
+}
+
+.dudu-sobre::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(232, 160, 32, 0.05), transparent 70%);
+  pointer-events: none;
 }
 
 .dudu-sobre .body-wrap {
   max-width: 1100px;
   margin: 0 auto;
   padding: 0 24px;
+  position: relative;
+  z-index: 1;
 }
 
 .dudu-sobre .section-eyebrow {
@@ -94,7 +122,7 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(232,160,32,0.3);
   border-radius: 100px;
   padding: 8px 14px;
@@ -138,4 +166,36 @@
 .dudu-sobre .fade-in.visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* =====================================================
+   RESPONSIVIDADE EXTRA
+===================================================== */
+
+/* Mobile pequeno */
+@media (max-width: 576px) {
+  .dudu-sobre {
+    padding: 40px 0;
+  }
+  
+  .dudu-sobre .stat-box {
+    padding: 15px 8px;
+  }
+  
+  .dudu-sobre .stat-num {
+    font-size: 1.8rem;
+  }
+  
+  .dudu-sobre .stat-label {
+    font-size: 0.6rem;
+  }
+  
+  .dudu-sobre .info-chip {
+    font-size: 0.7rem;
+    padding: 6px 10px;
+  }
+  
+  .dudu-sobre .section-text {
+    font-size: 0.85rem;
+  }
 }

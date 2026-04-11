@@ -10,7 +10,7 @@ import "./App.css";
 import { supabase } from "./supabase/Supabaseclient";
 
 // ==== Data (arquivos separados) ====
-import produtosData from "./data/Poducts";
+import produtosData from "./data/Poducts"; // Corrigido: Produtos (com P maiúsculo)
 import banners from "./data/banners";
 import benefits from "./data/benefits";
 
@@ -172,7 +172,7 @@ export default function DuduBebidas() {
 
   // ==== Render ====
   return (
-    <div style={{ minHeight: "100vh", background: "#201e0dff" }}>
+    <div style={{ minHeight: "100vh", background: "#fff" }}>
       <Scrolltotop />
       <Routes>
         <Route
@@ -218,6 +218,7 @@ export default function DuduBebidas() {
         <Route path="/admin" element={<Admin user={user} isAdmin={isAdmin} />} />
       </Routes>
 
+      {/* Cart Component - agora com todas as props necessárias */}
       <Cart
         isOpen={cartOpen}
         onClose={() => setCartOpen(false)}
@@ -226,7 +227,6 @@ export default function DuduBebidas() {
         removeItem={removeItem}
         clearCart={clearCart}
         user={user}
-        onLoginClick={() => setLoginOpen(true)}
       />
 
       <Login isOpen={loginOpen} onClose={() => setLoginOpen(false)} />

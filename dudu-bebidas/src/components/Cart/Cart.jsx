@@ -59,6 +59,7 @@ export default function Cart({
   updateQuantity,
   removeItem,
   clearCart,
+  user, // Adicione esta prop se precisar do usuário logado
 }) {
   const navigate = useNavigate();
 
@@ -98,8 +99,25 @@ export default function Cart({
     setIsBairroOpen(false);
   };
 
+  // ── Função para criar pedido no Supabase (se necessário) ──
+  const criarPedido = async (pedidoData) => {
+    try {
+      // Se tiver Supabase configurado, salve o pedido aqui
+      const { data, error } = await supabase
+        .from("pedidos")
+        .insert([pedidoData])
+        .select();
+      
+      if (error) throw error;
+      return data[0];
+    } catch (error) {
+      console.error("Erro ao criar pedido:", error);
+      return null;
+    }
+  };
+
   // ── Checkout com validação de horário ──────────────
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (cartItems.length === 0) return;
 
     if (!bairroSelecionado) {
@@ -107,13 +125,59 @@ export default function Cart({
       return;
     }
 
-    const { disponivel, mensagem } = verificarHorario(bairroSelecionado.isRetirada ?? false);
+    const isRetirada = bairroSelecionado.isRetirada ?? false;
+    const { disponivel, mensagem } = verificarHorario(isRetirada);
 
     if (!disponivel) {
       setHorarioAviso(mensagem);
       return;
     }
 
+    // Prepara os dados do pedido
+    const pedidoData = {
+      items: cartItems.map((item) => ({
+        id: item.id,
+        nome: item.nome,
+        preco: item.preco,
+        quantidade: item.quantity,
+        imagem: item.imagem,
+      })),
+      subtotal: subtotal,
+      frete: frete,
+      total: total,
+      bairro: bairroSelecionado.nome,
+      isRetirada: isRetirada,
+      data: new Date().toISOString(),
+      status: isRetirada ? "Pronto para retirada" : "Aguardando entrega",
+      // userId: user?.id, // Descomente se tiver usuário logado
+    };
+
+    // Se for retirada na loja, vai direto para confirmação
+    // No handleCheckout do Cart.jsx, para retirada na loja:
+if (isRetirada) {
+  navigate("/confirmacao", {
+    state: {
+      pedido: {
+        orderId: null, // Sem ID para retirada
+        cartItems: cartItems.map((item) => ({
+          id: item.id,
+          nome: item.nome,
+          preco: item.preco,
+          quantity: item.quantity,
+          imagem: item.imagem,
+        })),
+        total: total,
+        payment: "pix", // ou o método escolhido
+        address: {},
+        isRetirada: true,
+      },
+    },
+  });
+  onClose();
+  return;
+}
+
+    // Se for entrega, vai para o checkout normal
     navigate("/checkout", {
       state: {
         cartItems: cartItems.map((item) => ({
@@ -126,7 +190,7 @@ export default function Cart({
         cartTotal:  subtotal,
         frete:      frete,
         bairro:     bairroSelecionado.nome,
-        isRetirada: bairroSelecionado.isRetirada ?? false,
+        isRetirada: false,
       },
     });
 
@@ -314,7 +378,9 @@ export default function Cart({
               className={`checkout-btn ${!bairroSelecionado ? "checkout-btn-disabled" : ""}`}
               disabled={!bairroSelecionado}
             >
-              {bairroSelecionado ? "Finalizar Pedido" : "Selecione a opção →"}
+              {bairroSelecionado 
+                ? (bairroSelecionado.isRetirada ? "Confirmar Retirada" : "Finalizar Pedido")
+                : "Selecione a opção →"}
             </button>
 
           </div>
