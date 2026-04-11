@@ -106,10 +106,6 @@ export default function Checkout({ user }) {
   };
 
   const validateForm = () => {
-    if (!address.name.trim())
-      return "Por favor, informe seu nome completo.";
-    if (address.name.trim().split(" ").length < 2)
-      return "Por favor, informe nome e sobrenome.";
     const phoneClean = address.phone.replace(/\D/g, "");
     if (!phoneClean || phoneClean.length < 10)
       return "Por favor, informe um telefone válido com DDD.";
