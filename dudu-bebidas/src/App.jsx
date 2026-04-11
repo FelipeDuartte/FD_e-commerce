@@ -187,34 +187,38 @@ export default function DuduBebidas() {
       setCartOpen(true);
       navigate("/", { replace: true, state: {} });
     }
+    if (location.state?.openLogin) {
+      setLoginOpen(true);
+      navigate("/", { replace: true, state: {} });
+    }
   }, [location.state]);
 
   // ==== Auth ====
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(null);
-   // useEffect para verificar se o usuário é admin
-   useEffect(() => {
-  const fetchAdmin = async () => {
-    if (!user) {
-      setIsAdmin(false);
-      return;
-    }
+  // useEffect para verificar se o usuário é admin
+  useEffect(() => {
+    const fetchAdmin = async () => {
+      if (!user) {
+        setIsAdmin(false);
+        return;
+      }
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("is_admin")
-      .eq("id", user.id)
-      .single();
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("is_admin")
+        .eq("id", user.id)
+        .single();
 
-    if (!error && data?.is_admin) {
-      setIsAdmin(true);
-    } else {
-      setIsAdmin(false);
-    }
-  };
+      if (!error && data?.is_admin) {
+        setIsAdmin(true);
+      } else {
+        setIsAdmin(false);
+      }
+    };
 
-  fetchAdmin();
-}, [user]);
+    fetchAdmin();
+  }, [user]);
   // ==== Filters ====
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("todos");
@@ -342,20 +346,17 @@ export default function DuduBebidas() {
           }
         />
 
-        <Route path="/privacy-policy" element={<PrivacyPolicy/>} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
-         <Route path="/terms-service" element={<TermsOfService/>} />
+        <Route path="/terms-service" element={<TermsOfService />} />
+
+        <Route path="/checkout" element={<Checkout user={user} />} />
+        <Route path="/confirmacao" element={<Confirm user={user} />} />
 
         <Route
-          path="/checkout"
-          element={<Checkout user={user} />}
+          path="/admin"
+          element={<Admin user={user} isAdmin={isAdmin} />}
         />
-        <Route
-          path="/confirmacao"
-          element={<Confirm user={user} />}
-        />
-
-        <Route path="/admin" element={<Admin user={user} isAdmin={isAdmin} />} />
       </Routes>
 
       <Cart

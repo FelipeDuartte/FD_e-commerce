@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap");
 
 * {
   box-sizing: border-box;
@@ -10,7 +10,7 @@
 .co-root {
   background: #0a0a0a;
   min-height: 100vh;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   color: #fff;
   padding: 48px 24px;
   position: relative;
@@ -18,24 +18,32 @@
 }
 
 .co-root::before {
-  content: '';
+  content: "";
   position: fixed;
   top: -200px;
   right: -200px;
   width: 600px;
   height: 600px;
-  background: radial-gradient(circle, rgba(255, 208, 0, 0.07) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 208, 0, 0.07) 0%,
+    transparent 70%
+  );
   pointer-events: none;
 }
 
 .co-root::after {
-  content: '';
+  content: "";
   position: fixed;
   bottom: -100px;
   left: -100px;
   width: 400px;
   height: 400px;
-  background: radial-gradient(circle, rgba(255, 208, 0, 0.04) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 208, 0, 0.04) 0%,
+    transparent 70%
+  );
   pointer-events: none;
 }
 
@@ -83,7 +91,7 @@
 }
 
 .co-title {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: "Plus Jakarta Sans", sans-serif;
   font-size: 32px;
   font-weight: 800;
   color: #fff;
@@ -141,6 +149,82 @@
   max-width: 60px;
 }
 
+/* ─── BANNER DE LOGIN ───────────────────────────────── */
+.co-login-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(255, 208, 0, 0.06);
+  border: 1.5px solid rgba(255, 208, 0, 0.35);
+  border-radius: 16px;
+  padding: 18px 20px;
+  margin-bottom: 28px;
+  animation: co-banner-in 0.4s ease;
+}
+
+@keyframes co-banner-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.co-login-banner-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.co-login-banner-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.co-login-banner-text strong {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffd000;
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+.co-login-banner-text span {
+  font-size: 13px;
+  color: #888;
+}
+
+.co-login-banner-btn {
+  background: #ffd000;
+  color: #000;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 22px;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.co-login-banner-btn:hover {
+  background: #ffe033;
+  transform: translateY(-1px);
+}
+
+/* ─── CARD LOCKED ───────────────────────────────────── */
+.co-card-locked {
+  opacity: 0.5;
+  pointer-events: none;
+  user-select: none;
+  filter: blur(1px);
+}
+
 /* ─── GRID ──────────────────────────────────────────── */
 .co-grid {
   display: grid;
@@ -155,6 +239,9 @@
   border: 1px solid #1e1e1e;
   border-radius: 20px;
   padding: 32px;
+  transition:
+    opacity 0.3s,
+    filter 0.3s;
 }
 
 .co-section-label {
@@ -199,7 +286,7 @@
   border-radius: 10px;
   padding: 13px 16px;
   color: #fff;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   font-size: 14px;
   transition: all 0.2s;
   outline: none;
@@ -247,7 +334,9 @@
 }
 
 @keyframes co-spin {
-  to { transform: translateY(-50%) rotate(360deg); }
+  to {
+    transform: translateY(-50%) rotate(360deg);
+  }
 }
 
 .co-input-error {
@@ -293,7 +382,7 @@
   position: relative;
 }
 
-.co-pay-option input[type='radio'] {
+.co-pay-option input[type="radio"] {
   position: absolute;
   opacity: 0;
   width: 0;
@@ -348,7 +437,7 @@
 }
 
 .co-summary-title {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: "Plus Jakarta Sans", sans-serif;
   font-size: 18px;
   font-weight: 700;
   color: #fff;
@@ -469,7 +558,7 @@
 }
 
 .co-total-value {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: "Plus Jakarta Sans", sans-serif;
   font-size: 28px;
   font-weight: 800;
   color: #ffd000;
@@ -484,7 +573,7 @@
   color: #000;
   border: none;
   border-radius: 12px;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: "Plus Jakarta Sans", sans-serif;
   font-size: 16px;
   font-weight: 800;
   cursor: pointer;
@@ -557,6 +646,32 @@
     margin: 0 10px;
   }
 
+  /* Banner de login no mobile */
+  .co-login-banner {
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+
+  .co-login-banner-icon {
+    font-size: 24px;
+  }
+
+  .co-login-banner-text strong {
+    font-size: 14px;
+  }
+
+  .co-login-banner-text span {
+    font-size: 12px;
+  }
+
+  .co-login-banner-btn {
+    width: 100%;
+    padding: 12px;
+    text-align: center;
+  }
+
   .co-grid {
     grid-template-columns: 1fr;
     gap: 16px;
@@ -567,11 +682,13 @@
     border-radius: 16px;
   }
 
+  /* No mobile todos os campos ficam em coluna única por padrão */
   .co-field-row {
     grid-template-columns: 1fr;
     gap: 10px;
   }
 
+  /* Exceto bairro + complemento que mantém 2 colunas */
   .co-field-row.two-col-mobile {
     grid-template-columns: 1fr 1fr;
   }
@@ -582,16 +699,26 @@
     border-radius: 16px;
   }
 
+  .co-total-value {
+    font-size: 22px;
+  }
+
   .co-cta-wrap {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    padding: 12px 16px 24px;
+    padding: 12px 16px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
     background: linear-gradient(to top, #0a0a0a 70%, transparent);
     z-index: 100;
   }
 
+  .co-cta-wrap .co-cta {
+    margin-top: 0;
+  }
+
+  /* Esconde o botão dentro do summary no mobile */
   .co-summary .co-cta,
   .co-summary .co-secure {
     display: none;

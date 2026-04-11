@@ -35,6 +35,7 @@ export default function Header({
     { name: "Refrigerantes", icon: CupSoda, categoryId: "refrigerante" },
     { name: "Energéticos", icon: Zap, categoryId: "energetico" },
   ];
+
   const handleCategoryClick = (categoryId) => {
     if (onCategoryClick) {
       onCategoryClick(categoryId);
@@ -188,20 +189,21 @@ export default function Header({
         <div className="container-fluid d-lg-none mt-2 px-3">
           <div className="search-box w-100">
             <Search className="search-icon" size={20} />
-            <a className="text-decoration-none text-white" href="#produtos">
-              <input
-                type="search"
-                placeholder="Buscar bebidas..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="form-control border-0 text-white"
-                style={{
-                  background: "transparent",
-                  outline: "none",
-                  boxShadow: "none",
-                }}
-              />
-            </a>
+            <input
+              type="search"
+              placeholder="Buscar bebidas..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                document.getElementById("produtos")?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="form-control border-0 text-white"
+              style={{
+                background: "transparent",
+                outline: "none",
+                boxShadow: "none",
+              }}
+            />
           </div>
         </div>
       </nav>

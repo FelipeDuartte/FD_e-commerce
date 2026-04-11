@@ -60,27 +60,29 @@ export default function Cart({
 
   // ── Checkout ───────────────────────────────────────
   const handleCheckout = () => {
-    if (cartItems.length === 0) return;
-    if (!bairroSelecionado) {
-      alert("Por favor, selecione seu bairro para continuar.");
-      return;
-    }
-    onClose();
-    navigate("/checkout", {
-      state: {
-        cartItems: cartItems.map((item) => ({
-          id:       item.id,
-          name:     item.nome,
-          price:    item.preco,
-          quantity: item.quantity,
-          icon:     item.imagem,
-        })),
-        cartTotal:  subtotal,
-        frete:      frete,
-        bairro:     bairroSelecionado.nome,
-      },
-    });
-  };
+  if (cartItems.length === 0) return;
+  if (!bairroSelecionado) {
+    alert("Por favor, selecione seu bairro para continuar.");
+    return;
+  }
+
+  navigate("/checkout", {
+    state: {
+      cartItems: cartItems.map((item) => ({
+        id:       item.id,
+        name:     item.nome,
+        price:    item.preco,
+        quantity: item.quantity,
+        icon:     item.imagem,
+      })),
+      cartTotal:  subtotal,
+      frete:      frete,
+      bairro:     bairroSelecionado.nome,
+    },
+  });
+
+  setTimeout(() => onClose(), 300); // fecha o drawer depois de navegar
+};
 
   return (
     <>

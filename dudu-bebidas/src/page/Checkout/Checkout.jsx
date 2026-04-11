@@ -9,7 +9,6 @@ const paymentOptions = [
   { value: "cash", icon: "💵", name: "Dinheiro" },
 ];
 
-// ── Bairros permitidos para entrega ───────────────────
 const BAIRROS_PERMITIDOS = [
   "minas caixas",
   "serra verde",
@@ -26,11 +25,9 @@ export default function Checkout({ user }) {
   const cartTotal = location.state?.cartTotal ?? 0;
   const DELIVERY  = location.state?.frete ?? 5;
 
-  // ── Referência para evitar múltiplos envios ─────────
   const isProcessingRef = useRef(false);
   const [orderProcessed, setOrderProcessed] = useState(false);
 
-  // ── Redireciona se carrinho vazio ─────────────────
   useEffect(() => {
     if (cartItems.length === 0) {
       navigate("/", { replace: true });
@@ -41,10 +38,9 @@ export default function Checkout({ user }) {
   const [loading, setLoading]   = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  // ── CEP ───────────────────────────────────────────
-  const [cep, setCep]             = useState("");
+  const [cep, setCep]               = useState("");
   const [cepLoading, setCepLoading] = useState(false);
-  const [cepError, setCepError]   = useState("");
+  const [cepError, setCepError]     = useState("");
 
   const [address, setAddress] = useState({
     name:       "",
@@ -61,28 +57,22 @@ export default function Checkout({ user }) {
     setAddress((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  // ── Busca CEP na API ViaCEP ───────────────────────
   const handleCepBlur = async () => {
     const cleaned = cep.replace(/\D/g, "");
     if (cleaned.length !== 8) {
       setCepError("CEP inválido. Digite 8 números.");
       return;
     }
-
     setCepLoading(true);
     setCepError("");
-
     try {
       const res  = await fetch(`https://viacep.com.br/ws/${cleaned}/json/`);
       const data = await res.json();
-
       if (data.erro) {
         setCepError("CEP não encontrado. Verifique e tente novamente.");
         setCepLoading(false);
         return;
       }
-
-      // Preenche os campos automaticamente
       setAddress((prev) => ({
         ...prev,
         street:   data.logradouro || prev.street,
@@ -90,15 +80,12 @@ export default function Checkout({ user }) {
         city:     data.localidade || prev.city,
         state:    data.uf         || prev.state,
       }));
-
     } catch {
       setCepError("Erro ao buscar CEP. Verifique sua conexão.");
     }
-
     setCepLoading(false);
   };
 
-  // ── Formata CEP com máscara ───────────────────────
   const handleCepChange = (e) => {
     const value = e.target.value.replace(/\D/g, "").slice(0, 8);
     const formatted = value.length > 5
@@ -108,7 +95,6 @@ export default function Checkout({ user }) {
     setCepError("");
   };
 
-  // ── Formata telefone com máscara ──────────────────
   const handlePhoneChange = (e) => {
     let value = e.target.value.replace(/\D/g, "").slice(0, 11);
     if (value.length > 6) {
@@ -119,59 +105,42 @@ export default function Checkout({ user }) {
     setAddress((prev) => ({ ...prev, phone: value }));
   };
 
-  // ── Validação completa ────────────────────────────
   const validateForm = () => {
     if (!address.name.trim())
       return "Por favor, informe seu nome completo.";
-
     if (address.name.trim().split(" ").length < 2)
       return "Por favor, informe nome e sobrenome.";
-
     const phoneClean = address.phone.replace(/\D/g, "");
     if (!phoneClean || phoneClean.length < 10)
       return "Por favor, informe um telefone válido com DDD.";
-
     const cepClean = cep.replace(/\D/g, "");
     if (cepClean.length !== 8)
       return "Por favor, informe um CEP válido.";
-
     if (cepError)
       return "Por favor, verifique o CEP informado.";
-
     if (!address.street.trim())
       return "Por favor, informe o endereço.";
-
     if (!address.number.trim())
       return "Por favor, informe o número.";
-
     if (!address.district.trim())
       return "Por favor, informe o bairro.";
-
-    // Valida se o bairro é atendido
     const bairroNorm = address.district.trim().toLowerCase()
       .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const atendido = BAIRROS_PERMITIDOS.some((b) =>
       bairroNorm.includes(b.normalize("NFD").replace(/[\u0300-\u036f]/g, ""))
     );
-
     if (!atendido)
       return `Infelizmente não entregamos neste bairro. Atendemos: Minas Caixas, Serra Verde, Parque São Pedro e Venda Nova.`;
-
     return null;
   };
 
-  // ── Confirmar pedido com prevenção de múltiplos envios ──
   const handleConfirmOrder = async () => {
-    // Verifica se já está processando ou já foi processado
-    if (isProcessingRef.current || orderProcessed || loading) {
-      console.log("Pedido já está sendo processado ou já foi concluído");
-      return;
-    }
+    if (isProcessingRef.current || orderProcessed || loading) return;
 
     setErrorMsg("");
 
     if (!user) {
-      setErrorMsg("Você precisa estar logado para finalizar o pedido.");
+      setErrorMsg("login_required");
       return;
     }
 
@@ -186,7 +155,6 @@ export default function Checkout({ user }) {
       return;
     }
 
-    // Marca como processando
     isProcessingRef.current = true;
     setLoading(true);
 
@@ -206,10 +174,8 @@ export default function Checkout({ user }) {
         return;
       }
 
-      // Marca como processado com sucesso
       setOrderProcessed(true);
-      
-      // Navega para a página de confirmação
+
       navigate("/confirmacao", {
         state: {
           orderId,
@@ -218,9 +184,9 @@ export default function Checkout({ user }) {
           payment,
           address: { ...address, cep },
         },
-        replace: true, // Evita voltar para o checkout via botão voltar
+        replace: true,
       });
-      
+
     } catch (err) {
       console.error("Erro ao processar pedido:", err);
       setErrorMsg("Ocorreu um erro ao processar seu pedido. Tente novamente.");
@@ -229,16 +195,11 @@ export default function Checkout({ user }) {
     }
   };
 
-  // ── Previne navegação de voltar após pedido confirmado ──
   useEffect(() => {
     if (orderProcessed) {
-      // Adiciona um evento para impedir voltar para o checkout
       const handlePopState = () => {
-        if (orderProcessed) {
-          navigate("/", { replace: true });
-        }
+        if (orderProcessed) navigate("/", { replace: true });
       };
-      
       window.addEventListener('popstate', handlePopState);
       return () => window.removeEventListener('popstate', handlePopState);
     }
@@ -285,18 +246,34 @@ export default function Checkout({ user }) {
           </div>
         </div>
 
+        {/* ── BANNER DE LOGIN ── */}
+        {!user && (
+          <div className="co-login-banner">
+            <div className="co-login-banner-icon">🔐</div>
+            <div className="co-login-banner-text">
+              <strong>Faça login para continuar</strong>
+              <span>É necessário estar logado para finalizar seu pedido.</span>
+            </div>
+            <button
+              className="co-login-banner-btn"
+              onClick={() => navigate("/", { state: { openLogin: true } })}
+            >
+              Entrar
+            </button>
+          </div>
+        )}
+
         {/* ── MAIN GRID ── */}
         <div className="co-grid">
 
           {/* FORM */}
-          <div className="co-card">
+          <div className={`co-card${!user ? " co-card-locked" : ""}`}>
             <div className="co-section-label">📍 Entrega</div>
 
-            {errorMsg && (
+            {errorMsg && errorMsg !== "login_required" && (
               <div className="co-error-msg">⚠️ {errorMsg}</div>
             )}
 
-            {/* Nome + Telefone */}
             <div className="co-field-row">
               <div className="co-field">
                 <label>Nome completo</label>
@@ -306,7 +283,7 @@ export default function Checkout({ user }) {
                   value={address.name}
                   onChange={handleAddressChange}
                   placeholder="Seu nome e sobrenome"
-                  disabled={loading || orderProcessed}
+                  disabled={loading || orderProcessed || !user}
                 />
               </div>
               <div className="co-field">
@@ -317,12 +294,11 @@ export default function Checkout({ user }) {
                   value={address.phone}
                   onChange={handlePhoneChange}
                   placeholder="(00) 00000-0000"
-                  disabled={loading || orderProcessed}
+                  disabled={loading || orderProcessed || !user}
                 />
               </div>
             </div>
 
-            {/* CEP */}
             <div className="co-field-row">
               <div className="co-field">
                 <label>CEP</label>
@@ -335,19 +311,13 @@ export default function Checkout({ user }) {
                     placeholder="00000-000"
                     maxLength={9}
                     className={cepError ? "co-input-error" : ""}
-                    disabled={loading || orderProcessed}
+                    disabled={loading || orderProcessed || !user}
                   />
-                  {cepLoading && (
-                    <span className="co-cep-loading">🔍</span>
-                  )}
+                  {cepLoading && <span className="co-cep-loading">🔍</span>}
                 </div>
-                {cepError && (
-                  <span className="co-field-error">{cepError}</span>
-                )}
+                {cepError && <span className="co-field-error">{cepError}</span>}
                 {!cepError && address.city && (
-                  <span className="co-field-success">
-                    ✓ {address.city} — {address.state}
-                  </span>
+                  <span className="co-field-success">✓ {address.city} — {address.state}</span>
                 )}
               </div>
               <div className="co-field">
@@ -358,12 +328,11 @@ export default function Checkout({ user }) {
                   value={address.number}
                   onChange={handleAddressChange}
                   placeholder="123"
-                  disabled={loading || orderProcessed}
+                  disabled={loading || orderProcessed || !user}
                 />
               </div>
             </div>
 
-            {/* Endereço — preenchido pelo CEP */}
             <div className="co-field-row single">
               <div className="co-field">
                 <label>Endereço</label>
@@ -373,12 +342,11 @@ export default function Checkout({ user }) {
                   value={address.street}
                   onChange={handleAddressChange}
                   placeholder="Rua / Av. — preenchido pelo CEP"
-                  disabled={loading || orderProcessed}
+                  disabled={loading || orderProcessed || !user}
                 />
               </div>
             </div>
 
-            {/* Bairro + Complemento */}
             <div className="co-field-row two-col-mobile">
               <div className="co-field">
                 <label>Bairro</label>
@@ -388,7 +356,7 @@ export default function Checkout({ user }) {
                   value={address.district}
                   onChange={handleAddressChange}
                   placeholder="Bairro"
-                  disabled={loading || orderProcessed}
+                  disabled={loading || orderProcessed || !user}
                 />
               </div>
               <div className="co-field">
@@ -399,12 +367,11 @@ export default function Checkout({ user }) {
                   value={address.complement}
                   onChange={handleAddressChange}
                   placeholder="Apto, bloco..."
-                  disabled={loading || orderProcessed}
+                  disabled={loading || orderProcessed || !user}
                 />
               </div>
             </div>
 
-            {/* Aviso de bairros atendidos */}
             <div className="co-bairros-info">
               📍 Entregamos em: Minas Caixas, Serra Verde, Parque São Pedro e Venda Nova
             </div>
@@ -423,7 +390,7 @@ export default function Checkout({ user }) {
                     value={opt.value}
                     checked={payment === opt.value}
                     onChange={() => setPayment(opt.value)}
-                    disabled={loading || orderProcessed}
+                    disabled={loading || orderProcessed || !user}
                   />
                   <label className="co-pay-label" htmlFor={opt.value}>
                     <span className="co-pay-icon">{opt.icon}</span>
@@ -488,7 +455,13 @@ export default function Checkout({ user }) {
               onClick={handleConfirmOrder}
               disabled={loading || orderProcessed}
             >
-              {loading ? "Processando..." : (orderProcessed ? "Pedido Confirmado ✓" : "Confirmar Pedido →")}
+              {loading
+                ? "Processando..."
+                : orderProcessed
+                ? "Pedido Confirmado ✓"
+                : !user
+                ? "🔐 Entre para continuar"
+                : "Confirmar Pedido →"}
             </button>
             <div className="co-secure">🔒 Pagamento 100% seguro</div>
           </div>
@@ -502,7 +475,13 @@ export default function Checkout({ user }) {
           onClick={handleConfirmOrder}
           disabled={loading || orderProcessed}
         >
-          {loading ? "Processando..." : (orderProcessed ? "Pedido Confirmado ✓" : "Confirmar Pedido →")}
+          {loading
+            ? "Processando..."
+            : orderProcessed
+            ? "Pedido Confirmado ✓"
+            : !user
+            ? "🔐 Entre para continuar"
+            : "Confirmar Pedido →"}
         </button>
         <div className="co-secure">🔒 Pagamento 100% seguro</div>
       </div>
