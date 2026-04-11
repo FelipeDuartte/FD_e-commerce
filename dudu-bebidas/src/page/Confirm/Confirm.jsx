@@ -112,12 +112,20 @@ export default function Confirmacao() {
     return () => supabase.removeChannel(channel);
   }, [orderId]);
 
-  // ── Handler de cancelamento ───────────────────────
+  // ── Handler de cancelamento (agora também para retirada) ──
   const handleCancelOrder = async () => {
     setCancelling(true);
     setCancelError("");
 
     try {
+      // Para retirada na loja sem orderId, apenas limpa localStorage e redireciona
+      if (!orderId) {
+        localStorage.removeItem("lastOrder");
+        navigate("/", { state: { cancelledOrder: true, isRetirada: true } });
+        return;
+      }
+
+      // Para pedidos com orderId no banco
       // 1. Deleta os itens do pedido primeiro (FK)
       const { error: itemsError } = await supabase
         .from("order_items")
@@ -138,7 +146,7 @@ export default function Confirmacao() {
       localStorage.removeItem("lastOrder");
 
       // 4. Redireciona para home com mensagem
-      navigate("/", { state: { cancelledOrder: true } });
+      navigate("/", { state: { cancelledOrder: true, isRetirada: false } });
 
     } catch (err) {
       setCancelError(err.message);
@@ -147,9 +155,10 @@ export default function Confirmacao() {
   };
 
   const currentStep = STATUS_STEP[status] ?? 0;
-  const canCancel   = status === "pending" && orderId && !isRetirada;
+  // Permite cancelar se: status for pending E (tem orderId OU é retirada)
+  const canCancel = (status === "pending" && (orderId || isRetirada));
 
-  // ── Sem orderId e sem itens ───────────────────────
+  // ── Sem orderId e sem itens (caso de erro) ───────
   if (!orderId && cartItems.length === 0) {
     return (
       <div className="cf-root">
@@ -180,9 +189,9 @@ export default function Confirmacao() {
           <div className="cf-modal-overlay" onClick={() => !cancelling && setShowCancelModal(false)} />
           <div className="cf-modal">
             <div className="cf-modal-icon">⚠️</div>
-            <h3 className="cf-modal-title">Cancelar pedido?</h3>
+            <h3 className="cf-modal-title">Cancelar {isRetirada ? "retirada" : "pedido"}?</h3>
             <p className="cf-modal-desc">
-              Tem certeza que deseja cancelar o pedido <strong>#{shortId}</strong>?
+              Tem certeza que deseja cancelar {isRetirada ? "a retirada" : "o pedido"} <strong>#{shortId}</strong>?
               Esta ação não pode ser desfeita.
             </p>
 
@@ -203,7 +212,7 @@ export default function Confirmacao() {
                 onClick={handleCancelOrder}
                 disabled={cancelling}
               >
-                {cancelling ? "Cancelando..." : "Sim, cancelar pedido"}
+                {cancelling ? "Cancelando..." : "Sim, cancelar"}
               </button>
             </div>
           </div>
@@ -223,70 +232,100 @@ export default function Confirmacao() {
             </div>
           </div>
           <div className="cf-hero-text">
-            <div className="cf-tag">PEDIDO CONFIRMADO</div>
-            <h1 className="cf-title">Pedido recebido!</h1>
+            <div className="cf-tag">{isRetirada ? "RETIRADA CONFIRMADA" : "PEDIDO CONFIRMADO"}</div>
+            <h1 className="cf-title">{isRetirada ? "Retirada agendada!" : "Pedido recebido!"}</h1>
             <p className="cf-subtitle">
-              Seu pedido foi registrado com sucesso e já está sendo preparado.
+              {isRetirada 
+                ? "Seu pedido já está separado. Passe na loja para retirar quando quiser."
+                : "Seu pedido foi registrado com sucesso e já está sendo preparado."}
             </p>
           </div>
           <div className="cf-order-id">
-            <span className="cf-order-id-label">Nº DO PEDIDO</span>
+            <span className="cf-order-id-label">{isRetirada ? "CÓDIGO DA RETIRADA" : "Nº DO PEDIDO"}</span>
             <span className="cf-order-id-value">#{shortId}</span>
           </div>
         </div>
 
-        {/* ── TRACKER ── */}
-        <div className="cf-tracker-card">
-          <div className="cf-tracker-header">
-            <span className="cf-tracker-label">📦 Acompanhe seu pedido</span>
-            {!statusLoading && (
-              <span className={`cf-status-badge cf-status-${status}`}>
-                {STEPS[currentStep].icon} {STEPS[currentStep].title}
-              </span>
+        {/* ── TRACKER (apenas para entregas) ── */}
+        {!isRetirada && (
+          <div className="cf-tracker-card">
+            <div className="cf-tracker-header">
+              <span className="cf-tracker-label">📦 Acompanhe seu pedido</span>
+              {!statusLoading && (
+                <span className={`cf-status-badge cf-status-${status}`}>
+                  {STEPS[currentStep].icon} {STEPS[currentStep].title}
+                </span>
+              )}
+            </div>
+
+            {statusLoading ? (
+              <div className="cf-tracker-loading">
+                <div className="cf-loading-bar" />
+                <p>Carregando status...</p>
+              </div>
+            ) : (
+              <>
+                <div className="cf-progress-track">
+                  <div className="cf-progress-fill" style={{ width: `${(currentStep / 3) * 100}%` }} />
+                </div>
+
+                <div className="cf-steps">
+                  {STEPS.map((step, i) => {
+                    const isDone    = i < currentStep;
+                    const isActive  = i === currentStep;
+                    const isPending = i > currentStep;
+                    return (
+                      <div
+                        key={i}
+                        className={`cf-step ${isDone ? "cf-step-done" : ""} ${isActive ? "cf-step-active" : ""} ${isPending ? "cf-step-pending" : ""} ${animating && i === currentStep ? "cf-step-entering" : ""}`}
+                      >
+                        <div className="cf-step-icon-wrap">
+                          <div className="cf-step-icon">{isDone ? "✓" : step.icon}</div>
+                          {isActive && <div className="cf-step-pulse" />}
+                        </div>
+                        <div className="cf-step-info">
+                          <span className="cf-step-title">{step.title}</span>
+                          <span className="cf-step-desc">{isActive ? step.activeDesc : step.desc}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className={`cf-status-msg cf-status-msg-${status}`}>
+                  <span className="cf-status-msg-icon">{STEPS[currentStep].icon}</span>
+                  <span className="cf-status-msg-text">{STEPS[currentStep].activeDesc}</span>
+                </div>
+              </>
             )}
           </div>
+        )}
 
-          {statusLoading ? (
-            <div className="cf-tracker-loading">
-              <div className="cf-loading-bar" />
-              <p>Carregando status...</p>
+        {/* ── MENSAGEM PARA RETIRADA ── */}
+        {isRetirada && (
+          <div className="cf-tracker-card" style={{ textAlign: "center" }}>
+            <div className="cf-tracker-header">
+              <span className="cf-tracker-label">🏪 RETIRADA NA LOJA</span>
             </div>
-          ) : (
-            <>
-              <div className="cf-progress-track">
-                <div className="cf-progress-fill" style={{ width: `${(currentStep / 3) * 100}%` }} />
+            <div style={{ padding: "20px 0" }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>🏪</div>
+              <h3 style={{ color: "#ffd000", marginBottom: 8 }}>Seu pedido está pronto!</h3>
+              <p style={{ color: "#888", marginBottom: 16 }}>
+                Passe na loja com seu documento e o código de retirada.
+              </p>
+              <div style={{ 
+                background: "rgba(255, 208, 0, 0.1)", 
+                padding: "12px", 
+                borderRadius: "12px",
+                border: "1px solid rgba(255, 208, 0, 0.2)"
+              }}>
+                <p style={{ fontSize: 12, color: "#ffd000", marginBottom: 4 }}>ENDEREÇO</p>
+                <p style={{ color: "#ddd", fontSize: 14 }}>Rua Edgar Torres, 650</p>
+                <p style={{ color: "#666", fontSize: 12 }}>Belo Horizonte - MG</p>
               </div>
-
-              <div className="cf-steps">
-                {STEPS.map((step, i) => {
-                  const isDone    = i < currentStep;
-                  const isActive  = i === currentStep;
-                  const isPending = i > currentStep;
-                  return (
-                    <div
-                      key={i}
-                      className={`cf-step ${isDone ? "cf-step-done" : ""} ${isActive ? "cf-step-active" : ""} ${isPending ? "cf-step-pending" : ""} ${animating && i === currentStep ? "cf-step-entering" : ""}`}
-                    >
-                      <div className="cf-step-icon-wrap">
-                        <div className="cf-step-icon">{isDone ? "✓" : step.icon}</div>
-                        {isActive && <div className="cf-step-pulse" />}
-                      </div>
-                      <div className="cf-step-info">
-                        <span className="cf-step-title">{step.title}</span>
-                        <span className="cf-step-desc">{isActive ? step.activeDesc : step.desc}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className={`cf-status-msg cf-status-msg-${status}`}>
-                <span className="cf-status-msg-icon">{STEPS[currentStep].icon}</span>
-                <span className="cf-status-msg-text">{STEPS[currentStep].activeDesc}</span>
-              </div>
-            </>
-          )}
-        </div>
+            </div>
+          </div>
+        )}
 
         {/* ── GRID ── */}
         <div className="cf-grid">
@@ -346,20 +385,20 @@ export default function Confirmacao() {
               🏠 Voltar para a loja
             </button>
 
-            {/* ── BOTÃO CANCELAR — só aparece se status for pending ── */}
+            {/* ── BOTÃO CANCELAR — aparece para pending (entrega ou retirada) ── */}
             {canCancel && (
               <button
                 className="cf-btn-cancel"
                 onClick={() => setShowCancelModal(true)}
               >
-                ✕ Cancelar pedido
+                ✕ Cancelar {isRetirada ? "retirada" : "pedido"}
               </button>
             )}
 
             {/* Aviso quando não pode mais cancelar */}
-            {!canCancel && orderId && status !== "pending" && (
+            {!canCancel && (orderId || isRetirada) && status !== "pending" && (
               <div className="cf-cancel-info">
-                ℹ️ Não é mais possível cancelar — pedido já está em preparação.
+                ℹ️ Não é mais possível cancelar — {isRetirada ? "retirada" : "pedido"} já está em andamento.
               </div>
             )}
           </div>
