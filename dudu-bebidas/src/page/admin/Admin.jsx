@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../supabase/Supabaseclient";
 import "./Admin.css";
+
 // ── Status config ─────────────────────────────────────
 const STATUS_CONFIG = {
   pending:    { label: "Aguardando",  icon: "🕐", color: "#ffd000", next: "preparing"  },
@@ -9,11 +10,13 @@ const STATUS_CONFIG = {
   on_the_way: { label: "Em entrega",  icon: "🛵", color: "#50c878", next: "delivered"  },
   delivered:  { label: "Entregue",    icon: "✅", color: "#aaa",    next: null         },
 };
+
 const PAYMENT_LABEL = {
   pix:  { icon: "⚡", label: "PIX"      },
   card: { icon: "💳", label: "Cartão"   },
   cash: { icon: "💵", label: "Dinheiro" },
 };
+
 const STATUS_ORDER = ["pending", "preparing", "on_the_way", "delivered"];
 const PAGE_SIZE    = 20;
 
@@ -29,17 +32,19 @@ export default function Admin({ user, isAdmin }) {
   const [updating, setUpdating]         = useState(null);
   const [filterStatus, setFilterStatus] = useState("all");
   const [expandedId, setExpandedId]     = useState(null);
-  
-  // ── Novos estados para métricas do dia ───────────────
+
   const [todayOrdersCount, setTodayOrdersCount] = useState(0);
   const [todaySalesTotal, setTodaySalesTotal]   = useState(0);
 
-  // ── Buscar métricas do dia ──────────────────────────
+  // ── Modal de rejeição ─────────────────────────────
+  const [rejectModal, setRejectModal]     = useState(null); // orderId
+  const [rejecting, setRejecting]         = useState(false);
+  const [rejectError, setRejectError]     = useState("");
+
+  // ── Métricas do dia ───────────────────────────────
   const fetchTodayMetrics = async () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    const today    = new Date(); today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
 
     const { data, error, count } = await supabase
       .from("orders")
@@ -49,26 +54,21 @@ export default function Admin({ user, isAdmin }) {
 
     if (!error && data) {
       setTodayOrdersCount(count || 0);
-      const total = data.reduce((sum, order) => sum + (order.total || 0), 0);
-      setTodaySalesTotal(total);
+      setTodaySalesTotal(data.reduce((sum, o) => sum + (o.total || 0), 0));
     }
   };
 
   // ── Busca pedidos + Realtime ──────────────────────
   useEffect(() => {
     if (!isAdmin) return;
-
     fetchOrders(0, true);
-    fetchTodayMetrics(); // Buscar métricas do dia
+    fetchTodayMetrics();
 
     const channel = supabase
       .channel("admin-orders")
       .on("postgres_changes",
         { event: "*", schema: "public", table: "orders" },
-        () => {
-          fetchOrders(0, true);
-          fetchTodayMetrics(); // Atualizar métricas quando houver mudanças
-        }
+        () => { fetchOrders(0, true); fetchTodayMetrics(); }
       )
       .subscribe();
 
@@ -78,9 +78,7 @@ export default function Admin({ user, isAdmin }) {
   // ── Reset paginação ao mudar filtro ──────────────
   useEffect(() => {
     if (!isAdmin) return;
-    setPage(0);
-    setOrders([]);
-    setHasMore(true);
+    setPage(0); setOrders([]); setHasMore(true);
     fetchOrders(0, true);
   }, [filterStatus]);
 
@@ -101,10 +99,7 @@ export default function Admin({ user, isAdmin }) {
       .order("created_at", { ascending: false })
       .range(from, to);
 
-    // Aplica filtro de status se não for "all"
-    if (filterStatus !== "all") {
-      query = query.eq("status", filterStatus);
-    }
+    if (filterStatus !== "all") query = query.eq("status", filterStatus);
 
     const { data, error, count } = await query;
 
@@ -126,6 +121,46 @@ export default function Admin({ user, isAdmin }) {
     fetchOrders(next);
   };
 
+  // ── Aceitar pedido → avança para "preparing" ─────
+  const handleAcceptOrder = async (orderId) => {
+    setUpdating(orderId);
+    await supabase
+      .from("orders")
+      .update({ status: "preparing" })
+      .eq("id", orderId);
+    setUpdating(null);
+  };
+
+  // ── Rejeitar pedido → deleta do banco ────────────
+  const handleRejectOrder = async () => {
+    if (!rejectModal) return;
+    setRejecting(true);
+    setRejectError("");
+
+    try {
+      const { error: itemsError } = await supabase
+        .from("order_items")
+        .delete()
+        .eq("order_id", rejectModal);
+
+      if (itemsError) throw new Error("Erro ao remover itens do pedido.");
+
+      const { error: orderError } = await supabase
+        .from("orders")
+        .delete()
+        .eq("id", rejectModal);
+
+      if (orderError) throw new Error("Erro ao rejeitar o pedido.");
+
+      setRejectModal(null);
+      setRejecting(false);
+
+    } catch (err) {
+      setRejectError(err.message);
+      setRejecting(false);
+    }
+  };
+
   // ── Handlers de status ────────────────────────────
   const handleAdvanceStatus = async (orderId, currentStatus) => {
     const nextStatus = STATUS_CONFIG[currentStatus]?.next;
@@ -141,7 +176,6 @@ export default function Admin({ user, isAdmin }) {
     setUpdating(null);
   };
 
-  // ── Contadores por status (do total, não só da página) ─
   const counts = STATUS_ORDER.reduce((acc, s) => {
     acc[s] = orders.filter((o) => o.status === s).length;
     return acc;
@@ -155,12 +189,9 @@ export default function Admin({ user, isAdmin }) {
     });
   };
 
-  // ── Formatar valor monetário ───────────────────────
-  const formatCurrency = (value) => {
-    return `R$ ${value.toFixed(2).replace(".", ",")}`;
-  };
+  const formatCurrency = (value) =>
+    `R$ ${value.toFixed(2).replace(".", ",")}`;
 
-  // ── Tela de verificação ───────────────────────────
   if (isAdmin === null) {
     return (
       <div className="adm-root">
@@ -179,6 +210,46 @@ export default function Admin({ user, isAdmin }) {
   return (
     <div className="adm-root">
       <div className="adm-wrap">
+
+        {/* ── MODAL DE REJEIÇÃO ── */}
+        {rejectModal && (
+          <>
+            <div
+              className="adm-modal-overlay"
+              onClick={() => !rejecting && setRejectModal(null)}
+            />
+            <div className="adm-modal">
+              <div className="adm-modal-icon">🚫</div>
+              <h3 className="adm-modal-title">Rejeitar pedido?</h3>
+              <p className="adm-modal-desc">
+                Tem certeza que deseja <strong>rejeitar</strong> o pedido{" "}
+                <strong>#{rejectModal.slice(-8).toUpperCase()}</strong>?
+                O pedido será <strong>apagado permanentemente</strong> do banco.
+              </p>
+
+              {rejectError && (
+                <div className="adm-modal-error">⚠️ {rejectError}</div>
+              )}
+
+              <div className="adm-modal-actions">
+                <button
+                  className="adm-modal-btn-back"
+                  onClick={() => { setRejectModal(null); setRejectError(""); }}
+                  disabled={rejecting}
+                >
+                  Cancelar
+                </button>
+                <button
+                  className="adm-modal-btn-reject"
+                  onClick={handleRejectOrder}
+                  disabled={rejecting}
+                >
+                  {rejecting ? "Rejeitando..." : "Sim, rejeitar"}
+                </button>
+              </div>
+            </div>
+          </>
+        )}
 
         {/* ── HEADER ── */}
         <div className="adm-header">
@@ -211,7 +282,7 @@ export default function Admin({ user, isAdmin }) {
           </div>
         </div>
 
-        {/* ── NOVOS CARDS DE MÉTRICAS DO DIA ── */}
+        {/* ── MÉTRICAS DO DIA ── */}
         <div className="adm-today-metrics">
           <div className="adm-metric-card">
             <div className="adm-metric-icon">📅</div>
@@ -290,6 +361,7 @@ export default function Admin({ user, isAdmin }) {
                 const isExpanded = expandedId === order.id;
                 const isUpdating = updating === order.id;
                 const shortId    = order.id.slice(-8).toUpperCase();
+                const isPending  = order.status === "pending";
 
                 return (
                   <div key={order.id} className={`adm-order adm-order-${order.status}`}>
@@ -318,6 +390,31 @@ export default function Admin({ user, isAdmin }) {
                           R$ {Number(order.total).toFixed(2).replace(".", ",")}
                         </span>
                       </div>
+
+                      {/* ── BOTÕES ACEITAR / REJEITAR (só para pending) ── */}
+                      {isPending && (
+                        <div
+                          className="adm-order-actions"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <button
+                            className="adm-btn-accept"
+                            onClick={() => handleAcceptOrder(order.id)}
+                            disabled={isUpdating}
+                            title="Aceitar pedido"
+                          >
+                            {isUpdating ? "..." : "✓ Aceitar"}
+                          </button>
+                          <button
+                            className="adm-btn-reject"
+                            onClick={() => setRejectModal(order.id)}
+                            disabled={isUpdating}
+                            title="Rejeitar pedido"
+                          >
+                            ✕ Rejeitar
+                          </button>
+                        </div>
+                      )}
 
                       <span className="adm-order-date">{formatDate(order.created_at)}</span>
                       <span className={`adm-chevron ${isExpanded ? "open" : ""}`}>▾</span>
@@ -357,34 +454,59 @@ export default function Admin({ user, isAdmin }) {
 
                         <div className="adm-detail-section">
                           <div className="adm-detail-label">🔄 Alterar Status</div>
-                          <div className="adm-status-pills">
-                            {STATUS_ORDER.map((s) => (
+
+                          {/* Aceitar/Rejeitar também nos detalhes expandidos para pending */}
+                          {isPending && (
+                            <div className="adm-accept-reject-detail">
                               <button
-                                key={s}
-                                className={`adm-pill ${order.status === s ? "adm-pill-active" : ""}`}
-                                style={{ "--pill-color": STATUS_CONFIG[s].color }}
-                                onClick={() => handleSetStatus(order.id, s)}
+                                className="adm-btn-accept-lg"
+                                onClick={() => handleAcceptOrder(order.id)}
                                 disabled={isUpdating}
                               >
-                                {STATUS_CONFIG[s].icon} {STATUS_CONFIG[s].label}
+                                {isUpdating ? "Processando..." : "✓ Aceitar Pedido"}
                               </button>
-                            ))}
-                          </div>
-
-                          {cfg.next && (
-                            <button
-                              className="adm-btn-advance"
-                              onClick={() => handleAdvanceStatus(order.id, order.status)}
-                              disabled={isUpdating}
-                            >
-                              {isUpdating
-                                ? "Atualizando..."
-                                : `Avançar para: ${STATUS_CONFIG[cfg.next].icon} ${STATUS_CONFIG[cfg.next].label} →`}
-                            </button>
+                              <button
+                                className="adm-btn-reject-lg"
+                                onClick={() => setRejectModal(order.id)}
+                                disabled={isUpdating}
+                              >
+                                ✕ Rejeitar Pedido
+                              </button>
+                            </div>
                           )}
 
-                          {!cfg.next && (
-                            <div className="adm-delivered-msg">✅ Pedido finalizado</div>
+                          {!isPending && (
+                            <>
+                              <div className="adm-status-pills">
+                                {STATUS_ORDER.map((s) => (
+                                  <button
+                                    key={s}
+                                    className={`adm-pill ${order.status === s ? "adm-pill-active" : ""}`}
+                                    style={{ "--pill-color": STATUS_CONFIG[s].color }}
+                                    onClick={() => handleSetStatus(order.id, s)}
+                                    disabled={isUpdating}
+                                  >
+                                    {STATUS_CONFIG[s].icon} {STATUS_CONFIG[s].label}
+                                  </button>
+                                ))}
+                              </div>
+
+                              {cfg.next && (
+                                <button
+                                  className="adm-btn-advance"
+                                  onClick={() => handleAdvanceStatus(order.id, order.status)}
+                                  disabled={isUpdating}
+                                >
+                                  {isUpdating
+                                    ? "Atualizando..."
+                                    : `Avançar para: ${STATUS_CONFIG[cfg.next].icon} ${STATUS_CONFIG[cfg.next].label} →`}
+                                </button>
+                              )}
+
+                              {!cfg.next && (
+                                <div className="adm-delivered-msg">✅ Pedido finalizado</div>
+                              )}
+                            </>
                           )}
                         </div>
                       </div>
@@ -394,7 +516,6 @@ export default function Admin({ user, isAdmin }) {
               })}
             </div>
 
-            {/* ── BOTÃO CARREGAR MAIS ── */}
             {hasMore && (
               <div className="adm-load-more-wrap">
                 <button
@@ -403,10 +524,7 @@ export default function Admin({ user, isAdmin }) {
                   disabled={loadingMore}
                 >
                   {loadingMore ? (
-                    <>
-                      <div className="adm-spinner-sm" />
-                      Carregando...
-                    </>
+                    <><div className="adm-spinner-sm" /> Carregando...</>
                   ) : (
                     `Carregar mais pedidos (${orders.length} de ${totalCount})`
                   )}
@@ -414,11 +532,8 @@ export default function Admin({ user, isAdmin }) {
               </div>
             )}
 
-            {/* ── FIM DA LISTA ── */}
             {!hasMore && orders.length > PAGE_SIZE && (
-              <div className="adm-end-msg">
-                ✓ Todos os {totalCount} pedidos carregados
-              </div>
+              <div className="adm-end-msg">✓ Todos os {totalCount} pedidos carregados</div>
             )}
           </>
         )}

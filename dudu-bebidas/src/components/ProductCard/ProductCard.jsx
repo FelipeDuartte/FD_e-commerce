@@ -15,7 +15,7 @@ export default function ProductCard({ produto, addToCart }) {
     if (isAdded) return;
     addToCart(produto);
     setIsAdded(true);
-  };
+  };66
 
   useEffect(() => {
     if (!isAdded) return;
