@@ -12,9 +12,8 @@ const BAIRROS = [
   { nome: "Venda Nova",       frete: 5.00 },
 ];
 
-// ── Horários de funcionamento ──────────────────────────
-const HORARIO_ENTREGA  = { abertura: 9 * 60,        fechamento: 17 * 60 + 30 }; // 09:00 – 17:30
-const HORARIO_RETIRADA = { abertura: 9 * 60,        fechamento: 19 * 60      }; // 09:00 – 19:00
+const HORARIO_ENTREGA  = { abertura: 9 * 60, fechamento: 17 * 60 + 30 };
+const HORARIO_RETIRADA = { abertura: 9 * 60, fechamento: 19 * 60 };
 
 function getMinutosAgora() {
   const agora = new Date();
@@ -24,25 +23,16 @@ function getMinutosAgora() {
 function verificarHorario(isRetirada) {
   const minutos = getMinutosAgora();
   const horario = isRetirada ? HORARIO_RETIRADA : HORARIO_ENTREGA;
-
   if (minutos < horario.abertura) {
     const h = Math.floor(horario.abertura / 60).toString().padStart(2, "0");
     const m = (horario.abertura % 60).toString().padStart(2, "0");
-    return {
-      disponivel: false,
-      mensagem: `Ainda não abrimos. ${isRetirada ? "Retirada" : "Entrega"} disponível a partir das ${h}h${m}.`,
-    };
+    return { disponivel: false, mensagem: `Ainda não abrimos. ${isRetirada ? "Retirada" : "Entrega"} disponível a partir das ${h}h${m}.` };
   }
-
   if (minutos >= horario.fechamento) {
     const h = Math.floor(horario.abertura / 60).toString().padStart(2, "0");
     const m = (horario.abertura % 60).toString().padStart(2, "0");
-    return {
-      disponivel: false,
-      mensagem: `Fora do horário. ${isRetirada ? "Retirada" : "Entrega"} retoma amanhã às ${h}h${m}.`,
-    };
+    return { disponivel: false, mensagem: `Fora do horário. ${isRetirada ? "Retirada" : "Entrega"} retoma amanhã às ${h}h${m}.` };
   }
-
   return { disponivel: true, mensagem: null };
 }
 
@@ -59,7 +49,7 @@ export default function Cart({
   updateQuantity,
   removeItem,
   clearCart,
-  user, // Adicione esta prop se precisar do usuário logado
+  user,
 }) {
   const navigate = useNavigate();
 
@@ -68,15 +58,10 @@ export default function Cart({
   const [horarioAviso, setHorarioAviso]           = useState(null);
   const dropdownRef = useRef(null);
 
-  const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.preco * item.quantity,
-    0
-  );
+  const subtotal = cartItems.reduce((sum, item) => sum + item.preco * item.quantity, 0);
+  const frete    = bairroSelecionado ? bairroSelecionado.frete : null;
+  const total    = frete !== null ? subtotal + frete : subtotal;
 
-  const frete = bairroSelecionado ? bairroSelecionado.frete : null;
-  const total  = frete !== null ? subtotal + frete : subtotal;
-
-  // ── Fechar dropdown ao clicar fora ─────────────────
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -87,37 +72,15 @@ export default function Cart({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // ── Limpa aviso ao trocar seleção ──────────────────
-  useEffect(() => {
-    setHorarioAviso(null);
-  }, [bairroSelecionado]);
-
-  const toggleBairroDropdown = () => setIsBairroOpen((v) => !v);
+  useEffect(() => { setHorarioAviso(null); }, [bairroSelecionado]);
 
   const handleSelectBairro = (bairro) => {
     setBairroSelecionado(bairro);
     setIsBairroOpen(false);
   };
 
-  // ── Função para criar pedido no Supabase (se necessário) ──
-  const criarPedido = async (pedidoData) => {
-    try {
-      // Se tiver Supabase configurado, salve o pedido aqui
-      const { data, error } = await supabase
-        .from("pedidos")
-        .insert([pedidoData])
-        .select();
-      
-      if (error) throw error;
-      return data[0];
-    } catch (error) {
-      console.error("Erro ao criar pedido:", error);
-      return null;
-    }
-  };
-
-  // ── Checkout com validação de horário ──────────────
-  const handleCheckout = async () => {
+  // ── Checkout — tanto entrega quanto retirada vão para /checkout ──
+  const handleCheckout = () => {
     if (cartItems.length === 0) return;
 
     if (!bairroSelecionado) {
@@ -133,51 +96,7 @@ export default function Cart({
       return;
     }
 
-    // Prepara os dados do pedido
-    const pedidoData = {
-      items: cartItems.map((item) => ({
-        id: item.id,
-        nome: item.nome,
-        preco: item.preco,
-        quantidade: item.quantity,
-        imagem: item.imagem,
-      })),
-      subtotal: subtotal,
-      frete: frete,
-      total: total,
-      bairro: bairroSelecionado.nome,
-      isRetirada: isRetirada,
-      data: new Date().toISOString(),
-      status: isRetirada ? "Pronto para retirada" : "Aguardando entrega",
-      // userId: user?.id, // Descomente se tiver usuário logado
-    };
-
-    // Se for retirada na loja, vai direto para confirmação
-    // No handleCheckout do Cart.jsx, para retirada na loja:
-if (isRetirada) {
-  navigate("/confirmacao", {
-    state: {
-      pedido: {
-        orderId: null, // Sem ID para retirada
-        cartItems: cartItems.map((item) => ({
-          id: item.id,
-          nome: item.nome,
-          preco: item.preco,
-          quantity: item.quantity,
-          imagem: item.imagem,
-        })),
-        total: total,
-        payment: "pix", // ou o método escolhido
-        address: {},
-        isRetirada: true,
-      },
-    },
-  });
-  onClose();
-  return;
-}
-
-    // Se for entrega, vai para o checkout normal
+    // ✅ Ambos os fluxos vão para /checkout com os mesmos dados
     navigate("/checkout", {
       state: {
         cartItems: cartItems.map((item) => ({
@@ -190,7 +109,7 @@ if (isRetirada) {
         cartTotal:  subtotal,
         frete:      frete,
         bairro:     bairroSelecionado.nome,
-        isRetirada: false,
+        isRetirada: isRetirada,
       },
     });
 
@@ -199,10 +118,8 @@ if (isRetirada) {
 
   return (
     <>
-      {/* Overlay */}
       <div className={`cart-overlay ${isOpen ? "show" : ""}`} onClick={onClose} />
 
-      {/* Cart Drawer */}
       <div className={`cart-drawer ${isOpen ? "open" : ""}`}>
 
         {/* Header */}
@@ -262,11 +179,9 @@ if (isRetirada) {
                   </div>
                 </div>
               ))}
-
               {cartItems.length > 0 && (
                 <button onClick={clearCart} className="clear-cart-btn">
-                  <Trash2 size={16} />
-                  Limpar Carrinho
+                  <Trash2 size={16} /> Limpar Carrinho
                 </button>
               )}
             </div>
@@ -277,7 +192,7 @@ if (isRetirada) {
         {cartItems.length > 0 && (
           <div className="cart-footer">
 
-            {/* ── Horários de funcionamento ── */}
+            {/* Horários */}
             <div className="horarios-info">
               <div className="horario-row">
                 <MapPin size={13} />
@@ -289,7 +204,6 @@ if (isRetirada) {
               </div>
             </div>
 
-            {/* ── Aviso de horário fora do expediente ── */}
             {horarioAviso && (
               <div className="horario-aviso">
                 <Clock size={15} />
@@ -297,17 +211,14 @@ if (isRetirada) {
               </div>
             )}
 
-            {/* ── Dropdown de bairro / retirada ── */}
+            {/* Dropdown */}
             <div className="bairro-dropdown-container" ref={dropdownRef}>
               <div
                 className={`bairro-dropdown-header ${isBairroOpen ? "open" : ""}`}
-                onClick={toggleBairroDropdown}
+                onClick={() => setIsBairroOpen((v) => !v)}
               >
                 <div className="bairro-dropdown-label">
-                  {bairroSelecionado?.isRetirada
-                    ? <Store size={16} />
-                    : <MapPin size={16} />
-                  }
+                  {bairroSelecionado?.isRetirada ? <Store size={16} /> : <MapPin size={16} />}
                   <span>
                     {bairroSelecionado ? bairroSelecionado.nome : "Selecione entrega ou retirada"}
                   </span>
@@ -326,8 +237,7 @@ if (isRetirada) {
                       <div className="bairro-item-left">
                         {b.isRetirada
                           ? <Store size={14} className="bairro-item-icon retirada-icon" />
-                          : <MapPin size={14} className="bairro-item-icon" />
-                        }
+                          : <MapPin size={14} className="bairro-item-icon" />}
                         <div className="bairro-item-info">
                           <span className="bairro-item-nome">{b.nome}</span>
                           <span className={`bairro-item-frete ${b.frete === 0 ? "gratis" : ""}`}>
@@ -344,45 +254,38 @@ if (isRetirada) {
               )}
             </div>
 
-            {/* ── Resumo ── */}
+            {/* Resumo */}
             <div className="summary-section">
               <div className="summary-row">
                 <span>Subtotal:</span>
                 <span>R$ {subtotal.toFixed(2)}</span>
               </div>
-
               <div className={`summary-row ${frete === 0 ? "free-shipping" : ""}`}>
                 <span>Frete:</span>
                 <span>
                   {frete === null
                     ? <span className="frete-pendente">Selecione a opção</span>
-                    : frete === 0
-                    ? "GRÁTIS"
+                    : frete === 0 ? "GRÁTIS"
                     : `R$ ${frete.toFixed(2)}`}
                 </span>
               </div>
-
               <div className="summary-total">
                 <span className="total-label">Total:</span>
                 <span className="total-value">
-                  {frete === null
-                    ? `R$ ${subtotal.toFixed(2)}`
-                    : `R$ ${total.toFixed(2)}`}
+                  {frete === null ? `R$ ${subtotal.toFixed(2)}` : `R$ ${total.toFixed(2)}`}
                 </span>
               </div>
             </div>
 
-            {/* ── Botão de checkout ── */}
             <button
               onClick={handleCheckout}
               className={`checkout-btn ${!bairroSelecionado ? "checkout-btn-disabled" : ""}`}
               disabled={!bairroSelecionado}
             >
-              {bairroSelecionado 
-                ? (bairroSelecionado.isRetirada ? "Confirmar Retirada" : "Finalizar Pedido")
+              {bairroSelecionado
+                ? (bairroSelecionado.isRetirada ? "Confirmar Retirada →" : "Finalizar Pedido →")
                 : "Selecione a opção →"}
             </button>
-
           </div>
         )}
       </div>

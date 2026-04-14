@@ -21,37 +21,39 @@ export default function Checkout({ user }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const cartItems = location.state?.cartItems ?? [];
-  const cartTotal = location.state?.cartTotal ?? 0;
-  const DELIVERY  = location.state?.frete ?? 5;
+  const cartItems  = location.state?.cartItems  ?? [];
+  const cartTotal  = location.state?.cartTotal  ?? 0;
+  const DELIVERY   = location.state?.frete      ?? 0;
+  const isRetirada = location.state?.isRetirada ?? false;
 
-  const isProcessingRef = useRef(false);
+  const isProcessingRef              = useRef(false);
   const [orderProcessed, setOrderProcessed] = useState(false);
+  const [payment, setPayment]               = useState("pix");
+  const [loading, setLoading]               = useState(false);
+  const [errorMsg, setErrorMsg]             = useState("");
 
-  useEffect(() => {
-    if (cartItems.length === 0) {
-      navigate("/", { replace: true });
-    }
-  }, []);
-
-  const [payment, setPayment]   = useState("pix");
-  const [loading, setLoading]   = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
-
+  // ── Endereço — só usado para entregas ────────────
   const [cep, setCep]               = useState("");
   const [cepLoading, setCepLoading] = useState(false);
   const [cepError, setCepError]     = useState("");
 
   const [address, setAddress] = useState({
-    name:       "",
-    phone:      "",
-    street:     "",
-    number:     "",
-    district:   "",
-    complement: "",
-    city:       "",
-    state:      "",
+    name: "", phone: "", street: "",
+    number: "", district: "", complement: "",
+    city: "", state: "",
   });
+
+  useEffect(() => {
+    if (cartItems.length === 0) navigate("/", { replace: true });
+  }, []);
+
+  useEffect(() => {
+    if (orderProcessed) {
+      const handlePopState = () => { if (orderProcessed) navigate("/", { replace: true }); };
+      window.addEventListener("popstate", handlePopState);
+      return () => window.removeEventListener("popstate", handlePopState);
+    }
+  }, [orderProcessed, navigate]);
 
   const handleAddressChange = (e) => {
     setAddress((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -59,20 +61,12 @@ export default function Checkout({ user }) {
 
   const handleCepBlur = async () => {
     const cleaned = cep.replace(/\D/g, "");
-    if (cleaned.length !== 8) {
-      setCepError("CEP inválido. Digite 8 números.");
-      return;
-    }
-    setCepLoading(true);
-    setCepError("");
+    if (cleaned.length !== 8) { setCepError("CEP inválido. Digite 8 números."); return; }
+    setCepLoading(true); setCepError("");
     try {
       const res  = await fetch(`https://viacep.com.br/ws/${cleaned}/json/`);
       const data = await res.json();
-      if (data.erro) {
-        setCepError("CEP não encontrado. Verifique e tente novamente.");
-        setCepLoading(false);
-        return;
-      }
+      if (data.erro) { setCepError("CEP não encontrado."); setCepLoading(false); return; }
       setAddress((prev) => ({
         ...prev,
         street:   data.logradouro || prev.street,
@@ -80,86 +74,78 @@ export default function Checkout({ user }) {
         city:     data.localidade || prev.city,
         state:    data.uf         || prev.state,
       }));
-    } catch {
-      setCepError("Erro ao buscar CEP. Verifique sua conexão.");
-    }
+    } catch { setCepError("Erro ao buscar CEP."); }
     setCepLoading(false);
   };
 
   const handleCepChange = (e) => {
     const value = e.target.value.replace(/\D/g, "").slice(0, 8);
-    const formatted = value.length > 5
-      ? `${value.slice(0, 5)}-${value.slice(5)}`
-      : value;
-    setCep(formatted);
+    setCep(value.length > 5 ? `${value.slice(0,5)}-${value.slice(5)}` : value);
     setCepError("");
   };
 
   const handlePhoneChange = (e) => {
     let value = e.target.value.replace(/\D/g, "").slice(0, 11);
-    if (value.length > 6) {
-      value = `(${value.slice(0,2)}) ${value.slice(2,7)}-${value.slice(7)}`;
-    } else if (value.length > 2) {
-      value = `(${value.slice(0,2)}) ${value.slice(2)}`;
-    }
+    if (value.length > 6)      value = `(${value.slice(0,2)}) ${value.slice(2,7)}-${value.slice(7)}`;
+    else if (value.length > 2) value = `(${value.slice(0,2)}) ${value.slice(2)}`;
     setAddress((prev) => ({ ...prev, phone: value }));
   };
 
+  // ── Validação — pula endereço se for retirada ─────
   const validateForm = () => {
+    if (isRetirada) {
+      // Retirada só precisa do nome para identificação
+      if (!address.name.trim()) return "Por favor, informe seu nome para identificação.";
+      const phoneClean = address.phone.replace(/\D/g, "");
+      if (!phoneClean || phoneClean.length < 10)
+        return "Por favor, informe um telefone para contato.";
+      return null;
+    }
+
+    // Entrega — validação completa
     const phoneClean = address.phone.replace(/\D/g, "");
     if (!phoneClean || phoneClean.length < 10)
       return "Por favor, informe um telefone válido com DDD.";
     const cepClean = cep.replace(/\D/g, "");
-    if (cepClean.length !== 8)
-      return "Por favor, informe um CEP válido.";
-    if (cepError)
-      return "Por favor, verifique o CEP informado.";
-    if (!address.street.trim())
-      return "Por favor, informe o endereço.";
-    if (!address.number.trim())
-      return "Por favor, informe o número.";
-    if (!address.district.trim())
-      return "Por favor, informe o bairro.";
+    if (cepClean.length !== 8) return "Por favor, informe um CEP válido.";
+    if (cepError)               return "Por favor, verifique o CEP informado.";
+    if (!address.street.trim()) return "Por favor, informe o endereço.";
+    if (!address.number.trim()) return "Por favor, informe o número.";
+    if (!address.district.trim()) return "Por favor, informe o bairro.";
     const bairroNorm = address.district.trim().toLowerCase()
       .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const atendido = BAIRROS_PERMITIDOS.some((b) =>
       bairroNorm.includes(b.normalize("NFD").replace(/[\u0300-\u036f]/g, ""))
     );
     if (!atendido)
-      return `Infelizmente não entregamos neste bairro. Atendemos: Minas Caixas, Serra Verde, Parque São Pedro e Venda Nova.`;
+      return "Infelizmente não entregamos neste bairro. Atendemos: Minas Caixas, Serra Verde, Parque São Pedro e Venda Nova.";
     return null;
   };
 
   const handleConfirmOrder = async () => {
     if (isProcessingRef.current || orderProcessed || loading) return;
-
     setErrorMsg("");
 
-    if (!user) {
-      setErrorMsg("login_required");
-      return;
-    }
+    if (!user) { setErrorMsg("login_required"); return; }
 
     const validationError = validateForm();
-    if (validationError) {
-      setErrorMsg(validationError);
-      return;
-    }
-
-    if (cartItems.length === 0) {
-      setErrorMsg("Seu carrinho está vazio.");
-      return;
-    }
+    if (validationError) { setErrorMsg(validationError); return; }
+    if (cartItems.length === 0) { setErrorMsg("Seu carrinho está vazio."); return; }
 
     isProcessingRef.current = true;
     setLoading(true);
 
     try {
+      // Para retirada, address não tem CEP/endereço
+      const addressToSave = isRetirada
+        ? { name: address.name, phone: address.phone, isRetirada: true }
+        : { ...address, cep };
+
       const { orderId, error } = await saveOrder({
         userId:        user.id,
         total:         cartTotal + DELIVERY,
         paymentMethod: payment,
-        address:       { ...address, cep },
+        address:       addressToSave,
         cartItems,
       });
 
@@ -176,9 +162,10 @@ export default function Checkout({ user }) {
         state: {
           orderId,
           cartItems,
-          total: cartTotal + DELIVERY,
+          total:      cartTotal + DELIVERY,
           payment,
-          address: { ...address, cep },
+          address:    addressToSave,
+          isRetirada,
         },
         replace: true,
       });
@@ -191,16 +178,6 @@ export default function Checkout({ user }) {
     }
   };
 
-  useEffect(() => {
-    if (orderProcessed) {
-      const handlePopState = () => {
-        if (orderProcessed) navigate("/", { replace: true });
-      };
-      window.addEventListener('popstate', handlePopState);
-      return () => window.removeEventListener('popstate', handlePopState);
-    }
-  }, [orderProcessed, navigate]);
-
   return (
     <div className="co-root">
       <div className="co-wrap">
@@ -209,18 +186,16 @@ export default function Checkout({ user }) {
         <div className="co-header">
           <button
             className="co-back"
-            onClick={() => {
-              if (!orderProcessed && !loading) {
-                navigate("/", { state: { openCart: true } });
-              }
-            }}
+            onClick={() => { if (!orderProcessed && !loading) navigate("/", { state: { openCart: true } }); }}
             disabled={loading || orderProcessed}
           >
             ←
           </button>
           <div className="co-header-text">
             <div className="co-step-label">Passo 2 de 2</div>
-            <h1 className="co-title">Finalizar Pedido</h1>
+            <h1 className="co-title">
+              {isRetirada ? "Confirmar Retirada" : "Finalizar Pedido"}
+            </h1>
           </div>
         </div>
 
@@ -233,7 +208,7 @@ export default function Checkout({ user }) {
           <div className="co-prog-line" />
           <div className="co-prog-step">
             <div className="co-prog-dot">2</div>
-            <span className="co-prog-label">Checkout</span>
+            <span className="co-prog-label">{isRetirada ? "Retirada" : "Checkout"}</span>
           </div>
           <div className="co-prog-line" />
           <div className="co-prog-step">
@@ -259,17 +234,31 @@ export default function Checkout({ user }) {
           </div>
         )}
 
-        {/* ── MAIN GRID ── */}
         <div className="co-grid">
 
-          {/* FORM */}
+          {/* ── FORM ── */}
           <div className={`co-card${!user ? " co-card-locked" : ""}`}>
-            <div className="co-section-label">📍 Entrega</div>
+
+            {/* ── BANNER DE RETIRADA ── */}
+            {isRetirada && (
+              <div className="co-retirada-banner">
+                <span className="co-retirada-icon">🏪</span>
+                <div className="co-retirada-text">
+                  <strong>Retirada na Loja</strong>
+                  <span>Seu pedido ficará pronto para retirada assim que confirmado.</span>
+                </div>
+              </div>
+            )}
+
+            <div className="co-section-label">
+              {isRetirada ? "👤 Identificação" : "📍 Entrega"}
+            </div>
 
             {errorMsg && errorMsg !== "login_required" && (
               <div className="co-error-msg">⚠️ {errorMsg}</div>
             )}
 
+            {/* Nome + Telefone — sempre visível */}
             <div className="co-field-row">
               <div className="co-field">
                 <label>Nome completo</label>
@@ -278,7 +267,7 @@ export default function Checkout({ user }) {
                   name="name"
                   value={address.name}
                   onChange={handleAddressChange}
-                  placeholder="Seu nome e sobrenome"
+                  placeholder={isRetirada ? "Seu nome para retirada" : "Seu nome e sobrenome"}
                   disabled={loading || orderProcessed || !user}
                 />
               </div>
@@ -295,85 +284,89 @@ export default function Checkout({ user }) {
               </div>
             </div>
 
-            <div className="co-field-row">
-              <div className="co-field">
-                <label>CEP</label>
-                <div className="co-cep-wrap">
-                  <input
-                    type="text"
-                    value={cep}
-                    onChange={handleCepChange}
-                    onBlur={handleCepBlur}
-                    placeholder="00000-000"
-                    maxLength={9}
-                    className={cepError ? "co-input-error" : ""}
-                    disabled={loading || orderProcessed || !user}
-                  />
-                  {cepLoading && <span className="co-cep-loading">🔍</span>}
+            {/* ── Campos de endereço — só para ENTREGA ── */}
+            {!isRetirada && (
+              <>
+                <div className="co-field-row">
+                  <div className="co-field">
+                    <label>CEP</label>
+                    <div className="co-cep-wrap">
+                      <input
+                        type="text"
+                        value={cep}
+                        onChange={handleCepChange}
+                        onBlur={handleCepBlur}
+                        placeholder="00000-000"
+                        maxLength={9}
+                        className={cepError ? "co-input-error" : ""}
+                        disabled={loading || orderProcessed || !user}
+                      />
+                      {cepLoading && <span className="co-cep-loading">🔍</span>}
+                    </div>
+                    {cepError && <span className="co-field-error">{cepError}</span>}
+                    {!cepError && address.city && (
+                      <span className="co-field-success">✓ {address.city} — {address.state}</span>
+                    )}
+                  </div>
+                  <div className="co-field">
+                    <label>Número</label>
+                    <input
+                      type="text"
+                      name="number"
+                      value={address.number}
+                      onChange={handleAddressChange}
+                      placeholder="123"
+                      disabled={loading || orderProcessed || !user}
+                    />
+                  </div>
                 </div>
-                {cepError && <span className="co-field-error">{cepError}</span>}
-                {!cepError && address.city && (
-                  <span className="co-field-success">✓ {address.city} — {address.state}</span>
-                )}
-              </div>
-              <div className="co-field">
-                <label>Número</label>
-                <input
-                  type="text"
-                  name="number"
-                  value={address.number}
-                  onChange={handleAddressChange}
-                  placeholder="123"
-                  disabled={loading || orderProcessed || !user}
-                />
-              </div>
-            </div>
 
-            <div className="co-field-row single">
-              <div className="co-field">
-                <label>Endereço</label>
-                <input
-                  type="text"
-                  name="street"
-                  value={address.street}
-                  onChange={handleAddressChange}
-                  placeholder="Rua / Av. — preenchido pelo CEP"
-                  disabled={loading || orderProcessed || !user}
-                />
-              </div>
-            </div>
+                <div className="co-field-row single">
+                  <div className="co-field">
+                    <label>Endereço</label>
+                    <input
+                      type="text"
+                      name="street"
+                      value={address.street}
+                      onChange={handleAddressChange}
+                      placeholder="Rua / Av. — preenchido pelo CEP"
+                      disabled={loading || orderProcessed || !user}
+                    />
+                  </div>
+                </div>
 
-            <div className="co-field-row two-col-mobile">
-              <div className="co-field">
-                <label>Bairro</label>
-                <input
-                  type="text"
-                  name="district"
-                  value={address.district}
-                  onChange={handleAddressChange}
-                  placeholder="Bairro"
-                  disabled={loading || orderProcessed || !user}
-                />
-              </div>
-              <div className="co-field">
-                <label>Complemento</label>
-                <input
-                  type="text"
-                  name="complement"
-                  value={address.complement}
-                  onChange={handleAddressChange}
-                  placeholder="Apto, bloco..."
-                  disabled={loading || orderProcessed || !user}
-                />
-              </div>
-            </div>
+                <div className="co-field-row two-col-mobile">
+                  <div className="co-field">
+                    <label>Bairro</label>
+                    <input
+                      type="text"
+                      name="district"
+                      value={address.district}
+                      onChange={handleAddressChange}
+                      placeholder="Bairro"
+                      disabled={loading || orderProcessed || !user}
+                    />
+                  </div>
+                  <div className="co-field">
+                    <label>Complemento</label>
+                    <input
+                      type="text"
+                      name="complement"
+                      value={address.complement}
+                      onChange={handleAddressChange}
+                      placeholder="Apto, bloco..."
+                      disabled={loading || orderProcessed || !user}
+                    />
+                  </div>
+                </div>
 
-            <div className="co-bairros-info">
-              📍 Entregamos em: Minas Caixas, Serra Verde, Parque São Pedro e Venda Nova
-            </div>
+                <div className="co-bairros-info">
+                  📍 Entregamos em: Minas Caixas, Serra Verde, Parque São Pedro e Venda Nova
+                </div>
+              </>
+            )}
 
             <div className="co-divider" />
-
             <div className="co-section-label">💳 Pagamento</div>
 
             <div className="co-pay-grid">
@@ -397,7 +390,7 @@ export default function Checkout({ user }) {
             </div>
           </div>
 
-          {/* SUMMARY */}
+          {/* ── SUMMARY ── */}
           <div className="co-summary">
             <div className="co-summary-title">Resumo</div>
 
@@ -408,13 +401,9 @@ export default function Checkout({ user }) {
                 cartItems.map((item, i) => (
                   <div className="co-item" key={i}>
                     <div className="co-item-icon">
-                      {item.icon ? (
-                        <img
-                          src={item.icon}
-                          alt={item.name}
-                          style={{ width: 36, height: 36, objectFit: "cover", borderRadius: 6 }}
-                        />
-                      ) : "🛒"}
+                      {item.icon
+                        ? <img src={item.icon} alt={item.name} style={{ width: 36, height: 36, objectFit: "cover", borderRadius: 6 }} />
+                        : "🛒"}
                     </div>
                     <div className="co-item-info">
                       <div className="co-item-name">{item.name}</div>
@@ -434,8 +423,8 @@ export default function Checkout({ user }) {
                 <span>R$ {cartTotal.toFixed(2).replace(".", ",")}</span>
               </div>
               <div className="co-summary-row">
-                <span>Entrega</span>
-                <span>R$ {DELIVERY.toFixed(2).replace(".", ",")}</span>
+                <span>{isRetirada ? "Retirada" : "Entrega"}</span>
+                <span>{DELIVERY === 0 ? "GRÁTIS" : `R$ ${DELIVERY.toFixed(2).replace(".", ",")}`}</span>
               </div>
             </div>
 
@@ -451,13 +440,11 @@ export default function Checkout({ user }) {
               onClick={handleConfirmOrder}
               disabled={loading || orderProcessed}
             >
-              {loading
-                ? "Processando..."
-                : orderProcessed
-                ? "Pedido Confirmado ✓"
-                : !user
-                ? "🔐 Entre para continuar"
-                : "Confirmar Pedido →"}
+              {loading        ? "Processando..."
+               : orderProcessed ? "Confirmado ✓"
+               : !user         ? "🔐 Entre para continuar"
+               : isRetirada    ? "Confirmar Retirada →"
+               : "Confirmar Pedido →"}
             </button>
             <div className="co-secure">🔒 Pagamento 100% seguro</div>
           </div>
@@ -471,13 +458,11 @@ export default function Checkout({ user }) {
           onClick={handleConfirmOrder}
           disabled={loading || orderProcessed}
         >
-          {loading
-            ? "Processando..."
-            : orderProcessed
-            ? "Pedido Confirmado ✓"
-            : !user
-            ? "🔐 Entre para continuar"
-            : "Confirmar Pedido →"}
+          {loading        ? "Processando..."
+           : orderProcessed ? "Confirmado ✓"
+           : !user         ? "🔐 Entre para continuar"
+           : isRetirada    ? "Confirmar Retirada →"
+           : "Confirmar Pedido →"}
         </button>
         <div className="co-secure">🔒 Pagamento 100% seguro</div>
       </div>

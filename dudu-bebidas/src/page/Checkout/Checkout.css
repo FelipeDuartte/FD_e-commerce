@@ -609,8 +609,95 @@
   gap: 6px;
   margin-top: 12px;
   font-size: 12px;
-  color: #555;
+  color: #555;}
+
+  /* ─── BANNER DE RETIRADA ────────────────────────────── */
+.co-retirada-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  background: rgba(255, 208, 0, 0.06);
+  border: 1px solid rgba(255, 208, 0, 0.2);
+  border-radius: 14px;
+  margin-bottom: 24px;
 }
+ 
+.co-retirada-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+ 
+.co-retirada-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+ 
+.co-retirada-text strong {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffd000;
+}
+ 
+.co-retirada-text span {
+  font-size: 12px;
+  color: #777;
+  line-height: 1.5;
+}
+ 
+/* ─── BANNER DE LOGIN ───────────────────────────────── */
+.co-login-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  background: rgba(255, 208, 0, 0.05);
+  border: 1px solid rgba(255, 208, 0, 0.2);
+  border-radius: 14px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+ 
+.co-login-banner-icon { font-size: 22px; flex-shrink: 0; }
+ 
+.co-login-banner-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+ 
+.co-login-banner-text strong { font-size: 14px; color: #ddd; }
+.co-login-banner-text span   { font-size: 12px; color: #666; }
+ 
+.co-login-banner-btn {
+  padding: 9px 20px;
+  background: #ffd000;
+  color: #000;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+ 
+.co-login-banner-btn:hover {
+  background: #ffe033;
+  transform: translateY(-1px);
+}
+ 
+/* ─── CARD BLOQUEADO ─────────────────────────────────── */
+.co-card-locked {
+  opacity: 0.6;
+  pointer-events: none;
+}
+ 
 
 /* ══════════════════════════════════════════
    MOBILE (≤ 768px)
