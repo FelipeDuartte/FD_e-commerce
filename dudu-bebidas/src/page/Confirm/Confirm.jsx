@@ -94,8 +94,6 @@ export default function Confirmacao() {
   const address    = orderData.address || {};
   const isRetirada = orderData.isRetirada || false;
 
-  console.log("Dados extraídos:", { orderId, cartItems, total, payment, address, isRetirada });
-
   useEffect(() => {
     // Salvar no localStorage apenas se tiver dados válidos
     if (orderId || (cartItems.length > 0)) {

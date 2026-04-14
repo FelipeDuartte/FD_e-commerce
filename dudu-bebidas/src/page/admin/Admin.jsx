@@ -5,6 +5,12 @@ import "./Admin.css";
 
 // ── Status config ─────────────────────────────────────
 const STATUS_CONFIG = {
+  pending:    { label: "Aguardando",  icon: "🕐", color: "#ffd000", next: "delivered" }, // Agora vai direto para entregue
+  delivered:  { label: "Entregue",    icon: "✅", color: "#aaa",    next: null },
+};
+
+// Status para entregas normais
+const DELIVERY_STATUS_CONFIG = {
   pending:    { label: "Aguardando",  icon: "🕐", color: "#ffd000", next: "preparing"  },
   preparing:  { label: "Preparando",  icon: "👨‍🍳", color: "#ff8c00", next: "on_the_way" },
   on_the_way: { label: "Em entrega",  icon: "🛵", color: "#50c878", next: "delivered"  },
@@ -40,6 +46,39 @@ export default function Admin({ user, isAdmin }) {
   const [rejectModal, setRejectModal]     = useState(null); // orderId
   const [rejecting, setRejecting]         = useState(false);
   const [rejectError, setRejectError]     = useState("");
+
+  // Função para verificar se é retirada
+  const isRetiradaOrder = (order) => {
+    return order.address?.isRetirada === true;
+  };
+
+  // Função para pegar o status correto baseado no tipo de pedido
+  const getStatusConfig = (order) => {
+    const isRetirada = isRetiradaOrder(order);
+    if (isRetirada) {
+      return STATUS_CONFIG[order.status] || STATUS_CONFIG.pending;
+    }
+    return DELIVERY_STATUS_CONFIG[order.status] || DELIVERY_STATUS_CONFIG.pending;
+  };
+
+  // Função para pegar os status disponíveis baseado no tipo
+  const getAvailableStatuses = (order) => {
+    const isRetirada = isRetiradaOrder(order);
+    if (isRetirada) {
+      return ["pending", "delivered"];
+    }
+    return STATUS_ORDER;
+  };
+
+  // Função para avançar status
+  const getNextStatus = (order) => {
+    const isRetirada = isRetiradaOrder(order);
+    if (isRetirada) {
+      if (order.status === "pending") return "delivered";
+      return null;
+    }
+    return DELIVERY_STATUS_CONFIG[order.status]?.next;
+  };
 
   // ── Métricas do dia ───────────────────────────────
   const fetchTodayMetrics = async () => {
@@ -121,13 +160,16 @@ export default function Admin({ user, isAdmin }) {
     fetchOrders(next);
   };
 
-  // ── Aceitar pedido → avança para "preparing" ─────
-  const handleAcceptOrder = async (orderId) => {
-    setUpdating(orderId);
-    await supabase
-      .from("orders")
-      .update({ status: "preparing" })
-      .eq("id", orderId);
+  // ── Aceitar pedido → avança para próximo status ──
+  const handleAcceptOrder = async (order) => {
+    setUpdating(order.id);
+    const nextStatus = getNextStatus(order);
+    if (nextStatus) {
+      await supabase
+        .from("orders")
+        .update({ status: nextStatus })
+        .eq("id", order.id);
+    }
     setUpdating(null);
   };
 
@@ -162,11 +204,11 @@ export default function Admin({ user, isAdmin }) {
   };
 
   // ── Handlers de status ────────────────────────────
-  const handleAdvanceStatus = async (orderId, currentStatus) => {
-    const nextStatus = STATUS_CONFIG[currentStatus]?.next;
+  const handleAdvanceStatus = async (order) => {
+    const nextStatus = getNextStatus(order);
     if (!nextStatus) return;
-    setUpdating(orderId);
-    await supabase.from("orders").update({ status: nextStatus }).eq("id", orderId);
+    setUpdating(order.id);
+    await supabase.from("orders").update({ status: nextStatus }).eq("id", order.id);
     setUpdating(null);
   };
 
@@ -176,10 +218,29 @@ export default function Admin({ user, isAdmin }) {
     setUpdating(null);
   };
 
-  const counts = STATUS_ORDER.reduce((acc, s) => {
-    acc[s] = orders.filter((o) => o.status === s).length;
-    return acc;
-  }, {});
+  // Contagem para estatísticas
+  const getCounts = () => {
+    const counts = {
+      all: orders.length,
+      pending: 0,
+      preparing: 0,
+      on_the_way: 0,
+      delivered: 0
+    };
+    
+    orders.forEach(order => {
+      if (isRetiradaOrder(order)) {
+        if (order.status === "pending") counts.pending++;
+        if (order.status === "delivered") counts.delivered++;
+      } else {
+        counts[order.status]++;
+      }
+    });
+    
+    return counts;
+  };
+
+  const counts = getCounts();
 
   const formatDate = (iso) => {
     const d = new Date(iso);
@@ -306,40 +367,41 @@ export default function Admin({ user, isAdmin }) {
             className={`adm-stat adm-stat-all ${filterStatus === "all" ? "adm-stat-active" : ""}`}
             onClick={() => setFilterStatus("all")}
           >
-            <span className="adm-stat-num">{totalCount}</span>
+            <span className="adm-stat-num">{counts.all}</span>
             <span className="adm-stat-label">Total</span>
           </div>
-          {STATUS_ORDER.map((s) => (
-            <div
-              key={s}
-              className={`adm-stat adm-stat-${s} ${filterStatus === s ? "adm-stat-active" : ""}`}
-              onClick={() => setFilterStatus(s)}
-            >
-              <span className="adm-stat-icon">{STATUS_CONFIG[s].icon}</span>
-              <span className="adm-stat-num">{counts[s]}</span>
-              <span className="adm-stat-label">{STATUS_CONFIG[s].label}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* ── FILTROS ── */}
-        <div className="adm-filters">
-          <button
-            className={`adm-filter-btn ${filterStatus === "all" ? "active" : ""}`}
-            onClick={() => setFilterStatus("all")}
+          <div
+            className={`adm-stat adm-stat-pending ${filterStatus === "pending" ? "adm-stat-active" : ""}`}
+            onClick={() => setFilterStatus("pending")}
           >
-            Todos ({totalCount})
-          </button>
-          {STATUS_ORDER.map((s) => (
-            <button
-              key={s}
-              className={`adm-filter-btn ${filterStatus === s ? "active" : ""}`}
-              onClick={() => setFilterStatus(s)}
-              style={{ "--btn-color": STATUS_CONFIG[s].color }}
-            >
-              {STATUS_CONFIG[s].icon} {STATUS_CONFIG[s].label} ({counts[s]})
-            </button>
-          ))}
+            <span className="adm-stat-icon">🕐</span>
+            <span className="adm-stat-num">{counts.pending}</span>
+            <span className="adm-stat-label">Aguardando</span>
+          </div>
+          <div
+            className={`adm-stat adm-stat-preparing ${filterStatus === "preparing" ? "adm-stat-active" : ""}`}
+            onClick={() => setFilterStatus("preparing")}
+          >
+            <span className="adm-stat-icon">👨‍🍳</span>
+            <span className="adm-stat-num">{counts.preparing}</span>
+            <span className="adm-stat-label">Preparando</span>
+          </div>
+          <div
+            className={`adm-stat adm-stat-on_the_way ${filterStatus === "on_the_way" ? "adm-stat-active" : ""}`}
+            onClick={() => setFilterStatus("on_the_way")}
+          >
+            <span className="adm-stat-icon">🛵</span>
+            <span className="adm-stat-num">{counts.on_the_way}</span>
+            <span className="adm-stat-label">Em entrega</span>
+          </div>
+          <div
+            className={`adm-stat adm-stat-delivered ${filterStatus === "delivered" ? "adm-stat-active" : ""}`}
+            onClick={() => setFilterStatus("delivered")}
+          >
+            <span className="adm-stat-icon">✅</span>
+            <span className="adm-stat-num">{counts.delivered}</span>
+            <span className="adm-stat-label">Entregue</span>
+          </div>
         </div>
 
         {/* ── LISTA DE PEDIDOS ── */}
@@ -356,12 +418,15 @@ export default function Admin({ user, isAdmin }) {
           <>
             <div className="adm-orders">
               {orders.map((order) => {
-                const cfg        = STATUS_CONFIG[order.status] ?? STATUS_CONFIG.pending;
-                const payment    = PAYMENT_LABEL[order.payment_method] ?? { icon: "💳", label: order.payment_method };
+                const isRetirada = isRetiradaOrder(order);
+                const cfg = getStatusConfig(order);
+                const payment = PAYMENT_LABEL[order.payment_method] ?? { icon: "💳", label: order.payment_method };
                 const isExpanded = expandedId === order.id;
                 const isUpdating = updating === order.id;
-                const shortId    = order.id.slice(-8).toUpperCase();
-                const isPending  = order.status === "pending";
+                const shortId = order.id.slice(-8).toUpperCase();
+                const isPending = order.status === "pending";
+                const availableStatuses = getAvailableStatuses(order);
+                const nextStatus = getNextStatus(order);
 
                 return (
                   <div key={order.id} className={`adm-order adm-order-${order.status}`}>
@@ -376,12 +441,21 @@ export default function Admin({ user, isAdmin }) {
                         <span className="adm-status-label" style={{ color: cfg.color }}>
                           {cfg.label}
                         </span>
+                        {/* Badge de RETIRADA */}
+                        {isRetirada && (
+                          <span className="adm-retirada-badge">🏪 RETIRADA</span>
+                        )}
                       </div>
 
                       <div className="adm-order-info">
                         <span className="adm-order-id">#{shortId}</span>
                         <span className="adm-order-name">{order.address?.name ?? "—"}</span>
-                        <span className="adm-order-district">📍 {order.address?.district ?? "—"}</span>
+                        {!isRetirada && (
+                          <span className="adm-order-district">📍 {order.address?.district ?? "—"}</span>
+                        )}
+                        {isRetirada && (
+                          <span className="adm-order-retirada-info">🏪 Retirada na loja</span>
+                        )}
                       </div>
 
                       <div className="adm-order-payment">
@@ -399,11 +473,11 @@ export default function Admin({ user, isAdmin }) {
                         >
                           <button
                             className="adm-btn-accept"
-                            onClick={() => handleAcceptOrder(order.id)}
+                            onClick={() => handleAcceptOrder(order)}
                             disabled={isUpdating}
-                            title="Aceitar pedido"
+                            title={isRetirada ? "Confirmar retirada" : "Aceitar pedido"}
                           >
-                            {isUpdating ? "..." : "✓ Aceitar"}
+                            {isUpdating ? "..." : `✓ ${isRetirada ? "Confirmar retirada" : "Aceitar"}`}
                           </button>
                           <button
                             className="adm-btn-reject"
@@ -440,30 +514,43 @@ export default function Admin({ user, isAdmin }) {
                         </div>
 
                         <div className="adm-detail-section">
-                          <div className="adm-detail-label">📍 Endereço</div>
+                          <div className="adm-detail-label">
+                            {isRetirada ? "🏪 Informações da Retirada" : "📍 Endereço"}
+                          </div>
                           <div className="adm-address">
                             <p><strong>{order.address?.name}</strong></p>
-                            <p>
-                              {order.address?.street}, {order.address?.number}
-                              {order.address?.complement ? ` — ${order.address.complement}` : ""}
-                            </p>
-                            <p>{order.address?.district}</p>
+                            {isRetirada ? (
+                              <>
+                                <p>🏪 Retirada na loja</p>
+                                <p>📍 Rua Edgar Torres, 650 - Belo Horizonte/MG</p>
+                              </>
+                            ) : (
+                              <>
+                                <p>
+                                  {order.address?.street}, {order.address?.number}
+                                  {order.address?.complement ? ` — ${order.address.complement}` : ""}
+                                </p>
+                                <p>{order.address?.district}</p>
+                              </>
+                            )}
                             <p>📞 {order.address?.phone}</p>
                           </div>
                         </div>
 
                         <div className="adm-detail-section">
-                          <div className="adm-detail-label">🔄 Alterar Status</div>
+                          <div className="adm-detail-label">
+                            {isRetirada ? "🔄 Status da Retirada" : "🔄 Alterar Status"}
+                          </div>
 
                           {/* Aceitar/Rejeitar também nos detalhes expandidos para pending */}
                           {isPending && (
                             <div className="adm-accept-reject-detail">
                               <button
                                 className="adm-btn-accept-lg"
-                                onClick={() => handleAcceptOrder(order.id)}
+                                onClick={() => handleAcceptOrder(order)}
                                 disabled={isUpdating}
                               >
-                                {isUpdating ? "Processando..." : "✓ Aceitar Pedido"}
+                                {isUpdating ? "Processando..." : `✓ ${isRetirada ? "Confirmar Retirada" : "Aceitar Pedido"}`}
                               </button>
                               <button
                                 className="adm-btn-reject-lg"
@@ -478,33 +565,40 @@ export default function Admin({ user, isAdmin }) {
                           {!isPending && (
                             <>
                               <div className="adm-status-pills">
-                                {STATUS_ORDER.map((s) => (
+                                {availableStatuses.map((s) => (
                                   <button
                                     key={s}
                                     className={`adm-pill ${order.status === s ? "adm-pill-active" : ""}`}
-                                    style={{ "--pill-color": STATUS_CONFIG[s].color }}
+                                    style={{ 
+                                      "--pill-color": isRetirada 
+                                        ? STATUS_CONFIG[s]?.color 
+                                        : DELIVERY_STATUS_CONFIG[s]?.color 
+                                    }}
                                     onClick={() => handleSetStatus(order.id, s)}
                                     disabled={isUpdating}
                                   >
-                                    {STATUS_CONFIG[s].icon} {STATUS_CONFIG[s].label}
+                                    {isRetirada ? STATUS_CONFIG[s]?.icon : DELIVERY_STATUS_CONFIG[s]?.icon} 
+                                    {isRetirada ? STATUS_CONFIG[s]?.label : DELIVERY_STATUS_CONFIG[s]?.label}
                                   </button>
                                 ))}
                               </div>
 
-                              {cfg.next && (
+                              {nextStatus && (
                                 <button
                                   className="adm-btn-advance"
-                                  onClick={() => handleAdvanceStatus(order.id, order.status)}
+                                  onClick={() => handleAdvanceStatus(order)}
                                   disabled={isUpdating}
                                 >
                                   {isUpdating
                                     ? "Atualizando..."
-                                    : `Avançar para: ${STATUS_CONFIG[cfg.next].icon} ${STATUS_CONFIG[cfg.next].label} →`}
+                                    : `Avançar para: ${isRetirada ? STATUS_CONFIG[nextStatus]?.icon : DELIVERY_STATUS_CONFIG[nextStatus]?.icon} ${isRetirada ? STATUS_CONFIG[nextStatus]?.label : DELIVERY_STATUS_CONFIG[nextStatus]?.label} →`}
                                 </button>
                               )}
 
-                              {!cfg.next && (
-                                <div className="adm-delivered-msg">✅ Pedido finalizado</div>
+                              {!nextStatus && (
+                                <div className="adm-delivered-msg">
+                                  {isRetirada ? "✅ Retirada finalizada" : "✅ Pedido finalizado"}
+                                </div>
                               )}
                             </>
                           )}

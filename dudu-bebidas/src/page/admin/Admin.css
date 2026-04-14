@@ -793,6 +793,31 @@
   transform: none;
 }
  
+/* ─── BADGE DE RETIRADA ─────────────────────────────── */
+.adm-retirada-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: rgba(255, 208, 0, 0.1);
+  border: 1px solid rgba(255, 208, 0, 0.3);
+  border-radius: 20px;
+  font-size: 9px;
+  font-weight: 800;
+  color: #ffd000;
+  letter-spacing: 0.5px;
+  margin-left: 8px;
+  white-space: nowrap;
+}
+
+.adm-order-retirada-info {
+  font-size: 11px;
+  color: #ffd000;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+}
 
 /* ══════════════════════════════════════════
    MOBILE
@@ -845,4 +870,13 @@
   .adm-modal { padding: 28px 20px; }
   .adm-modal-actions { flex-direction: column; }
 
+  .adm-retirada-badge {
+    font-size: 7px;
+    padding: 2px 6px;
+    margin-left: 4px;
+  }
+  
+  .adm-order-retirada-info {
+    font-size: 10px;
+  }
 }
