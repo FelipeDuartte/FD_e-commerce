@@ -47,12 +47,33 @@ export default function Confirmacao() {
   const location = useLocation();
   const navigate  = useNavigate();
 
+  // ── CORREÇÃO: Ler os dados diretamente do location.state ──
   const [orderData] = useState(() => {
-    if (location.state && location.state.pedido) return location.state;
+    // Se tiver dados diretos no location.state
+    if (location.state && (location.state.orderId || location.state.cartItems)) {
+      console.log("Dados encontrados diretamente no location.state:", location.state);
+      return location.state;
+    }
+    
+    // Se tiver dentro de location.state.pedido (backward compatibility)
+    if (location.state?.pedido) {
+      console.log("Dados encontrados em location.state.pedido:", location.state.pedido);
+      return location.state.pedido;
+    }
+    
+    // Tenta recuperar do localStorage
     const savedOrder = localStorage.getItem("lastOrder");
     if (savedOrder) {
-      try { return JSON.parse(savedOrder); } catch (e) { console.error(e); }
+      try { 
+        const parsed = JSON.parse(savedOrder);
+        console.log("Dados recuperados do localStorage:", parsed);
+        return parsed; 
+      } catch (e) { 
+        console.error("Erro ao parsear localStorage:", e);
+      }
     }
+    
+    console.log("Nenhum dado encontrado, retornando objeto vazio");
     return { orderId: null, cartItems: [], total: 0, payment: "pix", address: {}, isRetirada: false };
   });
 
@@ -65,26 +86,31 @@ export default function Confirmacao() {
   const [cancelling, setCancelling]           = useState(false);
   const [cancelError, setCancelError]         = useState("");
 
-  const {
-    orderId    = orderData.orderId    || null,
-    cartItems  = orderData.cartItems  || [],
-    total      = orderData.total      || 0,
-    payment    = orderData.payment    || "pix",
-    address    = orderData.address    || {},
-    isRetirada = orderData.isRetirada || false,
-  } = location.state?.pedido || orderData;
+  // ── CORREÇÃO: Extrair os dados corretamente ──
+  const orderId    = orderData.orderId || null;
+  const cartItems  = orderData.cartItems || [];
+  const total      = orderData.total || 0;
+  const payment    = orderData.payment || "pix";
+  const address    = orderData.address || {};
+  const isRetirada = orderData.isRetirada || false;
+
+  console.log("Dados extraídos:", { orderId, cartItems, total, payment, address, isRetirada });
 
   useEffect(() => {
-    if (location.state?.pedido || (orderId && cartItems.length > 0)) {
+    // Salvar no localStorage apenas se tiver dados válidos
+    if (orderId || (cartItems.length > 0)) {
       localStorage.setItem("lastOrder", JSON.stringify({
         orderId, cartItems, total, payment, address, isRetirada,
         savedAt: new Date().toISOString(),
       }));
     }
-  }, [orderId]);
+  }, [orderId, cartItems, total, payment, address, isRetirada]);
 
   useEffect(() => {
-    if (!orderId) { setStatusLoading(false); return; }
+    if (!orderId) { 
+      setStatusLoading(false); 
+      return; 
+    }
 
     const fetchStatus = async () => {
       const { data, error } = await supabase
@@ -112,21 +138,18 @@ export default function Confirmacao() {
     return () => supabase.removeChannel(channel);
   }, [orderId]);
 
-  // ── Handler de cancelamento (agora também para retirada) ──
+  // ── Handler de cancelamento ──
   const handleCancelOrder = async () => {
     setCancelling(true);
     setCancelError("");
 
     try {
-      // Para retirada na loja sem orderId, apenas limpa localStorage e redireciona
       if (!orderId) {
         localStorage.removeItem("lastOrder");
         navigate("/", { state: { cancelledOrder: true, isRetirada: true } });
         return;
       }
 
-      // Para pedidos com orderId no banco
-      // 1. Deleta os itens do pedido primeiro (FK)
       const { error: itemsError } = await supabase
         .from("order_items")
         .delete()
@@ -134,7 +157,6 @@ export default function Confirmacao() {
 
       if (itemsError) throw new Error("Erro ao cancelar itens do pedido.");
 
-      // 2. Deleta o pedido
       const { error: orderError } = await supabase
         .from("orders")
         .delete()
@@ -142,10 +164,7 @@ export default function Confirmacao() {
 
       if (orderError) throw new Error("Erro ao cancelar o pedido.");
 
-      // 3. Limpa o localStorage
       localStorage.removeItem("lastOrder");
-
-      // 4. Redireciona para home com mensagem
       navigate("/", { state: { cancelledOrder: true, isRetirada: false } });
 
     } catch (err) {
@@ -155,11 +174,11 @@ export default function Confirmacao() {
   };
 
   const currentStep = STATUS_STEP[status] ?? 0;
-  // Permite cancelar se: status for pending E (tem orderId OU é retirada)
   const canCancel = (status === "pending" && (orderId || isRetirada));
 
-  // ── Sem orderId e sem itens (caso de erro) ───────
-  if (!orderId && cartItems.length === 0) {
+  // ── CORREÇÃO: Verificar se tem dados para exibir ──
+  if (!orderId && cartItems.length === 0 && !isRetirada) {
+    console.log("Exibindo tela de erro - nenhum dado encontrado");
     return (
       <div className="cf-root">
         <div className="cf-wrap cf-center">
@@ -385,7 +404,6 @@ export default function Confirmacao() {
               🏠 Voltar para a loja
             </button>
 
-            {/* ── BOTÃO CANCELAR — aparece para pending (entrega ou retirada) ── */}
             {canCancel && (
               <button
                 className="cf-btn-cancel"
@@ -395,7 +413,6 @@ export default function Confirmacao() {
               </button>
             )}
 
-            {/* Aviso quando não pode mais cancelar */}
             {!canCancel && (orderId || isRetirada) && status !== "pending" && (
               <div className="cf-cancel-info">
                 ℹ️ Não é mais possível cancelar — {isRetirada ? "retirada" : "pedido"} já está em andamento.
