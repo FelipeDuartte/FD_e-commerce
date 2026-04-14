@@ -43,26 +43,9 @@ export default function Checkout({ user }) {
     city: "", state: "",
   });
 
-  // Resetar campos quando mudar para retirada
-  useEffect(() => {
-    if (isRetirada) {
-      setCep("");
-      setCepError("");
-      setAddress(prev => ({
-        ...prev,
-        street: "",
-        number: "",
-        district: "",
-        complement: "",
-        city: "",
-        state: "",
-      }));
-    }
-  }, [isRetirada]);
-
   useEffect(() => {
     if (cartItems.length === 0) navigate("/", { replace: true });
-  }, [cartItems, navigate]);
+  }, []);
 
   useEffect(() => {
     if (orderProcessed) {
@@ -108,17 +91,14 @@ export default function Checkout({ user }) {
     setAddress((prev) => ({ ...prev, phone: value }));
   };
 
-  // ── Validação ────────────────────────────────────
+  // ── Validação — pula endereço se for retirada ─────
   const validateForm = () => {
     if (isRetirada) {
-      // Retirada - só valida nome e telefone
-      if (!address.name || address.name.trim() === "") {
-        return "Por favor, informe seu nome para identificação.";
-      }
+      // Retirada só precisa do nome para identificação
+      if (!address.name.trim()) return "Por favor, informe seu nome para identificação.";
       const phoneClean = address.phone.replace(/\D/g, "");
-      if (!phoneClean || phoneClean.length < 10) {
-        return "Por favor, informe um telefone válido para contato (mínimo 10 dígitos).";
-      }
+      if (!phoneClean || phoneClean.length < 10)
+        return "Por favor, informe um telefone para contato.";
       return null;
     }
 
@@ -156,6 +136,7 @@ export default function Checkout({ user }) {
     setLoading(true);
 
     try {
+      // Para retirada, address não tem CEP/endereço
       const addressToSave = isRetirada
         ? { name: address.name, phone: address.phone, isRetirada: true }
         : { ...address, cep };
@@ -257,105 +238,55 @@ export default function Checkout({ user }) {
 
           {/* ── FORM ── */}
           <div className={`co-card${!user ? " co-card-locked" : ""}`}>
-            
-            {isRetirada ? (
-              /* ── FORMULÁRIO SIMPLIFICADO PARA RETIRADA ── */
+
+            {/* ── BANNER DE RETIRADA ── */}
+            {isRetirada && (
+              <div className="co-retirada-banner">
+                <span className="co-retirada-icon">🏪</span>
+                <div className="co-retirada-text">
+                  <strong>Retirada na Loja</strong>
+                  <span>Seu pedido ficará pronto para retirada assim que confirmado.</span>
+                </div>
+              </div>
+            )}
+
+            <div className="co-section-label">
+              {isRetirada ? "👤 Identificação" : "📍 Entrega"}
+            </div>
+
+            {errorMsg && errorMsg !== "login_required" && (
+              <div className="co-error-msg">⚠️ {errorMsg}</div>
+            )}
+
+            {/* Nome + Telefone — sempre visível */}
+            <div className="co-field-row">
+              <div className="co-field">
+                <label>Nome completo</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={address.name}
+                  onChange={handleAddressChange}
+                  placeholder={isRetirada ? "Seu nome para retirada" : "Seu nome e sobrenome"}
+                  disabled={loading || orderProcessed || !user}
+                />
+              </div>
+              <div className="co-field">
+                <label>Telefone</label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={address.phone}
+                  onChange={handlePhoneChange}
+                  placeholder="(00) 00000-0000"
+                  disabled={loading || orderProcessed || !user}
+                />
+              </div>
+            </div>
+
+            {/* ── Campos de endereço — só para ENTREGA ── */}
+            {!isRetirada && (
               <>
-                <div className="co-retirada-banner">
-                  <span className="co-retirada-icon">🏪</span>
-                  <div className="co-retirada-text">
-                    <strong>Retirada na Loja</strong>
-                    <span>Seu pedido ficará pronto para retirada assim que confirmado.</span>
-                  </div>
-                </div>
-
-                <div className="co-section-label">👤 Identificação</div>
-
-                {errorMsg && errorMsg !== "login_required" && (
-                  <div className="co-error-msg">⚠️ {errorMsg}</div>
-                )}
-
-                <div className="co-field">
-                  <label>Nome completo *</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={address.name}
-                    onChange={handleAddressChange}
-                    placeholder="Seu nome para retirada"
-                    disabled={loading || orderProcessed || !user}
-                  />
-                </div>
-
-                <div className="co-field">
-                  <label>Telefone para contato *</label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={address.phone}
-                    onChange={handlePhoneChange}
-                    placeholder="(00) 00000-0000"
-                    disabled={loading || orderProcessed || !user}
-                  />
-                </div>
-
-                <div className="co-divider" />
-                <div className="co-section-label">💳 Pagamento</div>
-
-                <div className="co-pay-grid">
-                  {paymentOptions.map((opt) => (
-                    <div className="co-pay-option" key={opt.value}>
-                      <input
-                        type="radio"
-                        id={opt.value}
-                        name="payment"
-                        value={opt.value}
-                        checked={payment === opt.value}
-                        onChange={() => setPayment(opt.value)}
-                        disabled={loading || orderProcessed || !user}
-                      />
-                      <label className="co-pay-label" htmlFor={opt.value}>
-                        <span className="co-pay-icon">{opt.icon}</span>
-                        <span className="co-pay-name">{opt.name}</span>
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </>
-            ) : (
-              /* ── FORMULÁRIO COMPLETO PARA ENTREGA ── */
-              <>
-                <div className="co-section-label">📍 Entrega</div>
-
-                {errorMsg && errorMsg !== "login_required" && (
-                  <div className="co-error-msg">⚠️ {errorMsg}</div>
-                )}
-
-                <div className="co-field-row">
-                  <div className="co-field">
-                    <label>Nome completo</label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={address.name}
-                      onChange={handleAddressChange}
-                      placeholder="Seu nome e sobrenome"
-                      disabled={loading || orderProcessed || !user}
-                    />
-                  </div>
-                  <div className="co-field">
-                    <label>Telefone</label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={address.phone}
-                      onChange={handlePhoneChange}
-                      placeholder="(00) 00000-0000"
-                      disabled={loading || orderProcessed || !user}
-                    />
-                  </div>
-                </div>
-
                 <div className="co-field-row">
                   <div className="co-field">
                     <label>CEP</label>
@@ -432,31 +363,31 @@ export default function Checkout({ user }) {
                 <div className="co-bairros-info">
                   📍 Entregamos em: Minas Caixas, Serra Verde, Parque São Pedro e Venda Nova
                 </div>
-
-                <div className="co-divider" />
-                <div className="co-section-label">💳 Pagamento</div>
-
-                <div className="co-pay-grid">
-                  {paymentOptions.map((opt) => (
-                    <div className="co-pay-option" key={opt.value}>
-                      <input
-                        type="radio"
-                        id={opt.value}
-                        name="payment"
-                        value={opt.value}
-                        checked={payment === opt.value}
-                        onChange={() => setPayment(opt.value)}
-                        disabled={loading || orderProcessed || !user}
-                      />
-                      <label className="co-pay-label" htmlFor={opt.value}>
-                        <span className="co-pay-icon">{opt.icon}</span>
-                        <span className="co-pay-name">{opt.name}</span>
-                      </label>
-                    </div>
-                  ))}
-                </div>
               </>
             )}
+
+            <div className="co-divider" />
+            <div className="co-section-label">💳 Pagamento</div>
+
+            <div className="co-pay-grid">
+              {paymentOptions.map((opt) => (
+                <div className="co-pay-option" key={opt.value}>
+                  <input
+                    type="radio"
+                    id={opt.value}
+                    name="payment"
+                    value={opt.value}
+                    checked={payment === opt.value}
+                    onChange={() => setPayment(opt.value)}
+                    disabled={loading || orderProcessed || !user}
+                  />
+                  <label className="co-pay-label" htmlFor={opt.value}>
+                    <span className="co-pay-icon">{opt.icon}</span>
+                    <span className="co-pay-name">{opt.name}</span>
+                  </label>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* ── SUMMARY ── */}

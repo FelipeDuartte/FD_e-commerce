@@ -1,5 +1,6 @@
-//data supaBase
+// supabase/saveOrder.js
 import { supabase } from "./Supabaseclient";
+
 /**
  * Salva um pedido completo no Supabase.
  *
@@ -15,10 +16,24 @@ import { supabase } from "./Supabaseclient";
 export async function saveOrder({ userId, total, paymentMethod, address, cartItems }) {
 
   // ── Validações básicas ──────────────────────────────────
-  if (!userId)                      return { error: "Usuário não autenticado." };
+  if (!userId) return { error: "Usuário não autenticado." };
   if (!cartItems || cartItems.length === 0) return { error: "Carrinho vazio." };
-  if (!paymentMethod)               return { error: "Forma de pagamento não selecionada." };
-  if (!address?.street)             return { error: "Endereço incompleto." };
+  if (!paymentMethod) return { error: "Forma de pagamento não selecionada." };
+  
+  // ── Validação de endereço APENAS para entregas ──────────
+  const isRetirada = address?.isRetirada === true;
+  
+  if (!isRetirada) {
+    // Só valida endereço completo se NÃO for retirada
+    if (!address?.street) return { error: "Endereço incompleto. Informe a rua." };
+    if (!address?.number) return { error: "Endereço incompleto. Informe o número." };
+    if (!address?.district) return { error: "Endereço incompleto. Informe o bairro." };
+    if (!address?.cep) return { error: "Endereço incompleto. Informe o CEP." };
+  } else {
+    // Para retirada, valida apenas nome e telefone
+    if (!address?.name) return { error: "Informe seu nome para retirada." };
+    if (!address?.phone) return { error: "Informe seu telefone para contato." };
+  }
 
   // ── 1. Inserir o pedido ─────────────────────────────────
   const { data: order, error: orderError } = await supabase
@@ -27,7 +42,7 @@ export async function saveOrder({ userId, total, paymentMethod, address, cartIte
       user_id: userId,
       total,
       payment_method: paymentMethod,
-      address, // objeto JSON completo
+      address: address, // objeto JSON completo
     })
     .select("id")
     .single();
