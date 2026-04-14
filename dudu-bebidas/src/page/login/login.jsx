@@ -77,11 +77,6 @@ export default function Login({ isOpen, onClose }) {
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
-        options: {
-          data: {
-            full_name: formData.name,
-          },
-        },
       });
       setLoading(false);
 
