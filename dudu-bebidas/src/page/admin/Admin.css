@@ -573,6 +573,226 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
+/* ─── BOTÕES ACEITAR / REJEITAR (linha principal) ── */
+.adm-order-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+ 
+.adm-btn-accept {
+  padding: 7px 14px;
+  background: rgba(80, 200, 120, 0.1);
+  border: 1px solid rgba(80, 200, 120, 0.3);
+  border-radius: 8px;
+  color: #50c878;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+ 
+.adm-btn-accept:hover:not(:disabled) {
+  background: rgba(80, 200, 120, 0.2);
+  border-color: #50c878;
+  transform: translateY(-1px);
+}
+ 
+.adm-btn-reject {
+  padding: 7px 14px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 8px;
+  color: #ef4444;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+ 
+.adm-btn-reject:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+  transform: translateY(-1px);
+}
+ 
+.adm-btn-accept:disabled,
+.adm-btn-reject:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+ 
+/* ─── ACEITAR / REJEITAR NOS DETALHES ──────────── */
+.adm-accept-reject-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+ 
+.adm-btn-accept-lg {
+  width: 100%;
+  padding: 14px;
+  background: rgba(80, 200, 120, 0.1);
+  border: 1px solid rgba(80, 200, 120, 0.3);
+  border-radius: 12px;
+  color: #50c878;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+ 
+.adm-btn-accept-lg:hover:not(:disabled) {
+  background: rgba(80, 200, 120, 0.18);
+  border-color: #50c878;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(80, 200, 120, 0.15);
+}
+ 
+.adm-btn-reject-lg {
+  width: 100%;
+  padding: 14px;
+  background: transparent;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 12px;
+  color: #ef4444;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+ 
+.adm-btn-reject-lg:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: #ef4444;
+  transform: translateY(-1px);
+}
+ 
+.adm-btn-accept-lg:disabled,
+.adm-btn-reject-lg:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+ 
+/* ─── MODAL OVERLAY ─────────────────────────────── */
+.adm-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  animation: adm-fade-in 0.2s ease;
+}
+ 
+@keyframes adm-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+ 
+/* ─── MODAL ─────────────────────────────────────── */
+.adm-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 201;
+  background: #111;
+  border: 1px solid #2a2a2a;
+  border-radius: 20px;
+  padding: 36px 32px;
+  width: 90%;
+  max-width: 420px;
+  text-align: center;
+  animation: adm-modal-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+ 
+@keyframes adm-modal-pop {
+  from { transform: translate(-50%, -50%) scale(0.9); opacity: 0; }
+  to   { transform: translate(-50%, -50%) scale(1);   opacity: 1; }
+}
+ 
+.adm-modal-icon   { font-size: 48px; margin-bottom: 16px; }
+ 
+.adm-modal-title {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 20px; font-weight: 800;
+  color: #fff; margin-bottom: 10px;
+}
+ 
+.adm-modal-desc {
+  font-size: 14px; color: #888;
+  line-height: 1.6; margin-bottom: 24px;
+}
+ 
+.adm-modal-desc strong { color: #ffd000; }
+ 
+.adm-modal-error {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #f87171;
+  margin-bottom: 16px;
+}
+ 
+.adm-modal-actions { display: flex; gap: 12px; }
+ 
+.adm-modal-btn-back {
+  flex: 1; padding: 14px;
+  background: transparent;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  color: #888;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: all 0.2s;
+}
+ 
+.adm-modal-btn-back:hover:not(:disabled) {
+  border-color: #444; color: #fff;
+}
+ 
+.adm-modal-btn-reject {
+  flex: 1; padding: 14px;
+  background: #ef4444;
+  border: none; border-radius: 12px;
+  color: #fff;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: all 0.2s;
+}
+ 
+.adm-modal-btn-reject:hover:not(:disabled) {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+}
+ 
+.adm-modal-btn-back:disabled,
+.adm-modal-btn-reject:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+ 
 
 /* ══════════════════════════════════════════
    MOBILE
@@ -618,4 +838,11 @@
   .adm-metric-icon {
     font-size: 28px;
   }
+  .adm-order-actions {
+    display: none; /* esconde na linha — aparece só nos detalhes */
+  }
+ 
+  .adm-modal { padding: 28px 20px; }
+  .adm-modal-actions { flex-direction: column; }
+
 }
