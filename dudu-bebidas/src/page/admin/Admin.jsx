@@ -5,8 +5,7 @@ import "./Admin.css";
 
 // ── Status config ─────────────────────────────────────
 const STATUS_CONFIG = {
-  pending:    { label: "Aguardando",  icon: "🕐", color: "#ffd000", next: "delivered" },
-  preparing:  { label: "Pendente",  icon: "👨‍🍳", color: "#ff8c00", next: "on_the_way" },
+  pending:    { label: "Aguardando",  icon: "🕐", color: "#ffd000", next: "delivered" }, // Agora vai direto para entregue
   delivered:  { label: "Entregue",    icon: "✅", color: "#aaa",    next: null },
 };
 
