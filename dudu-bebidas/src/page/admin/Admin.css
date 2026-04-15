@@ -1,14 +1,20 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap");
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-/* ─── ROOT ─────────────────────────────────────────── */
+/* ─── ROOT ──────────────────────────────────────────── */
 .adm-root {
   background: #0a0a0a;
   min-height: 100vh;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   color: #fff;
-  padding: 0 0 80px;
+  padding-bottom: 80px;
 }
 
 /* ─── WRAP ──────────────────────────────────────────── */
@@ -37,13 +43,17 @@
 }
 
 .adm-logo {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: "Plus Jakarta Sans", sans-serif;
   font-size: 22px;
   font-weight: 800;
 }
 
-.adm-logo-dudu    { color: #fff; }
-.adm-logo-bebidas { color: #ffd000; }
+.adm-logo-dudu {
+  color: #fff;
+}
+.adm-logo-bebidas {
+  color: #ffd000;
+}
 
 .adm-badge {
   font-size: 9px;
@@ -74,11 +84,12 @@
   border-radius: 10px;
   color: #888;
   font-size: 13px;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   cursor: pointer;
-  transition: all 0.2s;
+  transition:
+    border-color 0.2s,
+    color 0.2s;
 }
-
 .adm-btn-back:hover {
   border-color: #ffd000;
   color: #ffd000;
@@ -95,10 +106,9 @@
 }
 
 .adm-title {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: "Plus Jakarta Sans", sans-serif;
   font-size: 36px;
   font-weight: 800;
-  color: #fff;
   letter-spacing: -1px;
 }
 
@@ -119,25 +129,81 @@
   background: rgba(80, 200, 120, 0.06);
   border: 1px solid rgba(80, 200, 120, 0.2);
   border-radius: 20px;
+  white-space: nowrap;
 }
 
 .adm-dot-pulse {
   width: 8px;
   height: 8px;
+  flex-shrink: 0;
   border-radius: 50%;
   background: #50c878;
-  box-shadow: 0 0 0 0 rgba(80, 200, 120, 0.4);
   animation: adm-pulse 1.5s ease-in-out infinite;
   display: inline-block;
 }
 
 @keyframes adm-pulse {
-  0%   { box-shadow: 0 0 0 0 rgba(80,200,120,0.4); }
-  70%  { box-shadow: 0 0 0 8px rgba(80,200,120,0); }
-  100% { box-shadow: 0 0 0 0 rgba(80,200,120,0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(80, 200, 120, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(80, 200, 120, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(80, 200, 120, 0);
+  }
 }
 
-/* ─── STATS ─────────────────────────────────────────── */
+/* ─── MÉTRICAS DO DIA ───────────────────────────────── */
+.adm-today-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.adm-metric-card {
+  background: #111;
+  border: 1px solid #1e1e1e;
+  border-radius: 20px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: border-color 0.2s;
+}
+.adm-metric-card:hover {
+  border-color: #2a2a2a;
+}
+
+.adm-metric-icon {
+  font-size: 32px;
+  opacity: 0.8;
+}
+
+.adm-metric-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.adm-metric-value {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: #ffd000;
+  line-height: 1;
+}
+
+.adm-metric-label {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ─── STATS / FILTROS ───────────────────────────────── */
 .adm-stats {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -155,73 +221,39 @@
   align-items: center;
   gap: 6px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition:
+    border-color 0.2s,
+    transform 0.2s,
+    background 0.2s;
+  /* reset button */
+  font-family: inherit;
+  color: inherit;
+  appearance: none;
 }
-
 .adm-stat:hover {
   border-color: #2a2a2a;
   transform: translateY(-2px);
 }
-
 .adm-stat-active {
   border-color: #ffd000 !important;
-  background: rgba(255,208,0,0.05) !important;
+  background: rgba(255, 208, 0, 0.05) !important;
 }
-
-.adm-stat-all        { border-color: #222; }
-.adm-stat-pending    { }
-.adm-stat-preparing  { }
-.adm-stat-on_the_way { }
-.adm-stat-delivered  { }
-
-.adm-stat-icon { font-size: 20px; }
-
+.adm-stat-icon {
+  font-size: 20px;
+}
 .adm-stat-num {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: "Plus Jakarta Sans", sans-serif;
   font-size: 28px;
   font-weight: 800;
   color: #ffd000;
   line-height: 1;
 }
-
 .adm-stat-label {
   font-size: 11px;
   color: #666;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-}
-
-/* ─── FILTROS ───────────────────────────────────────── */
-.adm-filters {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-}
-
-.adm-filter-btn {
-  padding: 8px 16px;
-  background: #111;
-  border: 1px solid #222;
-  border-radius: 20px;
-  color: #666;
-  font-size: 12px;
-  font-weight: 600;
-  font-family: 'Inter', sans-serif;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.adm-filter-btn:hover {
-  border-color: #333;
-  color: #aaa;
-}
-
-.adm-filter-btn.active {
-  background: rgba(255,208,0,0.1);
-  border-color: rgba(255,208,0,0.4);
-  color: #ffd000;
 }
 
 /* ─── LOADING / EMPTY ───────────────────────────────── */
@@ -243,7 +275,11 @@
   animation: adm-spin 0.8s linear infinite;
 }
 
-@keyframes adm-spin { to { transform: rotate(360deg); } }
+@keyframes adm-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 .adm-empty {
   text-align: center;
@@ -252,11 +288,12 @@
   font-size: 15px;
 }
 
-/* ─── LISTA DE PEDIDOS ──────────────────────────────── */
+/* ─── LISTA ─────────────────────────────────────────── */
 .adm-orders {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  list-style: none;
 }
 
 /* ─── CARD DE PEDIDO ────────────────────────────────── */
@@ -268,61 +305,111 @@
   transition: border-color 0.2s;
 }
 
-.adm-order-pending    { border-left: 3px solid #ffd000; }
-.adm-order-preparing  { border-left: 3px solid #ff8c00; }
-.adm-order-on_the_way { border-left: 3px solid #50c878; }
-.adm-order-delivered  { border-left: 3px solid #333; }
+.adm-order-pending {
+  border-left: 3px solid #ffd000;
+}
+.adm-order-preparing {
+  border-left: 3px solid #ff8c00;
+}
+.adm-order-on_the_way {
+  border-left: 3px solid #50c878;
+}
+.adm-order-delivered {
+  border-left: 3px solid #333;
+}
 
+/* ─── LINHA PRINCIPAL ───────────────────────────────── */
+/*
+  Colunas:
+  1. Status (label + badge retirada)  — 140px fixo
+  2. Info (nome, endereço)            — cresce
+  3. Pagamento + total                — auto
+  4. Botões aceitar/rejeitar          — auto (só pending)
+  5. Data                             — auto
+  6. Chevron                          — 24px
+*/
 .adm-order-main {
   display: grid;
-  grid-template-columns: 130px 1fr auto auto auto 24px;
+  grid-template-columns: 140px 1fr auto auto auto 24px;
   align-items: center;
   gap: 16px;
   padding: 18px 20px;
   cursor: pointer;
   transition: background 0.15s;
 }
-
-.adm-order-main:hover { background: #161616; }
+.adm-order-main:hover {
+  background: #161616;
+}
 
 .adm-order-status {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
-.adm-status-icon { font-size: 18px; }
-
+.adm-status-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
 .adm-status-label {
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.adm-retirada-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px;
+  background: rgba(255, 208, 0, 0.1);
+  border: 1px solid rgba(255, 208, 0, 0.3);
+  border-radius: 20px;
+  font-size: 9px;
+  font-weight: 800;
+  color: #ffd000;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  margin-top: 2px;
 }
 
 .adm-order-info {
   display: flex;
   flex-direction: column;
   gap: 3px;
+  min-width: 0;
 }
 
 .adm-order-id {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: "Plus Jakarta Sans", sans-serif;
   font-size: 13px;
   font-weight: 700;
   color: #555;
   letter-spacing: 1px;
 }
-
 .adm-order-name {
   font-size: 15px;
   font-weight: 600;
   color: #ddd;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-
 .adm-order-district {
   font-size: 12px;
   color: #555;
+}
+
+.adm-order-retirada-info {
+  font-size: 11px;
+  color: #ffd000;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .adm-order-payment {
@@ -332,10 +419,11 @@
   gap: 4px;
   font-size: 13px;
   color: #666;
+  white-space: nowrap;
 }
 
 .adm-order-total {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: "Plus Jakarta Sans", sans-serif;
   font-size: 16px;
   font-weight: 800;
   color: #ffd000;
@@ -355,26 +443,105 @@
   align-items: center;
   justify-content: center;
 }
+.adm-chevron.open {
+  transform: rotate(180deg);
+  color: #ffd000;
+}
 
-.adm-chevron.open { transform: rotate(180deg); color: #ffd000; }
+/* ─── BOTÕES ACEITAR / REJEITAR (linha) ─────────────── */
+.adm-order-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
 
-/* ─── DETALHES ──────────────────────────────────────── */
+.adm-btn-accept {
+  padding: 7px 14px;
+  background: rgba(80, 200, 120, 0.1);
+  border: 1px solid rgba(80, 200, 120, 0.3);
+  border-radius: 8px;
+  color: #50c878;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: "Inter", sans-serif;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    transform 0.2s;
+  white-space: nowrap;
+}
+.adm-btn-accept:hover:not(:disabled) {
+  background: rgba(80, 200, 120, 0.2);
+  border-color: #50c878;
+  transform: translateY(-1px);
+}
+
+.adm-btn-reject {
+  padding: 7px 14px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 8px;
+  color: #ef4444;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: "Inter", sans-serif;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    transform 0.2s;
+  white-space: nowrap;
+}
+.adm-btn-reject:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+  transform: translateY(-1px);
+}
+
+.adm-btn-accept:disabled,
+.adm-btn-reject:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ─── DETALHES EXPANDIDOS ───────────────────────────── */
 .adm-order-detail {
   border-top: 1px solid #1a1a1a;
   padding: 24px 20px;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
   gap: 24px;
   animation: adm-expand 0.25s ease both;
   background: #0d0d0d;
 }
 
-@keyframes adm-expand {
-  from { opacity: 0; transform: translateY(-8px); }
-  to   { opacity: 1; transform: translateY(0); }
+/* Entrega: 3 colunas — itens | endereço | status */
+.adm-order-detail--delivery {
+  grid-template-columns: 1fr 1fr 1fr;
 }
 
-.adm-detail-section { display: flex; flex-direction: column; gap: 12px; }
+/* Retirada: 2 colunas — itens | info+status lado a lado */
+.adm-order-detail--pickup {
+  grid-template-columns: 1fr 1fr;
+}
+
+@keyframes adm-expand {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.adm-detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 
 .adm-detail-label {
   font-size: 9px;
@@ -384,7 +551,11 @@
   font-weight: 700;
 }
 
-.adm-items { display: flex; flex-direction: column; gap: 8px; }
+.adm-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
 .adm-item {
   display: flex;
@@ -395,14 +566,40 @@
   border-radius: 10px;
   border: 1px solid #1a1a1a;
 }
+.adm-item-name {
+  flex: 1;
+  font-size: 13px;
+  color: #ccc;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.adm-item-qty {
+  font-size: 12px;
+  color: #666;
+  flex-shrink: 0;
+}
+.adm-item-price {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffd000;
+  flex-shrink: 0;
+}
 
-.adm-item-name  { flex: 1; font-size: 13px; color: #ccc; }
-.adm-item-qty   { font-size: 12px; color: #666; }
-.adm-item-price { font-size: 13px; font-weight: 700; color: #ffd000; }
-
-.adm-address { display: flex; flex-direction: column; gap: 5px; }
-.adm-address p { font-size: 13px; color: #888; line-height: 1.5; }
-.adm-address strong { color: #ccc; }
+.adm-address {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.adm-address p {
+  font-size: 13px;
+  color: #888;
+  line-height: 1.5;
+}
+.adm-address strong {
+  color: #ccc;
+}
 
 .adm-status-pills {
   display: flex;
@@ -418,23 +615,25 @@
   color: #666;
   font-size: 12px;
   font-weight: 600;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   cursor: pointer;
-  transition: all 0.2s;
+  transition:
+    border-color 0.2s,
+    color 0.2s;
 }
-
 .adm-pill:hover:not(:disabled) {
   border-color: var(--pill-color);
   color: var(--pill-color);
 }
-
 .adm-pill-active {
-  background: rgba(255,208,0,0.08);
+  background: rgba(255, 208, 0, 0.08);
   border-color: var(--pill-color) !important;
   color: var(--pill-color) !important;
 }
-
-.adm-pill:disabled { opacity: 0.4; cursor: not-allowed; }
+.adm-pill:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 
 .adm-btn-advance {
   width: 100%;
@@ -443,36 +642,227 @@
   color: #000;
   border: none;
   border-radius: 12px;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: "Plus Jakarta Sans", sans-serif;
   font-size: 13px;
   font-weight: 800;
   cursor: pointer;
-  transition: all 0.2s;
+  transition:
+    background 0.2s,
+    transform 0.2s,
+    box-shadow 0.2s;
   margin-top: 4px;
   letter-spacing: 0.3px;
 }
-
 .adm-btn-advance:hover:not(:disabled) {
   background: #ffe033;
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(255,208,0,0.2);
+  box-shadow: 0 6px 20px rgba(255, 208, 0, 0.2);
 }
-
 .adm-btn-advance:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  transform: none;
 }
 
 .adm-delivered-msg {
   padding: 12px 16px;
-  background: rgba(80,200,120,0.06);
-  border: 1px solid rgba(80,200,120,0.2);
+  background: rgba(80, 200, 120, 0.06);
+  border: 1px solid rgba(80, 200, 120, 0.2);
   border-radius: 12px;
   color: #50c878;
   font-size: 13px;
   font-weight: 600;
   text-align: center;
+}
+
+/* ─── ACEITAR / REJEITAR NOS DETALHES ──────────────── */
+.adm-accept-reject-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.adm-btn-accept-lg {
+  width: 100%;
+  padding: 14px;
+  background: rgba(80, 200, 120, 0.1);
+  border: 1px solid rgba(80, 200, 120, 0.3);
+  border-radius: 12px;
+  color: #50c878;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+.adm-btn-accept-lg:hover:not(:disabled) {
+  background: rgba(80, 200, 120, 0.18);
+  border-color: #50c878;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(80, 200, 120, 0.15);
+}
+
+.adm-btn-reject-lg {
+  width: 100%;
+  padding: 14px;
+  background: transparent;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 12px;
+  color: #ef4444;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    transform 0.2s;
+}
+.adm-btn-reject-lg:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: #ef4444;
+  transform: translateY(-1px);
+}
+
+.adm-btn-accept-lg:disabled,
+.adm-btn-reject-lg:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ─── MODAL ─────────────────────────────────────────── */
+.adm-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  animation: adm-fade-in 0.2s ease;
+}
+
+@keyframes adm-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.adm-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 201;
+  background: #111;
+  border: 1px solid #2a2a2a;
+  border-radius: 20px;
+  padding: 36px 32px;
+  width: 90%;
+  max-width: 420px;
+  text-align: center;
+  animation: adm-modal-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+@keyframes adm-modal-pop {
+  from {
+    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+.adm-modal-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+.adm-modal-title {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 10px;
+}
+.adm-modal-desc {
+  font-size: 14px;
+  color: #888;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+.adm-modal-desc strong {
+  color: #ffd000;
+}
+
+.adm-modal-error {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #f87171;
+  margin-bottom: 16px;
+}
+
+.adm-modal-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.adm-modal-btn-back {
+  flex: 1;
+  padding: 14px;
+  background: transparent;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  color: #888;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    color 0.2s;
+}
+.adm-modal-btn-back:hover:not(:disabled) {
+  border-color: #444;
+  color: #fff;
+}
+
+.adm-modal-btn-reject {
+  flex: 1;
+  padding: 14px;
+  background: #ef4444;
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+.adm-modal-btn-reject:hover:not(:disabled) {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+}
+
+.adm-modal-btn-back:disabled,
+.adm-modal-btn-reject:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* ─── CARREGAR MAIS ─────────────────────────────────── */
@@ -493,16 +883,16 @@
   color: #888;
   font-size: 13px;
   font-weight: 600;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   cursor: pointer;
-  transition: all 0.2s;
+  transition:
+    border-color 0.2s,
+    color 0.2s;
 }
-
 .adm-load-more:hover:not(:disabled) {
   border-color: #ffd000;
   color: #ffd000;
 }
-
 .adm-load-more:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -524,359 +914,119 @@
   font-size: 13px;
   color: #333;
 }
-/* ─── MÉTRICAS DO DIA ───────────────────────────────── */
-.adm-today-metrics {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.adm-metric-card {
-  background: linear-gradient(135deg, #111 0%, #0d0d0d 100%);
-  border: 1px solid #1e1e1e;
-  border-radius: 20px;
-  padding: 20px 24px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  transition: border-color 0.2s;
-}
-
-.adm-metric-card:hover {
-  border-color: #2a2a2a;
-}
-
-.adm-metric-icon {
-  font-size: 32px;
-  opacity: 0.8;
-}
-
-.adm-metric-content {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.adm-metric-value {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 28px;
-  font-weight: 800;
-  color: #ffd000;
-  line-height: 1;
-}
-
-.adm-metric-label {
-  font-size: 12px;
-  color: #666;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-/* ─── BOTÕES ACEITAR / REJEITAR (linha principal) ── */
-.adm-order-actions {
-  display: flex;
-  gap: 6px;
-  flex-shrink: 0;
-}
- 
-.adm-btn-accept {
-  padding: 7px 14px;
-  background: rgba(80, 200, 120, 0.1);
-  border: 1px solid rgba(80, 200, 120, 0.3);
-  border-radius: 8px;
-  color: #50c878;
-  font-size: 12px;
-  font-weight: 700;
-  font-family: 'Inter', sans-serif;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
- 
-.adm-btn-accept:hover:not(:disabled) {
-  background: rgba(80, 200, 120, 0.2);
-  border-color: #50c878;
-  transform: translateY(-1px);
-}
- 
-.adm-btn-reject {
-  padding: 7px 14px;
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.25);
-  border-radius: 8px;
-  color: #ef4444;
-  font-size: 12px;
-  font-weight: 700;
-  font-family: 'Inter', sans-serif;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
- 
-.adm-btn-reject:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.15);
-  border-color: #ef4444;
-  transform: translateY(-1px);
-}
- 
-.adm-btn-accept:disabled,
-.adm-btn-reject:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  transform: none;
-}
- 
-/* ─── ACEITAR / REJEITAR NOS DETALHES ──────────── */
-.adm-accept-reject-detail {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 4px;
-}
- 
-.adm-btn-accept-lg {
-  width: 100%;
-  padding: 14px;
-  background: rgba(80, 200, 120, 0.1);
-  border: 1px solid rgba(80, 200, 120, 0.3);
-  border-radius: 12px;
-  color: #50c878;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 14px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
- 
-.adm-btn-accept-lg:hover:not(:disabled) {
-  background: rgba(80, 200, 120, 0.18);
-  border-color: #50c878;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(80, 200, 120, 0.15);
-}
- 
-.adm-btn-reject-lg {
-  width: 100%;
-  padding: 14px;
-  background: transparent;
-  border: 1px solid rgba(239, 68, 68, 0.25);
-  border-radius: 12px;
-  color: #ef4444;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 14px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
- 
-.adm-btn-reject-lg:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.08);
-  border-color: #ef4444;
-  transform: translateY(-1px);
-}
- 
-.adm-btn-accept-lg:disabled,
-.adm-btn-reject-lg:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  transform: none;
-}
- 
-/* ─── MODAL OVERLAY ─────────────────────────────── */
-.adm-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(4px);
-  z-index: 200;
-  animation: adm-fade-in 0.2s ease;
-}
- 
-@keyframes adm-fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
- 
-/* ─── MODAL ─────────────────────────────────────── */
-.adm-modal {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 201;
-  background: #111;
-  border: 1px solid #2a2a2a;
-  border-radius: 20px;
-  padding: 36px 32px;
-  width: 90%;
-  max-width: 420px;
-  text-align: center;
-  animation: adm-modal-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
-}
- 
-@keyframes adm-modal-pop {
-  from { transform: translate(-50%, -50%) scale(0.9); opacity: 0; }
-  to   { transform: translate(-50%, -50%) scale(1);   opacity: 1; }
-}
- 
-.adm-modal-icon   { font-size: 48px; margin-bottom: 16px; }
- 
-.adm-modal-title {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 20px; font-weight: 800;
-  color: #fff; margin-bottom: 10px;
-}
- 
-.adm-modal-desc {
-  font-size: 14px; color: #888;
-  line-height: 1.6; margin-bottom: 24px;
-}
- 
-.adm-modal-desc strong { color: #ffd000; }
- 
-.adm-modal-error {
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.25);
-  border-radius: 10px;
-  padding: 10px 14px;
-  font-size: 13px;
-  color: #f87171;
-  margin-bottom: 16px;
-}
- 
-.adm-modal-actions { display: flex; gap: 12px; }
- 
-.adm-modal-btn-back {
-  flex: 1; padding: 14px;
-  background: transparent;
-  border: 1px solid #2a2a2a;
-  border-radius: 12px;
-  color: #888;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 14px; font-weight: 700;
-  cursor: pointer; transition: all 0.2s;
-}
- 
-.adm-modal-btn-back:hover:not(:disabled) {
-  border-color: #444; color: #fff;
-}
- 
-.adm-modal-btn-reject {
-  flex: 1; padding: 14px;
-  background: #ef4444;
-  border: none; border-radius: 12px;
-  color: #fff;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 14px; font-weight: 700;
-  cursor: pointer; transition: all 0.2s;
-}
- 
-.adm-modal-btn-reject:hover:not(:disabled) {
-  background: #dc2626;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
-}
- 
-.adm-modal-btn-back:disabled,
-.adm-modal-btn-reject:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
- 
-/* ─── BADGE DE RETIRADA ─────────────────────────────── */
-.adm-retirada-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 8px;
-  background: rgba(255, 208, 0, 0.1);
-  border: 1px solid rgba(255, 208, 0, 0.3);
-  border-radius: 20px;
-  font-size: 9px;
-  font-weight: 800;
-  color: #ffd000;
-  letter-spacing: 0.5px;
-  margin-left: 8px;
-  white-space: nowrap;
-}
-
-.adm-order-retirada-info {
-  font-size: 11px;
-  color: #ffd000;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 4px;
-}
 
 /* ══════════════════════════════════════════
-   MOBILE
+   RESPONSIVO
 ══════════════════════════════════════════ */
+@media (max-width: 1024px) {
+  /* Esconde data na linha para dar espaço */
+  .adm-order-date {
+    display: none;
+  }
+  .adm-order-main {
+    grid-template-columns: 130px 1fr auto auto 24px;
+  }
+}
+
 @media (max-width: 900px) {
-  .adm-stats { grid-template-columns: repeat(3, 1fr); }
+  .adm-stats {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 @media (max-width: 768px) {
-  .adm-wrap  { padding: 0 16px; }
-  .adm-title { font-size: 26px; }
-  .adm-stats { grid-template-columns: repeat(2, 1fr); }
-
-  .adm-order-main {
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto auto;
-    gap: 10px;
+  .adm-wrap {
+    padding: 0 16px;
   }
-
-  .adm-order-status  { grid-column: 1; }
-  .adm-order-payment { grid-column: 2; align-items: flex-end; }
-  .adm-order-info    { grid-column: 1 / -1; }
-  .adm-order-date    { grid-column: 1; font-size: 10px; }
-  .adm-chevron       { grid-column: 2; justify-self: end; }
-
-  .adm-order-detail {
-    grid-template-columns: 1fr;
-    gap: 20px;
+  .adm-title {
+    font-size: 26px;
   }
-   .adm-today-metrics {
+  .adm-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .adm-today-metrics {
     grid-template-columns: 1fr;
     gap: 12px;
   }
-  
   .adm-metric-card {
     padding: 16px 20px;
   }
-  
   .adm-metric-value {
     font-size: 24px;
   }
-  
   .adm-metric-icon {
     font-size: 28px;
   }
-  .adm-order-actions {
-    display: none; /* esconde na linha — aparece só nos detalhes */
+
+  /* Linha principal mobile: 2 colunas fluidas */
+  .adm-order-main {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "status   payment"
+      "info     info"
+      "date     chevron";
+    gap: 8px 12px;
+    align-items: start;
   }
- 
-  .adm-modal { padding: 28px 20px; }
-  .adm-modal-actions { flex-direction: column; }
+
+  .adm-order-status {
+    grid-area: status;
+  }
+  .adm-order-info {
+    grid-area: info;
+  }
+  .adm-order-payment {
+    grid-area: payment;
+    align-items: flex-end;
+  }
+  .adm-order-date {
+    grid-area: date;
+    display: block;
+    font-size: 10px;
+    align-self: center;
+  }
+  .adm-chevron {
+    grid-area: chevron;
+    justify-self: end;
+    align-self: center;
+  }
+
+  /* Esconde botões aceitar/rejeitar na linha — ficam apenas nos detalhes */
+  .adm-order-actions {
+    display: none;
+  }
+
+  /* Detalhes: 1 coluna em mobile para ambos os tipos */
+  .adm-order-detail--delivery,
+  .adm-order-detail--pickup {
+    grid-template-columns: 1fr;
+  }
+
+  .adm-modal {
+    padding: 28px 20px;
+  }
+  .adm-modal-actions {
+    flex-direction: column;
+  }
 
   .adm-retirada-badge {
     font-size: 7px;
     padding: 2px 6px;
-    margin-left: 4px;
   }
-  
   .adm-order-retirada-info {
     font-size: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .adm-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .adm-stat {
+    padding: 14px 10px;
+  }
+  .adm-stat-num {
+    font-size: 22px;
   }
 }

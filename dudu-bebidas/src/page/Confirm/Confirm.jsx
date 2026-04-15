@@ -328,7 +328,7 @@ export default function Confirmacao() {
               <div style={{ fontSize: 48, marginBottom: 16 }}>🏪</div>
               <h3 style={{ color: "#ffd000", marginBottom: 8 }}>Seu pedido está pronto!</h3>
               <p style={{ color: "#888", marginBottom: 16 }}>
-                Passe na loja com seu documento e o código de retirada.
+                Passe na loja com seu código de retirada.
               </p>
               <div style={{ 
                 background: "rgba(255, 208, 0, 0.1)", 
@@ -338,7 +338,7 @@ export default function Confirmacao() {
               }}>
                 <p style={{ fontSize: 12, color: "#ffd000", marginBottom: 4 }}>ENDEREÇO</p>
                 <p style={{ color: "#ddd", fontSize: 14 }}>Rua Edgar Torres, 650</p>
-                <p style={{ color: "#666", fontSize: 12 }}>Belo Horizonte - MG</p>
+                <p style={{ color: "#666", fontSize: 12 }}>Minas Caixa, Belo Horizonte - MG</p>
               </div>
             </div>
           </div>
