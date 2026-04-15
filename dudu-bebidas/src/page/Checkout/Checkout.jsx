@@ -20,6 +20,7 @@ const BAIRROS_PERMITIDOS = [
 export default function Checkout({ user }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const errorRef = useRef(null); // Referência para o elemento de erro
 
   const cartItems  = location.state?.cartItems  ?? [];
   const cartTotal  = location.state?.cartTotal  ?? 0;
@@ -55,8 +56,30 @@ export default function Checkout({ user }) {
     }
   }, [orderProcessed, navigate]);
 
+  // Função para rolar até o erro
+  const scrollToError = () => {
+    if (errorRef.current) {
+      // Rola suavemente até o elemento de erro
+      errorRef.current.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center',
+        inline: 'nearest'
+      });
+      
+      // Adiciona uma classe de destaque temporária
+      errorRef.current.classList.add('co-error-highlight');
+      setTimeout(() => {
+        if (errorRef.current) {
+          errorRef.current.classList.remove('co-error-highlight');
+        }
+      }, 2000);
+    }
+  };
+
   const handleAddressChange = (e) => {
     setAddress((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    // Limpa erro geral ao começar a digitar
+    if (errorMsg) setErrorMsg("");
   };
 
   const handleCepBlur = async () => {
@@ -82,6 +105,7 @@ export default function Checkout({ user }) {
     const value = e.target.value.replace(/\D/g, "").slice(0, 8);
     setCep(value.length > 5 ? `${value.slice(0,5)}-${value.slice(5)}` : value);
     setCepError("");
+    if (errorMsg) setErrorMsg("");
   };
 
   const handlePhoneChange = (e) => {
@@ -89,6 +113,7 @@ export default function Checkout({ user }) {
     if (value.length > 6)      value = `(${value.slice(0,2)}) ${value.slice(2,7)}-${value.slice(7)}`;
     else if (value.length > 2) value = `(${value.slice(0,2)}) ${value.slice(2)}`;
     setAddress((prev) => ({ ...prev, phone: value }));
+    if (errorMsg) setErrorMsg("");
   };
 
   // ── Validação — pula endereço se for retirada ─────
@@ -126,11 +151,22 @@ export default function Checkout({ user }) {
     if (isProcessingRef.current || orderProcessed || loading) return;
     setErrorMsg("");
 
-    if (!user) { setErrorMsg("login_required"); return; }
-
     const validationError = validateForm();
-    if (validationError) { setErrorMsg(validationError); return; }
-    if (cartItems.length === 0) { setErrorMsg("Seu carrinho está vazio."); return; }
+    if (validationError) { 
+      setErrorMsg(validationError);
+      // Aguarda o próximo ciclo do React para garantir que o elemento de erro foi renderizado
+      setTimeout(() => {
+        scrollToError();
+      }, 100);
+      return; 
+    }
+    if (cartItems.length === 0) { 
+      setErrorMsg("Seu carrinho está vazio.");
+      setTimeout(() => {
+        scrollToError();
+      }, 100);
+      return; 
+    }
 
     isProcessingRef.current = true;
     setLoading(true);
@@ -142,7 +178,7 @@ export default function Checkout({ user }) {
         : { ...address, cep };
 
       const { orderId, error } = await saveOrder({
-        userId:        user.id,
+        userId:        user?.id,
         total:         cartTotal + DELIVERY,
         paymentMethod: payment,
         address:       addressToSave,
@@ -151,6 +187,9 @@ export default function Checkout({ user }) {
 
       if (error) {
         setErrorMsg(error);
+        setTimeout(() => {
+          scrollToError();
+        }, 100);
         isProcessingRef.current = false;
         setLoading(false);
         return;
@@ -173,6 +212,9 @@ export default function Checkout({ user }) {
     } catch (err) {
       console.error("Erro ao processar pedido:", err);
       setErrorMsg("Ocorreu um erro ao processar seu pedido. Tente novamente.");
+      setTimeout(() => {
+        scrollToError();
+      }, 100);
       isProcessingRef.current = false;
       setLoading(false);
     }
@@ -217,27 +259,10 @@ export default function Checkout({ user }) {
           </div>
         </div>
 
-        {/* ── BANNER DE LOGIN ── */}
-        {!user && (
-          <div className="co-login-banner">
-            <div className="co-login-banner-icon">🔐</div>
-            <div className="co-login-banner-text">
-              <strong>Faça login para continuar</strong>
-              <span>É necessário estar logado para finalizar seu pedido.</span>
-            </div>
-            <button
-              className="co-login-banner-btn"
-              onClick={() => navigate("/", { state: { openLogin: true } })}
-            >
-              Entrar
-            </button>
-          </div>
-        )}
-
         <div className="co-grid">
 
           {/* ── FORM ── */}
-          <div className={`co-card${!user ? " co-card-locked" : ""}`}>
+          <div className="co-card">
 
             {/* ── BANNER DE RETIRADA ── */}
             {isRetirada && (
@@ -250,13 +275,27 @@ export default function Checkout({ user }) {
               </div>
             )}
 
+            {/* ── MENSAGEM DE ERRO DESTAQUE COM REF ── */}
+            {errorMsg && (
+              <div ref={errorRef} className="co-error-alert">
+                <div className="co-error-icon">⚠️</div>
+                <div className="co-error-content">
+                  <div className="co-error-title">Atenção!</div>
+                  <div className="co-error-message">{errorMsg}</div>
+                </div>
+                <button 
+                  className="co-error-close"
+                  onClick={() => setErrorMsg("")}
+                  aria-label="Fechar"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+
             <div className="co-section-label">
               {isRetirada ? "👤 Identificação" : "📍 Entrega"}
             </div>
-
-            {errorMsg && errorMsg !== "login_required" && (
-              <div className="co-error-msg">⚠️ {errorMsg}</div>
-            )}
 
             {/* Nome + Telefone — sempre visível */}
             <div className="co-field-row">
@@ -268,7 +307,8 @@ export default function Checkout({ user }) {
                   value={address.name}
                   onChange={handleAddressChange}
                   placeholder={isRetirada ? "Seu nome para retirada" : "Seu nome e sobrenome"}
-                  disabled={loading || orderProcessed || !user}
+                  disabled={loading || orderProcessed}
+                  className={errorMsg && !address.name.trim() ? "co-input-error" : ""}
                 />
               </div>
               <div className="co-field">
@@ -279,7 +319,8 @@ export default function Checkout({ user }) {
                   value={address.phone}
                   onChange={handlePhoneChange}
                   placeholder="(00) 00000-0000"
-                  disabled={loading || orderProcessed || !user}
+                  disabled={loading || orderProcessed}
+                  className={errorMsg && (!address.phone.replace(/\D/g, "") || address.phone.replace(/\D/g, "").length < 10) ? "co-input-error" : ""}
                 />
               </div>
             </div>
@@ -298,8 +339,8 @@ export default function Checkout({ user }) {
                         onBlur={handleCepBlur}
                         placeholder="00000-000"
                         maxLength={9}
-                        className={cepError ? "co-input-error" : ""}
-                        disabled={loading || orderProcessed || !user}
+                        className={cepError || (errorMsg && cep.replace(/\D/g, "").length !== 8) ? "co-input-error" : ""}
+                        disabled={loading || orderProcessed}
                       />
                       {cepLoading && <span className="co-cep-loading">🔍</span>}
                     </div>
@@ -316,7 +357,8 @@ export default function Checkout({ user }) {
                       value={address.number}
                       onChange={handleAddressChange}
                       placeholder="123"
-                      disabled={loading || orderProcessed || !user}
+                      disabled={loading || orderProcessed}
+                      className={errorMsg && !address.number.trim() ? "co-input-error" : ""}
                     />
                   </div>
                 </div>
@@ -330,7 +372,8 @@ export default function Checkout({ user }) {
                       value={address.street}
                       onChange={handleAddressChange}
                       placeholder="Rua / Av. — preenchido pelo CEP"
-                      disabled={loading || orderProcessed || !user}
+                      disabled={loading || orderProcessed}
+                      className={errorMsg && !address.street.trim() ? "co-input-error" : ""}
                     />
                   </div>
                 </div>
@@ -344,7 +387,8 @@ export default function Checkout({ user }) {
                       value={address.district}
                       onChange={handleAddressChange}
                       placeholder="Bairro"
-                      disabled={loading || orderProcessed || !user}
+                      disabled={loading || orderProcessed}
+                      className={errorMsg && !address.district.trim() ? "co-input-error" : ""}
                     />
                   </div>
                   <div className="co-field">
@@ -355,7 +399,7 @@ export default function Checkout({ user }) {
                       value={address.complement}
                       onChange={handleAddressChange}
                       placeholder="Apto, bloco..."
-                      disabled={loading || orderProcessed || !user}
+                      disabled={loading || orderProcessed}
                     />
                   </div>
                 </div>
@@ -379,7 +423,7 @@ export default function Checkout({ user }) {
                     value={opt.value}
                     checked={payment === opt.value}
                     onChange={() => setPayment(opt.value)}
-                    disabled={loading || orderProcessed || !user}
+                    disabled={loading || orderProcessed}
                   />
                   <label className="co-pay-label" htmlFor={opt.value}>
                     <span className="co-pay-icon">{opt.icon}</span>
@@ -442,7 +486,6 @@ export default function Checkout({ user }) {
             >
               {loading        ? "Processando..."
                : orderProcessed ? "Confirmado ✓"
-               : !user         ? "🔐 Entre para continuar"
                : isRetirada    ? "Confirmar Retirada →"
                : "Confirmar Pedido →"}
             </button>
@@ -460,7 +503,6 @@ export default function Checkout({ user }) {
         >
           {loading        ? "Processando..."
            : orderProcessed ? "Confirmado ✓"
-           : !user         ? "🔐 Entre para continuar"
            : isRetirada    ? "Confirmar Retirada →"
            : "Confirmar Pedido →"}
         </button>

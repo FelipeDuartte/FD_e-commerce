@@ -647,57 +647,88 @@
   line-height: 1.5;
 }
  
-/* ─── BANNER DE LOGIN ───────────────────────────────── */
-.co-login-banner {
+/* Alerta de erro destacado */
+.co-error-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+  border-left: 4px solid #d32f2f;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 12px rgba(211, 47, 47, 0.15);
+  animation: shakeError 0.5s ease-in-out;
+}
+
+@keyframes shakeError {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.co-error-icon {
+  font-size: 28px;
+  animation: pulseWarning 1s infinite;
+}
+
+@keyframes pulseWarning {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.co-error-content {
+  flex: 1;
+}
+
+.co-error-title {
+  font-weight: bold;
+  font-size: 16px;
+  color: #c62828;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.co-error-message {
+  font-size: 14px;
+  color: #b71c1c;
+  line-height: 1.4;
+}
+
+.co-error-close {
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #c62828;
+  padding: 0;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 16px 20px;
-  background: rgba(255, 208, 0, 0.05);
-  border: 1px solid rgba(255, 208, 0, 0.2);
-  border-radius: 14px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-}
- 
-.co-login-banner-icon { font-size: 22px; flex-shrink: 0; }
- 
-.co-login-banner-text {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
- 
-.co-login-banner-text strong { font-size: 14px; color: #ddd; }
-.co-login-banner-text span   { font-size: 12px; color: #666; }
- 
-.co-login-banner-btn {
-  padding: 9px 20px;
-  background: #ffd000;
-  color: #000;
-  border: none;
-  border-radius: 10px;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
+  justify-content: center;
+  border-radius: 50%;
   transition: all 0.2s;
-  flex-shrink: 0;
 }
- 
-.co-login-banner-btn:hover {
-  background: #ffe033;
-  transform: translateY(-1px);
+
+.co-error-close:hover {
+  background: rgba(198, 40, 40, 0.1);
+  transform: scale(1.1);
 }
- 
-/* ─── CARD BLOQUEADO ─────────────────────────────────── */
-.co-card-locked {
-  opacity: 0.6;
-  pointer-events: none;
+
+/* Campos com erro */
+.co-input-error {
+  border-color: #d32f2f !important;
+  background-color: #fff5f5 !important;
+  animation: fieldShake 0.3s ease-in-out;
 }
- 
+
+@keyframes fieldShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
+}
 
 /* ══════════════════════════════════════════
    MOBILE (≤ 768px)
@@ -733,32 +764,22 @@
     margin: 0 10px;
   }
 
-  /* Banner de login no mobile */
-  .co-login-banner {
-    flex-wrap: wrap;
-    gap: 12px;
-    padding: 16px;
-    margin-bottom: 20px;
+  .co-error-alert {
+    padding: 12px;
+    gap: 10px;
   }
-
-  .co-login-banner-icon {
+  
+  .co-error-icon {
     font-size: 24px;
   }
-
-  .co-login-banner-text strong {
+  
+  .co-error-title {
     font-size: 14px;
   }
-
-  .co-login-banner-text span {
+  
+  .co-error-message {
     font-size: 12px;
   }
-
-  .co-login-banner-btn {
-    width: 100%;
-    padding: 12px;
-    text-align: center;
-  }
-
   .co-grid {
     grid-template-columns: 1fr;
     gap: 16px;

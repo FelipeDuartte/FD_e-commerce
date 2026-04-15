@@ -16,7 +16,7 @@ import { supabase } from "./Supabaseclient";
 export async function saveOrder({ userId, total, paymentMethod, address, cartItems }) {
 
   // ── Validações básicas ──────────────────────────────────
-  if (!userId) return { error: "Usuário não autenticado." };
+  if (!userId) return { error: "Usuário não autenticado faça login." };
   if (!cartItems || cartItems.length === 0) return { error: "Carrinho vazio." };
   if (!paymentMethod) return { error: "Forma de pagamento não selecionada." };
   
