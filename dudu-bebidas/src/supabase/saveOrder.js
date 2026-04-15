@@ -42,7 +42,8 @@ export async function saveOrder({ userId, total, paymentMethod, address, cartIte
       user_id: userId,
       total,
       payment_method: paymentMethod,
-      address: address, // objeto JSON completo
+      address: address,
+      status: "pending",
     })
     .select("id")
     .single();
