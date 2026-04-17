@@ -10,31 +10,33 @@ export default function ProductList({
   setSelectedCategory,
   addToCart,
 }) {
-  const [visibleCount, setVisibleCount] = useState(12); // Começa com 12 produtos
+  const [visibleCount, setVisibleCount] = useState(12);
   const productsCount = filteredProducts.length;
   const hasProducts = filteredProducts.length > 0;
-  
-  // Produtos visíveis atualmente
+
   const visibleProducts = filteredProducts.slice(0, visibleCount);
   const hasMore = visibleCount < productsCount;
-  const hasVisibleExcess = visibleCount > 12; // Para mostrar botão "Ver Menos"
+  const hasVisibleExcess = visibleCount > 12;
 
   const handleCategorySelect = (categoryId) => {
     setSelectedCategory(categoryId);
-    setVisibleCount(12); // Resetar ao mudar categoria
+    setVisibleCount(12);
   };
 
   const handleLoadMore = () => {
-    setVisibleCount(prev => prev + 12); // Carrega mais 12 produtos
+    setVisibleCount((prev) => prev + 12);
   };
 
   const handleShowLess = () => {
-    setVisibleCount(12); // Volta para 12 produtos
-    // Scroll suave para o topo da seção de produtos
-    const produtosSection = document.getElementById('produtos');
-    if (produtosSection) {
-      produtosSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    setVisibleCount(12);
+    // Aguarda o React recolher os produtos antes de fazer scroll
+    setTimeout(() => {
+      const produtosSection = document.getElementById("produtos");
+      if (produtosSection) {
+        const offset = produtosSection.getBoundingClientRect().top + window.scrollY - 80;
+        window.scrollTo({ top: offset, behavior: "smooth" });
+      }
+    }, 50);
   };
 
   const categories = [
@@ -109,28 +111,21 @@ export default function ProductList({
         </div>
 
         {/* Botões de controle */}
-        {hasProducts && (
-          <div className="text-center mt-5 pt-3">
-            {/* Botão Ver Mais */}
+        {hasProducts && (hasMore || hasVisibleExcess) && (
+          <div className="produtos-controle-btns">
             {hasMore && (
-              <button 
-                onClick={handleLoadMore}
-                className="btn-ver-mais"
-              >
+              <button onClick={handleLoadMore} className="btn-ver-mais">
                 <i className="bi bi-plus-circle me-2"></i>
                 Ver Mais Produtos
                 <span className="ms-2 badge">
-                  +{Math.min(12, productsCount - visibleCount)} de {productsCount - visibleCount} restantes
+                  +{Math.min(12, productsCount - visibleCount)} de{" "}
+                  {productsCount - visibleCount} restantes
                 </span>
               </button>
             )}
 
-            {/* Botão Ver Menos - aparece apenas se tiver mais de 12 produtos visíveis */}
             {hasVisibleExcess && (
-              <button 
-                onClick={handleShowLess}
-                className="btn-ver-menos ms-3"
-              >
+              <button onClick={handleShowLess} className="btn-ver-menos">
                 <i className="bi bi-dash-circle me-2"></i>
                 Ver Menos Produtos
               </button>
