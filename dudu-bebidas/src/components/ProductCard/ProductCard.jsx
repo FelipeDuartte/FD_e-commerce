@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Plus, Check } from "lucide-react";
+import { Plus, Check, X } from "lucide-react";
 import "./ProductCard.css";
 
 const RESET_TIME = 2000;
@@ -7,15 +7,16 @@ const RESET_TIME = 2000;
 export default function ProductCard({ produto, addToCart }) {
   const [isAdded, setIsAdded] = useState(false);
 
-  const hasPromo    = Boolean(produto.promocao);
-  const hasOldPrice = hasPromo && Boolean(produto.precoAntigo);
-  const isLowStock  = produto.estoque < 15;
+  const hasPromo      = Boolean(produto.promocao);
+  const hasOldPrice   = hasPromo && Boolean(produto.precoAntigo);
+  const isLowStock    = produto.estoque > 0 && produto.estoque < 15;
+  const isOutOfStock  = produto.estoque <= 0 || produto.isActive === false; // ← NOVO
 
   const handleAddToCart = () => {
-    if (isAdded) return;
+    if (isAdded || isOutOfStock) return; // ← NOVO: bloqueia se esgotado
     addToCart(produto);
     setIsAdded(true);
-  };66
+  };
 
   useEffect(() => {
     if (!isAdded) return;
@@ -27,24 +28,30 @@ export default function ProductCard({ produto, addToCart }) {
     <>
       {/* Product Card */}
       <div className="col">
-        <div className="produto-card">
+        <div className={`produto-card ${isOutOfStock ? "produto-card-esgotado" : ""}`}> {/* ← NOVO: classe */}
 
           {/* Imagem */}
           <div className="produto-img-container">
             <img
               src={produto.imagem}
               alt={produto.nome}
-              className="produto-img"
+              className={`produto-img ${isOutOfStock ? "img-esgotado" : ""}`} // ← NOVO: opacidade
             />
 
-            {hasPromo && (
+            {hasPromo && !isOutOfStock && (
               <span className="badge-promo">
                 <i className="bi bi-lightning-charge-fill me-1"></i>
                 OFERTA
               </span>
             )}
 
-            {isLowStock && (
+            {/* NOVO: badge esgotado sobrepõe os outros */}
+            {isOutOfStock ? (
+              <span className="badge-estoque esgotado">
+                <i className="bi bi-x-circle-fill me-1"></i>
+                Esgotado
+              </span>
+            ) : isLowStock && (
               <span className="badge-estoque baixo">
                 <i className="bi bi-exclamation-circle-fill me-1"></i>
                 Últimas unidades
@@ -79,10 +86,15 @@ export default function ProductCard({ produto, addToCart }) {
             {/* Botão */}
             <button
               onClick={handleAddToCart}
-              className={`btn-add-cart ${isAdded ? "added" : ""}`}
-              disabled={isAdded}
+              className={`btn-add-cart ${isAdded ? "added" : ""} ${isOutOfStock ? "esgotado" : ""}`}
+              disabled={isAdded || isOutOfStock}
             >
-              {isAdded ? (
+              {isOutOfStock ? (
+                <>
+                  <X size={16} strokeWidth={3} />
+                  Esgotado
+                </>
+              ) : isAdded ? (
                 <>
                   <Check size={16} strokeWidth={3} />
                   Adicionado!

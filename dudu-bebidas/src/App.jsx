@@ -9,8 +9,9 @@ import "./App.css";
 // ==== Supabase ====
 import { supabase } from "./supabase/Supabaseclient";
 
-// ==== Data (arquivos separados) ====
-import produtosData from "./data/Poducts"; // Corrigido: Produtos (com P maiúsculo)
+// ==== Data ====
+// import produtosData from "./data/Poducts"; // ← REMOVER ESTA LINHA
+import { useProducts } from "./hooks/useProducts"; // ← ADICIONAR
 import banners from "./data/banners";
 import benefits from "./data/benefits";
 
@@ -58,23 +59,20 @@ export default function DuduBebidas() {
 
   useEffect(() => {
     const fetchAdmin = async () => {
-      if (!user) {
-        setIsAdmin(false);
-        return;
-      }
+      if (!user) { setIsAdmin(false); return; }
       const { data, error } = await supabase
         .from("profiles")
         .select("is_admin")
         .eq("id", user.id)
         .single();
-      if (!error && data?.is_admin) {
-        setIsAdmin(true);
-      } else {
-        setIsAdmin(false);
-      }
+      if (!error && data?.is_admin) setIsAdmin(true);
+      else setIsAdmin(false);
     };
     fetchAdmin();
   }, [user]);
+
+  // ==== Produtos do Supabase ← ALTERADO ====
+  const { products: produtosData, loading: produtosLoading } = useProducts();
 
   // ==== Filters ====
   const [searchTerm, setSearchTerm] = useState("");
@@ -91,11 +89,9 @@ export default function DuduBebidas() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
     });
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => { setUser(session?.user ?? null); }
+    );
     return () => subscription.unsubscribe();
   }, []);
 
@@ -114,7 +110,7 @@ export default function DuduBebidas() {
     return () => clearInterval(timer);
   }, []);
 
-  // ==== Produtos filtrados + ordenados (usando o arquivo importado) ====
+  // ==== Produtos filtrados + ordenados ====
   const filteredProducts = useMemo(() => {
     return produtosData
       .filter((produto) => {
@@ -130,7 +126,7 @@ export default function DuduBebidas() {
         if (!a.promocao && b.promocao) return 1;
         return 0;
       });
-  }, [searchTerm, selectedCategory]);
+  }, [produtosData, searchTerm, selectedCategory]);
 
   // ==== Cart handlers ====
   const addToCart = (produto) => {
@@ -166,9 +162,7 @@ export default function DuduBebidas() {
   );
 
   // ==== Logout ====
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-  };
+  const handleLogout = async () => { await supabase.auth.signOut(); };
 
   // ==== Render ====
   return (
@@ -199,12 +193,21 @@ export default function DuduBebidas() {
                 onLogout={handleLogout}
               />
               <Hero onCategorySelect={setSelectedCategory} />
-              <ProductList
-                filteredProducts={filteredProducts}
-                selectedCategory={selectedCategory}
-                setSelectedCategory={setSelectedCategory}
-                addToCart={addToCart}
-              />
+
+              {/* Mostra loading enquanto busca produtos */}
+              {produtosLoading ? (
+                <div style={{ textAlign: "center", padding: "4rem" }}>
+                  Carregando produtos...
+                </div>
+              ) : (
+                <ProductList
+                  filteredProducts={filteredProducts}
+                  selectedCategory={selectedCategory}
+                  setSelectedCategory={setSelectedCategory}
+                  addToCart={addToCart}
+                />
+              )}
+
               <About />
               <Benefits benefits={benefits} />
               <Footer />
@@ -218,7 +221,6 @@ export default function DuduBebidas() {
         <Route path="/admin" element={<Admin user={user} isAdmin={isAdmin} />} />
       </Routes>
 
-      {/* Cart Component - agora com todas as props necessárias */}
       <Cart
         isOpen={cartOpen}
         onClose={() => setCartOpen(false)}
