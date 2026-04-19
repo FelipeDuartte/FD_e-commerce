@@ -1,18 +1,29 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { X, Plus, Minus, Trash2, ShoppingBag, MapPin, ChevronDown, ChevronUp, Clock, Store } from "lucide-react";
+import {
+  X,
+  Plus,
+  Minus,
+  Trash2,
+  ShoppingBag,
+  MapPin,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  Store,
+} from "lucide-react";
 import "./Cart.css";
 
 // ── Opções de entrega / retirada ───────────────────────
 const BAIRROS = [
   { nome: "Retirada na Loja", frete: 0, isRetirada: true },
-  { nome: "Minas Caixas",     frete: 3.00 },
-  { nome: "Serra Verde",      frete: 5.00 },
-  { nome: "Parque São Pedro", frete: 3.00 },
-  { nome: "Venda Nova",       frete: 5.00 },
+  { nome: "Minas Caixas", frete: 3.0 },
+  { nome: "Serra Verde", frete: 5.0 },
+  { nome: "Parque São Pedro", frete: 3.0 },
+  { nome: "Venda Nova", frete: 5.0 },
 ];
 
-const HORARIO_ENTREGA  = { abertura: 9 * 60, fechamento: 17 * 60 + 30 };
+const HORARIO_ENTREGA = { abertura: 9 * 60, fechamento: 17 * 60 + 30 };
 const HORARIO_RETIRADA = { abertura: 9 * 60, fechamento: 19 * 60 };
 
 function getMinutosAgora() {
@@ -24,20 +35,32 @@ function verificarHorario(isRetirada) {
   const minutos = getMinutosAgora();
   const horario = isRetirada ? HORARIO_RETIRADA : HORARIO_ENTREGA;
   if (minutos < horario.abertura) {
-    const h = Math.floor(horario.abertura / 60).toString().padStart(2, "0");
+    const h = Math.floor(horario.abertura / 60)
+      .toString()
+      .padStart(2, "0");
     const m = (horario.abertura % 60).toString().padStart(2, "0");
-    return { disponivel: false, mensagem: `Ainda não abrimos. ${isRetirada ? "Retirada" : "Entrega"} disponível a partir das ${h}h${m}.` };
+    return {
+      disponivel: false,
+      mensagem: `Ainda não abrimos. ${isRetirada ? "Retirada" : "Entrega"} disponível a partir das ${h}h${m}.`,
+    };
   }
   if (minutos >= horario.fechamento) {
-    const h = Math.floor(horario.abertura / 60).toString().padStart(2, "0");
+    const h = Math.floor(horario.abertura / 60)
+      .toString()
+      .padStart(2, "0");
     const m = (horario.abertura % 60).toString().padStart(2, "0");
-    return { disponivel: false, mensagem: `Fora do horário. ${isRetirada ? "Retirada" : "Entrega"} retoma amanhã às ${h}h${m}.` };
+    return {
+      disponivel: false,
+      mensagem: `Fora do horário. ${isRetirada ? "Retirada" : "Entrega"} retoma amanhã às ${h}h${m}.`,
+    };
   }
   return { disponivel: true, mensagem: null };
 }
 
 function formatarHorario(minutos) {
-  const h = Math.floor(minutos / 60).toString().padStart(2, "0");
+  const h = Math.floor(minutos / 60)
+    .toString()
+    .padStart(2, "0");
   const m = (minutos % 60).toString().padStart(2, "0");
   return `${h}:${m}`;
 }
@@ -54,13 +77,16 @@ export default function Cart({
   const navigate = useNavigate();
 
   const [bairroSelecionado, setBairroSelecionado] = useState(null);
-  const [isBairroOpen, setIsBairroOpen]           = useState(false);
-  const [horarioAviso, setHorarioAviso]           = useState(null);
+  const [isBairroOpen, setIsBairroOpen] = useState(false);
+  const [horarioAviso, setHorarioAviso] = useState(null);
   const dropdownRef = useRef(null);
 
-  const subtotal = cartItems.reduce((sum, item) => sum + item.preco * item.quantity, 0);
-  const frete    = bairroSelecionado ? bairroSelecionado.frete : null;
-  const total    = frete !== null ? subtotal + frete : subtotal;
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + item.preco * item.quantity,
+    0,
+  );
+  const frete = bairroSelecionado ? bairroSelecionado.frete : null;
+  const total = frete !== null ? subtotal + frete : subtotal;
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -72,56 +98,54 @@ export default function Cart({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  useEffect(() => { setHorarioAviso(null); }, [bairroSelecionado]);
+  useEffect(() => {
+    setHorarioAviso(null);
+  }, [bairroSelecionado]);
 
   const handleSelectBairro = (bairro) => {
     setBairroSelecionado(bairro);
     setIsBairroOpen(false);
   };
 
-  // ── Checkout — tanto entrega quanto retirada vão para /checkout ──
   const handleCheckout = () => {
     if (cartItems.length === 0) return;
-
     if (!bairroSelecionado) {
       alert("Por favor, selecione seu bairro ou retirada para continuar.");
       return;
     }
-
     const isRetirada = bairroSelecionado.isRetirada ?? false;
     const { disponivel, mensagem } = verificarHorario(isRetirada);
-
     if (!disponivel) {
       setHorarioAviso(mensagem);
       return;
     }
 
-    // ✅ Ambos os fluxos vão para /checkout com os mesmos dados
     navigate("/checkout", {
       state: {
         cartItems: cartItems.map((item) => ({
-          id:       item.id,
-          name:     item.nome,
-          price:    item.preco,
+          id: item.id,
+          name: item.nome,
+          price: item.preco,
           quantity: item.quantity,
-          icon:     item.imagem,
+          icon: item.imagem,
         })),
-        cartTotal:  subtotal,
-        frete:      frete,
-        bairro:     bairroSelecionado.nome,
-        isRetirada: isRetirada,
+        cartTotal: subtotal,
+        frete,
+        bairro: bairroSelecionado.nome,
+        isRetirada,
       },
     });
-
     setTimeout(() => onClose(), 300);
   };
 
   return (
     <>
-      <div className={`cart-overlay ${isOpen ? "show" : ""}`} onClick={onClose} />
+      <div
+        className={`cart-overlay ${isOpen ? "show" : ""}`}
+        onClick={onClose}
+      />
 
       <div className={`cart-drawer ${isOpen ? "open" : ""}`}>
-
         {/* Header */}
         <div className="cart-header">
           <div className="cart-header-content">
@@ -140,11 +164,16 @@ export default function Cart({
           </button>
         </div>
 
-        {/* Cart Body */}
+        {/* Body */}
         <div className="cart-body">
           {cartItems.length === 0 ? (
             <div className="cart-empty">
-              <ShoppingBag size={64} color="#d1d5db" strokeWidth={1.5} className="cart-empty-icon" />
+              <ShoppingBag
+                size={64}
+                color="#d1d5db"
+                strokeWidth={1.5}
+                className="cart-empty-icon"
+              />
               <h4>Carrinho vazio</h4>
               <p>Adicione produtos para começar suas compras</p>
             </div>
@@ -152,25 +181,41 @@ export default function Cart({
             <div className="cart-items-wrapper">
               {cartItems.map((item) => (
                 <div key={item.id} className="cart-item">
-                  <img src={item.imagem} alt={item.nome} className="cart-item-image" />
+                  <img
+                    src={item.imagem}
+                    alt={item.nome}
+                    className="cart-item-image"
+                  />
                   <div className="cart-item-details">
                     <h4 className="cart-item-name">{item.nome}</h4>
                     <div className="cart-item-price-row">
-                      <span className="cart-item-price">R$ {item.preco.toFixed(2)}</span>
-                      <button onClick={() => removeItem(item.id)} className="cart-item-remove">
+                      <span className="cart-item-price">
+                        R$ {item.preco.toFixed(2)}
+                      </span>
+                      <button
+                        onClick={() => removeItem(item.id)}
+                        className="cart-item-remove"
+                      >
                         <Trash2 size={18} />
                       </button>
                     </div>
                     <div className="quantity-controls">
                       <button
-                        onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                        onClick={() =>
+                          updateQuantity(
+                            item.id,
+                            Math.max(1, item.quantity - 1),
+                          )
+                        }
                         className="quantity-btn"
                       >
                         <Minus size={16} />
                       </button>
                       <span className="quantity-value">{item.quantity}</span>
                       <button
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        onClick={() =>
+                          updateQuantity(item.id, item.quantity + 1)
+                        }
                         className="quantity-btn"
                       >
                         <Plus size={16} />
@@ -179,28 +224,31 @@ export default function Cart({
                   </div>
                 </div>
               ))}
-              {cartItems.length > 0 && (
-                <button onClick={clearCart} className="clear-cart-btn">
-                  <Trash2 size={16} /> Limpar Carrinho
-                </button>
-              )}
+              <button onClick={clearCart} className="clear-cart-btn">
+                <Trash2 size={16} /> Limpar Carrinho
+              </button>
             </div>
           )}
         </div>
 
-        {/* Footer */}
+        {/* Footer — só aparece se tiver itens */}
         {cartItems.length > 0 && (
           <div className="cart-footer">
-
             {/* Horários */}
             <div className="horarios-info">
               <div className="horario-row">
                 <MapPin size={13} />
-                <span>Entrega: {formatarHorario(HORARIO_ENTREGA.abertura)} – {formatarHorario(HORARIO_ENTREGA.fechamento)}</span>
+                <span>
+                  Entrega: {formatarHorario(HORARIO_ENTREGA.abertura)} –{" "}
+                  {formatarHorario(HORARIO_ENTREGA.fechamento)}
+                </span>
               </div>
               <div className="horario-row">
                 <Store size={13} />
-                <span>Retirada: {formatarHorario(HORARIO_RETIRADA.abertura)} – {formatarHorario(HORARIO_RETIRADA.fechamento)}</span>
+                <span>
+                  Retirada: {formatarHorario(HORARIO_RETIRADA.abertura)} –{" "}
+                  {formatarHorario(HORARIO_RETIRADA.fechamento)}
+                </span>
               </div>
             </div>
 
@@ -211,19 +259,29 @@ export default function Cart({
               </div>
             )}
 
-            {/* Dropdown */}
+            {/* ── Dropdown — FORA do overflow, usando position fixed no menu ── */}
             <div className="bairro-dropdown-container" ref={dropdownRef}>
               <div
                 className={`bairro-dropdown-header ${isBairroOpen ? "open" : ""}`}
                 onClick={() => setIsBairroOpen((v) => !v)}
               >
                 <div className="bairro-dropdown-label">
-                  {bairroSelecionado?.isRetirada ? <Store size={16} /> : <MapPin size={16} />}
+                  {bairroSelecionado?.isRetirada ? (
+                    <Store size={16} />
+                  ) : (
+                    <MapPin size={16} />
+                  )}
                   <span>
-                    {bairroSelecionado ? bairroSelecionado.nome : "Selecione entrega ou retirada"}
+                    {bairroSelecionado
+                      ? bairroSelecionado.nome
+                      : "Selecione entrega ou retirada"}
                   </span>
                 </div>
-                {isBairroOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                {isBairroOpen ? (
+                  <ChevronUp size={18} />
+                ) : (
+                  <ChevronDown size={18} />
+                )}
               </div>
 
               {isBairroOpen && (
@@ -235,13 +293,22 @@ export default function Cart({
                       onClick={() => handleSelectBairro(b)}
                     >
                       <div className="bairro-item-left">
-                        {b.isRetirada
-                          ? <Store size={14} className="bairro-item-icon retirada-icon" />
-                          : <MapPin size={14} className="bairro-item-icon" />}
+                        {b.isRetirada ? (
+                          <Store
+                            size={14}
+                            className="bairro-item-icon retirada-icon"
+                          />
+                        ) : (
+                          <MapPin size={14} className="bairro-item-icon" />
+                        )}
                         <div className="bairro-item-info">
                           <span className="bairro-item-nome">{b.nome}</span>
-                          <span className={`bairro-item-frete ${b.frete === 0 ? "gratis" : ""}`}>
-                            {b.frete === 0 ? "GRÁTIS" : `R$ ${b.frete.toFixed(2)}`}
+                          <span
+                            className={`bairro-item-frete ${b.frete === 0 ? "gratis" : ""}`}
+                          >
+                            {b.frete === 0
+                              ? "GRÁTIS"
+                              : `R$ ${b.frete.toFixed(2)}`}
                           </span>
                         </div>
                       </div>
@@ -257,22 +324,29 @@ export default function Cart({
             {/* Resumo */}
             <div className="summary-section">
               <div className="summary-row">
-                <span>Subtotal:</span>
+                <span>Subtotal</span>
                 <span>R$ {subtotal.toFixed(2)}</span>
               </div>
-              <div className={`summary-row ${frete === 0 ? "free-shipping" : ""}`}>
-                <span>Frete:</span>
+              <div
+                className={`summary-row ${frete === 0 ? "free-shipping" : ""}`}
+              >
+                <span>Frete</span>
                 <span>
-                  {frete === null
-                    ? <span className="frete-pendente">Selecione a opção</span>
-                    : frete === 0 ? "GRÁTIS"
-                    : `R$ ${frete.toFixed(2)}`}
+                  {frete === null ? (
+                    <span className="frete-pendente">Selecione a opção</span>
+                  ) : frete === 0 ? (
+                    "GRÁTIS"
+                  ) : (
+                    `R$ ${frete.toFixed(2)}`
+                  )}
                 </span>
               </div>
               <div className="summary-total">
-                <span className="total-label">Total:</span>
+                <span className="total-label">Total</span>
                 <span className="total-value">
-                  {frete === null ? `R$ ${subtotal.toFixed(2)}` : `R$ ${total.toFixed(2)}`}
+                  {frete === null
+                    ? `R$ ${subtotal.toFixed(2)}`
+                    : `R$ ${total.toFixed(2)}`}
                 </span>
               </div>
             </div>
@@ -283,7 +357,9 @@ export default function Cart({
               disabled={!bairroSelecionado}
             >
               {bairroSelecionado
-                ? (bairroSelecionado.isRetirada ? "Confirmar Retirada →" : "Finalizar Pedido →")
+                ? bairroSelecionado.isRetirada
+                  ? "🏪 Confirmar Retirada →"
+                  : "🛒 Finalizar Pedido →"
                 : "Selecione a opção →"}
             </button>
           </div>

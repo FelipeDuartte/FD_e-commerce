@@ -17,7 +17,7 @@ const BAIRROS_PERMITIDOS = [
   "venda nova",
 ];
 
-export default function Checkout({ user }) {
+export default function Checkout({ user, clearCart }) {
   const navigate = useNavigate();
   const location = useLocation();
   const errorRef = useRef(null); // Referência para o elemento de erro
@@ -208,7 +208,7 @@ export default function Checkout({ user }) {
         },
         replace: true,
       });
-
+      clearCart();
     } catch (err) {
       console.error("Erro ao processar pedido:", err);
       setErrorMsg("Ocorreu um erro ao processar seu pedido. Tente novamente.");
