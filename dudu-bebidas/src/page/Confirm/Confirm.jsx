@@ -138,38 +138,47 @@ export default function Confirmacao() {
 
   // ── Handler de cancelamento ──
   const handleCancelOrder = async () => {
-    setCancelling(true);
-    setCancelError("");
+  setCancelling(true);
+  setCancelError("");
 
-    try {
-      if (!orderId) {
-        localStorage.removeItem("lastOrder");
-        navigate("/", { state: { cancelledOrder: true, isRetirada: true } });
-        return;
-      }
-
-      const { error: itemsError } = await supabase
-        .from("order_items")
-        .delete()
-        .eq("order_id", orderId);
-
-      if (itemsError) throw new Error("Erro ao cancelar itens do pedido.");
-
-      const { error: orderError } = await supabase
-        .from("orders")
-        .delete()
-        .eq("id", orderId);
-
-      if (orderError) throw new Error("Erro ao cancelar o pedido.");
-
+  try {
+    if (!orderId) {
       localStorage.removeItem("lastOrder");
-      navigate("/", { state: { cancelledOrder: true, isRetirada: false } });
-
-    } catch (err) {
-      setCancelError(err.message);
-      setCancelling(false);
+      navigate("/", { state: { cancelledOrder: true, isRetirada: true } });
+      return;
     }
-  };
+
+    // 1. Devolve o estoque antes de deletar os itens
+    const { data: rpcResult, error: rpcError } = await supabase
+      .rpc("restore_stock", { p_order_id: orderId });
+
+    if (rpcError) throw new Error("Erro ao restaurar estoque.");
+    if (!rpcResult?.success) throw new Error(rpcResult?.error ?? "Erro ao restaurar estoque.");
+
+    // 2. Deleta os itens
+    const { error: itemsError } = await supabase
+      .from("order_items")
+      .delete()
+      .eq("order_id", orderId);
+
+    if (itemsError) throw new Error("Erro ao cancelar itens do pedido.");
+
+    // 3. Deleta o pedido
+    const { error: orderError } = await supabase
+      .from("orders")
+      .delete()
+      .eq("id", orderId);
+
+    if (orderError) throw new Error("Erro ao cancelar o pedido.");
+
+    localStorage.removeItem("lastOrder");
+    navigate("/", { state: { cancelledOrder: true, isRetirada: false } });
+
+  } catch (err) {
+    setCancelError(err.message);
+    setCancelling(false);
+  }
+};
 
   const currentStep = STATUS_STEP[status] ?? 0;
   const canCancel = (status === "pending" && (orderId || isRetirada));

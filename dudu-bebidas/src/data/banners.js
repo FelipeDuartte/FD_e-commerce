@@ -1,7 +1,7 @@
 const banners = [
   {
     id: 1,
-    titulo: "🔥 MEGA PROMOÇÕES 🔥",
+    titulo: "🔥 PROMOÇÕES ESPECIAIS PELO SITE 🔥",
     subtitulo: "Descontos incríveis para você",
     texto: "Aproveite preços imperdíveis em bebidas selecionadas",
     bg: "linear-gradient(135deg, #ffd700 0%, #ffed4e 100%)",
