@@ -1,6 +1,6 @@
 # 🍺 Dudu Bebidas
 - Loja virtual de bebidas com carrinho, checkout, autenticação e painel administrativo.
-- 🔗 dudu-bebidas.vercel.app
+- 🔗 https://dudu-bebidas.vercel.app/
 ---
 ## ✨ Funcionalidades
 
