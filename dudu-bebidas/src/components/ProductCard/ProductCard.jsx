@@ -1,5 +1,7 @@
+// src/components/ProductCard/ProductCard.jsx
 import React, { useEffect, useState } from "react";
 import { Plus, Check, X } from "lucide-react";
+import { imgProduto } from "../../utils/Cloudnary";
 import "./ProductCard.css";
 
 const RESET_TIME = 2000;
@@ -7,13 +9,13 @@ const RESET_TIME = 2000;
 export default function ProductCard({ produto, addToCart }) {
   const [isAdded, setIsAdded] = useState(false);
 
-  const hasPromo      = Boolean(produto.promocao);
-  const hasOldPrice   = hasPromo && Boolean(produto.precoAntigo);
-  const isLowStock    = produto.estoque > 0 && produto.estoque < 15;
-  const isOutOfStock  = produto.estoque <= 0 || produto.isActive === false; // ← NOVO
+  const hasPromo     = Boolean(produto.promocao);
+  const hasOldPrice  = hasPromo && Boolean(produto.precoAntigo);
+  const isLowStock   = produto.estoque > 0 && produto.estoque < 15;
+  const isOutOfStock = produto.estoque <= 0 || produto.isActive === false;
 
   const handleAddToCart = () => {
-    if (isAdded || isOutOfStock) return; // ← NOVO: bloqueia se esgotado
+    if (isAdded || isOutOfStock) return;
     addToCart(produto);
     setIsAdded(true);
   };
@@ -28,14 +30,15 @@ export default function ProductCard({ produto, addToCart }) {
     <>
       {/* Product Card */}
       <div className="col">
-        <div className={`produto-card ${isOutOfStock ? "produto-card-esgotado" : ""}`}> {/* ← NOVO: classe */}
+        <div className={`produto-card ${isOutOfStock ? "produto-card-esgotado" : ""}`}>
 
           {/* Imagem */}
           <div className="produto-img-container">
             <img
-              src={produto.imagem}
+              src={imgProduto(produto.imagem)}
               alt={produto.nome}
-              className={`produto-img ${isOutOfStock ? "img-esgotado" : ""}`} // ← NOVO: opacidade
+              className={`produto-img ${isOutOfStock ? "img-esgotado" : ""}`}
+              loading="lazy"
             />
 
             {hasPromo && !isOutOfStock && (
@@ -45,7 +48,6 @@ export default function ProductCard({ produto, addToCart }) {
               </span>
             )}
 
-            {/* NOVO: badge esgotado sobrepõe os outros */}
             {isOutOfStock ? (
               <span className="badge-estoque esgotado">
                 <i className="bi bi-x-circle-fill me-1"></i>
