@@ -126,18 +126,18 @@
 /* =====================================================
    PRICE
 ===================================================== */
-.preco-atual {
-  font-family: 'Montserrat', sans-serif;
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--gold-dark, #ffb700);
-  line-height: 1;
+/* Preço promocional — maior destaque */
+.preco-atual.preco-promo {
+  color: #ffae00;
+  font-size: 20px;
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
 }
 
 .preco-antigo {
   font-size: 12px;
-  color: #6c757d;
+  color: #9ca3af;
   text-decoration: line-through;
+  font-weight: 500;
 }
 
 .badge-desconto {

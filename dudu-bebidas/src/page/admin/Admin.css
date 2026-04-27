@@ -781,6 +781,63 @@
 .adm-modal-btn-save:hover    { opacity: 0.85; }
 .adm-modal-btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* ── Promoção no modal ── */
+.adm-promo-fields {
+  margin-top: 4px;
+  padding: 14px;
+  background: rgba(255, 208, 0, 0.06);
+  border: 1px solid rgba(255, 208, 0, 0.2);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.adm-promo-hint {
+  font-size: 12px;
+  color: #aaa;
+  line-height: 1.5;
+}
+
+.adm-promo-hint strong { color: #ffd000; }
+
+.adm-promo-preview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  background: rgba(0,0,0,0.2);
+  border-radius: 8px;
+}
+
+.adm-preview-label {
+  font-size: 11px;
+  color: #666;
+  margin-right: 4px;
+}
+
+.adm-preview-old {
+  font-size: 13px;
+  color: #666;
+  text-decoration: line-through;
+}
+
+.adm-preview-new {
+  font-size: 16px;
+  font-weight: 800;
+  color: #ffd000;
+}
+
+.adm-preview-badge {
+  background: rgba(255, 208, 0, 0.15);
+  color: #ffd000;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
 /* ══════════════════════════════════════════ RESPONSIVO ══════════════════════════════════════════ */
 @media (max-width: 1024px) {
   .adm-order-date { display: none; }

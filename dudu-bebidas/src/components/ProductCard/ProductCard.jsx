@@ -9,9 +9,9 @@ const RESET_TIME = 2000;
 export default function ProductCard({ produto, addToCart }) {
   const [isAdded, setIsAdded] = useState(false);
 
-  const hasPromo     = Boolean(produto.promocao);
-  const hasOldPrice  = hasPromo && Boolean(produto.precoAntigo);
-  const isLowStock   = produto.estoque > 0 && produto.estoque < 15;
+  const hasPromo = Boolean(produto.promocao);
+  const hasOldPrice = hasPromo && Boolean(produto.precoAntigo);
+  const isLowStock = produto.estoque > 0 && produto.estoque < 15;
   const isOutOfStock = produto.estoque <= 0 || produto.isActive === false;
 
   const handleAddToCart = () => {
@@ -30,8 +30,9 @@ export default function ProductCard({ produto, addToCart }) {
     <>
       {/* Product Card */}
       <div className="col">
-        <div className={`produto-card ${isOutOfStock ? "produto-card-esgotado" : ""}`}>
-
+        <div
+          className={`produto-card ${isOutOfStock ? "produto-card-esgotado" : ""}`}
+        >
           {/* Imagem */}
           <div className="produto-img-container">
             <img
@@ -53,11 +54,13 @@ export default function ProductCard({ produto, addToCart }) {
                 <i className="bi bi-x-circle-fill me-1"></i>
                 Esgotado
               </span>
-            ) : isLowStock && (
-              <span className="badge-estoque baixo">
-                <i className="bi bi-exclamation-circle-fill me-1"></i>
-                Últimas unidades
-              </span>
+            ) : (
+              isLowStock && (
+                <span className="badge-estoque baixo">
+                  <i className="bi bi-exclamation-circle-fill me-1"></i>
+                  Últimas unidades
+                </span>
+              )
             )}
           </div>
 
@@ -67,19 +70,30 @@ export default function ProductCard({ produto, addToCart }) {
 
             {/* Preços */}
             <div className="mb-2">
-              <div className="d-flex align-items-baseline gap-2 mb-1">
-                <span className="preco-atual">
-                  R$ {produto.preco.toFixed(2)}
-                </span>
-              </div>
-
-              {hasOldPrice && (
-                <div className="d-flex align-items-center gap-2">
-                  <span className="preco-antigo">
-                    R$ {produto.precoAntigo.toFixed(2)}
-                  </span>
-                  <span className="badge-desconto">
-                    -{produto.desconto}% OFF
+              {hasPromo && hasOldPrice ? (
+                // Produto em promoção: mostra preço antigo riscado + novo em destaque
+                <>
+                  <div className="d-flex align-items-baseline gap-2 mb-1">
+                    <span className="preco-atual preco-promo">
+                      R$ {produto.preco.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="d-flex align-items-center gap-2">
+                    <span className="preco-antigo">
+                      R$ {produto.precoAntigo.toFixed(2)}
+                    </span>
+                    {produto.desconto && (
+                      <span className="badge-desconto">
+                        -{produto.desconto}% OFF
+                      </span>
+                    )}
+                  </div>
+                </>
+              ) : (
+                // Produto normal: só o preço atual
+                <div className="d-flex align-items-baseline gap-2 mb-1">
+                  <span className="preco-atual">
+                    R$ {produto.preco.toFixed(2)}
                   </span>
                 </div>
               )}

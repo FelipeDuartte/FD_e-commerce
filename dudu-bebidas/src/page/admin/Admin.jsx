@@ -265,45 +265,52 @@ export default function Admin({ user, isAdmin }) {
     }));
   };
 
-  const handleModalSave = async (e) => {
-    e.preventDefault();
-    setModalSaving(true);
-    setModalError("");
+ const handleModalSave = async (e) => {
+  e.preventDefault();
+  setModalSaving(true);
+  setModalError("");
 
-    const row = {
-      id: String(modalForm.id).trim(),
-      name: modalForm.name.trim(),
-      category: modalForm.category,
-      price: Number(modalForm.price),
-      old_price:
-        modalForm.old_price !== "" ? Number(modalForm.old_price) : null,
-      image: modalForm.image || null,
-      stock: Number(modalForm.stock),
-      is_active: modalForm.is_active,
-      promotion: modalForm.promotion,
-      supplier: modalForm.supplier || null,
-      ean: modalForm.ean || null,
-    };
+  // Calcula desconto automaticamente se for promoção
+  const oldPrice = modalForm.old_price !== "" ? Number(modalForm.old_price) : null;
+  const newPrice = Number(modalForm.price);
+  const discount = modalForm.promotion && oldPrice
+    ? Math.round((1 - newPrice / oldPrice) * 100)
+    : null;
 
-    if (!row.id || !row.name || isNaN(row.price) || isNaN(row.stock)) {
-      setModalError("Preencha ID, nome, preço e estoque.");
-      setModalSaving(false);
-      return;
-    }
-
-    const isNew = productModal === "new";
-    const { error } = isNew
-      ? await supabase.from("products").insert(row)
-      : await supabase.from("products").update(row).eq("id", row.id);
-
-    if (error) {
-      setModalError(error.message);
-    } else {
-      await fetchProducts();
-      setProductModal(null);
-    }
-    setModalSaving(false);
+  const row = {
+    id:        String(modalForm.id).trim(),
+    name:      modalForm.name.trim(),
+    category:  modalForm.category,
+    price:     newPrice,
+    old_price: modalForm.promotion ? oldPrice : null,  // limpa se não for promoção
+    discount:  discount,
+    image:     modalForm.image || null,
+    stock:     Number(modalForm.stock),
+    is_active: modalForm.is_active,
+    promotion: modalForm.promotion,
+    supplier:  modalForm.supplier || null,
+    ean:       modalForm.ean || null,
   };
+
+  if (!row.id || !row.name || isNaN(row.price) || isNaN(row.stock)) {
+    setModalError("Preencha ID, nome, preço e estoque.");
+    setModalSaving(false);
+    return;
+  }
+
+  const isNew = productModal === "new";
+  const { error } = isNew
+    ? await supabase.from("products").insert(row)
+    : await supabase.from("products").update(row).eq("id", row.id);
+
+  if (error) {
+    setModalError(error.message);
+  } else {
+    await fetchProducts();
+    setProductModal(null);
+  }
+  setModalSaving(false);
+};
 
   const handleToggleActive = async (product) => {
     setTogglingId(product.id);
@@ -431,54 +438,56 @@ export default function Admin({ user, isAdmin }) {
     [updateOrderStatusLocally],
   );
 
- const confirmReject = useCallback(async () => {
-  if (!rejectModal) return;
-  setRejecting(true);
-  setRejectError("");
+  const confirmReject = useCallback(async () => {
+    if (!rejectModal) return;
+    setRejecting(true);
+    setRejectError("");
 
-  // 1. Devolve o estoque antes de deletar os itens
-  const { data: rpcResult, error: rpcError } = await supabase
-    .rpc("restore_stock", { p_order_id: rejectModal });
+    // 1. Devolve o estoque antes de deletar os itens
+    const { data: rpcResult, error: rpcError } = await supabase.rpc(
+      "restore_stock",
+      { p_order_id: rejectModal },
+    );
 
-  if (rpcError) {
-    setRejectError("Erro ao restaurar estoque.");
+    if (rpcError) {
+      setRejectError("Erro ao restaurar estoque.");
+      setRejecting(false);
+      return;
+    }
+    if (!rpcResult?.success) {
+      setRejectError(rpcResult?.error ?? "Erro ao restaurar estoque.");
+      setRejecting(false);
+      return;
+    }
+
+    // 2. Deleta os itens
+    const { error: itemsErr } = await supabase
+      .from("order_items")
+      .delete()
+      .eq("order_id", rejectModal);
+
+    if (itemsErr) {
+      setRejectError("Erro ao remover itens.");
+      setRejecting(false);
+      return;
+    }
+    // 3. Deleta o pedido
+    const { error: orderErr } = await supabase
+      .from("orders")
+      .delete()
+      .eq("id", rejectModal);
+
+    if (orderErr) {
+      setRejectError("Erro ao rejeitar pedido.");
+      setRejecting(false);
+      return;
+    }
+
+    setOrders((prev) => prev.filter((o) => o.id !== rejectModal));
+    setTotalCount((prev) => prev - 1);
+    setRejectModal(null);
     setRejecting(false);
-    return;
-  }
-  if (!rpcResult?.success) {
-    setRejectError(rpcResult?.error ?? "Erro ao restaurar estoque.");
-    setRejecting(false);
-    return;
-  }
-
-  // 2. Deleta os itens
-  const { error: itemsErr } = await supabase
-    .from("order_items")
-    .delete()
-    .eq("order_id", rejectModal);
-
-  if (itemsErr) {
-    setRejectError("Erro ao remover itens.");
-    setRejecting(false);
-    return;
-  }
-  // 3. Deleta o pedido
-  const { error: orderErr } = await supabase
-    .from("orders")
-    .delete()
-    .eq("id", rejectModal);
-
-  if (orderErr) {
-    setRejectError("Erro ao rejeitar pedido.");
-    setRejecting(false);
-    return;
-  }
-
-  setOrders((prev) => prev.filter((o) => o.id !== rejectModal));
-  setTotalCount((prev) => prev - 1);
-  setRejectModal(null);
-  setRejecting(false);
-}, [rejectModal]);
+  }, [rejectModal]);
 
   const closeRejectModal = useCallback(() => {
     if (rejecting) return;
@@ -690,6 +699,69 @@ export default function Admin({ user, isAdmin }) {
                     Em promoção
                   </label>
                 </div>
+
+                {/* Campo de preço promocional — só aparece quando promoção está marcada */}
+                {modalForm.promotion && (
+                  <div className="adm-promo-fields">
+                    <div className="adm-promo-hint">
+                      💡 <strong>Defina abaixo o novo preço promocional.</strong>
+                    </div>
+                    <div className="adm-form-row">
+                      <div className="adm-form-field">
+                        <label>Preço antigo (R$)</label>
+                        <input
+                          name="old_price"
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={modalForm.old_price ?? ""}
+                          onChange={handleModalChange}
+                          placeholder="ex: 10.00"
+                        />
+                      </div>
+                      <div className="adm-form-field">
+                        <label>Preço promocional (R$)</label>
+                        <input
+                          name="price"
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={modalForm.price}
+                          onChange={handleModalChange}
+                          placeholder="ex: 7.50"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    {/* Preview do card */}
+                    {modalForm.old_price && modalForm.price && (
+                      <div className="adm-promo-preview">
+                        <span className="adm-preview-label">
+                          Preview no card:
+                        </span>
+                        <div className="adm-preview-prices">
+                          <span className="adm-preview-old">
+                            R$ {Number(modalForm.old_price).toFixed(2)}
+                          </span>
+                          <span className="adm-preview-new">
+                            R$ {Number(modalForm.price).toFixed(2)}
+                          </span>
+                          {modalForm.old_price > 0 && (
+                            <span className="adm-preview-badge">
+                              -
+                              {Math.round(
+                                (1 - modalForm.price / modalForm.old_price) *
+                                  100,
+                              )}
+                              % OFF
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {modalError && (
                   <div className="adm-modal-error">⚠️ {modalError}</div>
