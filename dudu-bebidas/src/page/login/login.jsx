@@ -231,13 +231,13 @@ export default function Login({ isOpen, onClose }) {
             </div>
           )}
 
-          {isLogin && (
+          {/*isLogin && (
             <div className="forgot-password-wrapper">
               <a href="#" className="forgot-password-link">
                 Esqueceu sua senha?
               </a>
             </div>
-          )}
+          )*/}
 
           <button
             onClick={handleSubmit}
