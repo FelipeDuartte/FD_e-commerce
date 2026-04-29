@@ -9,25 +9,19 @@ const paymentOptions = [
   { value: "cash", icon: "💵", name: "Dinheiro" },
 ];
 
-const BAIRROS_PERMITIDOS = [
-  "minas caixas",
-  "serra verde",
-  "parque são pedro",
-  "parque sao pedro",
-  "venda nova",
-];
-
 export default function Checkout({ user, clearCart }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const errorRef = useRef(null); // Referência para o elemento de erro
+  const errorRef = useRef(null);
 
-  const cartItems  = location.state?.cartItems  ?? [];
-  const cartTotal  = location.state?.cartTotal  ?? 0;
-  const DELIVERY   = location.state?.frete      ?? 0;
-  const isRetirada = location.state?.isRetirada ?? false;
+  const cartItems      = location.state?.cartItems  ?? [];
+  const cartTotal      = location.state?.cartTotal  ?? 0;
+  const DELIVERY       = location.state?.frete      ?? 0;
+  const isRetirada     = location.state?.isRetirada ?? false;
+  // ✅ Bairro já validado pelo dropdown do carrinho — não precisa re-validar pelo CEP
+  const bairroCarrinho = location.state?.bairro     ?? "";
 
-  const isProcessingRef              = useRef(false);
+  const isProcessingRef                     = useRef(false);
   const [orderProcessed, setOrderProcessed] = useState(false);
   const [payment, setPayment]               = useState("pix");
   const [loading, setLoading]               = useState(false);
@@ -56,29 +50,18 @@ export default function Checkout({ user, clearCart }) {
     }
   }, [orderProcessed, navigate]);
 
-  // Função para rolar até o erro
   const scrollToError = () => {
     if (errorRef.current) {
-      // Rola suavemente até o elemento de erro
-      errorRef.current.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'center',
-        inline: 'nearest'
-      });
-      
-      // Adiciona uma classe de destaque temporária
-      errorRef.current.classList.add('co-error-highlight');
+      errorRef.current.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+      errorRef.current.classList.add("co-error-highlight");
       setTimeout(() => {
-        if (errorRef.current) {
-          errorRef.current.classList.remove('co-error-highlight');
-        }
+        if (errorRef.current) errorRef.current.classList.remove("co-error-highlight");
       }, 2000);
     }
   };
 
   const handleAddressChange = (e) => {
     setAddress((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-    // Limpa erro geral ao começar a digitar
     if (errorMsg) setErrorMsg("");
   };
 
@@ -103,47 +86,38 @@ export default function Checkout({ user, clearCart }) {
 
   const handleCepChange = (e) => {
     const value = e.target.value.replace(/\D/g, "").slice(0, 8);
-    setCep(value.length > 5 ? `${value.slice(0,5)}-${value.slice(5)}` : value);
+    setCep(value.length > 5 ? `${value.slice(0, 5)}-${value.slice(5)}` : value);
     setCepError("");
     if (errorMsg) setErrorMsg("");
   };
 
   const handlePhoneChange = (e) => {
     let value = e.target.value.replace(/\D/g, "").slice(0, 11);
-    if (value.length > 6)      value = `(${value.slice(0,2)}) ${value.slice(2,7)}-${value.slice(7)}`;
-    else if (value.length > 2) value = `(${value.slice(0,2)}) ${value.slice(2)}`;
+    if (value.length > 6)      value = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
+    else if (value.length > 2) value = `(${value.slice(0, 2)}) ${value.slice(2)}`;
     setAddress((prev) => ({ ...prev, phone: value }));
     if (errorMsg) setErrorMsg("");
   };
 
-  // ── Validação — pula endereço se for retirada ─────
+  // ── Validação ─────────────────────────────────────────
+  // ✅ Sem verificação de login. Bairro não re-validado (já veio do dropdown).
   const validateForm = () => {
-    if (isRetirada) {
-      // Retirada só precisa do nome para identificação
-      if (!address.name.trim()) return "Por favor, informe seu nome para identificação.";
-      const phoneClean = address.phone.replace(/\D/g, "");
-      if (!phoneClean || phoneClean.length < 10)
-        return "Por favor, informe um telefone para contato.";
-      return null;
-    }
+    if (!address.name.trim()) return "Por favor, informe seu nome.";
 
-    // Entrega — validação completa
     const phoneClean = address.phone.replace(/\D/g, "");
     if (!phoneClean || phoneClean.length < 10)
       return "Por favor, informe um telefone válido com DDD.";
+
+    if (isRetirada) return null;
+
+    // Validações extras apenas para entrega
     const cepClean = cep.replace(/\D/g, "");
-    if (cepClean.length !== 8) return "Por favor, informe um CEP válido.";
-    if (cepError)               return "Por favor, verifique o CEP informado.";
-    if (!address.street.trim()) return "Por favor, informe o endereço.";
-    if (!address.number.trim()) return "Por favor, informe o número.";
+    if (cepClean.length !== 8)    return "Por favor, informe um CEP válido.";
+    if (cepError)                 return "Por favor, verifique o CEP informado.";
+    if (!address.street.trim())   return "Por favor, informe o endereço.";
+    if (!address.number.trim())   return "Por favor, informe o número.";
     if (!address.district.trim()) return "Por favor, informe o bairro.";
-    const bairroNorm = address.district.trim().toLowerCase()
-      .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    const atendido = BAIRROS_PERMITIDOS.some((b) =>
-      bairroNorm.includes(b.normalize("NFD").replace(/[\u0300-\u036f]/g, ""))
-    );
-    if (!atendido)
-      return "Infelizmente não entregamos neste bairro. Atendemos: Minas Caixas, Serra Verde, Parque São Pedro e Venda Nova.";
+
     return null;
   };
 
@@ -152,33 +126,27 @@ export default function Checkout({ user, clearCart }) {
     setErrorMsg("");
 
     const validationError = validateForm();
-    if (validationError) { 
+    if (validationError) {
       setErrorMsg(validationError);
-      // Aguarda o próximo ciclo do React para garantir que o elemento de erro foi renderizado
-      setTimeout(() => {
-        scrollToError();
-      }, 100);
-      return; 
+      setTimeout(() => scrollToError(), 100);
+      return;
     }
-    if (cartItems.length === 0) { 
+    if (cartItems.length === 0) {
       setErrorMsg("Seu carrinho está vazio.");
-      setTimeout(() => {
-        scrollToError();
-      }, 100);
-      return; 
+      setTimeout(() => scrollToError(), 100);
+      return;
     }
 
     isProcessingRef.current = true;
     setLoading(true);
 
     try {
-      // Para retirada, address não tem CEP/endereço
       const addressToSave = isRetirada
         ? { name: address.name, phone: address.phone, isRetirada: true }
-        : { ...address, cep };
+        : { ...address, cep, bairro: bairroCarrinho };
 
       const { orderId, error } = await saveOrder({
-        userId:        user?.id,
+        userId:        user?.id ?? null, // ✅ null para convidados
         total:         cartTotal + DELIVERY,
         paymentMethod: payment,
         address:       addressToSave,
@@ -187,9 +155,7 @@ export default function Checkout({ user, clearCart }) {
 
       if (error) {
         setErrorMsg(error);
-        setTimeout(() => {
-          scrollToError();
-        }, 100);
+        setTimeout(() => scrollToError(), 100);
         isProcessingRef.current = false;
         setLoading(false);
         return;
@@ -212,9 +178,7 @@ export default function Checkout({ user, clearCart }) {
     } catch (err) {
       console.error("Erro ao processar pedido:", err);
       setErrorMsg("Ocorreu um erro ao processar seu pedido. Tente novamente.");
-      setTimeout(() => {
-        scrollToError();
-      }, 100);
+      setTimeout(() => scrollToError(), 100);
       isProcessingRef.current = false;
       setLoading(false);
     }
@@ -275,7 +239,7 @@ export default function Checkout({ user, clearCart }) {
               </div>
             )}
 
-            {/* ── MENSAGEM DE ERRO DESTAQUE COM REF ── */}
+            {/* ── MENSAGEM DE ERRO ── */}
             {errorMsg && (
               <div ref={errorRef} className="co-error-alert">
                 <div className="co-error-icon">⚠️</div>
@@ -283,7 +247,7 @@ export default function Checkout({ user, clearCart }) {
                   <div className="co-error-title">Atenção!</div>
                   <div className="co-error-message">{errorMsg}</div>
                 </div>
-                <button 
+                <button
                   className="co-error-close"
                   onClick={() => setErrorMsg("")}
                   aria-label="Fechar"
@@ -328,6 +292,12 @@ export default function Checkout({ user, clearCart }) {
             {/* ── Campos de endereço — só para ENTREGA ── */}
             {!isRetirada && (
               <>
+                {bairroCarrinho && (
+                  <div className="co-bairros-info">
+                    📍 Entregando em: <strong>{bairroCarrinho}</strong>
+                  </div>
+                )}
+
                 <div className="co-field-row">
                   <div className="co-field">
                     <label>CEP</label>
@@ -386,7 +356,7 @@ export default function Checkout({ user, clearCart }) {
                       name="district"
                       value={address.district}
                       onChange={handleAddressChange}
-                      placeholder="Bairro"
+                      placeholder="Bairro — preenchido pelo CEP"
                       disabled={loading || orderProcessed}
                       className={errorMsg && !address.district.trim() ? "co-input-error" : ""}
                     />
@@ -402,10 +372,6 @@ export default function Checkout({ user, clearCart }) {
                       disabled={loading || orderProcessed}
                     />
                   </div>
-                </div>
-
-                <div className="co-bairros-info">
-                  📍 Entregamos em: Minas Caixas, Serra Verde, Parque São Pedro e Venda Nova
                 </div>
               </>
             )}
@@ -484,9 +450,9 @@ export default function Checkout({ user, clearCart }) {
               onClick={handleConfirmOrder}
               disabled={loading || orderProcessed}
             >
-              {loading        ? "Processando..."
+              {loading          ? "Processando..."
                : orderProcessed ? "Confirmado ✓"
-               : isRetirada    ? "Confirmar Retirada →"
+               : isRetirada     ? "Confirmar Retirada →"
                : "Confirmar Pedido →"}
             </button>
             <div className="co-secure">🔒 Pagamento 100% seguro</div>
@@ -501,9 +467,9 @@ export default function Checkout({ user, clearCart }) {
           onClick={handleConfirmOrder}
           disabled={loading || orderProcessed}
         >
-          {loading        ? "Processando..."
+          {loading          ? "Processando..."
            : orderProcessed ? "Confirmado ✓"
-           : isRetirada    ? "Confirmar Retirada →"
+           : isRetirada     ? "Confirmar Retirada →"
            : "Confirmar Pedido →"}
         </button>
         <div className="co-secure">🔒 Pagamento 100% seguro</div>

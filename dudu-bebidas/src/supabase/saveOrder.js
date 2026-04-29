@@ -1,10 +1,8 @@
-// supabase/saveOrder.js
 import { supabase } from "./Supabaseclient";
 
 export async function saveOrder({ userId, total, paymentMethod, address, cartItems }) {
 
   // ── Validações básicas ──────────────────────────────────
-  if (!userId) return { error: "Usuário não autenticado faça login." };
   if (!cartItems || cartItems.length === 0) return { error: "Carrinho vazio." };
   if (!paymentMethod) return { error: "Forma de pagamento não selecionada." };
 
@@ -12,20 +10,21 @@ export async function saveOrder({ userId, total, paymentMethod, address, cartIte
   const isRetirada = address?.isRetirada === true;
 
   if (!isRetirada) {
-    if (!address?.street)    return { error: "Endereço incompleto. Informe a rua." };
-    if (!address?.number)    return { error: "Endereço incompleto. Informe o número." };
-    if (!address?.district)  return { error: "Endereço incompleto. Informe o bairro." };
-    if (!address?.cep)       return { error: "Endereço incompleto. Informe o CEP." };
+    if (!address?.street)   return { error: "Endereço incompleto. Informe a rua." };
+    if (!address?.number)   return { error: "Endereço incompleto. Informe o número." };
+    if (!address?.district) return { error: "Endereço incompleto. Informe o bairro." };
+    if (!address?.cep)      return { error: "Endereço incompleto. Informe o CEP." };
   } else {
-    if (!address?.name)      return { error: "Informe seu nome para retirada." };
-    if (!address?.phone)     return { error: "Informe seu telefone para contato." };
+    if (!address?.name)  return { error: "Informe seu nome para retirada." };
+    if (!address?.phone) return { error: "Informe seu telefone para contato." };
   }
 
   // ── 1. Inserir o pedido ─────────────────────────────────
+  // ✅ userId pode ser null (compra como convidado)
   const { data: order, error: orderError } = await supabase
     .from("orders")
     .insert({
-      user_id:        userId,
+      user_id:        userId ?? null,
       total,
       payment_method: paymentMethod,
       address:        address,
@@ -57,7 +56,7 @@ export async function saveOrder({ userId, total, paymentMethod, address, cartIte
     return { error: "Pedido criado, mas houve um erro ao salvar os itens." };
   }
 
-  // ── 3. NOVO: Baixa no estoque via RPC ───────────────────
+  // ── 3. Baixa no estoque via RPC ─────────────────────────
   const rpcItems = cartItems.map((item) => ({
     product_id: String(item.id),
     quantity:   item.quantity,
