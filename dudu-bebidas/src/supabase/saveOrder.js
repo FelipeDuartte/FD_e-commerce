@@ -19,64 +19,25 @@ export async function saveOrder({ userId, total, paymentMethod, address, cartIte
     if (!address?.phone) return { error: "Informe seu telefone para contato." };
   }
 
-  // ── 1. Inserir o pedido ─────────────────────────────────
-  // ✅ userId pode ser null (compra como convidado)
-  const { data: order, error: orderError } = await supabase
-    .from("orders")
-    .insert({
-      user_id:        userId ?? null,
-      total,
-      payment_method: paymentMethod,
-      address:        address,
-      status:         "pending",
-    })
-    .select("id")
-    .single();
-
-  if (orderError) {
-    console.error("Erro ao criar pedido:", orderError);
-    return { error: "Não foi possível criar o pedido. Tente novamente." };
-  }
-
-  // ── 2. Inserir os itens do pedido ───────────────────────
-  const orderItems = cartItems.map((item) => ({
-    order_id:   order.id,
-    product_id: String(item.id),
-    name:       item.name,
-    price:      item.price,
-    quantity:   item.quantity,
-  }));
-
-  const { error: itemsError } = await supabase
-    .from("order_items")
-    .insert(orderItems);
-
-  if (itemsError) {
-    console.error("Erro ao salvar itens:", itemsError);
-    return { error: "Pedido criado, mas houve um erro ao salvar os itens." };
-  }
-
-  // ── 3. Baixa no estoque via RPC ─────────────────────────
-  const rpcItems = cartItems.map((item) => ({
-    product_id: String(item.id),
-    quantity:   item.quantity,
-  }));
-
-  const { data: rpcResult, error: rpcError } = await supabase
-    .rpc("process_order", {
-      p_order_id: order.id,
-      p_items:    rpcItems,
+  try {
+    // ✅ Chama a Edge Function — usa service role internamente, bypassa RLS
+    const { data, error } = await supabase.functions.invoke("create-order", {
+      body: { userId, total, paymentMethod, address, cartItems },
     });
 
-  if (rpcError) {
-    console.error("Erro na RPC:", rpcError);
-    return { error: "Pedido salvo, mas houve um erro ao atualizar o estoque." };
-  }
+    if (error) {
+      console.error("Erro na Edge Function:", error);
+      return { error: "Não foi possível criar o pedido. Tente novamente." };
+    }
 
-  if (!rpcResult?.success) {
-    console.error("Erro no estoque:", rpcResult?.error);
-    return { error: rpcResult?.error ?? "Erro ao processar estoque." };
-  }
+    if (data?.error) {
+      return { error: data.error };
+    }
 
-  return { orderId: order.id };
+    return { orderId: data.orderId };
+
+  } catch (err) {
+    console.error("Erro inesperado:", err);
+    return { error: "Não foi possível criar o pedido. Tente novamente." };
+  }
 }
