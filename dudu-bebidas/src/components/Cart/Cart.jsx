@@ -99,37 +99,35 @@ export default function Cart({
   };
 
   const handleCheckout = () => {
-    if (cartItems.length === 0) return;
-    if (!bairroSelecionado) {
-      alert("Por favor, selecione seu bairro ou retirada para continuar.");
-      return;
-    }
+  if (cartItems.length === 0) return;
+  if (!bairroSelecionado) {
+    alert("Por favor, selecione seu bairro ou retirada para continuar.");
+    return;
+  }
 
-    const isRetirada = bairroSelecionado.isRetirada ?? false;
-    const { disponivel, mensagem } = verificarHorario(isRetirada);
-    if (!disponivel) {
-      setHorarioAviso(mensagem);
-      return;
-    }
+  const isRetirada = bairroSelecionado.isRetirada ?? false;
 
-    // ✅ Sem verificação de login — qualquer pessoa pode finalizar o pedido
-    navigate("/checkout", {
-      state: {
-        cartItems: cartItems.map((item) => ({
-          id:       item.id,
-          name:     item.nome,
-          price:    item.preco,
-          quantity: item.quantity,
-          icon:     item.imagem,
-        })),
-        cartTotal: subtotal,
-        frete,
-        bairro:    bairroSelecionado.nome,
-        isRetirada,
-      },
-    });
-    setTimeout(() => onClose(), 300);
-  };
+  // ⚠️ Verificação de horário desativada temporariamente para testes
+  // const { disponivel, mensagem } = verificarHorario(isRetirada);
+  // if (!disponivel) { setHorarioAviso(mensagem); return; }
+
+  navigate("/checkout", {
+    state: {
+      cartItems: cartItems.map((item) => ({
+        id:       item.id,
+        name:     item.nome,
+        price:    item.preco,
+        quantity: item.quantity,
+        icon:     item.imagem,
+      })),
+      cartTotal: subtotal,
+      frete,
+      bairro:    bairroSelecionado.nome,
+      isRetirada,
+    },
+  });
+  setTimeout(() => onClose(), 300);
+};
 
   return (
     <>
