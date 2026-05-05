@@ -23,7 +23,7 @@ const BAIRROS = [
   { nome: "Venda Nova", frete: 5.0 },
 ];
 
-const HORARIO_ENTREGA  = { abertura: 9 * 60, fechamento: 17 * 60 + 30 };
+const HORARIO_ENTREGA = { abertura: 9 * 60, fechamento: 17 * 60 + 30 };
 const HORARIO_RETIRADA = { abertura: 9 * 60, fechamento: 19 * 60 };
 
 function getMinutosAgora() {
@@ -35,7 +35,9 @@ function verificarHorario(isRetirada) {
   const minutos = getMinutosAgora();
   const horario = isRetirada ? HORARIO_RETIRADA : HORARIO_ENTREGA;
   if (minutos < horario.abertura) {
-    const h = Math.floor(horario.abertura / 60).toString().padStart(2, "0");
+    const h = Math.floor(horario.abertura / 60)
+      .toString()
+      .padStart(2, "0");
     const m = (horario.abertura % 60).toString().padStart(2, "0");
     return {
       disponivel: false,
@@ -43,7 +45,9 @@ function verificarHorario(isRetirada) {
     };
   }
   if (minutos >= horario.fechamento) {
-    const h = Math.floor(horario.abertura / 60).toString().padStart(2, "0");
+    const h = Math.floor(horario.abertura / 60)
+      .toString()
+      .padStart(2, "0");
     const m = (horario.abertura % 60).toString().padStart(2, "0");
     return {
       disponivel: false,
@@ -54,7 +58,9 @@ function verificarHorario(isRetirada) {
 }
 
 function formatarHorario(minutos) {
-  const h = Math.floor(minutos / 60).toString().padStart(2, "0");
+  const h = Math.floor(minutos / 60)
+    .toString()
+    .padStart(2, "0");
   const m = (minutos % 60).toString().padStart(2, "0");
   return `${h}:${m}`;
 }
@@ -71,13 +77,16 @@ export default function Cart({
   const navigate = useNavigate();
 
   const [bairroSelecionado, setBairroSelecionado] = useState(null);
-  const [isBairroOpen,      setIsBairroOpen]      = useState(false);
-  const [horarioAviso,      setHorarioAviso]      = useState(null);
+  const [isBairroOpen, setIsBairroOpen] = useState(false);
+  const [horarioAviso, setHorarioAviso] = useState(null);
   const dropdownRef = useRef(null);
 
-  const subtotal = cartItems.reduce((sum, item) => sum + item.preco * item.quantity, 0);
-  const frete    = bairroSelecionado ? bairroSelecionado.frete : null;
-  const total    = frete !== null ? subtotal + frete : subtotal;
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + item.preco * item.quantity,
+    0,
+  );
+  const frete = bairroSelecionado ? bairroSelecionado.frete : null;
+  const total = frete !== null ? subtotal + frete : subtotal;
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -99,35 +108,37 @@ export default function Cart({
   };
 
   const handleCheckout = () => {
-  if (cartItems.length === 0) return;
-  if (!bairroSelecionado) {
-    alert("Por favor, selecione seu bairro ou retirada para continuar.");
-    return;
-  }
+    if (cartItems.length === 0) return;
+    if (!bairroSelecionado) {
+      alert("Por favor, selecione seu bairro ou retirada para continuar.");
+      return;
+    }
 
-  const isRetirada = bairroSelecionado.isRetirada ?? false;
+    const isRetirada = bairroSelecionado.isRetirada ?? false;
+    const { disponivel, mensagem } = verificarHorario(isRetirada);
+    if (!disponivel) {
+      setHorarioAviso(mensagem);
+      return;
+    }
 
-  // ⚠️ Verificação de horário desativada temporariamente para testes
-  // const { disponivel, mensagem } = verificarHorario(isRetirada);
-  // if (!disponivel) { setHorarioAviso(mensagem); return; }
-
-  navigate("/checkout", {
-    state: {
-      cartItems: cartItems.map((item) => ({
-        id:       item.id,
-        name:     item.nome,
-        price:    item.preco,
-        quantity: item.quantity,
-        icon:     item.imagem,
-      })),
-      cartTotal: subtotal,
-      frete,
-      bairro:    bairroSelecionado.nome,
-      isRetirada,
-    },
-  });
-  setTimeout(() => onClose(), 300);
-};
+    // ✅ Sem verificação de login — qualquer pessoa pode finalizar o pedido
+    navigate("/checkout", {
+      state: {
+        cartItems: cartItems.map((item) => ({
+          id: item.id,
+          name: item.nome,
+          price: item.preco,
+          quantity: item.quantity,
+          icon: item.imagem,
+        })),
+        cartTotal: subtotal,
+        frete,
+        bairro: bairroSelecionado.nome,
+        isRetirada,
+      },
+    });
+    setTimeout(() => onClose(), 300);
+  };
 
   return (
     <>
@@ -192,14 +203,21 @@ export default function Cart({
                     </div>
                     <div className="quantity-controls">
                       <button
-                        onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                        onClick={() =>
+                          updateQuantity(
+                            item.id,
+                            Math.max(1, item.quantity - 1),
+                          )
+                        }
                         className="quantity-btn"
                       >
                         <Minus size={16} />
                       </button>
                       <span className="quantity-value">{item.quantity}</span>
                       <button
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        onClick={() =>
+                          updateQuantity(item.id, item.quantity + 1)
+                        }
                         className="quantity-btn"
                       >
                         <Plus size={16} />
@@ -261,7 +279,11 @@ export default function Cart({
                       : "Selecione entrega ou retirada"}
                   </span>
                 </div>
-                {isBairroOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                {isBairroOpen ? (
+                  <ChevronUp size={18} />
+                ) : (
+                  <ChevronDown size={18} />
+                )}
               </div>
 
               {isBairroOpen && (
@@ -274,14 +296,21 @@ export default function Cart({
                     >
                       <div className="bairro-item-left">
                         {b.isRetirada ? (
-                          <Store size={14} className="bairro-item-icon retirada-icon" />
+                          <Store
+                            size={14}
+                            className="bairro-item-icon retirada-icon"
+                          />
                         ) : (
                           <MapPin size={14} className="bairro-item-icon" />
                         )}
                         <div className="bairro-item-info">
                           <span className="bairro-item-nome">{b.nome}</span>
-                          <span className={`bairro-item-frete ${b.frete === 0 ? "gratis" : ""}`}>
-                            {b.frete === 0 ? "GRÁTIS" : `R$ ${b.frete.toFixed(2)}`}
+                          <span
+                            className={`bairro-item-frete ${b.frete === 0 ? "gratis" : ""}`}
+                          >
+                            {b.frete === 0
+                              ? "GRÁTIS"
+                              : `R$ ${b.frete.toFixed(2)}`}
                           </span>
                         </div>
                       </div>
@@ -300,7 +329,9 @@ export default function Cart({
                 <span>Subtotal</span>
                 <span>R$ {subtotal.toFixed(2)}</span>
               </div>
-              <div className={`summary-row ${frete === 0 ? "free-shipping" : ""}`}>
+              <div
+                className={`summary-row ${frete === 0 ? "free-shipping" : ""}`}
+              >
                 <span>Frete</span>
                 <span>
                   {frete === null ? (
