@@ -24,11 +24,7 @@
   right: -200px;
   width: 600px;
   height: 600px;
-  background: radial-gradient(
-    circle,
-    rgba(255, 208, 0, 0.07) 0%,
-    transparent 70%
-  );
+  background: radial-gradient(circle, rgba(255, 208, 0, 0.07) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -39,11 +35,7 @@
   left: -100px;
   width: 400px;
   height: 400px;
-  background: radial-gradient(
-    circle,
-    rgba(255, 208, 0, 0.04) 0%,
-    transparent 70%
-  );
+  background: radial-gradient(circle, rgba(255, 208, 0, 0.04) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -149,82 +141,6 @@
   max-width: 60px;
 }
 
-/* ─── BANNER DE LOGIN ───────────────────────────────── */
-.co-login-banner {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  background: rgba(255, 208, 0, 0.06);
-  border: 1.5px solid rgba(255, 208, 0, 0.35);
-  border-radius: 16px;
-  padding: 18px 20px;
-  margin-bottom: 28px;
-  animation: co-banner-in 0.4s ease;
-}
-
-@keyframes co-banner-in {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.co-login-banner-icon {
-  font-size: 28px;
-  flex-shrink: 0;
-}
-
-.co-login-banner-text {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.co-login-banner-text strong {
-  font-size: 15px;
-  font-weight: 700;
-  color: #ffd000;
-  font-family: "Plus Jakarta Sans", sans-serif;
-}
-
-.co-login-banner-text span {
-  font-size: 13px;
-  color: #888;
-}
-
-.co-login-banner-btn {
-  background: #ffd000;
-  color: #000;
-  border: none;
-  border-radius: 10px;
-  padding: 10px 22px;
-  font-family: "Plus Jakarta Sans", sans-serif;
-  font-size: 14px;
-  font-weight: 800;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
-
-.co-login-banner-btn:hover {
-  background: #ffe033;
-  transform: translateY(-1px);
-}
-
-/* ─── CARD LOCKED ───────────────────────────────────── */
-.co-card-locked {
-  opacity: 0.5;
-  pointer-events: none;
-  user-select: none;
-  filter: blur(1px);
-}
-
 /* ─── GRID ──────────────────────────────────────────── */
 .co-grid {
   display: grid;
@@ -239,9 +155,7 @@
   border: 1px solid #1e1e1e;
   border-radius: 20px;
   padding: 32px;
-  transition:
-    opacity 0.3s,
-    filter 0.3s;
+  transition: opacity 0.3s, filter 0.3s;
 }
 
 .co-section-label {
@@ -308,17 +222,6 @@
   margin: 28px 0;
 }
 
-/* ─── ERROR MSG ─────────────────────────────────────── */
-.co-error-msg {
-  background: rgba(220, 38, 38, 0.08);
-  border: 1px solid rgba(220, 38, 38, 0.25);
-  border-radius: 10px;
-  padding: 12px 16px;
-  font-size: 13px;
-  color: #f87171;
-  margin-bottom: 16px;
-}
-
 /* ─── CEP ───────────────────────────────────────────── */
 .co-cep-wrap {
   position: relative;
@@ -334,14 +237,22 @@
 }
 
 @keyframes co-spin {
-  to {
-    transform: translateY(-50%) rotate(360deg);
-  }
+  to { transform: translateY(-50%) rotate(360deg); }
 }
 
+/* ─── FIELD STATES ──────────────────────────────────── */
+/* Definição única e consolidada de co-input-error */
 .co-input-error {
-  border-color: #ef4444 !important;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.07) !important;
+  border-color: #d32f2f !important;
+  background-color: #320101 !important;
+  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.07) !important;
+  animation: fieldShake 0.3s ease-in-out;
+}
+
+@keyframes fieldShake {
+  0%, 100% { transform: translateX(0); }
+  25%       { transform: translateX(-3px); }
+  75%       { transform: translateX(3px); }
 }
 
 .co-field-error {
@@ -609,9 +520,10 @@
   gap: 6px;
   margin-top: 12px;
   font-size: 12px;
-  color: #555;}
+  color: #555;
+}
 
-  /* ─── BANNER DE RETIRADA ────────────────────────────── */
+/* ─── BANNER DE RETIRADA ────────────────────────────── */
 .co-retirada-banner {
   display: flex;
   align-items: flex-start;
@@ -622,32 +534,32 @@
   border-radius: 14px;
   margin-bottom: 24px;
 }
- 
+
 .co-retirada-icon {
   font-size: 28px;
   flex-shrink: 0;
   line-height: 1;
 }
- 
+
 .co-retirada-text {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
- 
+
 .co-retirada-text strong {
   font-size: 14px;
   font-weight: 700;
   color: #ffd000;
 }
- 
+
 .co-retirada-text span {
   font-size: 12px;
   color: #777;
   line-height: 1.5;
 }
- 
-/* Alerta de erro destacado */
+
+/* ─── ERRO ALERT ────────────────────────────────────── */
 .co-error-alert {
   display: flex;
   align-items: flex-start;
@@ -663,8 +575,8 @@
 
 @keyframes shakeError {
   0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  75% { transform: translateX(5px); }
+  25%       { transform: translateX(-5px); }
+  75%       { transform: translateX(5px); }
 }
 
 .co-error-icon {
@@ -674,7 +586,7 @@
 
 @keyframes pulseWarning {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+  50%       { transform: scale(1.1); }
 }
 
 .co-error-content {
@@ -717,19 +629,6 @@
   transform: scale(1.1);
 }
 
-/* Campos com erro */
-.co-input-error {
-  border-color: #d32f2f !important;
-  background-color: #fff5f5 !important;
-  animation: fieldShake 0.3s ease-in-out;
-}
-
-@keyframes fieldShake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-3px); }
-  75% { transform: translateX(3px); }
-}
-
 /* ══════════════════════════════════════════
    MOBILE (≤ 768px)
 ══════════════════════════════════════════ */
@@ -768,18 +667,19 @@
     padding: 12px;
     gap: 10px;
   }
-  
+
   .co-error-icon {
     font-size: 24px;
   }
-  
+
   .co-error-title {
     font-size: 14px;
   }
-  
+
   .co-error-message {
     font-size: 12px;
   }
+
   .co-grid {
     grid-template-columns: 1fr;
     gap: 16px;
@@ -790,13 +690,11 @@
     border-radius: 16px;
   }
 
-  /* No mobile todos os campos ficam em coluna única por padrão */
   .co-field-row {
     grid-template-columns: 1fr;
     gap: 10px;
   }
 
-  /* Exceto bairro + complemento que mantém 2 colunas */
   .co-field-row.two-col-mobile {
     grid-template-columns: 1fr 1fr;
   }
@@ -826,7 +724,6 @@
     margin-top: 0;
   }
 
-  /* Esconde o botão dentro do summary no mobile */
   .co-summary .co-cta,
   .co-summary .co-secure {
     display: none;
