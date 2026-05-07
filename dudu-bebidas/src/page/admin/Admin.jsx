@@ -488,7 +488,7 @@ export default function Admin({ user, isAdmin }) {
                     Em promoção
                   </label>
                 </div>
-
+                {/* modal promocionais */}
                 {modalForm.promotion && (
                   <div className="adm-promo-fields">
                     <p className="adm-promo-hint">

@@ -3,100 +3,65 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../../supabase/Supabaseclient";
 import "./Confirm.css";
 
-const paymentLabels = {
+// ── Constantes ────────────────────────────────────────
+const PAYMENT_LABELS = {
   pix:  { icon: "⚡", label: "PIX" },
   card: { icon: "💳", label: "Cartão" },
   cash: { icon: "💵", label: "Dinheiro" },
 };
 
-const STATUS_STEP = {
-  pending:    0,
-  preparing:  1,
-  on_the_way: 2,
-  delivered:  3,
-};
+const STATUS_STEP = { pending: 0, preparing: 1, on_the_way: 2, delivered: 3 };
 
 const STEPS = [
-  {
-    icon: "✅",
-    title: "Pedido confirmado",
-    desc: "Recebemos seu pedido",
-    activeDesc: "Seu pedido foi registrado com sucesso!",
-  },
-  {
-    icon: "👨‍🍳",
-    title: "Em preparação",
-    desc: "Separando seus produtos",
-    activeDesc: "Estamos preparando tudo com cuidado para você.",
-  },
-  {
-    icon: "🛵",
-    title: "Saiu para entrega",
-    desc: "A caminho do seu endereço",
-    activeDesc: "Seu pedido está a caminho! Fique de olho.",
-  },
-  {
-    icon: "🎉",
-    title: "Entregue",
-    desc: "Pedido finalizado",
-    activeDesc: "Pedido entregue. Bom proveito! 🍺",
-  },
+  { icon: "✅", title: "Pedido confirmado", desc: "Recebemos seu pedido",         activeDesc: "Seu pedido foi registrado com sucesso!" },
+  { icon: "👨‍🍳", title: "Em preparação",    desc: "Separando seus produtos",      activeDesc: "Estamos preparando tudo com cuidado para você." },
+  { icon: "🛵", title: "Saiu para entrega", desc: "A caminho do seu endereço",    activeDesc: "Seu pedido está a caminho! Fique de olho." },
+  { icon: "🎉", title: "Entregue",          desc: "Pedido finalizado",            activeDesc: "Pedido entregue. Bom proveito! 🍺" },
 ];
 
+const EMPTY_ORDER = { orderId: null, cartItems: [], total: 0, payment: "pix", address: {}, isRetirada: false };
+
+// ── Helper: lê order do location.state ou localStorage ──
+function resolveOrderData(locationState) {
+  if (locationState?.orderId || locationState?.cartItems) return locationState;
+  if (locationState?.pedido) return locationState.pedido;
+
+  const saved = localStorage.getItem("lastOrder");
+  if (saved) {
+    try { return JSON.parse(saved); } catch {}
+  }
+  return EMPTY_ORDER;
+}
+
+// ── Formatação de BRL ─────────────────────────────────
+const formatBRL = (value) => `R$ ${Number(value).toFixed(2).replace(".", ",")}`;
+
+// ══════════════════════════════════════════════════════
+//  COMPONENTE PRINCIPAL
+// ══════════════════════════════════════════════════════
 export default function Confirmacao() {
   const location = useLocation();
-  const navigate  = useNavigate();
+  const navigate = useNavigate();
 
-  // ── CORREÇÃO: Ler os dados diretamente do location.state ──
-  const [orderData] = useState(() => {
-    // Se tiver dados diretos no location.state
-    if (location.state && (location.state.orderId || location.state.cartItems)) {
-      console.log("Dados encontrados diretamente no location.state:", location.state);
-      return location.state;
-    }
-    
-    // Se tiver dentro de location.state.pedido (backward compatibility)
-    if (location.state?.pedido) {
-      console.log("Dados encontrados em location.state.pedido:", location.state.pedido);
-      return location.state.pedido;
-    }
-    
-    // Tenta recuperar do localStorage
-    const savedOrder = localStorage.getItem("lastOrder");
-    if (savedOrder) {
-      try { 
-        const parsed = JSON.parse(savedOrder);
-        console.log("Dados recuperados do localStorage:", parsed);
-        return parsed; 
-      } catch (e) { 
-        console.error("Erro ao parsear localStorage:", e);
-      }
-    }
-    
-    console.log("Nenhum dado encontrado, retornando objeto vazio");
-    return { orderId: null, cartItems: [], total: 0, payment: "pix", address: {}, isRetirada: false };
-  });
+  const [orderData] = useState(() => resolveOrderData(location.state));
 
-  const [status, setStatus]           = useState("pending");
+  const { orderId, cartItems, total, payment, address, isRetirada } = {
+    ...EMPTY_ORDER,
+    ...orderData,
+  };
+
+  const [status,      setStatus]      = useState("pending");
   const [statusLoading, setStatusLoading] = useState(true);
-  const [animating, setAnimating]     = useState(false);
+  const [animating,   setAnimating]   = useState(false);
 
-  // ── Cancelamento ──────────────────────────────────
+  // ── Modal cancelamento ────────────────────────────
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [cancelling, setCancelling]           = useState(false);
-  const [cancelError, setCancelError]         = useState("");
+  const [cancelling,      setCancelling]      = useState(false);
+  const [cancelError,     setCancelError]     = useState("");
 
-  // ── CORREÇÃO: Extrair os dados corretamente ──
-  const orderId    = orderData.orderId || null;
-  const cartItems  = orderData.cartItems || [];
-  const total      = orderData.total || 0;
-  const payment    = orderData.payment || "pix";
-  const address    = orderData.address || {};
-  const isRetirada = orderData.isRetirada || false;
-
+  // ── Persiste no localStorage ──────────────────────
   useEffect(() => {
-    // Salvar no localStorage apenas se tiver dados válidos
-    if (orderId || (cartItems.length > 0)) {
+    if (orderId || cartItems.length > 0) {
       localStorage.setItem("lastOrder", JSON.stringify({
         orderId, cartItems, total, payment, address, isRetirada,
         savedAt: new Date().toISOString(),
@@ -104,92 +69,72 @@ export default function Confirmacao() {
     }
   }, [orderId, cartItems, total, payment, address, isRetirada]);
 
+  // ── Realtime status ───────────────────────────────
   useEffect(() => {
-    if (!orderId) { 
-      setStatusLoading(false); 
-      return; 
-    }
+    if (!orderId) { setStatusLoading(false); return; }
 
-    const fetchStatus = async () => {
-      const { data, error } = await supabase
-        .from("orders").select("status").eq("id", orderId).single();
-      if (!error && data?.status) setStatus(data.status);
-      setStatusLoading(false);
-    };
-
-    fetchStatus();
+    supabase.from("orders").select("status").eq("id", orderId).single()
+      .then(({ data, error }) => {
+        if (!error && data?.status) setStatus(data.status);
+        setStatusLoading(false);
+      });
 
     const channel = supabase
       .channel(`order-status-${orderId}`)
       .on("postgres_changes",
         { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${orderId}` },
-        (payload) => {
-          if (payload.new?.status) {
+        ({ new: payload }) => {
+          if (payload?.status) {
             setAnimating(true);
-            setStatus(payload.new.status);
+            setStatus(payload.status);
             setTimeout(() => setAnimating(false), 600);
           }
-        }
+        },
       )
       .subscribe();
 
     return () => supabase.removeChannel(channel);
   }, [orderId]);
 
-  // ── Handler de cancelamento ──
+  // ── Cancelamento ──────────────────────────────────
   const handleCancelOrder = async () => {
-  setCancelling(true);
-  setCancelError("");
+    setCancelling(true);
+    setCancelError("");
 
-  try {
-    if (!orderId) {
+    try {
+      if (!orderId) {
+        localStorage.removeItem("lastOrder");
+        navigate("/", { state: { cancelledOrder: true, isRetirada: true } });
+        return;
+      }
+
+      const { data: rpcResult, error: rpcError } = await supabase
+        .rpc("restore_stock", { p_order_id: orderId });
+
+      if (rpcError || !rpcResult?.success)
+        throw new Error(rpcError ? "Erro ao restaurar estoque." : (rpcResult?.error ?? "Erro ao restaurar estoque."));
+
+      const { error: itemsError } = await supabase.from("order_items").delete().eq("order_id", orderId);
+      if (itemsError) throw new Error("Erro ao cancelar itens do pedido.");
+
+      const { error: orderError } = await supabase.from("orders").delete().eq("id", orderId);
+      if (orderError) throw new Error("Erro ao cancelar o pedido.");
+
       localStorage.removeItem("lastOrder");
-      navigate("/", { state: { cancelledOrder: true, isRetirada: true } });
-      return;
+      navigate("/", { state: { cancelledOrder: true, isRetirada: false } });
+
+    } catch (err) {
+      setCancelError(err.message);
+      setCancelling(false);
     }
+  };
 
-    // 1. Devolve o estoque antes de deletar os itens
-    const { data: rpcResult, error: rpcError } = await supabase
-      .rpc("restore_stock", { p_order_id: orderId });
-
-    if (rpcError) throw new Error("Erro ao restaurar estoque.");
-    if (!rpcResult?.success) throw new Error(rpcResult?.error ?? "Erro ao restaurar estoque.");
-
-    // 2. Deleta os itens
-    const { error: itemsError } = await supabase
-      .from("order_items")
-      .delete()
-      .eq("order_id", orderId);
-
-    if (itemsError) throw new Error("Erro ao cancelar itens do pedido.");
-
-    // 3. Deleta o pedido
-    const { error: orderError } = await supabase
-      .from("orders")
-      .delete()
-      .eq("id", orderId);
-
-    if (orderError) throw new Error("Erro ao cancelar o pedido.");
-
-    localStorage.removeItem("lastOrder");
-    navigate("/", { state: { cancelledOrder: true, isRetirada: false } });
-
-  } catch (err) {
-    setCancelError(err.message);
-    setCancelling(false);
-  }
-};
-
-  const currentStep = STATUS_STEP[status] ?? 0;
-  const canCancel = (status === "pending" && (orderId || isRetirada));
-
-  // ── CORREÇÃO: Verificar se tem dados para exibir ──
+  // ── Guards ────────────────────────────────────────
   if (!orderId && cartItems.length === 0 && !isRetirada) {
-    console.log("Exibindo tela de erro - nenhum dado encontrado");
     return (
       <div className="cf-root">
         <div className="cf-wrap cf-center">
-          <div className="cf-card" style={{ textAlign: "center", maxWidth: 400 }}>
+          <div className="cf-card" style={{ maxWidth: 400 }}>
             <div style={{ fontSize: 64, marginBottom: 16 }}>📦</div>
             <h2 style={{ marginBottom: 8 }}>Nenhum pedido encontrado</h2>
             <p style={{ color: "#666", marginBottom: 24 }}>Não encontramos informações do seu pedido.</p>
@@ -200,8 +145,11 @@ export default function Confirmacao() {
     );
   }
 
-  const paymentInfo = paymentLabels[payment] ?? { icon: "💳", label: payment };
+  const paymentInfo = PAYMENT_LABELS[payment] ?? { icon: "💳", label: payment };
   const shortId     = orderId ? orderId.slice(-8).toUpperCase() : "RETIRADA";
+  const currentStep = STATUS_STEP[status] ?? 0;
+  const canCancel   = status === "pending" && (orderId || isRetirada);
+  const entityLabel = isRetirada ? "retirada" : "pedido";
 
   return (
     <div className="cf-root">
@@ -209,35 +157,21 @@ export default function Confirmacao() {
       <div className="cf-particle cf-p2" />
       <div className="cf-particle cf-p3" />
 
-      {/* ── MODAL DE CONFIRMAÇÃO DE CANCELAMENTO ── */}
+      {/* MODAL — CANCELAR */}
       {showCancelModal && (
         <>
           <div className="cf-modal-overlay" onClick={() => !cancelling && setShowCancelModal(false)} />
           <div className="cf-modal">
             <div className="cf-modal-icon">⚠️</div>
-            <h3 className="cf-modal-title">Cancelar {isRetirada ? "retirada" : "pedido"}?</h3>
+            <h3 className="cf-modal-title">Cancelar {entityLabel}?</h3>
             <p className="cf-modal-desc">
-              Tem certeza que deseja cancelar {isRetirada ? "a retirada" : "o pedido"} <strong>#{shortId}</strong>?
-              Esta ação não pode ser desfeita.
+              Tem certeza que deseja cancelar {isRetirada ? "a retirada" : "o pedido"}{" "}
+              <strong>#{shortId}</strong>? Esta ação não pode ser desfeita.
             </p>
-
-            {cancelError && (
-              <div className="cf-modal-error">⚠️ {cancelError}</div>
-            )}
-
+            {cancelError && <div className="cf-modal-error">⚠️ {cancelError}</div>}
             <div className="cf-modal-actions">
-              <button
-                className="cf-modal-btn-cancel"
-                onClick={() => setShowCancelModal(false)}
-                disabled={cancelling}
-              >
-                Voltar
-              </button>
-              <button
-                className="cf-modal-btn-confirm"
-                onClick={handleCancelOrder}
-                disabled={cancelling}
-              >
+              <button className="cf-modal-btn-cancel"  onClick={() => setShowCancelModal(false)} disabled={cancelling}>Voltar</button>
+              <button className="cf-modal-btn-confirm" onClick={handleCancelOrder}               disabled={cancelling}>
                 {cancelling ? "Cancelando..." : "Sim, cancelar"}
               </button>
             </div>
@@ -247,7 +181,7 @@ export default function Confirmacao() {
 
       <div className="cf-wrap">
 
-        {/* ── HERO ── */}
+        {/* HERO */}
         <div className="cf-hero">
           <div className="cf-check-ring">
             <div className="cf-check-circle">
@@ -261,7 +195,7 @@ export default function Confirmacao() {
             <div className="cf-tag">{isRetirada ? "RETIRADA CONFIRMADA" : "PEDIDO CONFIRMADO"}</div>
             <h1 className="cf-title">{isRetirada ? "Retirada agendada!" : "Pedido recebido!"}</h1>
             <p className="cf-subtitle">
-              {isRetirada 
+              {isRetirada
                 ? "Seu pedido já está separado. Passe na loja para retirar quando quiser."
                 : "Seu pedido foi registrado com sucesso e já está sendo preparado."}
             </p>
@@ -272,7 +206,7 @@ export default function Confirmacao() {
           </div>
         </div>
 
-        {/* ── TRACKER (apenas para entregas) ── */}
+        {/* TRACKER — apenas entrega */}
         {!isRetirada && (
           <div className="cf-tracker-card">
             <div className="cf-tracker-header">
@@ -303,7 +237,13 @@ export default function Confirmacao() {
                     return (
                       <div
                         key={i}
-                        className={`cf-step ${isDone ? "cf-step-done" : ""} ${isActive ? "cf-step-active" : ""} ${isPending ? "cf-step-pending" : ""} ${animating && i === currentStep ? "cf-step-entering" : ""}`}
+                        className={[
+                          "cf-step",
+                          isDone    && "cf-step-done",
+                          isActive  && "cf-step-active",
+                          isPending && "cf-step-pending",
+                          animating && isActive && "cf-step-entering",
+                        ].filter(Boolean).join(" ")}
                       >
                         <div className="cf-step-icon-wrap">
                           <div className="cf-step-icon">{isDone ? "✓" : step.icon}</div>
@@ -327,36 +267,29 @@ export default function Confirmacao() {
           </div>
         )}
 
-        {/* ── MENSAGEM PARA RETIRADA ── */}
+        {/* TRACKER — retirada */}
         {isRetirada && (
-          <div className="cf-tracker-card" style={{ textAlign: "center" }}>
+          <div className="cf-tracker-card cf-tracker-card--pickup">
             <div className="cf-tracker-header">
               <span className="cf-tracker-label">🏪 RETIRADA NA LOJA</span>
             </div>
-            <div style={{ padding: "20px 0" }}>
-              <div style={{ fontSize: 48, marginBottom: 16 }}>🏪</div>
-              <h3 style={{ color: "#ffd000", marginBottom: 8 }}>Seu pedido está pronto!</h3>
-              <p style={{ color: "#888", marginBottom: 16 }}>
-                Passe na loja com seu código de retirada.
-              </p>
-              <div style={{ 
-                background: "rgba(255, 208, 0, 0.1)", 
-                padding: "12px", 
-                borderRadius: "12px",
-                border: "1px solid rgba(255, 208, 0, 0.2)"
-              }}>
-                <p style={{ fontSize: 12, color: "#ffd000", marginBottom: 4 }}>ENDEREÇO</p>
-                <p style={{ color: "#ddd", fontSize: 14 }}>Rua Edgar Torres, 650</p>
-                <p style={{ color: "#666", fontSize: 12 }}>Minas Caixa, Belo Horizonte - MG</p>
+            <div className="cf-pickup-body">
+              <div className="cf-pickup-icon">🏪</div>
+              <h3 className="cf-pickup-title">Seu pedido está pronto!</h3>
+              <p className="cf-pickup-desc">Passe na loja com seu código de retirada.</p>
+              <div className="cf-pickup-address">
+                <p className="cf-pickup-address-label">ENDEREÇO</p>
+                <p className="cf-pickup-address-street">Rua Edgar Torres, 650</p>
+                <p className="cf-pickup-address-city">Minas Caixa, Belo Horizonte - MG</p>
               </div>
             </div>
           </div>
         )}
 
-        {/* ── GRID ── */}
+        {/* GRID */}
         <div className="cf-grid">
 
-          {/* COLUNA ESQUERDA */}
+          {/* Coluna esquerda */}
           <div className="cf-col">
             <div className="cf-card">
               <div className="cf-card-label">🛒 Itens do Pedido</div>
@@ -373,14 +306,14 @@ export default function Confirmacao() {
                       <span className="cf-item-qty">{item.quantity} unidade(s)</span>
                     </div>
                     <span className="cf-item-price">
-                      R$ {((item.preco || item.price) * item.quantity).toFixed(2).replace(".", ",")}
+                      {formatBRL((item.preco || item.price) * item.quantity)}
                     </span>
                   </div>
                 ))}
               </div>
               <div className="cf-total-row">
                 <span>Total pago</span>
-                <span className="cf-total-value">R$ {total.toFixed(2).replace(".", ",")}</span>
+                <span className="cf-total-value">{formatBRL(total)}</span>
               </div>
             </div>
 
@@ -397,7 +330,7 @@ export default function Confirmacao() {
             )}
           </div>
 
-          {/* COLUNA DIREITA */}
+          {/* Coluna direita */}
           <div className="cf-col">
             <div className="cf-card cf-card-payment">
               <div className="cf-card-label">💳 Forma de Pagamento</div>
@@ -412,17 +345,14 @@ export default function Confirmacao() {
             </button>
 
             {canCancel && (
-              <button
-                className="cf-btn-cancel"
-                onClick={() => setShowCancelModal(true)}
-              >
-                ✕ Cancelar {isRetirada ? "retirada" : "pedido"}
+              <button className="cf-btn-cancel" onClick={() => setShowCancelModal(true)}>
+                ✕ Cancelar {entityLabel}
               </button>
             )}
 
             {!canCancel && (orderId || isRetirada) && status !== "pending" && (
               <div className="cf-cancel-info">
-                ℹ️ Não é mais possível cancelar — {isRetirada ? "retirada" : "pedido"} já está em andamento.
+                ℹ️ Não é mais possível cancelar — {entityLabel} já está em andamento.
               </div>
             )}
           </div>

@@ -1,124 +1,94 @@
 @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap");
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+/* ─── RESET ──────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ─── TOKENS ─────────────────────────────────────────────────────── */
+:root {
+  --c-bg:         #0a0a0a;
+  --c-surface:    #111;
+  --c-border:     #1e1e1e;
+  --c-border-2:   #2a2a2a;
+  --c-text:       #fff;
+  --c-text-muted: #888;
+  --c-text-dim:   #555;
+  --c-accent:     #ffd000;
+  --c-accent-2:   #ffe566;
+  --c-green:      #50c878;
+  --c-orange:     #ff8c00;
+  --c-red:        #ef4444;
+  --c-red-dark:   #dc2626;
+
+  --font-display: "Plus Jakarta Sans", sans-serif;
+  --font-body:    "Inter", sans-serif;
+
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 20px;
+  --r-2xl: 24px;
+
+  --t: 0.2s;
+  --t-slow: 0.4s;
 }
 
-/* ─── ROOT ─────────────────────────────────────────── */
+/* ─── ROOT ───────────────────────────────────────────────────────── */
 .cf-root {
-  background: #0a0a0a;
+  background: var(--c-bg);
   min-height: 100vh;
-  font-family: "Inter", sans-serif;
-  color: #fff;
+  font-family: var(--font-body);
+  color: var(--c-text);
   padding: 48px 24px 80px;
   position: relative;
   overflow: hidden;
 }
 
-.cf-root::before {
-  content: "";
-  position: fixed;
-  top: -200px;
-  right: -200px;
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(
-    circle,
-    rgba(255, 208, 0, 0.08) 0%,
-    transparent 70%
-  );
-  pointer-events: none;
-}
-
+/* Glow de fundo */
+.cf-root::before,
 .cf-root::after {
   content: "";
   position: fixed;
-  bottom: -100px;
-  left: -100px;
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(
-    circle,
-    rgba(255, 208, 0, 0.04) 0%,
-    transparent 70%
-  );
   pointer-events: none;
+  background: radial-gradient(circle, rgba(255,208,0,.08) 0%, transparent 70%);
 }
+.cf-root::before { top: -200px; right: -200px; width: 600px; height: 600px; }
+.cf-root::after  { bottom: -100px; left: -100px; width: 400px; height: 400px; background: radial-gradient(circle, rgba(255,208,0,.04) 0%, transparent 70%); }
 
-/* ─── PARTÍCULAS ────────────────────────────────────── */
+/* ─── PARTÍCULAS ─────────────────────────────────────────────────── */
 .cf-particle {
   position: fixed;
   border-radius: 50%;
   pointer-events: none;
   opacity: 0;
+  background: var(--c-accent);
   animation: cf-float 6s ease-in-out infinite;
 }
-.cf-p1 {
-  width: 6px;
-  height: 6px;
-  background: #ffd000;
-  top: 20%;
-  left: 15%;
-  animation-delay: 0s;
-}
-.cf-p2 {
-  width: 4px;
-  height: 4px;
-  background: #ffd000;
-  top: 35%;
-  right: 20%;
-  animation-delay: 1.5s;
-}
-.cf-p3 {
-  width: 8px;
-  height: 8px;
-  background: rgba(255, 208, 0, 0.4);
-  top: 60%;
-  left: 70%;
-  animation-delay: 3s;
-}
+.cf-p1 { width: 6px; height: 6px; top: 20%; left: 15%; animation-delay: 0s; }
+.cf-p2 { width: 4px; height: 4px; top: 35%; right: 20%; animation-delay: 1.5s; }
+.cf-p3 { width: 8px; height: 8px; top: 60%; left: 70%; animation-delay: 3s; background: rgba(255,208,0,.4); }
 
 @keyframes cf-float {
-  0% {
-    opacity: 0;
-    transform: translateY(0) scale(0.5);
-  }
-  20% {
-    opacity: 1;
-  }
-  80% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-80px) scale(1);
-  }
+  0%   { opacity: 0; transform: translateY(0) scale(.5); }
+  20%  { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-80px) scale(1); }
 }
 
-/* ─── WRAP ──────────────────────────────────────────── */
-.cf-wrap {
-  max-width: 1100px;
-  margin: 0 auto;
+/* ─── LAYOUT ─────────────────────────────────────────────────────── */
+.cf-wrap   { max-width: 1100px; margin: 0 auto; }
+.cf-center { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 20px; text-align: center; }
+
+/* ─── ANIMAÇÕES BASE ─────────────────────────────────────────────── */
+@keyframes cf-fade-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.cf-center {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 60vh;
-  gap: 20px;
-  text-align: center;
+@keyframes cf-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
-.cf-not-found {
-  color: #555;
-  font-size: 16px;
-}
-
-/* ─── HERO ──────────────────────────────────────────── */
+/* ─── HERO ───────────────────────────────────────────────────────── */
 .cf-hero {
   display: flex;
   flex-direction: column;
@@ -128,84 +98,49 @@
   animation: cf-fade-up 0.6s ease both;
 }
 
-@keyframes cf-fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(24px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
+/* Anel animado */
 .cf-check-ring {
   position: relative;
-  width: 100px;
-  height: 100px;
+  width: 100px; height: 100px;
   margin-bottom: 28px;
 }
 
-.cf-check-ring::before {
-  content: "";
-  position: absolute;
-  inset: -8px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 208, 0, 0.2);
-  animation: cf-ring-pulse 2s ease-in-out infinite;
-}
-
+.cf-check-ring::before,
 .cf-check-ring::after {
   content: "";
   position: absolute;
-  inset: -16px;
   border-radius: 50%;
-  border: 1px solid rgba(255, 208, 0, 0.08);
-  animation: cf-ring-pulse 2s ease-in-out infinite 0.4s;
+  border: solid rgba(255,208,0,.2);
+  animation: cf-ring-pulse 2s ease-in-out infinite;
 }
+.cf-check-ring::before { inset: -8px;  border-width: 2px; }
+.cf-check-ring::after  { inset: -16px; border-width: 1px; border-color: rgba(255,208,0,.08); animation-delay: 0.4s; }
 
 @keyframes cf-ring-pulse {
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.06);
-    opacity: 0.6;
-  }
+  0%, 100% { transform: scale(1);    opacity: 1; }
+  50%       { transform: scale(1.06); opacity: .6; }
 }
 
+/* Círculo do check */
 .cf-check-circle {
-  width: 100px;
-  height: 100px;
+  width: 100px; height: 100px;
   border-radius: 50%;
-  background: #ffd000;
+  background: var(--c-accent);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 40px rgba(255, 208, 0, 0.35);
-  animation: cf-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+  box-shadow: 0 0 40px rgba(255,208,0,.35);
+  animation: cf-pop 0.5s cubic-bezier(.175,.885,.32,1.275) both;
 }
 
 @keyframes cf-pop {
-  from {
-    transform: scale(0);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
+  from { transform: scale(0); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
 }
 
-.cf-checkmark {
-  width: 52px;
-  height: 52px;
-}
-.cf-checkmark circle {
-  stroke: none;
-}
+/* SVG Checkmark */
+.cf-checkmark { width: 52px; height: 52px; }
+.cf-checkmark circle { stroke: none; }
 .cf-checkmark path {
   stroke: #000;
   stroke-width: 4;
@@ -216,27 +151,23 @@
   animation: cf-draw-check 0.5s ease 0.4s forwards;
 }
 
-@keyframes cf-draw-check {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
+@keyframes cf-draw-check { to { stroke-dashoffset: 0; } }
 
+/* Texto do hero */
 .cf-tag {
   font-size: 10px;
   letter-spacing: 4px;
   text-transform: uppercase;
-  color: #ffd000;
+  color: var(--c-accent);
   font-weight: 700;
   margin-bottom: 10px;
   animation: cf-fade-up 0.5s ease 0.2s both;
 }
 
 .cf-title {
-  font-family: "Plus Jakarta Sans", sans-serif;
+  font-family: var(--font-display);
   font-size: 42px;
   font-weight: 800;
-  color: #fff;
   letter-spacing: -1px;
   margin-bottom: 10px;
   animation: cf-fade-up 0.5s ease 0.3s both;
@@ -250,6 +181,7 @@
   animation: cf-fade-up 0.5s ease 0.4s both;
 }
 
+/* ID do pedido */
 .cf-order-id {
   display: flex;
   flex-direction: column;
@@ -257,7 +189,7 @@
   gap: 4px;
   margin-top: 28px;
   padding: 16px 32px;
-  background: #111;
+  background: var(--c-surface);
   border: 1px solid #222;
   border-radius: 14px;
   animation: cf-fade-up 0.5s ease 0.5s both;
@@ -267,25 +199,23 @@
   font-size: 10px;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: #555;
+  color: var(--c-text-dim);
   font-weight: 600;
 }
 
 .cf-order-id-value {
-  font-family: "Plus Jakarta Sans", sans-serif;
+  font-family: var(--font-display);
   font-size: 22px;
   font-weight: 800;
-  color: #ffd000;
+  color: var(--c-accent);
   letter-spacing: 2px;
 }
 
-/* ═══════════════════════════════════════════════════
-   TRACKER CARD
-═══════════════════════════════════════════════════ */
+/* ─── TRACKER CARD ───────────────────────────────────────────────── */
 .cf-tracker-card {
-  background: #111;
-  border: 1px solid #1e1e1e;
-  border-radius: 24px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-2xl);
   padding: 32px;
   margin-bottom: 28px;
   animation: cf-fade-up 0.5s ease 0.55s both;
@@ -296,16 +226,10 @@
 .cf-tracker-card::before {
   content: "";
   position: absolute;
-  top: -60px;
-  left: 50%;
+  top: -60px; left: 50%;
   transform: translateX(-50%);
-  width: 300px;
-  height: 120px;
-  background: radial-gradient(
-    ellipse,
-    rgba(255, 208, 0, 0.06) 0%,
-    transparent 70%
-  );
+  width: 300px; height: 120px;
+  background: radial-gradient(ellipse, rgba(255,208,0,.06) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -322,201 +246,27 @@
   font-size: 10px;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: #ffd000;
+  color: var(--c-accent);
   font-weight: 700;
 }
 
+/* ─── STATUS BADGE ───────────────────────────────────────────────── */
 .cf-status-badge {
   font-size: 12px;
   font-weight: 700;
   padding: 6px 14px;
   border-radius: 20px;
-  letter-spacing: 0.3px;
-  transition: all 0.4s ease;
+  letter-spacing: .3px;
+  transition: all var(--t-slow) ease;
 }
 
-.cf-status-pending {
-  background: rgba(255, 208, 0, 0.1);
-  color: #ffd000;
-  border: 1px solid rgba(255, 208, 0, 0.25);
-}
-.cf-status-preparing {
-  background: rgba(255, 140, 0, 0.1);
-  color: #ff8c00;
-  border: 1px solid rgba(255, 140, 0, 0.25);
-}
-.cf-status-on_the_way {
-  background: rgba(80, 200, 120, 0.1);
-  color: #50c878;
-  border: 1px solid rgba(80, 200, 120, 0.25);
-}
-.cf-status-delivered {
-  background: rgba(255, 208, 0, 0.15);
-  color: #ffd000;
-  border: 1px solid rgba(255, 208, 0, 0.3);
-}
+/* Variantes por status — padrão compartilhado */
+.cf-status-pending    { background: rgba(255,208,0,.1);  color: var(--c-accent); border: 1px solid rgba(255,208,0,.25); }
+.cf-status-preparing  { background: rgba(255,140,0,.1);  color: var(--c-orange); border: 1px solid rgba(255,140,0,.25); }
+.cf-status-on_the_way { background: rgba(80,200,120,.1); color: var(--c-green);  border: 1px solid rgba(80,200,120,.25); }
+.cf-status-delivered  { background: rgba(255,208,0,.15); color: var(--c-accent); border: 1px solid rgba(255,208,0,.3); }
 
-/* ─── BARRA DE PROGRESSO ────────────────────────── */
-.cf-progress-track {
-  width: 100%;
-  height: 4px;
-  background: #1e1e1e;
-  border-radius: 99px;
-  margin-bottom: 32px;
-  overflow: hidden;
-}
-
-.cf-progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #ffd000, #ffe566);
-  border-radius: 99px;
-  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 0 8px rgba(255, 208, 0, 0.4);
-}
-
-/* ─── STEPS ─────────────────────────────────────── */
-.cf-steps {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-}
-
-.cf-step {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 12px;
-  padding: 20px 12px;
-  border-radius: 16px;
-  border: 1px solid transparent;
-  transition: all 0.4s ease;
-  position: relative;
-}
-
-.cf-step-done {
-  background: rgba(255, 208, 0, 0.04);
-  border-color: rgba(255, 208, 0, 0.1);
-}
-.cf-step-active {
-  background: rgba(255, 208, 0, 0.08);
-  border-color: rgba(255, 208, 0, 0.3);
-  box-shadow: 0 0 24px rgba(255, 208, 0, 0.08);
-}
-.cf-step-pending {
-  background: transparent;
-  border-color: #1a1a1a;
-  opacity: 0.4;
-}
-
-.cf-step-entering {
-  animation: cf-step-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
-}
-
-@keyframes cf-step-pop {
-  0% {
-    transform: scale(0.9);
-    opacity: 0.5;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.cf-step-icon-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.cf-step-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-  transition: all 0.4s ease;
-}
-
-.cf-step-done .cf-step-icon {
-  background: #ffd000;
-  color: #000;
-  font-size: 18px;
-  font-weight: 900;
-  box-shadow: 0 4px 16px rgba(255, 208, 0, 0.3);
-}
-.cf-step-active .cf-step-icon {
-  background: rgba(255, 208, 0, 0.15);
-  border: 2px solid #ffd000;
-  box-shadow: 0 0 20px rgba(255, 208, 0, 0.2);
-}
-.cf-step-pending .cf-step-icon {
-  background: #181818;
-  border: 1px solid #252525;
-  filter: grayscale(1);
-}
-
-.cf-step-pulse {
-  position: absolute;
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 208, 0, 0.4);
-  animation: cf-pulse-ring 1.8s ease-out infinite;
-}
-
-@keyframes cf-pulse-ring {
-  0% {
-    transform: scale(1);
-    opacity: 0.8;
-  }
-  100% {
-    transform: scale(1.7);
-    opacity: 0;
-  }
-}
-
-.cf-step-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.cf-step-title {
-  font-size: 12px;
-  font-weight: 700;
-  color: #ddd;
-  line-height: 1.3;
-  transition: color 0.3s;
-}
-.cf-step-done .cf-step-title {
-  color: #ffd000;
-}
-.cf-step-active .cf-step-title {
-  color: #fff;
-}
-.cf-step-pending .cf-step-title {
-  color: #333;
-}
-
-.cf-step-desc {
-  font-size: 10px;
-  color: #555;
-  line-height: 1.4;
-  transition: color 0.3s;
-}
-.cf-step-active .cf-step-desc {
-  color: #888;
-}
-.cf-step-pending .cf-step-desc {
-  color: #2a2a2a;
-}
-
-/* ─── MENSAGEM DE STATUS ────────────────────────── */
+/* Mensagem de status (mesmo padrão de cor) */
 .cf-status-msg {
   display: flex;
   align-items: center;
@@ -528,36 +278,126 @@
   transition: all 0.5s ease;
   animation: cf-fade-up 0.4s ease both;
 }
+.cf-status-msg-pending    { background: rgba(255,208,0,.05);  border-color: rgba(255,208,0,.15);  }
+.cf-status-msg-preparing  { background: rgba(255,140,0,.05);  border-color: rgba(255,140,0,.15);  }
+.cf-status-msg-on_the_way { background: rgba(80,200,120,.05); border-color: rgba(80,200,120,.15); }
+.cf-status-msg-delivered  { background: rgba(255,208,0,.08);  border-color: rgba(255,208,0,.2);   }
 
-.cf-status-msg-pending {
-  background: rgba(255, 208, 0, 0.05);
-  border-color: rgba(255, 208, 0, 0.15);
-}
-.cf-status-msg-preparing {
-  background: rgba(255, 140, 0, 0.05);
-  border-color: rgba(255, 140, 0, 0.15);
-}
-.cf-status-msg-on_the_way {
-  background: rgba(80, 200, 120, 0.05);
-  border-color: rgba(80, 200, 120, 0.15);
-}
-.cf-status-msg-delivered {
-  background: rgba(255, 208, 0, 0.08);
-  border-color: rgba(255, 208, 0, 0.2);
+.cf-status-msg-icon { font-size: 22px; flex-shrink: 0; }
+.cf-status-msg-text { font-size: 14px; font-weight: 500; color: #bbb; line-height: 1.5; }
+
+/* ─── BARRA DE PROGRESSO ─────────────────────────────────────────── */
+.cf-progress-track {
+  width: 100%; height: 4px;
+  background: var(--c-border);
+  border-radius: 99px;
+  margin-bottom: 32px;
+  overflow: hidden;
 }
 
-.cf-status-msg-icon {
+.cf-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--c-accent), var(--c-accent-2));
+  border-radius: 99px;
+  transition: width 0.8s cubic-bezier(.4,0,.2,1);
+  box-shadow: 0 0 8px rgba(255,208,0,.4);
+}
+
+/* ─── STEPS ──────────────────────────────────────────────────────── */
+.cf-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+
+.cf-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  padding: 20px 12px;
+  border-radius: var(--r-lg);
+  border: 1px solid transparent;
+  transition: all var(--t-slow) ease;
+  position: relative;
+}
+
+.cf-step-done    { background: rgba(255,208,0,.04);  border-color: rgba(255,208,0,.1); }
+.cf-step-active  { background: rgba(255,208,0,.08);  border-color: rgba(255,208,0,.3); box-shadow: 0 0 24px rgba(255,208,0,.08); }
+.cf-step-pending { background: transparent; border-color: #1a1a1a; opacity: .4; }
+
+@keyframes cf-step-pop {
+  0%   { transform: scale(.9); opacity: .5; }
+  100% { transform: scale(1);  opacity: 1;  }
+}
+.cf-step-entering { animation: cf-step-pop 0.5s cubic-bezier(.175,.885,.32,1.275) both; }
+
+/* Ícone do step */
+.cf-step-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cf-step-icon {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 22px;
-  flex-shrink: 0;
-}
-.cf-status-msg-text {
-  font-size: 14px;
-  font-weight: 500;
-  color: #bbb;
-  line-height: 1.5;
+  transition: all var(--t-slow) ease;
 }
 
-/* ─── LOADING ───────────────────────────────────── */
+.cf-step-done    .cf-step-icon { background: var(--c-accent); color: #000; font-size: 18px; font-weight: 900; box-shadow: 0 4px 16px rgba(255,208,0,.3); }
+.cf-step-active  .cf-step-icon { background: rgba(255,208,0,.15); border: 2px solid var(--c-accent); box-shadow: 0 0 20px rgba(255,208,0,.2); }
+.cf-step-pending .cf-step-icon { background: #181818; border: 1px solid #252525; filter: grayscale(1); }
+
+/* Pulso do step ativo */
+.cf-step-pulse {
+  position: absolute;
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,208,0,.4);
+  animation: cf-pulse-ring 1.8s ease-out infinite;
+}
+
+@keyframes cf-pulse-ring {
+  0%   { transform: scale(1);   opacity: .8; }
+  100% { transform: scale(1.7); opacity: 0;  }
+}
+
+/* Textos do step */
+.cf-step-info { display: flex; flex-direction: column; gap: 4px; }
+
+.cf-step-title { font-size: 12px; font-weight: 700; color: #ddd; line-height: 1.3; transition: color 0.3s; }
+.cf-step-done    .cf-step-title { color: var(--c-accent); }
+.cf-step-active  .cf-step-title { color: var(--c-text); }
+.cf-step-pending .cf-step-title { color: #333; }
+
+.cf-step-desc { font-size: 10px; color: var(--c-text-dim); line-height: 1.4; transition: color 0.3s; }
+.cf-step-active  .cf-step-desc { color: var(--c-text-muted); }
+.cf-step-pending .cf-step-desc { color: #2a2a2a; }
+
+/* ─── TRACKER RETIRADA ───────────────────────────────────────────── */
+.cf-tracker-card--pickup { text-align: center; }
+
+.cf-pickup-body  { padding: 20px 0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.cf-pickup-icon  { font-size: 48px; margin-bottom: 8px; }
+.cf-pickup-title { font-size: 18px; font-weight: 700; color: var(--c-accent); }
+.cf-pickup-desc  { font-size: 14px; color: var(--c-text-muted); }
+
+.cf-pickup-address {
+  margin-top: 8px;
+  padding: 12px 20px;
+  background: rgba(255,208,0,.1);
+  border: 1px solid rgba(255,208,0,.2);
+  border-radius: var(--r-md);
+  text-align: center;
+}
+.cf-pickup-address-label  { font-size: 12px; color: var(--c-accent); margin-bottom: 4px; font-weight: 600; letter-spacing: 1px; }
+.cf-pickup-address-street { font-size: 14px; color: #ddd; }
+.cf-pickup-address-city   { font-size: 12px; color: #666; margin-top: 2px; }
+
+/* ─── LOADING ────────────────────────────────────────────────────── */
 .cf-tracker-loading {
   display: flex;
   flex-direction: column;
@@ -565,55 +405,34 @@
   gap: 16px;
   padding: 32px 0;
 }
+.cf-tracker-loading p { font-size: 13px; color: var(--c-text-dim); }
 
 .cf-loading-bar {
-  width: 100%;
-  height: 4px;
-  background: #1e1e1e;
+  width: 100%; height: 4px;
+  background: var(--c-border);
   border-radius: 99px;
   overflow: hidden;
   position: relative;
 }
-
 .cf-loading-bar::after {
   content: "";
   position: absolute;
-  left: -40%;
-  width: 40%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, #ffd000, transparent);
+  left: -40%; width: 40%; height: 100%;
+  background: linear-gradient(90deg, transparent, var(--c-accent), transparent);
   animation: cf-shimmer 1.2s ease-in-out infinite;
 }
 
-@keyframes cf-shimmer {
-  to {
-    left: 140%;
-  }
-}
+@keyframes cf-shimmer { to { left: 140%; } }
 
-.cf-tracker-loading p {
-  font-size: 13px;
-  color: #555;
-}
+/* ─── GRID ───────────────────────────────────────────────────────── */
+.cf-grid { display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start; }
+.cf-col  { display: flex; flex-direction: column; gap: 20px; }
 
-/* ─── GRID ──────────────────────────────────────── */
-.cf-grid {
-  display: grid;
-  grid-template-columns: 1fr 340px;
-  gap: 24px;
-  align-items: start;
-}
-.cf-col {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* ─── CARD ──────────────────────────────────────── */
+/* ─── CARD ───────────────────────────────────────────────────────── */
 .cf-card {
-  background: #111;
-  border: 1px solid #1e1e1e;
-  border-radius: 20px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-xl);
   padding: 28px;
   animation: cf-fade-up 0.5s ease 0.6s both;
 }
@@ -622,16 +441,13 @@
   font-size: 10px;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: #ffd000;
+  color: var(--c-accent);
   font-weight: 700;
   margin-bottom: 20px;
 }
 
-/* ─── ITENS ─────────────────────────────────────── */
-.cf-items {
-  display: flex;
-  flex-direction: column;
-}
+/* ─── ITENS ──────────────────────────────────────────────────────── */
+.cf-items { display: flex; flex-direction: column; }
 
 .cf-item {
   display: flex;
@@ -640,13 +456,10 @@
   padding: 12px 0;
   border-bottom: 1px solid #181818;
 }
-.cf-item:last-child {
-  border-bottom: none;
-}
+.cf-item:last-child { border-bottom: none; }
 
 .cf-item-img {
-  width: 38px;
-  height: 38px;
+  width: 38px; height: 38px;
   border-radius: 10px;
   background: #181818;
   overflow: hidden;
@@ -656,39 +469,12 @@
   font-size: 18px;
   flex-shrink: 0;
 }
-.cf-item-img img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+.cf-item-img img { width: 100%; height: 100%; object-fit: cover; }
 
-.cf-item-info {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.cf-item-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: #ddd;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.cf-item-qty {
-  font-size: 12px;
-  color: #666;
-}
-.cf-item-price {
-  font-size: 15px;
-  font-weight: 700;
-  color: #fff;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
+.cf-item-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.cf-item-name  { font-size: 14px; font-weight: 500; color: #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cf-item-qty   { font-size: 12px; color: #666; }
+.cf-item-price { font-size: 15px; font-weight: 700; color: var(--c-text); white-space: nowrap; flex-shrink: 0; }
 
 .cf-total-row {
   display: flex;
@@ -702,206 +488,117 @@
   text-transform: uppercase;
   letter-spacing: 1px;
 }
+.cf-total-value { font-family: var(--font-display); font-size: 24px; font-weight: 800; color: var(--c-accent); }
 
-.cf-total-value {
-  font-family: "Plus Jakarta Sans", sans-serif;
-  font-size: 24px;
-  font-weight: 800;
-  color: #ffd000;
-}
+/* ─── ENDEREÇO ───────────────────────────────────────────────────── */
+.cf-address { display: flex; flex-direction: column; gap: 6px; }
+.cf-address p { font-size: 14px; color: var(--c-text-muted); line-height: 1.5; }
 
-/* ─── ENDEREÇO ──────────────────────────────────── */
-.cf-address {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.cf-address p {
-  font-size: 14px;
-  color: #888;
-  line-height: 1.5;
-}
-.cf-address-name {
-  font-size: 15px !important;
-  font-weight: 600 !important;
-  color: #ddd !important;
-}
-.cf-address-phone {
-  color: #666 !important;
-  font-size: 13px !important;
-  margin-top: 4px;
-}
+.cf-address-name  { font-size: 15px !important; font-weight: 600 !important; color: #ddd !important; }
+.cf-address-phone { color: #666 !important; font-size: 13px !important; margin-top: 4px; }
 
-/* ─── PAGAMENTO ─────────────────────────────────── */
-.cf-card-payment {
-  animation-delay: 0.65s;
-}
+/* ─── PAGAMENTO ──────────────────────────────────────────────────── */
+.cf-card-payment { animation-delay: 0.65s; }
 
 .cf-payment {
   display: flex;
   align-items: center;
   gap: 14px;
   padding: 16px 20px;
-  background: rgba(255, 208, 0, 0.05);
-  border: 1px solid rgba(255, 208, 0, 0.15);
-  border-radius: 12px;
+  background: rgba(255,208,0,.05);
+  border: 1px solid rgba(255,208,0,.15);
+  border-radius: var(--r-md);
 }
+.cf-payment-icon  { font-size: 26px; }
+.cf-payment-label { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--c-accent); }
 
-.cf-payment-icon {
-  font-size: 26px;
-}
-.cf-payment-label {
-  font-family: "Plus Jakarta Sans", sans-serif;
-  font-size: 18px;
-  font-weight: 700;
-  color: #ffd000;
-}
-
-/* ─── BOTÃO HOME ────────────────────────────────── */
-.cf-btn-home {
-  width: 100%;
-  padding: 16px;
-  background: #ffd000;
-  color: #000;
-  border: none;
-  border-radius: 12px;
-  font-family: "Plus Jakarta Sans", sans-serif;
-  font-size: 15px;
-  font-weight: 800;
-  cursor: pointer;
-  letter-spacing: 0.5px;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  animation: cf-fade-up 0.5s ease 0.8s both;
-}
-
-.cf-btn-home:hover {
-  background: #ffe033;
-  transform: translateY(-2px);
-  box-shadow: 0 10px 28px rgba(255, 208, 0, 0.25);
-}
-.cf-btn-home:active {
-  transform: translateY(0);
-}
-
-/* ─── BOTÃO CANCELAR ────────────────────────────── */
+/* ─── BOTÕES ─────────────────────────────────────────────────────── */
+/* Base compartilhada */
+.cf-btn-home,
 .cf-btn-cancel {
   width: 100%;
   padding: 14px;
-  background: transparent;
-  color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: 12px;
-  font-family: "Plus Jakarta Sans", sans-serif;
+  border-radius: var(--r-md);
+  font-family: var(--font-display);
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
-  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  transition: all var(--t);
 }
 
-.cf-btn-cancel:hover {
-  background: rgba(239, 68, 68, 0.08);
-  border-color: #ef4444;
-  transform: translateY(-1px);
+.cf-btn-home {
+  padding: 16px;
+  font-size: 15px;
+  background: var(--c-accent);
+  color: #000;
+  border: none;
+  animation: cf-fade-up 0.5s ease 0.8s both;
 }
+.cf-btn-home:hover  { background: var(--c-accent-2); transform: translateY(-2px); box-shadow: 0 10px 28px rgba(255,208,0,.25); }
+.cf-btn-home:active { transform: translateY(0); }
 
-.cf-btn-cancel:active {
-  transform: translateY(0);
+.cf-btn-cancel {
+  background: transparent;
+  color: var(--c-red);
+  border: 1px solid rgba(239,68,68,.3);
 }
+.cf-btn-cancel:hover  { background: rgba(239,68,68,.08); border-color: var(--c-red); transform: translateY(-1px); }
+.cf-btn-cancel:active { transform: translateY(0); }
 
-/* ─── AVISO NÃO PODE CANCELAR ───────────────────── */
+/* Info "não pode cancelar" */
 .cf-cancel-info {
   padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid #1e1e1e;
-  border-radius: 12px;
+  background: rgba(255,255,255,.03);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
   font-size: 12px;
-  color: #555;
+  color: var(--c-text-dim);
   text-align: center;
   line-height: 1.5;
 }
 
-/* ─── MODAL OVERLAY ─────────────────────────────── */
+/* ─── MODAL ──────────────────────────────────────────────────────── */
 .cf-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(0,0,0,.75);
   backdrop-filter: blur(4px);
   z-index: 200;
-  animation: cf-fade-in 0.2s ease;
+  animation: cf-fade-in var(--t) ease;
 }
 
-@keyframes cf-fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* ─── MODAL ─────────────────────────────────────── */
 .cf-modal {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
   z-index: 201;
-  background: #111;
-  border: 1px solid #2a2a2a;
-  border-radius: 20px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-2);
+  border-radius: var(--r-xl);
   padding: 36px 32px;
   width: 90%;
   max-width: 420px;
   text-align: center;
-  animation: cf-modal-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+  animation: cf-modal-pop 0.3s cubic-bezier(.175,.885,.32,1.275) both;
 }
 
 @keyframes cf-modal-pop {
-  from {
-    transform: translate(-50%, -50%) scale(0.9);
-    opacity: 0;
-  }
-  to {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 1;
-  }
+  from { transform: translate(-50%,-50%) scale(.9); opacity: 0; }
+  to   { transform: translate(-50%,-50%) scale(1);  opacity: 1; }
 }
 
-.cf-modal-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-}
-
-.cf-modal-title {
-  font-family: "Plus Jakarta Sans", sans-serif;
-  font-size: 20px;
-  font-weight: 800;
-  color: #fff;
-  margin-bottom: 10px;
-}
-
-.cf-modal-desc {
-  font-size: 14px;
-  color: #888;
-  line-height: 1.6;
-  margin-bottom: 24px;
-}
-
-.cf-modal-desc strong {
-  color: #ffd000;
-}
+.cf-modal-icon  { font-size: 48px; margin-bottom: 16px; }
+.cf-modal-title { font-family: var(--font-display); font-size: 20px; font-weight: 800; margin-bottom: 10px; }
+.cf-modal-desc  { font-size: 14px; color: var(--c-text-muted); line-height: 1.6; margin-bottom: 24px; }
+.cf-modal-desc strong { color: var(--c-accent); }
 
 .cf-modal-error {
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: rgba(239,68,68,.08);
+  border: 1px solid rgba(239,68,68,.25);
   border-radius: 10px;
   padding: 10px 14px;
   font-size: 13px;
@@ -909,127 +606,66 @@
   margin-bottom: 16px;
 }
 
-.cf-modal-actions {
-  display: flex;
-  gap: 12px;
-}
+.cf-modal-actions { display: flex; gap: 12px; }
 
-.cf-modal-btn-cancel {
-  flex: 1;
-  padding: 14px;
-  background: transparent;
-  border: 1px solid #2a2a2a;
-  border-radius: 12px;
-  color: #888;
-  font-family: "Plus Jakarta Sans", sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.cf-modal-btn-cancel:hover:not(:disabled) {
-  border-color: #444;
-  color: #fff;
-}
-
+/* Botões do modal — base compartilhada */
+.cf-modal-btn-cancel,
 .cf-modal-btn-confirm {
   flex: 1;
   padding: 14px;
-  background: #ef4444;
-  border: none;
-  border-radius: 12px;
-  color: #fff;
-  font-family: "Plus Jakarta Sans", sans-serif;
+  border-radius: var(--r-md);
+  font-family: var(--font-display);
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--t);
+  border: none;
 }
 
+.cf-modal-btn-cancel {
+  background: transparent;
+  border: 1px solid var(--c-border-2);
+  color: var(--c-text-muted);
+}
+.cf-modal-btn-cancel:hover:not(:disabled) { border-color: #444; color: var(--c-text); }
+
+.cf-modal-btn-confirm { background: var(--c-red); color: #fff; }
 .cf-modal-btn-confirm:hover:not(:disabled) {
-  background: #dc2626;
+  background: var(--c-red-dark);
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+  box-shadow: 0 6px 20px rgba(239,68,68,.3);
 }
 
 .cf-modal-btn-cancel:disabled,
-.cf-modal-btn-confirm:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
+.cf-modal-btn-confirm:disabled { opacity: .5; cursor: not-allowed; transform: none; }
 
-/* ══════════════════════════════════════════
-   MOBILE (≤ 768px)
-══════════════════════════════════════════ */
+/* ══════════════════════════════ RESPONSIVO ══════════════════════════════ */
 @media (max-width: 768px) {
-  .cf-root {
-    padding: 32px 16px 60px;
-  }
-  .cf-hero {
-    margin-bottom: 28px;
-  }
-  .cf-title {
-    font-size: 30px;
-  }
-  .cf-tracker-card {
-    padding: 20px 16px;
-    border-radius: 18px;
-  }
+  .cf-root           { padding: 32px 16px 60px; }
+  .cf-hero           { margin-bottom: 28px; }
+  .cf-title          { font-size: 30px; }
+  .cf-tracker-card   { padding: 20px 16px; border-radius: 18px; }
+
   .cf-steps {
     grid-template-columns: 1fr 1fr;
     gap: 10px;
   }
-  .cf-step {
-    padding: 16px 10px;
-  }
-  .cf-step-icon {
-    width: 44px;
-    height: 44px;
-    font-size: 20px;
-  }
-  .cf-step-pulse {
-    width: 44px;
-    height: 44px;
-  }
-  .cf-step-title {
-    font-size: 11px;
-  }
-  .cf-step-desc {
-    font-size: 9px;
-  }
-  .cf-status-msg {
-    padding: 14px 16px;
-  }
-  .cf-status-msg-text {
-    font-size: 13px;
-  }
-  .cf-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-  .cf-card {
-    padding: 20px 16px;
-    border-radius: 16px;
-  }
-  .cf-order-id {
-    padding: 12px 24px;
-  }
-  .cf-order-id-value {
-    font-size: 18px;
-  }
+  .cf-step           { padding: 16px 10px; }
+  .cf-step-icon      { width: 44px; height: 44px; font-size: 20px; }
+  .cf-step-pulse     { width: 44px; height: 44px; }
+  .cf-step-title     { font-size: 11px; }
+  .cf-step-desc      { font-size: 9px; }
+  .cf-status-msg     { padding: 14px 16px; }
+  .cf-status-msg-text { font-size: 13px; }
 
-  .cf-modal {
-    padding: 28px 20px;
-  }
-  .cf-modal-actions {
-    flex-direction: column;
-  }
+  .cf-grid           { grid-template-columns: 1fr; gap: 16px; }
+  .cf-card           { padding: 20px 16px; border-radius: var(--r-lg); }
+  .cf-order-id       { padding: 12px 24px; }
+  .cf-order-id-value { font-size: 18px; }
+  .cf-modal          { padding: 28px 20px; }
+  .cf-modal-actions  { flex-direction: column; }
 }
 
 @media (max-width: 400px) {
-  .cf-steps {
-    grid-template-columns: 1fr;
-  }
+  .cf-steps { grid-template-columns: 1fr; }
 }
