@@ -44,7 +44,7 @@ export default function ProductList({
     { id: "cerveja",      label: "Cervejas",      icon: "bi-cup-straw" },
     { id: "vinho",        label: "Vinhos",        icon: "bi-cup" },
     { id: "destilado",    label: "Destilados",    icon: "bi-droplet-fill" },
-    { id: "refrigerante", label: "Refrigerantes", icon: "bi-cup-hot-fill" },
+    { id: "refrigerante", label: "Refri / Sucos", icon: "bi bi-cup-straw" },
     { id: "energetico",   label: "Energéticos",   icon: "bi-lightning-charge-fill" },
     { id: "outros",       label: "Outros",        icon: "bi-bag" },
   ];

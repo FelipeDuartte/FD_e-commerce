@@ -32,7 +32,7 @@ export default function Header({
     { name: "Vinhos", icon: Wine, categoryId: "vinho" },
     { name: "Cervejas", icon: Beer, categoryId: "cerveja" },
     { name: "Destilados", icon: Droplets, categoryId: "destilado" },
-    { name: "Refrigerantes", icon: CupSoda, categoryId: "refrigerante" },
+    { name: "Refri / Sucos", icon: CupSoda, categoryId: "refrigerante" },
     { name: "Energéticos", icon: Zap, categoryId: "energetico" },
   ];
 
