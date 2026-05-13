@@ -1,274 +1,7 @@
-/* =====================================================
-   PRODUCTS SECTION
-===================================================== */
-#produtos {
-  background: #fff;
-}
+/* ─── SEÇÃO ──────────────────────────────────────────────────────── */
+#produtos { background: #fff; }
 
-/* =====================================================
-   FILTER CONTAINER
-===================================================== */
-.filter-container {
-  position: relative;
-  margin-bottom: 3rem;
-}
-
-/* Wrapper que cria o fade nas bordas sem interferir no scroll */
-.filter-scroll-wrapper {
-  position: relative;
-}
-
-/* Os fades ficam no WRAPPER, não dentro do scroll — nunca se movem */
-.filter-scroll-wrapper::before,
-.filter-scroll-wrapper::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 48px;
-  pointer-events: none;
-  z-index: 2;
-}
-
-.filter-scroll-wrapper::before {
-  left: 0;
-  background: linear-gradient(to right, #fff 20%, transparent 100%);
-}
-
-.filter-scroll-wrapper::after {
-  right: 0;
-  background: linear-gradient(to left, #fff 20%, transparent 100%);
-}
-
-/* A área de scroll em si — sem pseudo-elementos */
-.overflow-x-auto {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 4px 14px;
-  overflow-x: auto;
-  overflow-y: visible;
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-
-  /* Scrollbar fina e amarela */
-  scrollbar-width: thin;
-  scrollbar-color: #f5c518 transparent;
-}
-
-.overflow-x-auto::-webkit-scrollbar {
-  height: 3px;
-}
-
-.overflow-x-auto::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.overflow-x-auto::-webkit-scrollbar-thumb {
-  background: linear-gradient(90deg, #f5c518, #ffd700);
-  border-radius: 10px;
-}
-
-/* =====================================================
-   FILTER BUTTON
-===================================================== */
-.filter-btn {
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 10px 20px;
-  font-family: 'Montserrat', sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-  cursor: pointer;
-
-  color: #333;
-  background: #fff;
-  border: 1.5px solid rgba(0, 0, 0, 0.09);
-  border-radius: 50px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-
-  transition: color 0.25s ease,
-              background 0.25s ease,
-              border-color 0.25s ease,
-              transform 0.25s ease,
-              box-shadow 0.25s ease;
-
-  position: relative;
-  overflow: visible;
-}
-
-.filter-btn i {
-  font-size: 14px;
-  transition: transform 0.25s ease;
-}
-
-.filter-btn:hover {
-  color: #000;
-  background: #fffbea;
-  border-color: #f5c518;
-  box-shadow: 0 4px 12px rgba(245, 197, 24, 0.2);
-  transform: translateY(-2px);
-}
-
-.filter-btn:hover i {
-  transform: scale(1.2);
-}
-
-.filter-btn:active {
-  transform: translateY(0) scale(0.97);
-}
-
-.filter-btn.active {
-  background: #000;
-  color: #f5c518;
-  border-color: #000;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18),
-              0 0 0 3px rgba(245, 197, 24, 0.15);
-}
-
-.filter-btn.active i {
-  color: #f5c518;
-}
-
-/* =====================================================
-   BOTÃO VER MAIS - CORES DA LOJA (AMARELO/PRETO)
-===================================================== */
-
-.produtos-controle-btns {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
-  margin-top: 2.5rem;
-  padding-top: 0.75rem;
-}
-
-.btn-ver-mais {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 4px;
-  padding: 0.6rem 1.4rem;
-  font-size: 0.95rem;
-  font-weight: 500;
-  border-radius: 50px;
-  border: 2px solid #212529;
-  background-color: #212529;
-  color: #fff;
-  cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
-  white-space: normal;
-  text-align: center;
-}
- 
-.btn-ver-mais:hover {
-  background-color: #343a40;
-  border-color: #343a40;
-}
- 
-.btn-ver-mais .badge {
-  background-color: rgba(255, 255, 255, 0.2);
-  font-size: 0.78rem;
-  padding: 0.25em 0.6em;
-  border-radius: 50px;
-}
- 
-/* Botão Ver Menos */
-.btn-ver-menos {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.6rem 1.4rem;
-  font-size: 0.95rem;
-  font-weight: 500;
-  border-radius: 50px;
-  border: 2px solid #6c757d;
-  background-color: transparent;
-  color: #6c757d;
-  cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
-  white-space: nowrap;
-}
- 
-.btn-ver-menos:hover {
-  background-color: #6c757d;
-  color: #fff;
-}
- 
-/* =====================================================
-   BADGES DE PROMOÇÃO E ESTOQUE
-===================================================== */
-.badge-promo {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  background: #f5c518;
-  color: #000;
-  padding: 4px 8px;
-  border-radius: 50px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  z-index: 1;
-}
-
-.badge-estoque {
-  position: absolute;
-  bottom: 10px;
-  left: 10px;
-  background: #000;
-  color: #f5c518;
-  padding: 4px 8px;
-  border-radius: 50px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  z-index: 1;
-}
-
-.badge-estoque.baixo {
-  background: #dc2626;
-  color: #fff;
-}
-
-/* =====================================================
-   ANIMAÇÃO DOS CARDS
-===================================================== */
-.produto-card {
-  animation: fadeInUp 0.4s ease forwards;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Delay progressivo para os cards */
-.row-cols-2 .produto-card {
-  animation-delay: calc(var(--index, 0) * 0.05s);
-}
-
-/* =====================================================
-   EMPTY STATE
-===================================================== */
-.empty-state-icon {
-  font-size: 4rem;
-  color: #dee2e6;
-}
-
-/* =====================================================
-   TÍTULO DA SEÇÃO
-===================================================== */
+/* ─── TÍTULO ─────────────────────────────────────────────────────── */
 .section-title {
   font-size: 2rem;
   font-weight: 700;
@@ -280,62 +13,167 @@
 .section-title::after {
   content: '';
   position: absolute;
-  bottom: -10px;
-  left: 0;
-  width: 60px;
-  height: 3px;
+  bottom: -10px; left: 0;
+  width: 60px; height: 3px;
   background: #f5c518;
   border-radius: 2px;
 }
 
-/* =====================================================
-   RESPONSIVE FILTER & BUTTONS
-===================================================== */
+/* ─── FILTROS ────────────────────────────────────────────────────── */
+.filter-container  { position: relative; margin-bottom: 3rem; }
+.filter-scroll-wrapper { position: relative; }
 
-/* Mobile */
-@media (max-width: 576px) {
-  .filter-btn {
-    padding: 8px 16px;
-    font-size: 12px;
-    gap: 6px;
-  }
+/* Fades nas bordas */
+.filter-scroll-wrapper::before,
+.filter-scroll-wrapper::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 48px;
+  pointer-events: none;
+  z-index: 2;
+}
+.filter-scroll-wrapper::before { left: 0;  background: linear-gradient(to right, #fff 20%, transparent); }
+.filter-scroll-wrapper::after  { right: 0; background: linear-gradient(to left,  #fff 20%, transparent); }
 
-  .filter-btn i {
-    font-size: 13px;
-  }
+/* Área de scroll */
+.overflow-x-auto {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 4px 14px;
+  overflow-x: auto;
+  overflow-y: visible;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #f5c518 transparent;
+}
+.overflow-x-auto::-webkit-scrollbar        { height: 3px; }
+.overflow-x-auto::-webkit-scrollbar-track  { background: transparent; }
+.overflow-x-auto::-webkit-scrollbar-thumb  { background: linear-gradient(90deg, #f5c518, #ffd700); border-radius: 10px; }
 
-  /* Fades menores pra não esconder o primeiro/último botão */
-  .filter-scroll-wrapper::before,
-  .filter-scroll-wrapper::after {
-    width: 28px;
-  }
-
-  .overflow-x-auto {
-    gap: 7px;
-    padding: 8px 2px 12px;
-  }
-
-  /* Botão Ver Mais responsivo */
- .produtos-controle-btns {
-    flex-direction: column;
-    gap: 10px;
-  }
- 
-  .btn-ver-mais,
-  .btn-ver-menos {
-    width: 100%;
-    font-size: 0.9rem;
-    padding: 0.65rem 1rem;
-  }
-
-  .section-title {
-    font-size: 1.5rem;
-  }
+/* ─── BOTÃO DE FILTRO ────────────────────────────────────────────── */
+.filter-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 20px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  color: #333;
+  background: #fff;
+  border: 1.5px solid rgba(0,0,0,.09);
+  border-radius: 50px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.05);
+  transition: color .25s ease, background .25s ease, border-color .25s ease,
+              transform .25s ease, box-shadow .25s ease;
 }
 
-/* Tablet */
+.filter-btn i { font-size: 14px; transition: transform .25s ease; }
+
+.filter-btn:hover {
+  color: #000;
+  background: #fffbea;
+  border-color: #f5c518;
+  box-shadow: 0 4px 12px rgba(245,197,24,.2);
+  transform: translateY(-2px);
+}
+.filter-btn:hover i    { transform: scale(1.2); }
+.filter-btn:active     { transform: translateY(0) scale(.97); }
+
+.filter-btn.active {
+  background: #000;
+  color: #f5c518;
+  border-color: #000;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0,0,0,.18), 0 0 0 3px rgba(245,197,24,.15);
+}
+.filter-btn.active i { color: #f5c518; }
+
+/* ─── CONTROLES VER MAIS / VER MENOS ────────────────────────────── */
+.produtos-controle-btns {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 2.5rem;
+  padding-top: 0.75rem;
+}
+
+/* Base compartilhada */
+.btn-ver-mais,
+.btn-ver-menos {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem 1.4rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: background-color .2s ease, color .2s ease;
+  white-space: nowrap;
+}
+
+.btn-ver-mais {
+  flex-wrap: wrap;
+  gap: 4px;
+  border: 2px solid #212529;
+  background: #212529;
+  color: #fff;
+  text-align: center;
+}
+.btn-ver-mais:hover { background: #343a40; border-color: #343a40; }
+.btn-ver-mais .badge {
+  background: rgba(255,255,255,.2);
+  font-size: .78rem;
+  padding: .25em .6em;
+  border-radius: 50px;
+}
+
+.btn-ver-menos {
+  border: 2px solid #6c757d;
+  background: transparent;
+  color: #6c757d;
+}
+.btn-ver-menos:hover { background: #6c757d; color: #fff; }
+
+/* ─── EMPTY STATE ────────────────────────────────────────────────── */
+.empty-state-icon { font-size: 4rem; color: #dee2e6; }
+
+/* ─── ANIMAÇÃO DOS CARDS ─────────────────────────────────────────── */
+.produto-card { animation: fadeInUp .4s ease forwards; }
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.row-cols-2 .produto-card { animation-delay: calc(var(--index, 0) * 0.05s); }
+
+/* ─── RESPONSIVO ─────────────────────────────────────────────────── */
+@media (max-width: 576px) {
+  .section-title { font-size: 1.5rem; }
+
+  .filter-btn   { padding: 8px 16px; font-size: 12px; gap: 6px; }
+  .filter-btn i { font-size: 13px; }
+
+  .filter-scroll-wrapper::before,
+  .filter-scroll-wrapper::after { width: 28px; }
+
+  .overflow-x-auto { gap: 7px; padding: 8px 2px 12px; }
+
+  .produtos-controle-btns { flex-direction: column; gap: 10px; }
+  .btn-ver-mais,
+  .btn-ver-menos { width: 100%; font-size: .9rem; padding: .65rem 1rem; }
+}
+
 @media (min-width: 577px) and (max-width: 768px) {
-  .btn-ver-mais .badge {
-    display: inline-flex;
-  }
+  .btn-ver-mais .badge { display: inline-flex; }
 }
