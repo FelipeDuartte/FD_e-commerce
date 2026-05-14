@@ -79,6 +79,7 @@ export default function Cart({
   const [bairroSelecionado, setBairroSelecionado] = useState(null);
   const [isBairroOpen, setIsBairroOpen] = useState(false);
   const [horarioAviso, setHorarioAviso] = useState(null);
+  const [avisoEstoque, setAvisoEstoque] = useState(null);
   const dropdownRef = useRef(null);
 
   const subtotal = cartItems.reduce(
@@ -105,6 +106,16 @@ export default function Cart({
   const handleSelectBairro = (bairro) => {
     setBairroSelecionado(bairro);
     setIsBairroOpen(false);
+  };
+
+  const handleIncrementQuantity = (item) => {
+    if (item.quantity >= item.estoque) {
+      // Mostra aviso se atingiu o máximo de estoque
+      setAvisoEstoque(item.id);
+      setTimeout(() => setAvisoEstoque(null), 3000);
+      return;
+    }
+    updateQuantity(item.id, item.quantity + 1);
   };
 
   const handleCheckout = () => {
@@ -215,13 +226,21 @@ export default function Cart({
                       </button>
                       <span className="quantity-value">{item.quantity}</span>
                       <button
-                        onClick={() =>
-                          updateQuantity(item.id, item.quantity + 1)
-                        }
+                        onClick={() => handleIncrementQuantity(item)}
                         className="quantity-btn"
+                        title={
+                          item.quantity >= item.estoque
+                            ? `Máximo em estoque: ${item.estoque}`
+                            : ""
+                        }
                       >
                         <Plus size={16} />
                       </button>
+                      {avisoEstoque === item.id && (
+                        <span className="estoque-aviso">
+                          ⚠ Limite de estoque atingido
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>

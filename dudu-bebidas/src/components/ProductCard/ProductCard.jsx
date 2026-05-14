@@ -10,13 +10,13 @@ const formatBRL = (value) => `R$ ${Number(value).toFixed(2)}`;
 export default function ProductCard({ produto, addToCart }) {
   const [isAdded, setIsAdded] = useState(false);
 
-  const hasPromo    = Boolean(produto.promocao);
+  const hasPromo = Boolean(produto.promocao);
   const hasOldPrice = hasPromo && Boolean(produto.precoAntigo);
-  const isLowStock  = produto.estoque > 0 && produto.estoque < 15;
+  const isLowStock = produto.estoque > 0 && produto.estoque < 15;
   const isOutOfStock = produto.estoque <= 0 || produto.isActive === false;
 
   const handleAddToCart = () => {
-    if (isAdded || isOutOfStock) return;
+    if (isAdded || isOutOfStock || produto.estoque <= 0) return;
     addToCart(produto);
     setIsAdded(true);
   };
@@ -31,16 +31,29 @@ export default function ProductCard({ produto, addToCart }) {
   const btnState = isOutOfStock ? "esgotado" : isAdded ? "added" : "default";
 
   const BTN_CONTENT = {
-    esgotado: <><X     size={16} strokeWidth={3} /> Esgotado</>,
-    added:    <><Check size={16} strokeWidth={3} /> Adicionado!</>,
-    default:  <><Plus  size={16} strokeWidth={3} /> Adicionar</>,
+    esgotado: (
+      <>
+        <X size={16} strokeWidth={3} /> Esgotado
+      </>
+    ),
+    added: (
+      <>
+        <Check size={16} strokeWidth={3} /> Adicionado!
+      </>
+    ),
+    default: (
+      <>
+        <Plus size={16} strokeWidth={3} /> Adicionar
+      </>
+    ),
   };
 
   return (
     <>
       <div className="col">
-        <div className={`produto-card${isOutOfStock ? " produto-card-esgotado" : ""}`}>
-
+        <div
+          className={`produto-card${isOutOfStock ? " produto-card-esgotado" : ""}`}
+        >
           {/* Imagem */}
           <div className="produto-img-container">
             <img
@@ -62,11 +75,13 @@ export default function ProductCard({ produto, addToCart }) {
                 <i className="bi bi-x-circle-fill me-1" />
                 Esgotado
               </span>
-            ) : isLowStock && (
-              <span className="badge-estoque baixo">
-                <i className="bi bi-exclamation-circle-fill me-1" />
-                Últimas unidades
-              </span>
+            ) : (
+              isLowStock && (
+                <span className="badge-estoque baixo">
+                  <i className="bi bi-exclamation-circle-fill me-1" />
+                  Últimas unidades
+                </span>
+              )
             )}
           </div>
 
@@ -76,15 +91,21 @@ export default function ProductCard({ produto, addToCart }) {
 
             {/* Preços */}
             <div className="produto-precos">
-              <span className={`preco-atual${hasPromo && hasOldPrice ? " preco-promo" : ""}`}>
+              <span
+                className={`preco-atual${hasPromo && hasOldPrice ? " preco-promo" : ""}`}
+              >
                 {formatBRL(produto.preco)}
               </span>
 
               {hasPromo && hasOldPrice && (
                 <div className="preco-linha-antiga">
-                  <span className="preco-antigo">{formatBRL(produto.precoAntigo)}</span>
+                  <span className="preco-antigo">
+                    {formatBRL(produto.precoAntigo)}
+                  </span>
                   {produto.desconto && (
-                    <span className="badge-desconto">-{produto.desconto}% OFF</span>
+                    <span className="badge-desconto">
+                      -{produto.desconto}% OFF
+                    </span>
                   )}
                 </div>
               )}

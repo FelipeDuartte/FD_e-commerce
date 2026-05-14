@@ -21,20 +21,29 @@ export function useCart() {
     setCartItems((prev) => {
       const exists = prev.find((item) => item.id === produto.id);
       if (exists) {
+        // Valida se não ultrapassa o estoque disponível
+        const novaQuantidade = Math.min(exists.quantity + 1, produto.estoque);
         return prev.map((item) =>
-          item.id === produto.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
+          item.id === produto.id ? { ...item, quantity: novaQuantidade } : item,
         );
       }
-      return [...prev, { ...produto, quantity: 1 }];
+      // Quando adiciona novo item, limita à quantidade em estoque
+      return [...prev, { ...produto, quantity: Math.min(1, produto.estoque) }];
     });
   };
 
   const updateQuantity = (id, quantity) => {
     if (quantity < 1) return;
     setCartItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, quantity } : item))
+      prev.map((item) => {
+        if (item.id === id) {
+          // Valida que não ultrapassa o estoque
+          const quantidadeMaxima = item.estoque || 999;
+          const novaQuantidade = Math.min(quantity, quantidadeMaxima);
+          return { ...item, quantity: novaQuantidade };
+        }
+        return item;
+      }),
     );
   };
 
@@ -49,8 +58,15 @@ export function useCart() {
 
   const cartCount = useMemo(
     () => cartItems.reduce((sum, item) => sum + item.quantity, 0),
-    [cartItems]
+    [cartItems],
   );
 
-  return { cartItems, cartCount, addToCart, updateQuantity, removeItem, clearCart };
+  return {
+    cartItems,
+    cartCount,
+    addToCart,
+    updateQuantity,
+    removeItem,
+    clearCart,
+  };
 }
