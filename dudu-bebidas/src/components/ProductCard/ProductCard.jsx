@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Plus, Check, X } from "lucide-react";
 import { imgProduto } from "../../utils/Cloudnary";
 import "./ProductCard.css";
+import { isStoreOpen } from "../../utils/storeHours";
 
 const RESET_TIME = 2000;
 
@@ -16,6 +17,10 @@ export default function ProductCard({ produto, addToCart }) {
   const isOutOfStock = produto.estoque <= 0 || produto.isActive === false;
 
   const handleAddToCart = () => {
+    if (!isStoreOpen()) {
+      alert("Loja fechada às segundas — não é possível comprar agora.");
+      return;
+    }
     if (isAdded || isOutOfStock || produto.estoque <= 0) return;
     addToCart(produto);
     setIsAdded(true);
@@ -28,7 +33,7 @@ export default function ProductCard({ produto, addToCart }) {
   }, [isAdded]);
 
   // Estado do botão
-  const btnState = isOutOfStock ? "esgotado" : isAdded ? "added" : "default";
+  const btnState = !isStoreOpen() ? "fechado" : isOutOfStock ? "esgotado" : isAdded ? "added" : "default";
 
   const BTN_CONTENT = {
     esgotado: (
@@ -39,6 +44,11 @@ export default function ProductCard({ produto, addToCart }) {
     added: (
       <>
         <Check size={16} strokeWidth={3} /> Adicionado!
+      </>
+    ),
+    fechado: (
+      <>
+        <X size={16} strokeWidth={3} /> Fechado (segunda)
       </>
     ),
     default: (
@@ -115,7 +125,8 @@ export default function ProductCard({ produto, addToCart }) {
             <button
               onClick={handleAddToCart}
               className={`btn-add-cart${isAdded ? " added" : ""}${isOutOfStock ? " esgotado" : ""}`}
-              disabled={isAdded || isOutOfStock}
+              disabled={isAdded || isOutOfStock || !isStoreOpen()}
+              title={!isStoreOpen() ? "Loja fechada às segundas" : undefined}
             >
               {BTN_CONTENT[btnState]}
             </button>

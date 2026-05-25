@@ -13,6 +13,7 @@ import {
   Store,
 } from "lucide-react";
 import "./Cart.css";
+import { isStoreOpen } from "../../utils/storeHours";
 
 // ── Opções de entrega / retirada ───────────────────────
 const BAIRROS = [
@@ -119,6 +120,10 @@ export default function Cart({
   };
 
   const handleCheckout = () => {
+    if (!isStoreOpen()) {
+      setHorarioAviso("Hoje é segunda — a loja está fechada. Não é possível finalizar pedidos.");
+      return;
+    }
     if (cartItems.length === 0) return;
     if (!bairroSelecionado) {
       alert("Por favor, selecione seu bairro ou retirada para continuar.");

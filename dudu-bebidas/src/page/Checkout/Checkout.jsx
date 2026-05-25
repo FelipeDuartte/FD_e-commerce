@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import "./Checkout.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import { saveOrder } from "../../supabase/saveOrder";
+import { isStoreOpen } from "../../utils/storeHours";
 
 const paymentOptions = [
   { value: "pix",  icon: "⚡", name: "PIX"      },
@@ -190,9 +191,20 @@ export default function Checkout({ user, clearCart }) {
                  :                    "Confirmar Pedido →";
 
   // ── Render ────────────────────────────────────────────
+  const closed = !isStoreOpen();
   return (
     <div className="co-root">
       <div className="co-wrap">
+
+        {closed && (
+          <div className="co-error-alert">
+            <div className="co-error-icon">⚠️</div>
+            <div className="co-error-content">
+              <div className="co-error-title">Loja fechada</div>
+              <div className="co-error-message">Hoje é segunda-feira — não é possível finalizar pedidos.</div>
+            </div>
+          </div>
+        )}
 
         {/* ── HEADER ── */}
         <div className="co-header">
@@ -447,7 +459,7 @@ export default function Checkout({ user, clearCart }) {
               </span>
             </div>
 
-            <button className="co-cta" onClick={handleConfirmOrder} disabled={isDisabled}>
+            <button className="co-cta" onClick={handleConfirmOrder} disabled={isDisabled || closed}>
               {ctaLabel}
             </button>
             <div className="co-secure">🔒 Pagamento 100% seguro</div>
@@ -457,7 +469,7 @@ export default function Checkout({ user, clearCart }) {
 
       {/* ── BOTÃO FIXO MOBILE ── */}
       <div className="co-cta-wrap">
-        <button className="co-cta" onClick={handleConfirmOrder} disabled={isDisabled}>
+        <button className="co-cta" onClick={handleConfirmOrder} disabled={isDisabled || closed}>
           {ctaLabel}
         </button>
         <div className="co-secure">🔒 Pagamento 100% seguro</div>

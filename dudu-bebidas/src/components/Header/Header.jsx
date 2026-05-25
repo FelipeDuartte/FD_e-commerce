@@ -12,6 +12,7 @@ import {
   LogOut,
 } from "lucide-react";
 import "./Header.css";
+import { isMonday } from "../../utils/storeHours";
 
 export default function Header({
   searchTerm,
@@ -56,6 +57,11 @@ export default function Header({
     <header
       className={`sticky-top navbar-custom ${scrolled ? "scrolled" : ""}`}
     >
+      {isMonday() && (
+        <div className="site-closed-banner">
+          Hoje é segunda — a loja está fechada. Não é possível finalizar compras hoje.
+        </div>
+      )}
       <nav className="navbar navbar-dark">
         {/* ── BARRA PRINCIPAL ── */}
         <div
