@@ -98,6 +98,15 @@ const formatBRL = (value) => `R$ ${Number(value).toFixed(2).replace(".", ",")}`;
 const calcDiscount = (oldPrice, newPrice) =>
   oldPrice > 0 ? Math.round((1 - newPrice / oldPrice) * 100) : null;
 
+// ── Helper para remover pedidos antigos entregues ─────
+const shouldRemoveOrder = (order) => {
+  if (order.status !== "delivered") return false;
+  const createdTime = new Date(order.created_at).getTime();
+  const now = Date.now();
+  const hoursPassed = (now - createdTime) / (1000 * 60 * 60);
+  return hoursPassed >= 24;
+};
+
 // ── Reducer métricas ──────────────────────────────────
 const metricsReducer = (_, { count, total }) => ({ count, total });
 
@@ -344,6 +353,7 @@ export default function Admin({ user, isAdmin }) {
       pageNum === 0 ? setLoading(true) : setLoadingMore(true);
       const from = pageNum * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
+      const boundary = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
       let query = supabase
         .from("orders")
@@ -355,7 +365,13 @@ export default function Admin({ user, isAdmin }) {
         .order("created_at", { ascending: false })
         .range(from, to);
 
-      if (filterStatus !== "all") query = query.eq("status", filterStatus);
+      if (filterStatus === "all") {
+        query = query.or(`status.not.eq.delivered,created_at.gte.${boundary}`);
+      } else if (filterStatus === "delivered") {
+        query = query.eq("status", "delivered").gte("created_at", boundary);
+      } else {
+        query = query.eq("status", filterStatus);
+      }
 
       const { data, error, count } = await query;
       if (!error) {
@@ -393,10 +409,9 @@ export default function Admin({ user, isAdmin }) {
       .on(
         "postgres_changes",
         { event: "DELETE", schema: "public", table: "orders" },
-        ({ old: deletedOrder }) => {
-          // Remove pedido cancelado da lista
-          setOrders((prev) => prev.filter((o) => o.id !== deletedOrder.id));
-          setTotalCount((prev) => Math.max(0, prev - 1));
+        () => {
+          // Recarrega a lista e as métricas para manter contagem consistente
+          fetchOrders(0, true);
           fetchTodayMetrics();
         },
       )
@@ -413,12 +428,36 @@ export default function Admin({ user, isAdmin }) {
     fetchOrders(0, true);
   }, [filterStatus]); // eslint-disable-line
 
+  // Verificar e remover pedidos antigos entregues (a cada 1 minuto)
+  useEffect(() => {
+    if (!isAdmin) return;
+    const interval = setInterval(() => {
+      setOrders((prev) => {
+        const updated = prev.filter((o) => !shouldRemoveOrder(o));
+        const removed = prev.length - updated.length;
+        if (removed > 0) {
+          setTotalCount((count) => Math.max(0, count - removed));
+        }
+        return updated;
+      });
+    }, 60000); // 1 minuto
+    return () => clearInterval(interval);
+  }, [isAdmin]);
+
   // ── Ações de pedidos ──────────────────────────────
   const updateOrderStatusLocally = useCallback(
     (orderId, newStatus) =>
-      setOrders((prev) =>
-        prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o)),
-      ),
+      setOrders((prev) => {
+        const updated = prev.reduce((acc, o) => {
+          if (o.id !== orderId) return [...acc, o];
+          const nextOrder = { ...o, status: newStatus };
+          return shouldRemoveOrder(nextOrder) ? acc : [...acc, nextOrder];
+        }, []);
+        if (updated.length !== prev.length) {
+          setTotalCount((count) => Math.max(0, count - 1));
+        }
+        return updated;
+      }),
     [],
   );
 
@@ -815,7 +854,7 @@ export default function Admin({ user, isAdmin }) {
         {/* ABAS */}
         <div className="adm-tabs">
           {[
-            { key: "pedidos", label: "📦 Pedidos", badge: totalCount },
+            { key: "pedidos", label: "📦 Pedidos", badge: orders.length },
             { key: "produtos", label: "🍺 Produtos", badge: products.length },
           ].map(({ key, label, badge }) => (
             <button
@@ -836,8 +875,7 @@ export default function Admin({ user, isAdmin }) {
               <div>
                 <h1 className="adm-title">Painel de Pedidos</h1>
                 <p className="adm-subtitle">
-                  {totalCount} pedido(s) · mostrando {orders.length} · tempo
-                  real
+                  {orders.length} pedido(s) · tempo real
                 </p>
               </div>
               <div className="adm-realtime-dot" aria-label="Tempo real">
