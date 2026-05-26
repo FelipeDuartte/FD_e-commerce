@@ -33,7 +33,13 @@ export default function ProductCard({ produto, addToCart }) {
   }, [isAdded]);
 
   // Estado do botão
-  const btnState = !isStoreOpen() ? "fechado" : isOutOfStock ? "esgotado" : isAdded ? "added" : "default";
+  const btnState = !isStoreOpen()
+    ? "fechado"
+    : isOutOfStock
+      ? "esgotado"
+      : isAdded
+        ? "added"
+        : "default";
 
   const BTN_CONTENT = {
     esgotado: (

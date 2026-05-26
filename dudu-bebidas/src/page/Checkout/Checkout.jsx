@@ -5,15 +5,20 @@ import { saveOrder } from "../../supabase/saveOrder";
 import { isStoreOpen } from "../../utils/storeHours";
 
 const paymentOptions = [
-  { value: "pix",  icon: "⚡", name: "PIX"      },
-  { value: "card", icon: "💳", name: "Cartão"   },
+  { value: "pix", icon: "⚡", name: "PIX" },
+  { value: "card", icon: "💳", name: "Cartão" },
   { value: "cash", icon: "💵", name: "Dinheiro" },
 ];
 
 const INITIAL_ADDRESS = {
-  name: "", phone: "", street: "",
-  number: "", district: "", complement: "",
-  city: "", state: "",
+  name: "",
+  phone: "",
+  street: "",
+  number: "",
+  district: "",
+  complement: "",
+  city: "",
+  state: "",
 };
 
 export default function Checkout({ user, clearCart }) {
@@ -21,21 +26,21 @@ export default function Checkout({ user, clearCart }) {
   const location = useLocation();
   const errorRef = useRef(null);
 
-  const cartItems      = location.state?.cartItems  ?? [];
-  const cartTotal      = location.state?.cartTotal  ?? 0;
-  const DELIVERY       = location.state?.frete      ?? 0;
-  const isRetirada     = location.state?.isRetirada ?? false;
-  const bairroCarrinho = location.state?.bairro     ?? "";
+  const cartItems = location.state?.cartItems ?? [];
+  const cartTotal = location.state?.cartTotal ?? 0;
+  const DELIVERY = location.state?.frete ?? 0;
+  const isRetirada = location.state?.isRetirada ?? false;
+  const bairroCarrinho = location.state?.bairro ?? "";
 
-  const isProcessingRef                     = useRef(false);
+  const isProcessingRef = useRef(false);
   const [orderProcessed, setOrderProcessed] = useState(false);
-  const [payment, setPayment]               = useState("pix");
-  const [loading, setLoading]               = useState(false);
-  const [errorMsg, setErrorMsg]             = useState("");
+  const [payment, setPayment] = useState("pix");
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
-  const [cep, setCep]               = useState("");
+  const [cep, setCep] = useState("");
   const [cepLoading, setCepLoading] = useState(false);
-  const [cepError, setCepError]     = useState("");
+  const [cepError, setCepError] = useState("");
 
   const [address, setAddress] = useState(INITIAL_ADDRESS);
 
@@ -44,9 +49,16 @@ export default function Checkout({ user, clearCart }) {
     setErrorMsg(msg);
     setTimeout(() => {
       if (errorRef.current) {
-        errorRef.current.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+        errorRef.current.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+          inline: "nearest",
+        });
         errorRef.current.classList.add("co-error-highlight");
-        setTimeout(() => errorRef.current?.classList.remove("co-error-highlight"), 2000);
+        setTimeout(
+          () => errorRef.current?.classList.remove("co-error-highlight"),
+          2000,
+        );
       }
     }, 100);
   };
@@ -78,19 +90,26 @@ export default function Checkout({ user, clearCart }) {
 
   const handleCepBlur = async () => {
     const cleaned = cep.replace(/\D/g, "");
-    if (cleaned.length !== 8) { setCepError("CEP inválido. Digite 8 números."); return; }
+    if (cleaned.length !== 8) {
+      setCepError("CEP inválido. Digite 8 números.");
+      return;
+    }
     setCepLoading(true);
     setCepError("");
     try {
-      const res  = await fetch(`https://viacep.com.br/ws/${cleaned}/json/`);
+      const res = await fetch(`https://viacep.com.br/ws/${cleaned}/json/`);
       const data = await res.json();
-      if (data.erro) { setCepError("CEP não encontrado."); setCepLoading(false); return; }
+      if (data.erro) {
+        setCepError("CEP não encontrado.");
+        setCepLoading(false);
+        return;
+      }
       setAddress((prev) => ({
         ...prev,
-        street:   data.logradouro || prev.street,
-        district: data.bairro     || prev.district,
-        city:     data.localidade || prev.city,
-        state:    data.uf         || prev.state,
+        street: data.logradouro || prev.street,
+        district: data.bairro || prev.district,
+        city: data.localidade || prev.city,
+        state: data.uf || prev.state,
       }));
     } catch {
       setCepError("Erro ao buscar CEP.");
@@ -100,8 +119,10 @@ export default function Checkout({ user, clearCart }) {
 
   const handlePhoneChange = (e) => {
     let value = e.target.value.replace(/\D/g, "").slice(0, 11);
-    if (value.length > 6)      value = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
-    else if (value.length > 2) value = `(${value.slice(0, 2)}) ${value.slice(2)}`;
+    if (value.length > 6)
+      value = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
+    else if (value.length > 2)
+      value = `(${value.slice(0, 2)}) ${value.slice(2)}`;
     setAddress((prev) => ({ ...prev, phone: value }));
     if (errorMsg) setErrorMsg("");
   };
@@ -117,10 +138,10 @@ export default function Checkout({ user, clearCart }) {
     if (isRetirada) return null;
 
     const cepDigits = cep.replace(/\D/g, "");
-    if (cepDigits.length !== 8)   return "Por favor, informe um CEP válido.";
-    if (cepError)                 return "Por favor, verifique o CEP informado.";
-    if (!address.street.trim())   return "Por favor, informe o endereço.";
-    if (!address.number.trim())   return "Por favor, informe o número.";
+    if (cepDigits.length !== 8) return "Por favor, informe um CEP válido.";
+    if (cepError) return "Por favor, verifique o CEP informado.";
+    if (!address.street.trim()) return "Por favor, informe o endereço.";
+    if (!address.number.trim()) return "Por favor, informe o número.";
     if (!address.district.trim()) return "Por favor, informe o bairro.";
 
     return null;
@@ -132,9 +153,15 @@ export default function Checkout({ user, clearCart }) {
     setErrorMsg("");
 
     const validationError = validateForm();
-    if (validationError) { showError(validationError); return; }
+    if (validationError) {
+      showError(validationError);
+      return;
+    }
 
-    if (cartItems.length === 0) { showError("Seu carrinho está vazio."); return; }
+    if (cartItems.length === 0) {
+      showError("Seu carrinho está vazio.");
+      return;
+    }
 
     isProcessingRef.current = true;
     setLoading(true);
@@ -145,10 +172,10 @@ export default function Checkout({ user, clearCart }) {
         : { ...address, cep, bairro: bairroCarrinho };
 
       const { orderId, error } = await saveOrder({
-        userId:        user?.id ?? null,
-        total:         cartTotal + DELIVERY,
+        userId: user?.id ?? null,
+        total: cartTotal + DELIVERY,
         paymentMethod: payment,
-        address:       addressToSave,
+        address: addressToSave,
         cartItems,
       });
 
@@ -165,9 +192,9 @@ export default function Checkout({ user, clearCart }) {
         state: {
           orderId,
           cartItems,
-          total:      cartTotal + DELIVERY,
+          total: cartTotal + DELIVERY,
           payment,
-          address:    addressToSave,
+          address: addressToSave,
           isRetirada,
         },
         replace: true,
@@ -181,27 +208,31 @@ export default function Checkout({ user, clearCart }) {
   };
 
   // ── Derivados ─────────────────────────────────────────
-  const isDisabled   = loading || orderProcessed;
-  const phoneDigits  = address.phone.replace(/\D/g, "");
-  const cepDigits    = cep.replace(/\D/g, "");
+  const isDisabled = loading || orderProcessed;
+  const phoneDigits = address.phone.replace(/\D/g, "");
+  const cepDigits = cep.replace(/\D/g, "");
 
-  const ctaLabel = loading          ? "Processando..."
-                 : orderProcessed   ? "Confirmado ✓"
-                 : isRetirada       ? "Confirmar Retirada →"
-                 :                    "Confirmar Pedido →";
+  const ctaLabel = loading
+    ? "Processando..."
+    : orderProcessed
+      ? "Confirmado ✓"
+      : isRetirada
+        ? "Confirmar Retirada →"
+        : "Confirmar Pedido →";
 
   // ── Render ────────────────────────────────────────────
   const closed = !isStoreOpen();
   return (
     <div className="co-root">
       <div className="co-wrap">
-
         {closed && (
           <div className="co-error-alert">
             <div className="co-error-icon">⚠️</div>
             <div className="co-error-content">
               <div className="co-error-title">Loja fechada</div>
-              <div className="co-error-message">Hoje é segunda-feira — não é possível finalizar pedidos.</div>
+              <div className="co-error-message">
+                Hoje é segunda-feira — não é possível finalizar pedidos.
+              </div>
             </div>
           </div>
         )}
@@ -210,7 +241,9 @@ export default function Checkout({ user, clearCart }) {
         <div className="co-header">
           <button
             className="co-back"
-            onClick={() => { if (!isDisabled) navigate("/", { state: { openCart: true } }); }}
+            onClick={() => {
+              if (!isDisabled) navigate("/", { state: { openCart: true } });
+            }}
             disabled={isDisabled}
           >
             ←
@@ -232,7 +265,9 @@ export default function Checkout({ user, clearCart }) {
           <div className="co-prog-line" />
           <div className="co-prog-step">
             <div className="co-prog-dot">2</div>
-            <span className="co-prog-label">{isRetirada ? "Retirada" : "Checkout"}</span>
+            <span className="co-prog-label">
+              {isRetirada ? "Retirada" : "Checkout"}
+            </span>
           </div>
           <div className="co-prog-line" />
           <div className="co-prog-step">
@@ -242,16 +277,16 @@ export default function Checkout({ user, clearCart }) {
         </div>
 
         <div className="co-grid">
-
           {/* ── FORM ── */}
           <div className="co-card">
-
             {isRetirada && (
               <div className="co-retirada-banner">
                 <span className="co-retirada-icon">🏪</span>
                 <div className="co-retirada-text">
                   <strong>Retirada na Loja</strong>
-                  <span>Seu pedido ficará pronto para retirada assim que confirmado.</span>
+                  <span>
+                    Seu pedido ficará pronto para retirada assim que confirmado.
+                  </span>
                 </div>
               </div>
             )}
@@ -285,9 +320,15 @@ export default function Checkout({ user, clearCart }) {
                   name="name"
                   value={address.name}
                   onChange={handleAddressChange}
-                  placeholder={isRetirada ? "Seu nome para retirada" : "Seu nome e sobrenome"}
+                  placeholder={
+                    isRetirada
+                      ? "Seu nome para retirada"
+                      : "Seu nome e sobrenome"
+                  }
                   disabled={isDisabled}
-                  className={errorMsg && !address.name.trim() ? "co-input-error" : ""}
+                  className={
+                    errorMsg && !address.name.trim() ? "co-input-error" : ""
+                  }
                 />
               </div>
               <div className="co-field">
@@ -299,7 +340,9 @@ export default function Checkout({ user, clearCart }) {
                   onChange={handlePhoneChange}
                   placeholder="(00) 00000-0000"
                   disabled={isDisabled}
-                  className={errorMsg && phoneDigits.length < 10 ? "co-input-error" : ""}
+                  className={
+                    errorMsg && phoneDigits.length < 10 ? "co-input-error" : ""
+                  }
                 />
               </div>
             </div>
@@ -323,14 +366,22 @@ export default function Checkout({ user, clearCart }) {
                         onBlur={handleCepBlur}
                         placeholder="00000-000"
                         maxLength={9}
-                        className={cepError || (errorMsg && cepDigits.length !== 8) ? "co-input-error" : ""}
+                        className={
+                          cepError || (errorMsg && cepDigits.length !== 8)
+                            ? "co-input-error"
+                            : ""
+                        }
                         disabled={isDisabled}
                       />
                       {cepLoading && <span className="co-cep-loading">🔍</span>}
                     </div>
-                    {cepError && <span className="co-field-error">{cepError}</span>}
+                    {cepError && (
+                      <span className="co-field-error">{cepError}</span>
+                    )}
                     {!cepError && address.city && (
-                      <span className="co-field-success">✓ {address.city} — {address.state}</span>
+                      <span className="co-field-success">
+                        ✓ {address.city} — {address.state}
+                      </span>
                     )}
                   </div>
                   <div className="co-field">
@@ -342,7 +393,11 @@ export default function Checkout({ user, clearCart }) {
                       onChange={handleAddressChange}
                       placeholder="123"
                       disabled={isDisabled}
-                      className={errorMsg && !address.number.trim() ? "co-input-error" : ""}
+                      className={
+                        errorMsg && !address.number.trim()
+                          ? "co-input-error"
+                          : ""
+                      }
                     />
                   </div>
                 </div>
@@ -357,7 +412,11 @@ export default function Checkout({ user, clearCart }) {
                       onChange={handleAddressChange}
                       placeholder="Rua / Av. — preenchido pelo CEP"
                       disabled={isDisabled}
-                      className={errorMsg && !address.street.trim() ? "co-input-error" : ""}
+                      className={
+                        errorMsg && !address.street.trim()
+                          ? "co-input-error"
+                          : ""
+                      }
                     />
                   </div>
                 </div>
@@ -372,7 +431,11 @@ export default function Checkout({ user, clearCart }) {
                       onChange={handleAddressChange}
                       placeholder="Bairro — preenchido pelo CEP"
                       disabled={isDisabled}
-                      className={errorMsg && !address.district.trim() ? "co-input-error" : ""}
+                      className={
+                        errorMsg && !address.district.trim()
+                          ? "co-input-error"
+                          : ""
+                      }
                     />
                   </div>
                   <div className="co-field">
@@ -425,16 +488,32 @@ export default function Checkout({ user, clearCart }) {
                 cartItems.map((item, i) => (
                   <div className="co-item" key={i}>
                     <div className="co-item-icon">
-                      {item.icon
-                        ? <img src={item.icon} alt={item.name} style={{ width: 36, height: 36, objectFit: "cover", borderRadius: 6 }} />
-                        : "🛒"}
+                      {item.icon ? (
+                        <img
+                          src={item.icon}
+                          alt={item.name}
+                          style={{
+                            width: 36,
+                            height: 36,
+                            objectFit: "cover",
+                            borderRadius: 6,
+                          }}
+                        />
+                      ) : (
+                        "🛒"
+                      )}
                     </div>
                     <div className="co-item-info">
                       <div className="co-item-name">{item.name}</div>
-                      <div className="co-item-qty">{item.quantity} unidade(s)</div>
+                      <div className="co-item-qty">
+                        {item.quantity} unidade(s)
+                      </div>
                     </div>
                     <div className="co-item-price">
-                      R$ {(item.price * item.quantity).toFixed(2).replace(".", ",")}
+                      R${" "}
+                      {(item.price * item.quantity)
+                        .toFixed(2)
+                        .replace(".", ",")}
                     </div>
                   </div>
                 ))
@@ -448,7 +527,11 @@ export default function Checkout({ user, clearCart }) {
               </div>
               <div className="co-summary-row">
                 <span>{isRetirada ? "Retirada" : "Entrega"}</span>
-                <span>{DELIVERY === 0 ? "GRÁTIS" : `R$ ${DELIVERY.toFixed(2).replace(".", ",")}`}</span>
+                <span>
+                  {DELIVERY === 0
+                    ? "GRÁTIS"
+                    : `R$ ${DELIVERY.toFixed(2).replace(".", ",")}`}
+                </span>
               </div>
             </div>
 
@@ -459,7 +542,11 @@ export default function Checkout({ user, clearCart }) {
               </span>
             </div>
 
-            <button className="co-cta" onClick={handleConfirmOrder} disabled={isDisabled || closed}>
+            <button
+              className="co-cta"
+              onClick={handleConfirmOrder}
+              disabled={isDisabled || closed}
+            >
               {ctaLabel}
             </button>
             <div className="co-secure">🔒 Pagamento 100% seguro</div>
@@ -469,7 +556,11 @@ export default function Checkout({ user, clearCart }) {
 
       {/* ── BOTÃO FIXO MOBILE ── */}
       <div className="co-cta-wrap">
-        <button className="co-cta" onClick={handleConfirmOrder} disabled={isDisabled || closed}>
+        <button
+          className="co-cta"
+          onClick={handleConfirmOrder}
+          disabled={isDisabled || closed}
+        >
           {ctaLabel}
         </button>
         <div className="co-secure">🔒 Pagamento 100% seguro</div>

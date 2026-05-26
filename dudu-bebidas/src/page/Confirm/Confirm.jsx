@@ -5,7 +5,7 @@ import "./Confirm.css";
 
 // ── Constantes ────────────────────────────────────────
 const PAYMENT_LABELS = {
-  pix:  { icon: "⚡", label: "PIX" },
+  pix: { icon: "⚡", label: "PIX" },
   card: { icon: "💳", label: "Cartão" },
   cash: { icon: "💵", label: "Dinheiro" },
 };
@@ -13,13 +13,40 @@ const PAYMENT_LABELS = {
 const STATUS_STEP = { pending: 0, preparing: 1, on_the_way: 2, delivered: 3 };
 
 const STEPS = [
-  { icon: "✅", title: "Pedido confirmado", desc: "Recebemos seu pedido",         activeDesc: "Seu pedido foi registrado com sucesso!" },
-  { icon: "👨‍🍳", title: "Em preparação",    desc: "Separando seus produtos",      activeDesc: "Estamos preparando tudo com cuidado para você." },
-  { icon: "🛵", title: "Saiu para entrega", desc: "A caminho do seu endereço",    activeDesc: "Seu pedido está a caminho! Fique de olho." },
-  { icon: "🎉", title: "Entregue",          desc: "Pedido finalizado",            activeDesc: "Pedido entregue. Bom proveito! 🍺" },
+  {
+    icon: "✅",
+    title: "Pedido confirmado",
+    desc: "Recebemos seu pedido",
+    activeDesc: "Seu pedido foi registrado com sucesso!",
+  },
+  {
+    icon: "👨‍🍳",
+    title: "Em preparação",
+    desc: "Separando seus produtos",
+    activeDesc: "Estamos preparando tudo com cuidado para você.",
+  },
+  {
+    icon: "🛵",
+    title: "Saiu para entrega",
+    desc: "A caminho do seu endereço",
+    activeDesc: "Seu pedido está a caminho! Fique de olho.",
+  },
+  {
+    icon: "🎉",
+    title: "Entregue",
+    desc: "Pedido finalizado",
+    activeDesc: "Pedido entregue. Bom proveito! 🍺",
+  },
 ];
 
-const EMPTY_ORDER = { orderId: null, cartItems: [], total: 0, payment: "pix", address: {}, isRetirada: false };
+const EMPTY_ORDER = {
+  orderId: null,
+  cartItems: [],
+  total: 0,
+  payment: "pix",
+  address: {},
+  isRetirada: false,
+};
 
 // ── Helper: lê order do location.state ou localStorage ──
 function resolveOrderData(locationState) {
@@ -28,7 +55,9 @@ function resolveOrderData(locationState) {
 
   const saved = localStorage.getItem("lastOrder");
   if (saved) {
-    try { return JSON.parse(saved); } catch {}
+    try {
+      return JSON.parse(saved);
+    } catch {}
   }
   return EMPTY_ORDER;
 }
@@ -50,30 +79,45 @@ export default function Confirmacao() {
     ...orderData,
   };
 
-  const [status,      setStatus]      = useState("pending");
+  const [status, setStatus] = useState("pending");
   const [statusLoading, setStatusLoading] = useState(true);
-  const [animating,   setAnimating]   = useState(false);
+  const [animating, setAnimating] = useState(false);
 
   // ── Modal cancelamento ────────────────────────────
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [cancelling,      setCancelling]      = useState(false);
-  const [cancelError,     setCancelError]     = useState("");
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState("");
 
   // ── Persiste no localStorage ──────────────────────
   useEffect(() => {
     if (orderId || cartItems.length > 0) {
-      localStorage.setItem("lastOrder", JSON.stringify({
-        orderId, cartItems, total, payment, address, isRetirada,
-        savedAt: new Date().toISOString(),
-      }));
+      localStorage.setItem(
+        "lastOrder",
+        JSON.stringify({
+          orderId,
+          cartItems,
+          total,
+          payment,
+          address,
+          isRetirada,
+          savedAt: new Date().toISOString(),
+        }),
+      );
     }
   }, [orderId, cartItems, total, payment, address, isRetirada]);
 
   // ── Realtime status ───────────────────────────────
   useEffect(() => {
-    if (!orderId) { setStatusLoading(false); return; }
+    if (!orderId) {
+      setStatusLoading(false);
+      return;
+    }
 
-    supabase.from("orders").select("status").eq("id", orderId).single()
+    supabase
+      .from("orders")
+      .select("status")
+      .eq("id", orderId)
+      .single()
       .then(({ data, error }) => {
         if (!error && data?.status) setStatus(data.status);
         setStatusLoading(false);
@@ -81,8 +125,14 @@ export default function Confirmacao() {
 
     const channel = supabase
       .channel(`order-status-${orderId}`)
-      .on("postgres_changes",
-        { event: "UPDATE", schema: "public", table: "orders", filter: `id=eq.${orderId}` },
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "orders",
+          filter: `id=eq.${orderId}`,
+        },
         ({ new: payload }) => {
           if (payload?.status) {
             setAnimating(true);
@@ -108,21 +158,21 @@ export default function Confirmacao() {
         return;
       }
 
-      const { data: rpcResult, error: rpcError } = await supabase
-        .rpc("restore_stock", { p_order_id: orderId });
+      // Usa RPC cancel_order para deletar com segurança (security definer)
+      const { data: rpcResult, error: rpcError } = await supabase.rpc(
+        "cancel_order",
+        { p_order_id: orderId },
+      );
 
       if (rpcError || !rpcResult?.success)
-        throw new Error(rpcError ? "Erro ao restaurar estoque." : (rpcResult?.error ?? "Erro ao restaurar estoque."));
-
-      const { error: itemsError } = await supabase.from("order_items").delete().eq("order_id", orderId);
-      if (itemsError) throw new Error("Erro ao cancelar itens do pedido.");
-
-      const { error: orderError } = await supabase.from("orders").delete().eq("id", orderId);
-      if (orderError) throw new Error("Erro ao cancelar o pedido.");
+        throw new Error(
+          rpcError
+            ? "Erro ao cancelar pedido."
+            : (rpcResult?.error ?? "Erro ao cancelar pedido."),
+        );
 
       localStorage.removeItem("lastOrder");
       navigate("/", { state: { cancelledOrder: true, isRetirada: false } });
-
     } catch (err) {
       setCancelError(err.message);
       setCancelling(false);
@@ -137,8 +187,12 @@ export default function Confirmacao() {
           <div className="cf-card" style={{ maxWidth: 400 }}>
             <div style={{ fontSize: 64, marginBottom: 16 }}>📦</div>
             <h2 style={{ marginBottom: 8 }}>Nenhum pedido encontrado</h2>
-            <p style={{ color: "#666", marginBottom: 24 }}>Não encontramos informações do seu pedido.</p>
-            <button className="cf-btn-home" onClick={() => navigate("/")}>Voltar para a loja</button>
+            <p style={{ color: "#666", marginBottom: 24 }}>
+              Não encontramos informações do seu pedido.
+            </p>
+            <button className="cf-btn-home" onClick={() => navigate("/")}>
+              Voltar para a loja
+            </button>
           </div>
         </div>
       </div>
@@ -146,9 +200,9 @@ export default function Confirmacao() {
   }
 
   const paymentInfo = PAYMENT_LABELS[payment] ?? { icon: "💳", label: payment };
-  const shortId     = orderId ? orderId.slice(-8).toUpperCase() : "RETIRADA";
+  const shortId = orderId ? orderId.slice(-8).toUpperCase() : "RETIRADA";
   const currentStep = STATUS_STEP[status] ?? 0;
-  const canCancel   = status === "pending" && (orderId || isRetirada);
+  const canCancel = status === "pending" && (orderId || isRetirada);
   const entityLabel = isRetirada ? "retirada" : "pedido";
 
   return (
@@ -160,18 +214,34 @@ export default function Confirmacao() {
       {/* MODAL — CANCELAR */}
       {showCancelModal && (
         <>
-          <div className="cf-modal-overlay" onClick={() => !cancelling && setShowCancelModal(false)} />
+          <div
+            className="cf-modal-overlay"
+            onClick={() => !cancelling && setShowCancelModal(false)}
+          />
           <div className="cf-modal">
             <div className="cf-modal-icon">⚠️</div>
             <h3 className="cf-modal-title">Cancelar {entityLabel}?</h3>
             <p className="cf-modal-desc">
-              Tem certeza que deseja cancelar {isRetirada ? "a retirada" : "o pedido"}{" "}
+              Tem certeza que deseja cancelar{" "}
+              {isRetirada ? "a retirada" : "o pedido"}{" "}
               <strong>#{shortId}</strong>? Esta ação não pode ser desfeita.
             </p>
-            {cancelError && <div className="cf-modal-error">⚠️ {cancelError}</div>}
+            {cancelError && (
+              <div className="cf-modal-error">⚠️ {cancelError}</div>
+            )}
             <div className="cf-modal-actions">
-              <button className="cf-modal-btn-cancel"  onClick={() => setShowCancelModal(false)} disabled={cancelling}>Voltar</button>
-              <button className="cf-modal-btn-confirm" onClick={handleCancelOrder}               disabled={cancelling}>
+              <button
+                className="cf-modal-btn-cancel"
+                onClick={() => setShowCancelModal(false)}
+                disabled={cancelling}
+              >
+                Voltar
+              </button>
+              <button
+                className="cf-modal-btn-confirm"
+                onClick={handleCancelOrder}
+                disabled={cancelling}
+              >
                 {cancelling ? "Cancelando..." : "Sim, cancelar"}
               </button>
             </div>
@@ -180,7 +250,6 @@ export default function Confirmacao() {
       )}
 
       <div className="cf-wrap">
-
         {/* HERO */}
         <div className="cf-hero">
           <div className="cf-check-ring">
@@ -192,8 +261,12 @@ export default function Confirmacao() {
             </div>
           </div>
           <div className="cf-hero-text">
-            <div className="cf-tag">{isRetirada ? "RETIRADA CONFIRMADA" : "PEDIDO CONFIRMADO"}</div>
-            <h1 className="cf-title">{isRetirada ? "Retirada agendada!" : "Pedido recebido!"}</h1>
+            <div className="cf-tag">
+              {isRetirada ? "RETIRADA CONFIRMADA" : "PEDIDO CONFIRMADO"}
+            </div>
+            <h1 className="cf-title">
+              {isRetirada ? "Retirada agendada!" : "Pedido recebido!"}
+            </h1>
             <p className="cf-subtitle">
               {isRetirada
                 ? "Seu pedido já está separado. Passe na loja para retirar quando quiser."
@@ -201,7 +274,9 @@ export default function Confirmacao() {
             </p>
           </div>
           <div className="cf-order-id">
-            <span className="cf-order-id-label">{isRetirada ? "CÓDIGO DA RETIRADA" : "Nº DO PEDIDO"}</span>
+            <span className="cf-order-id-label">
+              {isRetirada ? "CÓDIGO DA RETIRADA" : "Nº DO PEDIDO"}
+            </span>
             <span className="cf-order-id-value">#{shortId}</span>
           </div>
         </div>
@@ -226,32 +301,41 @@ export default function Confirmacao() {
             ) : (
               <>
                 <div className="cf-progress-track">
-                  <div className="cf-progress-fill" style={{ width: `${(currentStep / 3) * 100}%` }} />
+                  <div
+                    className="cf-progress-fill"
+                    style={{ width: `${(currentStep / 3) * 100}%` }}
+                  />
                 </div>
 
                 <div className="cf-steps">
                   {STEPS.map((step, i) => {
-                    const isDone    = i < currentStep;
-                    const isActive  = i === currentStep;
+                    const isDone = i < currentStep;
+                    const isActive = i === currentStep;
                     const isPending = i > currentStep;
                     return (
                       <div
                         key={i}
                         className={[
                           "cf-step",
-                          isDone    && "cf-step-done",
-                          isActive  && "cf-step-active",
+                          isDone && "cf-step-done",
+                          isActive && "cf-step-active",
                           isPending && "cf-step-pending",
                           animating && isActive && "cf-step-entering",
-                        ].filter(Boolean).join(" ")}
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
                       >
                         <div className="cf-step-icon-wrap">
-                          <div className="cf-step-icon">{isDone ? "✓" : step.icon}</div>
+                          <div className="cf-step-icon">
+                            {isDone ? "✓" : step.icon}
+                          </div>
                           {isActive && <div className="cf-step-pulse" />}
                         </div>
                         <div className="cf-step-info">
                           <span className="cf-step-title">{step.title}</span>
-                          <span className="cf-step-desc">{isActive ? step.activeDesc : step.desc}</span>
+                          <span className="cf-step-desc">
+                            {isActive ? step.activeDesc : step.desc}
+                          </span>
                         </div>
                       </div>
                     );
@@ -259,8 +343,12 @@ export default function Confirmacao() {
                 </div>
 
                 <div className={`cf-status-msg cf-status-msg-${status}`}>
-                  <span className="cf-status-msg-icon">{STEPS[currentStep].icon}</span>
-                  <span className="cf-status-msg-text">{STEPS[currentStep].activeDesc}</span>
+                  <span className="cf-status-msg-icon">
+                    {STEPS[currentStep].icon}
+                  </span>
+                  <span className="cf-status-msg-text">
+                    {STEPS[currentStep].activeDesc}
+                  </span>
                 </div>
               </>
             )}
@@ -276,11 +364,17 @@ export default function Confirmacao() {
             <div className="cf-pickup-body">
               <div className="cf-pickup-icon">🏪</div>
               <h3 className="cf-pickup-title">Seu pedido está pronto!</h3>
-              <p className="cf-pickup-desc">Passe na loja com seu código de retirada.</p>
+              <p className="cf-pickup-desc">
+                Passe na loja com seu código de retirada.
+              </p>
               <div className="cf-pickup-address">
                 <p className="cf-pickup-address-label">ENDEREÇO</p>
-                <p className="cf-pickup-address-street">Rua Edgar Torres, 650</p>
-                <p className="cf-pickup-address-city">Minas Caixa, Belo Horizonte - MG</p>
+                <p className="cf-pickup-address-street">
+                  Rua Edgar Torres, 650
+                </p>
+                <p className="cf-pickup-address-city">
+                  Minas Caixa, Belo Horizonte - MG
+                </p>
               </div>
             </div>
           </div>
@@ -288,7 +382,6 @@ export default function Confirmacao() {
 
         {/* GRID */}
         <div className="cf-grid">
-
           {/* Coluna esquerda */}
           <div className="cf-col">
             <div className="cf-card">
@@ -297,13 +390,22 @@ export default function Confirmacao() {
                 {cartItems.map((item, i) => (
                   <div className="cf-item" key={i}>
                     <div className="cf-item-img">
-                      {item.imagem || item.icon
-                        ? <img src={item.imagem || item.icon} alt={item.nome || item.name} />
-                        : "🍺"}
+                      {item.imagem || item.icon ? (
+                        <img
+                          src={item.imagem || item.icon}
+                          alt={item.nome || item.name}
+                        />
+                      ) : (
+                        "🍺"
+                      )}
                     </div>
                     <div className="cf-item-info">
-                      <span className="cf-item-name">{item.nome || item.name}</span>
-                      <span className="cf-item-qty">{item.quantity} unidade(s)</span>
+                      <span className="cf-item-name">
+                        {item.nome || item.name}
+                      </span>
+                      <span className="cf-item-qty">
+                        {item.quantity} unidade(s)
+                      </span>
                     </div>
                     <span className="cf-item-price">
                       {formatBRL((item.preco || item.price) * item.quantity)}
@@ -322,7 +424,10 @@ export default function Confirmacao() {
                 <div className="cf-card-label">📍 Endereço de Entrega</div>
                 <div className="cf-address">
                   <p className="cf-address-name">{address.name}</p>
-                  <p>{address.street}, {address.number}{address.complement ? ` — ${address.complement}` : ""}</p>
+                  <p>
+                    {address.street}, {address.number}
+                    {address.complement ? ` — ${address.complement}` : ""}
+                  </p>
                   <p>{address.district}</p>
                   <p className="cf-address-phone">📞 {address.phone}</p>
                 </div>
@@ -345,14 +450,18 @@ export default function Confirmacao() {
             </button>
 
             {canCancel && (
-              <button className="cf-btn-cancel" onClick={() => setShowCancelModal(true)}>
+              <button
+                className="cf-btn-cancel"
+                onClick={() => setShowCancelModal(true)}
+              >
                 ✕ Cancelar {entityLabel}
               </button>
             )}
 
             {!canCancel && (orderId || isRetirada) && status !== "pending" && (
               <div className="cf-cancel-info">
-                ℹ️ Não é mais possível cancelar — {entityLabel} já está em andamento.
+                ℹ️ Não é mais possível cancelar — {entityLabel} já está em
+                andamento.
               </div>
             )}
           </div>

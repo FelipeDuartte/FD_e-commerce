@@ -121,7 +121,9 @@ export default function Cart({
 
   const handleCheckout = () => {
     if (!isStoreOpen()) {
-      setHorarioAviso("Hoje é segunda — a loja está fechada. Não é possível finalizar pedidos.");
+      setHorarioAviso(
+        "Hoje é segunda — a loja está fechada. Não é possível finalizar pedidos.",
+      );
       return;
     }
     if (cartItems.length === 0) return;

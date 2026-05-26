@@ -26,7 +26,7 @@ export default function Header({
   onCategoryClick,
   user,
   onLogout,
-  isAdmin
+  isAdmin,
 }) {
   const navigate = useNavigate();
   const categories = [
@@ -59,7 +59,8 @@ export default function Header({
     >
       {isMonday() && (
         <div className="site-closed-banner">
-          Hoje é segunda — a loja está fechada. Não é possível finalizar compras hoje.
+          Hoje é segunda — a loja está fechada. Não é possível finalizar compras
+          hoje.
         </div>
       )}
       <nav className="navbar navbar-dark">
@@ -113,7 +114,7 @@ export default function Header({
           >
             {isAdmin && (
               <button onClick={() => navigate("/admin")} className="btn-admin">
-                <span>Admin</span>  ⚙️
+                <span>Admin</span> ⚙️
               </button>
             )}
 
@@ -201,7 +202,9 @@ export default function Header({
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
-                document.getElementById("produtos")?.scrollIntoView({ behavior: "smooth" });
+                document
+                  .getElementById("produtos")
+                  ?.scrollIntoView({ behavior: "smooth" });
               }}
               className="form-control border-0 text-white"
               style={{

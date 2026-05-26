@@ -169,17 +169,22 @@ function useVariableVirtualList(count, estimatedItemHeight = 90, overscan = 3) {
   return { containerRef, totalHeight, offsets, start, end, measureRef };
 }
 
+let notificationAudio = null;
+
 function playNotificationSound() {
   try {
-    const a = new Audio("/notification.mp3");
-    a.volume = 1;
-    a.play().catch(() => {});
+    if (!notificationAudio) {
+      notificationAudio = new Audio("/notification.mp3");
+      notificationAudio.volume = 1;
+    }
+    notificationAudio.currentTime = 0;
+    notificationAudio.play().catch(() => {});
   } catch {}
 }
 
 // ══════════════════════════════════════════════════════
 //  COMPONENTE PRINCIPAL
-// ══════════════════════════════════════════════════════
+// ═══════════════════════════════════════=══════════════════════
 export default function Admin({ user, isAdmin }) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("pedidos");
@@ -198,7 +203,6 @@ export default function Admin({ user, isAdmin }) {
     count: 0,
     total: 0,
   });
-  const [now, setNow] = useState(Date.now());
   const [rejectModal, setRejectModal] = useState(null);
   const [rejecting, setRejecting] = useState(false);
   const [rejectError, setRejectError] = useState("");
@@ -344,7 +348,7 @@ export default function Admin({ user, isAdmin }) {
       let query = supabase
         .from("orders")
         .select(
-          `id, total, payment_method, address, status, created_at, updated_at,
+          `id, total, payment_method, address, status, created_at,
          order_items ( id, name, price, quantity )`,
           { count: "exact" },
         )
@@ -372,7 +376,7 @@ export default function Admin({ user, isAdmin }) {
     fetchTodayMetrics();
   }, [isAdmin, fetchOrders, fetchTodayMetrics]);
 
-  // Realtime: novos pedidos
+  // Realtime: novos pedidos e cancelamentos
   useEffect(() => {
     if (!isAdmin) return;
     const channel = supabase
@@ -383,6 +387,16 @@ export default function Admin({ user, isAdmin }) {
         () => {
           playNotificationSound();
           fetchOrders(0, true);
+          fetchTodayMetrics();
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "orders" },
+        ({ old: deletedOrder }) => {
+          // Remove pedido cancelado da lista
+          setOrders((prev) => prev.filter((o) => o.id !== deletedOrder.id));
+          setTotalCount((prev) => Math.max(0, prev - 1));
           fetchTodayMetrics();
         },
       )
@@ -403,13 +417,9 @@ export default function Admin({ user, isAdmin }) {
   const updateOrderStatusLocally = useCallback(
     (orderId, newStatus) =>
       setOrders((prev) =>
-        prev.map((o) =>
-          o.id === orderId
-            ? { ...o, status: newStatus, updated_at: new Date().toISOString() }
-            : o,
-        ),
+        prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o)),
       ),
-    [setOrders],
+    [],
   );
 
   const advanceStatus = useCallback(
@@ -495,28 +505,13 @@ export default function Admin({ user, isAdmin }) {
     }
   }, [rejecting]);
 
-  useEffect(() => {
-    const interval = setInterval(() => setNow(Date.now()), 60_000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const isDeliveredTooOld = useCallback(
-    (order) => {
-      if (order.status !== "delivered" || !order.updated_at) return false;
-      return now - new Date(order.updated_at).getTime() >= 24 * 60 * 60 * 1000;
-    },
-    [now],
-  );
-
-  const visibleOrders = orders.filter((order) => !isDeliveredTooOld(order));
-
   const handleLoadMore = useCallback(() => {
     const next = page + 1;
     setPage(next);
     fetchOrders(next);
   }, [page, fetchOrders]);
 
-  const counts = visibleOrders.reduce(
+  const counts = orders.reduce(
     (acc, o) => {
       acc.all++;
       if (o.status in acc) acc[o.status]++;
@@ -526,7 +521,7 @@ export default function Admin({ user, isAdmin }) {
   );
 
   const { containerRef, totalHeight, offsets, start, end, measureRef } =
-    useVariableVirtualList(visibleOrders.length, 90, 3);
+    useVariableVirtualList(orders.length, 90, 3);
 
   // ── Guards ────────────────────────────────────────
   if (isAdmin === null)
@@ -716,7 +711,7 @@ export default function Admin({ user, isAdmin }) {
                     Em promoção
                   </label>
                 </div>
-                {/* modal promocionais */}
+
                 {modalForm.promotion && (
                   <div className="adm-promo-fields">
                     <p className="adm-promo-hint">
@@ -841,8 +836,8 @@ export default function Admin({ user, isAdmin }) {
               <div>
                 <h1 className="adm-title">Painel de Pedidos</h1>
                 <p className="adm-subtitle">
-                  {totalCount} pedido(s) · mostrando {visibleOrders.length} ·
-                  tempo real
+                  {totalCount} pedido(s) · mostrando {orders.length} · tempo
+                  real
                 </p>
               </div>
               <div className="adm-realtime-dot" aria-label="Tempo real">
@@ -920,7 +915,7 @@ export default function Admin({ user, isAdmin }) {
                 <div className="adm-spinner" />
                 <p>Carregando pedidos...</p>
               </div>
-            ) : visibleOrders.length === 0 ? (
+            ) : orders.length === 0 ? (
               <div className="adm-empty">
                 <p>Nenhum pedido encontrado.</p>
               </div>
@@ -928,38 +923,36 @@ export default function Admin({ user, isAdmin }) {
               <>
                 <div ref={containerRef} className="adm-virtual-container">
                   <div style={{ height: totalHeight, position: "relative" }}>
-                    {visibleOrders
-                      .slice(start, end + 1)
-                      .map((order, relIdx) => {
-                        const absIdx = start + relIdx;
-                        return (
-                          <div
-                            key={order.id}
-                            ref={measureRef(absIdx)}
-                            style={{
-                              position: "absolute",
-                              top: offsets[absIdx],
-                              left: 0,
-                              right: 0,
-                            }}
-                          >
-                            <OrderCard
-                              order={order}
-                              isExpanded={expandedId === order.id}
-                              isUpdating={updating === order.id}
-                              onToggle={() =>
-                                setExpandedId((p) =>
-                                  p === order.id ? null : order.id,
-                                )
-                              }
-                              onAccept={() => advanceStatus(order)}
-                              onReject={() => setRejectModal(order.id)}
-                              onAdvance={() => advanceStatus(order)}
-                              onSetStatus={(s) => setStatus(order.id, s)}
-                            />
-                          </div>
-                        );
-                      })}
+                    {orders.slice(start, end + 1).map((order, relIdx) => {
+                      const absIdx = start + relIdx;
+                      return (
+                        <div
+                          key={order.id}
+                          ref={measureRef(absIdx)}
+                          style={{
+                            position: "absolute",
+                            top: offsets[absIdx],
+                            left: 0,
+                            right: 0,
+                          }}
+                        >
+                          <OrderCard
+                            order={order}
+                            isExpanded={expandedId === order.id}
+                            isUpdating={updating === order.id}
+                            onToggle={() =>
+                              setExpandedId((p) =>
+                                p === order.id ? null : order.id,
+                              )
+                            }
+                            onAccept={() => advanceStatus(order)}
+                            onReject={() => setRejectModal(order.id)}
+                            onAdvance={() => advanceStatus(order)}
+                            onSetStatus={(s) => setStatus(order.id, s)}
+                          />
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -975,13 +968,13 @@ export default function Admin({ user, isAdmin }) {
                           <div className="adm-spinner-sm" /> Carregando...
                         </>
                       ) : (
-                        `Carregar mais (${visibleOrders.length} de ${totalCount})`
+                        `Carregar mais (${orders.length} de ${totalCount})`
                       )}
                     </button>
                   </div>
                 )}
 
-                {!hasMore && visibleOrders.length > PAGE_SIZE && (
+                {!hasMore && orders.length > PAGE_SIZE && (
                   <div className="adm-end-msg">
                     ✓ Todos os {totalCount} pedidos carregados
                   </div>
