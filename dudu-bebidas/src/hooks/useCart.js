@@ -16,6 +16,30 @@ export function useCart() {
     localStorage.setItem("dudu-cart", JSON.stringify(cartItems));
   }, [cartItems]);
 
+  // ── Sincroniza preços e estoques quando os produtos carregam ──
+  useEffect(() => {
+    const syncStock = (e) => {
+      const products = e.detail;
+      setCartItems((prev) =>
+        prev
+          .map((item) => {
+            const product = products.find((p) => p.id === item.id);
+            // Remove item se produto foi desativado ou não existe mais
+            if (!product) return null;
+            // Atualiza preço e limita quantidade ao estoque atual
+            return {
+              ...item,
+              price: product.preco,
+              quantity: Math.min(item.quantity, product.estoque),
+            };
+          })
+          .filter(Boolean),
+      );
+    };
+    window.addEventListener("products-loaded", syncStock);
+    return () => window.removeEventListener("products-loaded", syncStock);
+  }, []);
+
   // ── Handlers ──────────────────────────────────────
   const addToCart = (produto) => {
     setCartItems((prev) => {

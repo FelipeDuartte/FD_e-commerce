@@ -14,6 +14,7 @@ export function useProducts() {
       const { data, error } = await supabase
         .from("products")
         .select("*")
+        .eq("is_active", true)  // só produtos ativos aparecem na loja
         .order("name");
 
       if (error) {
@@ -35,6 +36,9 @@ export function useProducts() {
           isActive:    p.is_active,
         }));
         setProducts(normalized);
+
+        // Avisa o carrinho para sincronizar preços e estoques atualizados
+        window.dispatchEvent(new CustomEvent("products-loaded", { detail: normalized }));
       }
 
       setLoading(false);
