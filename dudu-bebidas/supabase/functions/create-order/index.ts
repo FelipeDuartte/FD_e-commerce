@@ -31,12 +31,48 @@ Deno.serve(async (req) => {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
 
-    // 1. Inserir o pedido
+    // 1. Buscar preços reais no banco — ignora o total enviado pelo front-end
+    const productIds = cartItems.map((item) => String(item.id));
+
+    const { data: products, error: productsError } = await supabase
+      .from("products")
+      .select("id, price, is_active, stock")
+      .in("id", productIds);
+
+    if (productsError || !products) {
+      console.error("Erro ao buscar produtos:", productsError);
+      return new Response(JSON.stringify({ error: "Erro ao validar produtos." }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Valida se todos os produtos existem e estão ativos
+    for (const item of cartItems) {
+      const product = products.find((p) => p.id === String(item.id));
+      if (!product) {
+        return new Response(JSON.stringify({ error: `Produto não encontrado: ${item.id}` }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (!product.is_active) {
+        return new Response(JSON.stringify({ error: `Produto indisponível: ${item.name ?? item.id}` }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    // Calcula o total real usando os preços do banco
+    const calculatedTotal = cartItems.reduce((sum, item) => {
+      const product = products.find((p) => p.id === String(item.id));
+      return sum + (product?.price ?? 0) * item.quantity;
+    }, 0);
+
+    // 2. Inserir o pedido com o total calculado no servidor
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .insert({
         user_id:        userId ?? null,
-        total,
+        total:          calculatedTotal,
         payment_method: paymentMethod,
         address,
         status:         "pending",
@@ -51,7 +87,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 2. Inserir os itens
+    // 3. Inserir os itens
     const orderItems = cartItems.map((item) => ({
       order_id:   order.id,
       product_id: String(item.id),
@@ -69,7 +105,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 3. Baixa no estoque via RPC
+    // 4. Baixa no estoque via RPC
     const rpcItems = cartItems.map((item) => ({
       product_id: String(item.id),
       quantity:   item.quantity,

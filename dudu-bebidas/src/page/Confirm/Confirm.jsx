@@ -117,9 +117,10 @@ export default function Confirmacao() {
       .from("orders")
       .select("status")
       .eq("id", orderId)
-      .single()
+      .maybeSingle()
       .then(({ data, error }) => {
-        if (!error && data?.status) setStatus(data.status);
+        if (error) console.error("Erro ao buscar status:", error);
+        if (data?.status) setStatus(data.status);
         setStatusLoading(false);
       });
 
