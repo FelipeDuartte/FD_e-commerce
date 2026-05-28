@@ -10,11 +10,14 @@
 - Checkout com entrega ou retirada na loja
 - Controle de estoque em tempo real
 - Painel admin com gestão de pedidos e produtos
+- Integração API meta whatsapp
 ---
 ## 🛠 Tecnologias
 
+- API rest
 - React 19 + Vite
 - Supabase — banco de dados, autenticação e realtime
 - React Router DOM v7
 - Bootstrap 5
 - Deploy na Vercel
+- cloudnary - hospedagem imagens
