@@ -1,4 +1,4 @@
-# 🍺 Dudu Bebidas
+# 🍺 E-commerce com crm de estoque e pedidos
 - Loja virtual de bebidas com carrinho, checkout, autenticação e painel administrativo.
 - 🔗 https://dudu-bebidas.vercel.app/
 ---
