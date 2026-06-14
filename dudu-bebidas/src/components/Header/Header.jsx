@@ -59,7 +59,7 @@ export default function Header({
       className={`sticky-top navbar-custom ${scrolled ? "scrolled" : ""}`}
     >
       {!storeStatus.open && (
-        <div className="site-closed-banner">{storeStatus.message}</div>
+        <div className="site-closed-banner text-black text-center fw-bold bg-warning p-1">{storeStatus.message}</div>
       )}
       <nav className="navbar navbar-dark">
         {/* ── BARRA PRINCIPAL ── */}

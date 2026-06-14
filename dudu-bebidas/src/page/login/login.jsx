@@ -307,9 +307,9 @@ export default function Login({ isOpen, onClose }) {
         <div className="login-footer">
           <p>Ao continuar, você concorda com nossos</p>
           <div className="footer-links">
-            <a href="#">Termos de Uso</a>
+            <a href="/terms-service" target="_blank">Termos de Uso</a>
             <span>•</span>
-            <a href="#">Política de Privacidade</a>
+            <a href="/privacy-policy" target="_blank">Política de Privacidade</a>
           </div>
         </div>
       </div>

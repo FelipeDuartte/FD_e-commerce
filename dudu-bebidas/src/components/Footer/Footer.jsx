@@ -88,7 +88,7 @@ export default function Footer() {
                 Moderação.
               </p>
               <p className="text-warning mt-2 fst-italic"> <span className="fw-bold">Desenvolvido por</span> 
-              <span><img src={logoDev} alt="" /></span> , Crie seu site e-commerce. <a href="https://felipeduartte.github.io/Portfolio/" className="text-warning">clique aqui!</a>
+              <span><img src={logoDev} alt="" /></span> , Crie seu site e-commerce. <a href="https://wa.me/5531999450717" className="text-warning">clique aqui!</a>
               </p>
             </div>
           </div>
