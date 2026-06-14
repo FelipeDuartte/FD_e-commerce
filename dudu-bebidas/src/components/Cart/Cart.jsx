@@ -13,7 +13,7 @@ import {
   Store,
 } from "lucide-react";
 import "./Cart.css";
-import { isStoreOpen } from "../../utils/storeHours";
+import { getStoreStatus } from "../../utils/storeHours";
 
 // ── Opções de entrega / retirada ───────────────────────
 const BAIRROS = [
@@ -73,7 +73,6 @@ export default function Cart({
   updateQuantity,
   removeItem,
   clearCart,
-  user, // mantido por compatibilidade, mas não usado para bloquear o checkout
 }) {
   const navigate = useNavigate();
 
@@ -100,12 +99,9 @@ export default function Cart({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    setHorarioAviso(null);
-  }, [bairroSelecionado]);
-
   const handleSelectBairro = (bairro) => {
     setBairroSelecionado(bairro);
+    setHorarioAviso(null);
     setIsBairroOpen(false);
   };
 
@@ -120,10 +116,9 @@ export default function Cart({
   };
 
   const handleCheckout = () => {
-    if (!isStoreOpen()) {
-      setHorarioAviso(
-        "Hoje é segunda — a loja está fechada. Não é possível finalizar pedidos.",
-      );
+    const storeStatus = getStoreStatus();
+    if (!storeStatus.open) {
+      setHorarioAviso(storeStatus.message);
       return;
     }
     if (cartItems.length === 0) return;

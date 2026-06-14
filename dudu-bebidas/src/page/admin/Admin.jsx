@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useReducer, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../supabase/Supabaseclient";
 import "./Admin.css";
@@ -6,13 +6,25 @@ import {
   PAGE_SIZE,
   CATEGORIES,
   EMPTY_PRODUCT,
-  calcDiscount,
   formatBRL,
   useVariableVirtualList,
   playNotificationSound,
   shouldRemoveOrder,
   getNext,
 } from "./adminUtils";
+import {
+  buildProductPayload,
+  listAdminProducts,
+  saveAdminProduct,
+  toggleAdminProductActive,
+  validateProductPayload,
+} from "./services/adminProductService";
+import {
+  getTodayOrderMetrics,
+  listAdminOrders,
+  rejectAdminOrder,
+  updateAdminOrderStatus,
+} from "./services/adminOrderService";
 import OrderCard from "./OrderCard";
 import ProductModal from "./ProductModal";
 import RejectModal from "./RejectModal";
@@ -31,6 +43,7 @@ export default function Admin({ user, isAdmin }) {
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
+  const [ordersError, setOrdersError] = useState("");
   const [updating, setUpdating] = useState(null);
   const [filterStatus, setFilterStatus] = useState("all");
   const [expandedId, setExpandedId] = useState(null);
@@ -45,6 +58,7 @@ export default function Admin({ user, isAdmin }) {
   // ── Estados de produtos ───────────────────────────
   const [products, setProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(false);
+  const [productsError, setProductsError] = useState("");
   const [productSearch, setProductSearch] = useState("");
   const [productCategory, setProductCategory] = useState("todos");
   const [productModal, setProductModal] = useState(null);
@@ -56,15 +70,18 @@ export default function Admin({ user, isAdmin }) {
   // ── Fetch produtos ────────────────────────────────
   const fetchProducts = useCallback(async () => {
     setProductsLoading(true);
-    const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .order("name");
-    if (!error) setProducts(data ?? []);
+    setProductsError("");
+    try {
+      setProducts(await listAdminProducts());
+    } catch (error) {
+      console.error(error);
+      setProductsError(error.message);
+    }
     setProductsLoading(false);
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (activeTab === "produtos" && products.length === 0) fetchProducts();
   }, [activeTab, fetchProducts, products.length]);
 
@@ -102,40 +119,23 @@ export default function Admin({ user, isAdmin }) {
     setModalSaving(true);
     setModalError("");
 
-    const oldPrice =
-      modalForm.old_price !== "" ? Number(modalForm.old_price) : null;
-    const newPrice = Number(modalForm.price);
+    const row = buildProductPayload(modalForm);
+    const validationError = validateProductPayload(row);
 
-    const row = {
-      id: String(modalForm.id).trim(),
-      name: modalForm.name.trim(),
-      category: modalForm.category,
-      price: newPrice,
-      old_price: modalForm.promotion ? oldPrice : null,
-      discount: modalForm.promotion ? calcDiscount(oldPrice, newPrice) : null,
-      image: modalForm.image || null,
-      stock: Number(modalForm.stock),
-      is_active: modalForm.is_active,
-      promotion: modalForm.promotion,
-      supplier: modalForm.supplier || null,
-      ean: modalForm.ean || null,
-    };
-
-    if (!row.id || !row.name || isNaN(row.price) || isNaN(row.stock)) {
-      setModalError("Preencha ID, nome, preço e estoque.");
+    if (validationError) {
+      setModalError(validationError);
       setModalSaving(false);
       return;
     }
 
     const isNew = productModal === "new";
-    const { error } = isNew
-      ? await supabase.from("products").insert(row)
-      : await supabase.from("products").update(row).eq("id", row.id);
-
-    if (error) setModalError(error.message);
-    else {
+    try {
+      await saveAdminProduct(row, isNew);
       await fetchProducts();
       setProductModal(null);
+    } catch (error) {
+      console.error(error);
+      setModalError(error.message);
     }
 
     setModalSaving(false);
@@ -143,68 +143,48 @@ export default function Admin({ user, isAdmin }) {
 
   const handleToggleActive = async (product) => {
     setTogglingId(product.id);
-    await supabase
-      .from("products")
-      .update({ is_active: !product.is_active })
-      .eq("id", product.id);
-    setProducts((prev) =>
-      prev.map((p) =>
-        p.id === product.id ? { ...p, is_active: !p.is_active } : p,
-      ),
-    );
+    setProductsError("");
+    try {
+      const updatedProduct = await toggleAdminProductActive(product);
+      setProducts((prev) =>
+        prev.map((p) => (p.id === product.id ? updatedProduct : p)),
+      );
+    } catch (error) {
+      console.error(error);
+      setProductsError(error.message);
+    }
     setTogglingId(null);
   };
 
   // ── Métricas ──────────────────────────────────────
   const fetchTodayMetrics = useCallback(async () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const { data, count, error } = await supabase
-      .from("orders")
-      .select("total", { count: "exact" })
-      .gte("created_at", today.toISOString())
-      .lt("created_at", tomorrow.toISOString());
-    if (!error && data)
-      dispatchMetrics({
-        count: count ?? 0,
-        total: data.reduce((s, o) => s + (o.total ?? 0), 0),
-      });
+    try {
+      dispatchMetrics(await getTodayOrderMetrics());
+    } catch (error) {
+      console.error(error);
+    }
   }, []);
 
   // ── Fetch pedidos ─────────────────────────────────
   const fetchOrders = useCallback(
     async (pageNum = 0, reset = false) => {
       pageNum === 0 ? setLoading(true) : setLoadingMore(true);
-      const from = pageNum * PAGE_SIZE;
-      const to = from + PAGE_SIZE - 1;
-      const boundary = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-
-      let query = supabase
-        .from("orders")
-        .select(
-          `id, total, payment_method, address, status, created_at, order_items ( id, name, price, quantity )`,
-          { count: "exact" },
-        )
-        .order("created_at", { ascending: false })
-        .range(from, to);
-
-      if (filterStatus === "all") {
-        query = query.or(`status.not.eq.delivered,created_at.gte.${boundary}`);
-      } else if (filterStatus === "delivered") {
-        query = query.eq("status", "delivered").gte("created_at", boundary);
-      } else {
-        query = query.eq("status", filterStatus);
-      }
-
-      const { data, error, count } = await query;
-      if (!error) {
+      setOrdersError("");
+      try {
+        const result = await listAdminOrders({
+          page: pageNum,
+          status: filterStatus,
+        });
         setOrders((prev) =>
-          reset || pageNum === 0 ? (data ?? []) : [...prev, ...(data ?? [])],
+          reset || pageNum === 0
+            ? result.orders
+            : [...prev, ...result.orders],
         );
-        setHasMore((data ?? []).length === PAGE_SIZE);
-        if (count !== null) setTotalCount(count);
+        setHasMore(result.hasMore);
+        setTotalCount(result.count);
+      } catch (error) {
+        console.error(error);
+        setOrdersError(error.message);
       }
       pageNum === 0 ? setLoading(false) : setLoadingMore(false);
     },
@@ -213,6 +193,7 @@ export default function Admin({ user, isAdmin }) {
 
   useEffect(() => {
     if (!isAdmin) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchOrders(0, true);
     fetchTodayMetrics();
   }, [isAdmin, fetchOrders, fetchTodayMetrics]);
@@ -246,6 +227,7 @@ export default function Admin({ user, isAdmin }) {
   // Reset ao mudar filtro
   useEffect(() => {
     if (!isAdmin) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPage(0);
     setOrders([]);
     setHasMore(true);
@@ -290,11 +272,14 @@ export default function Admin({ user, isAdmin }) {
       const next = getNext(order);
       if (!next) return;
       setUpdating(order.id);
-      const { error } = await supabase
-        .from("orders")
-        .update({ status: next })
-        .eq("id", order.id);
-      if (!error) updateOrderStatusLocally(order.id, next);
+      setOrdersError("");
+      try {
+        await updateAdminOrderStatus(order.id, next);
+        updateOrderStatusLocally(order.id, next);
+      } catch (error) {
+        console.error(error);
+        setOrdersError(error.message);
+      }
       setUpdating(null);
     },
     [updateOrderStatusLocally],
@@ -303,11 +288,14 @@ export default function Admin({ user, isAdmin }) {
   const setStatus = useCallback(
     async (orderId, newStatus) => {
       setUpdating(orderId);
-      const { error } = await supabase
-        .from("orders")
-        .update({ status: newStatus })
-        .eq("id", orderId);
-      if (!error) updateOrderStatusLocally(orderId, newStatus);
+      setOrdersError("");
+      try {
+        await updateAdminOrderStatus(orderId, newStatus);
+        updateOrderStatusLocally(orderId, newStatus);
+      } catch (error) {
+        console.error(error);
+        setOrdersError(error.message);
+      }
       setUpdating(null);
     },
     [updateOrderStatusLocally],
@@ -318,37 +306,11 @@ export default function Admin({ user, isAdmin }) {
     setRejecting(true);
     setRejectError("");
 
-    const { data: rpcResult, error: rpcError } = await supabase.rpc(
-      "restore_stock",
-      { p_order_id: rejectModal },
-    );
-
-    if (rpcError || !rpcResult?.success) {
-      setRejectError(
-        rpcError
-          ? "Erro ao restaurar estoque."
-          : (rpcResult?.error ?? "Erro ao restaurar estoque."),
-      );
-      setRejecting(false);
-      return;
-    }
-
-    const { error: itemsErr } = await supabase
-      .from("order_items")
-      .delete()
-      .eq("order_id", rejectModal);
-    if (itemsErr) {
-      setRejectError("Erro ao remover itens.");
-      setRejecting(false);
-      return;
-    }
-
-    const { error: orderErr } = await supabase
-      .from("orders")
-      .delete()
-      .eq("id", rejectModal);
-    if (orderErr) {
-      setRejectError("Erro ao rejeitar pedido.");
+    try {
+      await rejectAdminOrder(rejectModal);
+    } catch (error) {
+      console.error(error);
+      setRejectError(error.message);
       setRejecting(false);
       return;
     }
@@ -424,7 +386,6 @@ export default function Admin({ user, isAdmin }) {
             handleModalChange={handleModalChange}
             handleModalSave={handleModalSave}
             setProductModal={setProductModal}
-            setModalForm={setModalForm}
           />
         )}
 
@@ -542,7 +503,9 @@ export default function Admin({ user, isAdmin }) {
               ))}
             </div>
 
-            {loading ? (
+            {ordersError ? (
+              <div className="adm-modal-error">⚠️ {ordersError}</div>
+            ) : loading ? (
               <div className="adm-loading">
                 <div className="adm-spinner" />
                 <p>Carregando pedidos...</p>
@@ -651,6 +614,10 @@ export default function Admin({ user, isAdmin }) {
                 ))}
               </select>
             </div>
+
+            {productsError && (
+              <div className="adm-modal-error">⚠️ {productsError}</div>
+            )}
 
             {productsLoading ? (
               <div className="adm-loading">

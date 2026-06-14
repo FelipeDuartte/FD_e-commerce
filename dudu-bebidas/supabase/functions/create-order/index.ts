@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { userId, total, paymentMethod, address, cartItems } = await req.json();
+    const { userId, deliveryFee = 0, paymentMethod, address, cartItems } = await req.json();
 
     // Usa service role — bypassa RLS completamente
     const supabase = createClient(
@@ -62,10 +62,12 @@ Deno.serve(async (req) => {
     }
 
     // Calcula o total real usando os preços do banco
-    const calculatedTotal = cartItems.reduce((sum, item) => {
+    const calculatedProductsTotal = cartItems.reduce((sum, item) => {
       const product = products.find((p) => p.id === String(item.id));
       return sum + (product?.price ?? 0) * item.quantity;
     }, 0);
+    const normalizedDeliveryFee = Math.max(0, Number(deliveryFee) || 0);
+    const calculatedTotal = calculatedProductsTotal + normalizedDeliveryFee;
 
     // 2. Inserir o pedido com o total calculado no servidor
     const { data: order, error: orderError } = await supabase
@@ -92,7 +94,7 @@ Deno.serve(async (req) => {
       order_id:   order.id,
       product_id: String(item.id),
       name:       item.name,
-      price:      item.price,
+      price:      products.find((p) => p.id === String(item.id))?.price ?? item.price,
       quantity:   item.quantity,
     }));
 

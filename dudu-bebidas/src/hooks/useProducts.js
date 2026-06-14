@@ -1,6 +1,6 @@
 // src/hooks/useProducts.js
 import { useEffect, useState } from "react";
-import { supabase } from "../supabase/Supabaseclient";
+import { listActiveProducts } from "../supabase/services/shopProductService";
 
 export function useProducts() {
   const [products, setProducts] = useState([]);
@@ -8,43 +8,32 @@ export function useProducts() {
   const [error, setError]       = useState(null);
 
   useEffect(() => {
+    let isMounted = true;
+
     async function fetchProducts() {
       setLoading(true);
+      setError(null);
 
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .eq("is_active", true)  // só produtos ativos aparecem na loja
-        .order("name");
+      try {
+        const normalized = await listActiveProducts();
 
-      if (error) {
-        setError(error.message);
-      } else {
-        // Normaliza para o formato que seu app já usa
-        const normalized = data.map((p) => ({
-          id:          p.id,
-          nome:        p.name,
-          categoria:   p.category,
-          preco:       Number(p.price),
-          precoAntigo: p.old_price ? Number(p.old_price) : null,
-          desconto:    p.discount,
-          imagem:      p.image,
-          estoque:     p.stock,
-          promocao:    p.promotion,
-          fornecedor:  p.supplier,
-          ean:         p.ean,
-          isActive:    p.is_active,
-        }));
+        if (!isMounted) return;
         setProducts(normalized);
 
         // Avisa o carrinho para sincronizar preços e estoques atualizados
         window.dispatchEvent(new CustomEvent("products-loaded", { detail: normalized }));
+      } catch (error) {
+        if (isMounted) setError(error.message);
+      } finally {
+        if (isMounted) setLoading(false);
       }
-
-      setLoading(false);
     }
 
     fetchProducts();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return { products, loading, error };

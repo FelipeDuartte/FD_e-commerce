@@ -1,5 +1,5 @@
 // Utils e constantes compartilhadas pelo painel admin
-import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 export const PAGE_SIZE = 20;
 
 export const STATUS_PICKUP = {
@@ -110,9 +110,8 @@ export function useVariableVirtualList(
   overscan = 3,
 ) {
   const containerRef = useRef(null);
-  const heightsRef = useRef({});
+  const [heights, setHeights] = useState({});
   const observersRef = useRef({});
-  const [, forceUpdate] = useReducer((n) => n + 1, 0);
   const [scrollTop, setScrollTop] = useState(0);
   const [viewH, setViewH] = useState(700);
 
@@ -129,13 +128,15 @@ export function useVariableVirtualList(
     };
   }, []);
 
-  const offsets = [];
-  let acc = 0;
-  for (let i = 0; i < count; i++) {
-    offsets.push(acc);
-    acc += (heightsRef.current[i] ?? estimatedItemHeight) + GAP;
-  }
-  const totalHeight = acc;
+  const { offsets, totalHeight } = useMemo(() => {
+    const nextOffsets = [];
+    let acc = 0;
+    for (let i = 0; i < count; i++) {
+      nextOffsets.push(acc);
+      acc += (heights[i] ?? estimatedItemHeight) + GAP;
+    }
+    return { offsets: nextOffsets, totalHeight: acc };
+  }, [count, estimatedItemHeight, heights]);
 
   const threshold = overscan * estimatedItemHeight;
   let start = 0;
@@ -152,15 +153,12 @@ export function useVariableVirtualList(
       if (!el) return;
       const ro = new ResizeObserver(([e]) => {
         const h = Math.round(e.contentRect.height);
-        if (heightsRef.current[index] !== h) {
-          heightsRef.current[index] = h;
-          forceUpdate();
-        }
+        setHeights((prev) => (prev[index] === h ? prev : { ...prev, [index]: h }));
       });
       ro.observe(el);
       observersRef.current[index] = ro;
     },
-    [forceUpdate],
+    [],
   );
 
   useEffect(() => {
@@ -181,5 +179,7 @@ export function playNotificationSound() {
     }
     notificationAudio.currentTime = 0;
     notificationAudio.play().catch(() => {});
-  } catch {}
+  } catch (error) {
+    console.warn("Não foi possível tocar a notificação.", error);
+  }
 }

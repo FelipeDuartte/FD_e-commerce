@@ -1,7 +1,7 @@
 import React from "react";
 import "./Banner.css";
 
-export default function Banner({ banners, currentBanner, setCurrentBanner }) {
+export default function Banner({ banners, currentBanner }) {
   return (
     <div className="position-relative overflow-hidden">
       {banners.map((banner, index) => (

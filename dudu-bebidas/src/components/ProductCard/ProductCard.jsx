@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Plus, Check, X } from "lucide-react";
 import { imgProduto } from "../../utils/Cloudnary";
 import "./ProductCard.css";
-import { isStoreOpen } from "../../utils/storeHours";
+import { getStoreStatus } from "../../utils/storeHours";
 
 const RESET_TIME = 2000;
 
@@ -15,10 +15,11 @@ export default function ProductCard({ produto, addToCart }) {
   const hasOldPrice = hasPromo && Boolean(produto.precoAntigo);
   const isLowStock = produto.estoque > 0 && produto.estoque < 15;
   const isOutOfStock = produto.estoque <= 0 || produto.isActive === false;
+  const storeStatus = getStoreStatus();
 
   const handleAddToCart = () => {
-    if (!isStoreOpen()) {
-      alert("Loja fechada às segundas — não é possível comprar agora.");
+    if (!storeStatus.open) {
+      alert(storeStatus.message);
       return;
     }
     if (isAdded || isOutOfStock || produto.estoque <= 0) return;
@@ -33,7 +34,7 @@ export default function ProductCard({ produto, addToCart }) {
   }, [isAdded]);
 
   // Estado do botão
-  const btnState = !isStoreOpen()
+  const btnState = !storeStatus.open
     ? "fechado"
     : isOutOfStock
       ? "esgotado"
@@ -54,7 +55,7 @@ export default function ProductCard({ produto, addToCart }) {
     ),
     fechado: (
       <>
-        <X size={16} strokeWidth={3} /> Fechado (segunda)
+        <X size={16} strokeWidth={3} /> {storeStatus.shortMessage}
       </>
     ),
     default: (
@@ -131,8 +132,8 @@ export default function ProductCard({ produto, addToCart }) {
             <button
               onClick={handleAddToCart}
               className={`btn-add-cart${isAdded ? " added" : ""}${isOutOfStock ? " esgotado" : ""}`}
-              disabled={isAdded || isOutOfStock || !isStoreOpen()}
-              title={!isStoreOpen() ? "Loja fechada às segundas" : undefined}
+              disabled={isAdded || isOutOfStock || !storeStatus.open}
+              title={!storeStatus.open ? storeStatus.message : undefined}
             >
               {BTN_CONTENT[btnState]}
             </button>

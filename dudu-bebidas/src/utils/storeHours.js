@@ -1,12 +1,151 @@
 // Utils para horário de funcionamento
-export function isMonday() {
-  const today = new Date();
-  return today.getDay() === 1; // 0=Dom,1=Seg,...
+// Gera feriados nacionais do Brasil (fixos + móveis) para o ano atual
+// e o próximo. Ajuste se quiser adicionar feriados municipais/estaduais.
+
+function localISODate(date = new Date()) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
-export function isStoreOpen() {
-  // Regra atual: fechado às segundas
-  return !isMonday();
+// Cálculo da Páscoa (algoritmo de Meeus)
+function easterDate(year) {
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31);
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(year, month - 1, day);
 }
 
-export default { isMonday, isStoreOpen };
+function addDays(date, days) {
+  const d = new Date(date.getTime());
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
+function generateHolidays(year) {
+  const easter = easterDate(year);
+  const goodFriday = addDays(easter, -2);
+  const carnivalTuesday = addDays(easter, -47);
+  const corpusChristi = addDays(easter, 60);
+
+  const fixed = [
+    `${year}-01-01`, // Ano Novo
+    `${year}-04-21`, // Tiradentes
+    `${year}-05-01`, // Dia do Trabalhador
+    `${year}-09-07`, // Independência
+    `${year}-10-12`, // Nossa Senhora Aparecida
+    `${year}-11-02`, // Finados
+    `${year}-11-15`, // Proclamação da República
+    `${year}-12-25`, // Natal
+  ];
+
+  const movable = [
+    localISODate(carnivalTuesday),
+    localISODate(goodFriday),
+    localISODate(easter),
+    localISODate(corpusChristi),
+  ];
+
+  // Opcional: incluir Dia da Consciência Negra (20/11) — observado em muitos municípios/estados
+  movable.push(`${year}-11-20`);
+
+  return [...fixed, ...movable];
+}
+
+const now = new Date();
+const HOLIDAYS = [
+  ...generateHolidays(now.getFullYear()),
+  ...generateHolidays(now.getFullYear() + 1),
+];
+
+const STORE_STATUS = {
+  open: {
+    open: true,
+    reason: "open",
+    message: null,
+    shortMessage: null,
+  },
+  monday: {
+    open: false,
+    reason: "monday",
+    message:
+      "Hoje é segunda-feira — a loja está fechada. Não é possível finalizar pedidos.",
+    shortMessage: "Fechado (segunda)",
+  },
+  sundayAfterNoon: {
+    open: false,
+    reason: "sunday_after_noon",
+    message:
+      "Aos domingos, pedidos ficam disponíveis até 12h. Não é possível finalizar pedidos agora.",
+    shortMessage: "Fechado após 12h",
+  },
+  holidayAfterNoon: {
+    open: false,
+    reason: "holiday_after_noon",
+    message:
+      "Em feriados, pedidos ficam disponíveis até 12h. Não é possível finalizar pedidos agora.",
+    shortMessage: "Fechado após 12h",
+  },
+};
+
+export function isMonday(date = new Date()) {
+  return date.getDay() === 1; // 0=Dom,1=Seg,...
+}
+
+export function isSunday(date = new Date()) {
+  return date.getDay() === 0;
+}
+
+export function isHoliday(date = new Date()) {
+  const iso = localISODate(date);
+  return HOLIDAYS.includes(iso);
+}
+
+export function isBeforeNoon(date = new Date()) {
+  // Permite compra até 12:00 (meio-dia). Aqui consideramos hora < 12.
+  return date.getHours() < 12;
+}
+
+export function getStoreStatus(date = new Date()) {
+  if (isMonday(date)) return STORE_STATUS.monday;
+  if (isHoliday(date) && !isBeforeNoon(date)) {
+    return STORE_STATUS.holidayAfterNoon;
+  }
+  if (isSunday(date) && !isBeforeNoon(date)) {
+    return STORE_STATUS.sundayAfterNoon;
+  }
+  return STORE_STATUS.open;
+}
+
+// Retorna se é permitido efetuar compra no momento atual
+export function isPurchaseAllowed(date = new Date()) {
+  return getStoreStatus(date).open;
+}
+
+export function isStoreOpen(date = new Date()) {
+  // Compatível com usos existentes no projeto
+  return isPurchaseAllowed(date);
+}
+
+export default {
+  isMonday,
+  isSunday,
+  isHoliday,
+  isBeforeNoon,
+  getStoreStatus,
+  isPurchaseAllowed,
+  isStoreOpen,
+  HOLIDAYS,
+};
