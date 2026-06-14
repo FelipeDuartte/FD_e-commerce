@@ -40,6 +40,7 @@ export default function DuduBebidas() {
 
   useEffect(() => {
     if (location.state?.openCart) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCartOpen(true);
       navigate("/", { replace: true, state: {} });
     }
@@ -77,7 +78,11 @@ export default function DuduBebidas() {
   }, [user]);
 
   // ==== Produtos ====
-  const { products: produtosData, loading: produtosLoading } = useProducts();
+  const {
+    products: produtosData,
+    loading: produtosLoading,
+    error: produtosError,
+  } = useProducts();
 
   // ==== Carrinho ====
   const { cartItems, cartCount, addToCart, updateQuantity, removeItem, clearCart } = useCart();
@@ -153,6 +158,10 @@ export default function DuduBebidas() {
               {produtosLoading ? (
                 <div style={{ textAlign: "center", padding: "4rem" }}>
                   Carregando produtos...
+                </div>
+              ) : produtosError ? (
+                <div style={{ textAlign: "center", padding: "4rem" }}>
+                  {produtosError}
                 </div>
               ) : (
                 <ProductList

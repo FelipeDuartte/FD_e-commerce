@@ -12,7 +12,7 @@ import {
   LogOut,
 } from "lucide-react";
 import "./Header.css";
-import { isMonday } from "../../utils/storeHours";
+import { getStoreStatus } from "../../utils/storeHours";
 
 export default function Header({
   searchTerm,
@@ -52,16 +52,14 @@ export default function Header({
   const firstName = user?.user_metadata?.full_name
     ? user.user_metadata.full_name.split(" ")[0]
     : (user?.email?.split("@")[0] ?? "");
+  const storeStatus = getStoreStatus();
 
   return (
     <header
       className={`sticky-top navbar-custom ${scrolled ? "scrolled" : ""}`}
     >
-      {isMonday() && (
-        <div className="site-closed-banner">
-          Hoje é segunda — a loja está fechada. Não é possível finalizar compras
-          hoje.
-        </div>
+      {!storeStatus.open && (
+        <div className="site-closed-banner">{storeStatus.message}</div>
       )}
       <nav className="navbar navbar-dark">
         {/* ── BARRA PRINCIPAL ── */}

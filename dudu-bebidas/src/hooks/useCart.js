@@ -1,19 +1,17 @@
 // src/hooks/useCart.js
 import { useState, useEffect, useMemo } from "react";
+import {
+  clearStoredCart,
+  loadStoredCart,
+  saveStoredCart,
+} from "../utils/cartStorage";
 
 export function useCart() {
   // ── Persiste no localStorage ──────────────────────
-  const [cartItems, setCartItems] = useState(() => {
-    try {
-      const saved = localStorage.getItem("dudu-cart");
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [cartItems, setCartItems] = useState(loadStoredCart);
 
   useEffect(() => {
-    localStorage.setItem("dudu-cart", JSON.stringify(cartItems));
+    saveStoredCart(cartItems);
   }, [cartItems]);
 
   // ── Sincroniza preços e estoques quando os produtos carregam ──
@@ -77,7 +75,7 @@ export function useCart() {
 
   const clearCart = () => {
     setCartItems([]);
-    localStorage.removeItem("dudu-cart");
+    clearStoredCart();
   };
 
   const cartCount = useMemo(

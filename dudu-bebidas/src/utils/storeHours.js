@@ -70,6 +70,36 @@ const HOLIDAYS = [
   ...generateHolidays(now.getFullYear() + 1),
 ];
 
+const STORE_STATUS = {
+  open: {
+    open: true,
+    reason: "open",
+    message: null,
+    shortMessage: null,
+  },
+  monday: {
+    open: false,
+    reason: "monday",
+    message:
+      "Hoje é segunda-feira — a loja está fechada. Não é possível finalizar pedidos.",
+    shortMessage: "Fechado (segunda)",
+  },
+  sundayAfterNoon: {
+    open: false,
+    reason: "sunday_after_noon",
+    message:
+      "Aos domingos, pedidos ficam disponíveis até 12h. Não é possível finalizar pedidos agora.",
+    shortMessage: "Fechado após 12h",
+  },
+  holidayAfterNoon: {
+    open: false,
+    reason: "holiday_after_noon",
+    message:
+      "Em feriados, pedidos ficam disponíveis até 12h. Não é possível finalizar pedidos agora.",
+    shortMessage: "Fechado após 12h",
+  },
+};
+
 export function isMonday(date = new Date()) {
   return date.getDay() === 1; // 0=Dom,1=Seg,...
 }
@@ -88,13 +118,20 @@ export function isBeforeNoon(date = new Date()) {
   return date.getHours() < 12;
 }
 
+export function getStoreStatus(date = new Date()) {
+  if (isMonday(date)) return STORE_STATUS.monday;
+  if (isHoliday(date) && !isBeforeNoon(date)) {
+    return STORE_STATUS.holidayAfterNoon;
+  }
+  if (isSunday(date) && !isBeforeNoon(date)) {
+    return STORE_STATUS.sundayAfterNoon;
+  }
+  return STORE_STATUS.open;
+}
+
 // Retorna se é permitido efetuar compra no momento atual
 export function isPurchaseAllowed(date = new Date()) {
-  if (isMonday(date)) return false; // regra existente: fechado às segundas
-  if (isSunday(date) || isHoliday(date)) {
-    return isBeforeNoon(date);
-  }
-  return true;
+  return getStoreStatus(date).open;
 }
 
 export function isStoreOpen(date = new Date()) {
@@ -107,6 +144,7 @@ export default {
   isSunday,
   isHoliday,
   isBeforeNoon,
+  getStoreStatus,
   isPurchaseAllowed,
   isStoreOpen,
   HOLIDAYS,

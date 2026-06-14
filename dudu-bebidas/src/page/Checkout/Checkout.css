@@ -281,6 +281,67 @@
   line-height: 1.5;
 }
 
+.co-last-location {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 14px;
+  background: #0a0a0a;
+  border: 1px solid rgba(255, 208, 0, 0.18);
+  border-radius: 10px;
+}
+
+.co-last-location-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.co-last-location-copy strong {
+  color: #ffd000;
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.co-last-location-copy span {
+  color: #aaa;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.co-last-location-btn {
+  flex-shrink: 0;
+  border: 1px solid #ffd000;
+  border-radius: 8px;
+  background: #ffd000;
+  color: #000;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 9px 14px;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.co-last-location-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.co-last-location-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.co-last-location-feedback {
+  margin-bottom: 12px;
+  color: #50c878;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 /* ─── PAYMENT ───────────────────────────────────────── */
 .co-pay-grid {
   display: grid;

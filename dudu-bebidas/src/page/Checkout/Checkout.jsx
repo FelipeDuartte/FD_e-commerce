@@ -2,7 +2,11 @@ import { useEffect, useState, useRef } from "react";
 import "./Checkout.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import { saveOrder } from "../../supabase/saveOrder";
-import { isStoreOpen } from "../../utils/storeHours";
+import { getStoreStatus } from "../../utils/storeHours";
+import {
+  loadLastDeliveryAddress,
+  saveLastDeliveryAddress,
+} from "../../utils/checkoutAddressStorage";
 
 const paymentOptions = [
   { value: "pix", icon: "⚡", name: "PIX" },
@@ -43,6 +47,8 @@ export default function Checkout({ user, clearCart }) {
   const [cepError, setCepError] = useState("");
 
   const [address, setAddress] = useState(INITIAL_ADDRESS);
+  const [lastAddress, setLastAddress] = useState(null);
+  const [lastAddressMessage, setLastAddressMessage] = useState("");
 
   // ── Helpers ───────────────────────────────────────────
   const showError = (msg) => {
@@ -66,7 +72,7 @@ export default function Checkout({ user, clearCart }) {
   // ── Effects ───────────────────────────────────────────
   useEffect(() => {
     if (cartItems.length === 0) navigate("/", { replace: true });
-  }, []);
+  }, [cartItems.length, navigate]);
 
   useEffect(() => {
     if (!orderProcessed) return;
@@ -75,9 +81,25 @@ export default function Checkout({ user, clearCart }) {
     return () => window.removeEventListener("popstate", handlePopState);
   }, [orderProcessed, navigate]);
 
+  useEffect(() => {
+    if (!user?.id || isRetirada) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setLastAddress(null);
+      return;
+    }
+
+    const savedAddress = loadLastDeliveryAddress(user.id);
+    const sameDeliveryArea =
+      savedAddress &&
+      (!savedAddress.bairro || savedAddress.bairro === bairroCarrinho);
+
+    setLastAddress(sameDeliveryArea ? savedAddress : null);
+  }, [bairroCarrinho, isRetirada, user?.id]);
+
   // ── Handlers ──────────────────────────────────────────
   const handleAddressChange = (e) => {
     setAddress((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    setLastAddressMessage("");
     if (errorMsg) setErrorMsg("");
   };
 
@@ -85,6 +107,7 @@ export default function Checkout({ user, clearCart }) {
     const value = e.target.value.replace(/\D/g, "").slice(0, 8);
     setCep(value.length > 5 ? `${value.slice(0, 5)}-${value.slice(5)}` : value);
     setCepError("");
+    setLastAddressMessage("");
     if (errorMsg) setErrorMsg("");
   };
 
@@ -124,7 +147,21 @@ export default function Checkout({ user, clearCart }) {
     else if (value.length > 2)
       value = `(${value.slice(0, 2)}) ${value.slice(2)}`;
     setAddress((prev) => ({ ...prev, phone: value }));
+    setLastAddressMessage("");
     if (errorMsg) setErrorMsg("");
+  };
+
+  const handleUseLastAddress = () => {
+    if (!lastAddress) return;
+
+    setAddress({
+      ...INITIAL_ADDRESS,
+      ...lastAddress,
+    });
+    setCep(lastAddress.cep ?? "");
+    setCepError("");
+    setErrorMsg("");
+    setLastAddressMessage("Ultima localizacao aplicada.");
   };
 
   // ── Validação ─────────────────────────────────────────
@@ -174,6 +211,7 @@ export default function Checkout({ user, clearCart }) {
       const { orderId, error } = await saveOrder({
         userId: user?.id ?? null,
         total: cartTotal + DELIVERY,
+        deliveryFee: DELIVERY,
         paymentMethod: payment,
         address: addressToSave,
         cartItems,
@@ -184,6 +222,10 @@ export default function Checkout({ user, clearCart }) {
         isProcessingRef.current = false;
         setLoading(false);
         return;
+      }
+
+      if (user?.id && !isRetirada) {
+        saveLastDeliveryAddress(user.id, addressToSave);
       }
 
       setOrderProcessed(true);
@@ -221,7 +263,8 @@ export default function Checkout({ user, clearCart }) {
         : "Confirmar Pedido →";
 
   // ── Render ────────────────────────────────────────────
-  const closed = !isStoreOpen();
+  const storeStatus = getStoreStatus();
+  const closed = !storeStatus.open;
   return (
     <div className="co-root">
       <div className="co-wrap">
@@ -230,9 +273,7 @@ export default function Checkout({ user, clearCart }) {
             <div className="co-error-icon">⚠️</div>
             <div className="co-error-content">
               <div className="co-error-title">Loja fechada</div>
-              <div className="co-error-message">
-                Hoje é segunda-feira — não é possível finalizar pedidos.
-              </div>
+              <div className="co-error-message">{storeStatus.message}</div>
             </div>
           </div>
         )}
@@ -311,6 +352,35 @@ export default function Checkout({ user, clearCart }) {
             <div className="co-section-label">
               {isRetirada ? "👤 Identificação" : "📍 Entrega"}
             </div>
+
+            {lastAddress && !isRetirada && (
+              <div className="co-last-location">
+                <div className="co-last-location-copy">
+                  <strong>Ultima localizacao</strong>
+                  <span>
+                    {lastAddress.street}, {lastAddress.number}
+                    {lastAddress.complement
+                      ? ` - ${lastAddress.complement}`
+                      : ""}{" "}
+                    · {lastAddress.district}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="co-last-location-btn"
+                  onClick={handleUseLastAddress}
+                  disabled={isDisabled}
+                >
+                  Usar
+                </button>
+              </div>
+            )}
+
+            {lastAddressMessage && (
+              <div className="co-last-location-feedback">
+                {lastAddressMessage}
+              </div>
+            )}
 
             <div className="co-field-row">
               <div className="co-field">

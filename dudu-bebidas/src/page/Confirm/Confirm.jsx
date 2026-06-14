@@ -57,7 +57,9 @@ function resolveOrderData(locationState) {
   if (saved) {
     try {
       return JSON.parse(saved);
-    } catch {}
+    } catch (error) {
+      console.warn("Pedido salvo inválido.", error);
+    }
   }
   return EMPTY_ORDER;
 }

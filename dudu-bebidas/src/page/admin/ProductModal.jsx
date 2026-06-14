@@ -8,7 +8,6 @@ export default function ProductModal({
   handleModalChange,
   handleModalSave,
   setProductModal,
-  setModalForm,
 }) {
   return (
     <>
