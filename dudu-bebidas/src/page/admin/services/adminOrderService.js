@@ -61,7 +61,10 @@ export async function getTodayOrderMetrics() {
     .lt("created_at", tomorrow.toISOString());
 
   if (error) {
-    throw new AdminServiceError("Não foi possível carregar as métricas.", error);
+    throw new AdminServiceError(
+      "Não foi possível carregar as métricas.",
+      error,
+    );
   }
 
   return {
@@ -82,40 +85,27 @@ export async function updateAdminOrderStatus(orderId, status) {
 }
 
 export async function rejectAdminOrder(orderId) {
-  // Marca como "rejected" primeiro: dispara o evento realtime para o
-  // cliente avisar o usuário antes que o pedido seja apagado abaixo.
+  // Marca como "rejected" primeiro para disparar notificação ao cliente
   const { error: statusError } = await supabase
     .from("orders")
     .update({ status: "rejected" })
     .eq("id", orderId);
 
   if (statusError) {
-    throw new AdminServiceError("Erro ao rejeitar pedido.", statusError);
+    console.error("Erro ao marcar como rejected:", statusError);
   }
 
-  const { data: rpcResult, error: rpcError } = await supabase.rpc(
-    "restore_stock",
-    { p_order_id: orderId },
-  );
-
-  if (rpcError || !rpcResult?.success) {
-    throw new AdminServiceError(
-      rpcError
-        ? "Erro ao restaurar estoque."
-        : (rpcResult?.error ?? "Erro ao restaurar estoque."),
-      rpcError,
-    );
-  }
-
+  // Deleta itens do pedido
   const { error: itemsError } = await supabase
     .from("order_items")
     .delete()
     .eq("order_id", orderId);
 
   if (itemsError) {
-    throw new AdminServiceError("Erro ao remover itens.", itemsError);
+    throw new AdminServiceError("Erro ao remover itens do pedido.", itemsError);
   }
 
+  // Deleta o pedido
   const { error: orderError } = await supabase
     .from("orders")
     .delete()

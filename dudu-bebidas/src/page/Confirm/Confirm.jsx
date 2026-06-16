@@ -158,6 +158,21 @@ export default function Confirmacao() {
           }
         },
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "orders",
+          filter: `id=eq.${orderId}`,
+        },
+        () => {
+          // Pedido foi deletado (rejeição)
+          setStatus("rejected");
+          setShowRejectedModal(true);
+          localStorage.removeItem("lastOrder");
+        },
+      )
       .subscribe();
 
     return () => supabase.removeChannel(channel);
@@ -275,8 +290,8 @@ export default function Confirmacao() {
             <h3 className="cf-modal-title">Pedido rejeitado</h3>
             <p className="cf-modal-desc">
               Infelizmente seu {entityLabel} <strong>#{shortId}</strong> foi{" "}
-              <strong>rejeitado</strong> pela loja. Nenhum valor foi
-              cobrado. Se tiver dúvidas, entre em contato com a loja.
+              <strong>rejeitado</strong> pela loja. Nenhum valor foi cobrado. Se
+              tiver dúvidas, entre em contato com a loja.
             </p>
             <div className="cf-modal-actions">
               <button
