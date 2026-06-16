@@ -27,6 +27,7 @@ import Confirm       from "./page/Confirm/Confirm";
 import Admin         from "./page/admin/Admin";
 import PrivacyPolicy from "./page/privacy-politcy/PrivacyPoclicy";
 import TermsOfService from "./page/terms-service/TermsService";
+import CookieConsent from "./components/CookieConsent/CookieConsent";
 
 export default function DuduBebidas() {
   // ==== UI States ====
@@ -196,6 +197,7 @@ export default function DuduBebidas() {
       />
 
       <Login isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
+      <CookieConsent />
     </div>
   );
 }

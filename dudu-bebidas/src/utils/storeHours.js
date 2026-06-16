@@ -84,19 +84,19 @@ const STORE_STATUS = {
       "Hoje é segunda-feira — a loja está fechada. Não é possível finalizar pedidos.",
     shortMessage: "Fechado (segunda)",
   },
-  sundayAfterNoon: {
+  sunday: {
     open: false,
-    reason: "sunday_after_noon",
+    reason: "sunday",
     message:
-      "Aos domingos, pedidos ficam disponíveis até 12h. Não é possível finalizar pedidos agora.",
-    shortMessage: "Fechado após 12h",
+      "Hoje é domingo — a loja está fechada. Não é possível finalizar pedidos.",
+    shortMessage: "Fechado (domingo)",
   },
-  holidayAfterNoon: {
+  holiday: {
     open: false,
-    reason: "holiday_after_noon",
+    reason: "holiday",
     message:
-      "Em feriados, pedidos ficam disponíveis até 12h. Não é possível finalizar pedidos agora.",
-    shortMessage: "Fechado após 12h",
+      "Hoje é feriado — a loja está fechada. Não é possível finalizar pedidos.",
+    shortMessage: "Fechado (feriado)",
   },
 };
 
@@ -120,12 +120,8 @@ export function isBeforeNoon(date = new Date()) {
 
 export function getStoreStatus(date = new Date()) {
   if (isMonday(date)) return STORE_STATUS.monday;
-  if (isHoliday(date) && !isBeforeNoon(date)) {
-    return STORE_STATUS.holidayAfterNoon;
-  }
-  if (isSunday(date) && !isBeforeNoon(date)) {
-    return STORE_STATUS.sundayAfterNoon;
-  }
+  if (isHoliday(date)) return STORE_STATUS.holiday;
+  if (isSunday(date)) return STORE_STATUS.sunday;
   return STORE_STATUS.open;
 }
 

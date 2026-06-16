@@ -90,6 +90,9 @@ export default function Confirmacao() {
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState("");
 
+  // ── Modal pedido rejeitado pelo admin ─────────────
+  const [showRejectedModal, setShowRejectedModal] = useState(false);
+
   // ── Persiste no localStorage ──────────────────────
   useEffect(() => {
     if (orderId || cartItems.length > 0) {
@@ -123,6 +126,11 @@ export default function Confirmacao() {
       .then(({ data, error }) => {
         if (error) console.error("Erro ao buscar status:", error);
         if (data?.status) setStatus(data.status);
+        if (data === null && !error) {
+          // Pedido não existe mais (rejeitado e removido)
+          setStatus("rejected");
+          setShowRejectedModal(true);
+        }
         setStatusLoading(false);
       });
 
@@ -138,6 +146,12 @@ export default function Confirmacao() {
         },
         ({ new: payload }) => {
           if (payload?.status) {
+            if (payload.status === "rejected") {
+              setStatus("rejected");
+              setShowRejectedModal(true);
+              localStorage.removeItem("lastOrder");
+              return;
+            }
             setAnimating(true);
             setStatus(payload.status);
             setTimeout(() => setAnimating(false), 600);
@@ -246,6 +260,30 @@ export default function Confirmacao() {
                 disabled={cancelling}
               >
                 {cancelling ? "Cancelando..." : "Sim, cancelar"}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* MODAL — PEDIDO REJEITADO PELO ADMIN */}
+      {showRejectedModal && (
+        <>
+          <div className="cf-modal-overlay" />
+          <div className="cf-modal" role="dialog" aria-modal="true">
+            <div className="cf-modal-icon">😔</div>
+            <h3 className="cf-modal-title">Pedido rejeitado</h3>
+            <p className="cf-modal-desc">
+              Infelizmente seu {entityLabel} <strong>#{shortId}</strong> foi{" "}
+              <strong>rejeitado</strong> pela loja. Nenhum valor foi
+              cobrado. Se tiver dúvidas, entre em contato com a loja.
+            </p>
+            <div className="cf-modal-actions">
+              <button
+                className="cf-modal-btn-confirm"
+                onClick={() => navigate("/")}
+              >
+                Voltar para a loja
               </button>
             </div>
           </div>
@@ -461,12 +499,15 @@ export default function Confirmacao() {
               </button>
             )}
 
-            {!canCancel && (orderId || isRetirada) && status !== "pending" && (
-              <div className="cf-cancel-info">
-                ℹ️ Não é mais possível cancelar — {entityLabel} já está em
-                andamento.
-              </div>
-            )}
+            {!canCancel &&
+              (orderId || isRetirada) &&
+              status !== "pending" &&
+              status !== "rejected" && (
+                <div className="cf-cancel-info">
+                  ℹ️ Não é mais possível cancelar — {entityLabel} já está em
+                  andamento.
+                </div>
+              )}
           </div>
         </div>
       </div>

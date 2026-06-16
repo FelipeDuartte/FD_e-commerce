@@ -82,6 +82,17 @@ export async function updateAdminOrderStatus(orderId, status) {
 }
 
 export async function rejectAdminOrder(orderId) {
+  // Marca como "rejected" primeiro: dispara o evento realtime para o
+  // cliente avisar o usuário antes que o pedido seja apagado abaixo.
+  const { error: statusError } = await supabase
+    .from("orders")
+    .update({ status: "rejected" })
+    .eq("id", orderId);
+
+  if (statusError) {
+    throw new AdminServiceError("Erro ao rejeitar pedido.", statusError);
+  }
+
   const { data: rpcResult, error: rpcError } = await supabase.rpc(
     "restore_stock",
     { p_order_id: orderId },
