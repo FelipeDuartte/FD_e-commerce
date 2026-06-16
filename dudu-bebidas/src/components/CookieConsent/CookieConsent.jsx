@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import "./CookieConsent.css";
+import "./Cookieconsent.css";
 
 const STORAGE_KEY = "cookieConsent";
 const COOKIE_NAME = "cookie_consent";
