@@ -18,10 +18,10 @@ import { getStoreStatus } from "../../utils/storeHours";
 // ── Opções de entrega / retirada ───────────────────────
 const BAIRROS = [
   { nome: "Retirada na Loja", frete: 0, isRetirada: true },
-  { nome: "Minas Caixas", frete: 3.0 },
-  { nome: "Serra Verde", frete: 5.0 },
-  { nome: "Parque São Pedro", frete: 3.0 },
-  { nome: "Venda Nova", frete: 5.0 },
+  { nome: "Minas Caixas", frete: 3.20 },
+  { nome: "Serra Verde", frete: 5.20 },
+  { nome: "Parque São Pedro", frete: 3.20 },
+  { nome: "Venda Nova", frete: 5.20 },
 ];
 
 const HORARIO_ENTREGA = { abertura: 9 * 60, fechamento: 17 * 60 + 30 };
