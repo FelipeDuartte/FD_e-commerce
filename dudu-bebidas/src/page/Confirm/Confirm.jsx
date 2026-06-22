@@ -519,8 +519,15 @@ export default function Confirmacao() {
               status !== "pending" &&
               status !== "rejected" && (
                 <div className="cf-cancel-info">
-                  ℹ️ Não é mais possível cancelar — {entityLabel} já está em
-                  andamento.
+                  <p>
+                    ℹ️ Não é mais possível cancelar — {entityLabel} já está em
+                    andamento.
+                  </p>
+                  <a href="https://wa.me/553183077990" target="_blank" className="text-bold text-decoration-none fs-6 text-white">
+                    <div className="border border-secondary rounded bg-success p-2">
+                      <span>Falar com atendente <i class="bi bi-whatsapp"></i></span>
+                    </div>
+                  </a>
                 </div>
               )}
           </div>

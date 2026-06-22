@@ -20,7 +20,7 @@ export default function Footer() {
               <a href="https://www.instagram.com/dudu_bebidas_vn_/" target="_blank" className="footer-social-link">
                 <i className="bi bi-instagram"></i>
               </a>
-              <a href="https://wa.me/31999575029" target="_blank" className="footer-social-link">
+              <a href="https://wa.me/553183077990" target="_blank" className="footer-social-link">
                 <i className="bi bi-whatsapp"></i>
               </a>
             </div>
@@ -57,7 +57,7 @@ export default function Footer() {
               <i className="bi bi-whatsapp"></i>
               <div className="contact-content">
                 <div className="contact-label">WhatsApp</div>
-                <div className="contact-info">(31) 99957-5029</div>
+                <div className="contact-info">+55 (31) 8307-7990</div>
               </div>
             </div>
             <div className="footer-contact-item">
