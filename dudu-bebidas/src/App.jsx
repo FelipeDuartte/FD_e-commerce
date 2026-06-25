@@ -1,5 +1,5 @@
 // ==== React imports ====
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Route, Routes } from "react-router-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 // ==== Styles ====
@@ -65,17 +65,25 @@ export default function DuduBebidas() {
     return () => subscription.unsubscribe();
   }, []);
 
+  const lastCheckedUid = useRef(null);
+
   useEffect(() => {
-    const fetchAdmin = async () => {
-      if (!user) { setIsAdmin(false); return; }
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("is_admin")
-        .eq("id", user.id)
-        .single();
-      setIsAdmin(!error && data?.is_admin ? true : false);
-    };
-    fetchAdmin();
+    if (!user) {
+      lastCheckedUid.current = null;
+      setIsAdmin(false);
+      return;
+    }
+    if (user.id === lastCheckedUid.current) return;
+    lastCheckedUid.current = user.id;
+
+    supabase
+      .from("profiles")
+      .select("is_admin")
+      .eq("id", user.id)
+      .single()
+      .then(({ data, error }) => {
+        setIsAdmin(!error && data?.is_admin === true);
+      });
   }, [user]);
 
   // ==== Produtos ====
