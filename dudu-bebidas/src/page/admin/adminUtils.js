@@ -71,6 +71,13 @@ export const EMPTY_PRODUCT = {
   ean: "",
 };
 
+export function generateProductId() {
+  const suffix = Math.floor(Math.random() * 10000)
+    .toString()
+    .padStart(4, "0");
+  return `02${suffix}`;
+}
+
 export const isPickup = (order) => order.address?.isRetirada === true;
 export const getStatusMap = (order) =>
   isPickup(order) ? STATUS_PICKUP : STATUS_DELIVERY;

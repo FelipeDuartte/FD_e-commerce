@@ -11,6 +11,7 @@ import {
   playNotificationSound,
   shouldRemoveOrder,
   getNext,
+  generateProductId,
 } from "./adminUtils";
 import {
   buildProductPayload,
@@ -108,7 +109,7 @@ export default function Admin({ user, isAdmin }) {
 
   // ── Modal de produto ──────────────────────────────
   const openNewProduct = () => {
-    setModalForm(EMPTY_PRODUCT);
+    setModalForm({ ...EMPTY_PRODUCT, id: generateProductId() });
     setModalError("");
     setProductModal("new");
   };
