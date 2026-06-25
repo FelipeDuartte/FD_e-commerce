@@ -28,6 +28,8 @@ import {
 import OrderCard from "./OrderCard";
 import ProductModal from "./ProductModal";
 import RejectModal from "./RejectModal";
+import AdminReports from "./AdminReports";
+import { useAdminReports } from "./hooks/useAdminReports";
 
 // ── Reducer métricas ──────────────────────────────────
 const metricsReducer = (_, { count, total }) => ({ count, total });
@@ -54,6 +56,16 @@ export default function Admin({ user, isAdmin }) {
   const [rejectModal, setRejectModal] = useState(null);
   const [rejecting, setRejecting] = useState(false);
   const [rejectError, setRejectError] = useState("");
+
+  // ── Relatórios ────────────────────────────────────
+  const {
+    reportData,
+    loading: reportsLoading,
+    error: reportsError,
+    period,
+    setPeriod,
+    refresh: refreshReports,
+  } = useAdminReports(activeTab === "relatorios");
 
   // ── Estados de produtos ───────────────────────────
   const [products, setProducts] = useState([]);
@@ -399,7 +411,7 @@ export default function Admin({ user, isAdmin }) {
             <div className="adm-badge">ADMIN</div>
           </div>
           <div className="adm-header-right">
-            <span className="adm-admin-email">👤 {user.email}</span>
+            <span className="adm-admin-email">👤 Dudu bebidas</span>
             <button className="adm-btn-back" onClick={() => navigate("/")}>
               ← Voltar à loja
             </button>
@@ -411,6 +423,7 @@ export default function Admin({ user, isAdmin }) {
           {[
             { key: "pedidos", label: "📦 Pedidos", badge: orders.length },
             { key: "produtos", label: "🍺 Produtos", badge: products.length },
+            { key: "relatorios", label: "📊 Relatórios", badge: null },
           ].map(({ key, label, badge }) => (
             <button
               key={key}
@@ -418,7 +431,9 @@ export default function Admin({ user, isAdmin }) {
               onClick={() => setActiveTab(key)}
             >
               {label}
-              {badge > 0 && <span className="adm-tab-badge">{badge}</span>}
+              {badge != null && badge > 0 && (
+                <span className="adm-tab-badge">{badge}</span>
+              )}
             </button>
           ))}
         </div>
@@ -699,6 +714,17 @@ export default function Admin({ user, isAdmin }) {
               </div>
             )}
           </>
+        )}
+        {/* ══ ABA RELATÓRIOS ══ */}
+        {activeTab === "relatorios" && (
+          <AdminReports
+            reportData={reportData}
+            loading={reportsLoading}
+            error={reportsError}
+            period={period}
+            setPeriod={setPeriod}
+            refresh={refreshReports}
+          />
         )}
       </div>
     </div>
