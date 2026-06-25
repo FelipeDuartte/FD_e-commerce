@@ -19,6 +19,8 @@ import Benefits      from "./components/Benefits/Benefits";
 import ProductList   from "./components/ProductList/ProductList";
 import Footer        from "./components/Footer/Footer";
 import Cart          from "./components/Cart/Cart";
+import AgeGate from "./components/AgeGate/AgeGate";
+import { hasAcceptedAgeGate } from "./components/AgeGate/ageGateStorage";
 import Login         from "./page/login/login";
 import Checkout      from "./page/Checkout/Checkout";
 import Scrolltotop   from "./data/scrolltotop/Scrolltotop";
@@ -35,9 +37,11 @@ export default function DuduBebidas() {
   const [cartOpen,   setCartOpen]   = useState(false);
   const [loginOpen,  setLoginOpen]  = useState(false);
   const [scrolled,   setScrolled]   = useState(false);
+  const [ageGateAccepted, setAgeGateAccepted] = useState(() => hasAcceptedAgeGate());
 
   const location = useLocation();
   const navigate = useNavigate();
+  const isLegalPage = ["/privacy-policy", "/terms-service"].includes(location.pathname);
 
   useEffect(() => {
     if (location.state?.openCart) {
@@ -70,6 +74,7 @@ export default function DuduBebidas() {
   useEffect(() => {
     if (!user) {
       lastCheckedUid.current = null;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsAdmin(false);
       return;
     }
@@ -205,7 +210,12 @@ export default function DuduBebidas() {
       />
 
       <Login isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
+        
       <CookieConsent />
+
+      {!ageGateAccepted && !isLegalPage && (
+        <AgeGate onAccept={() => setAgeGateAccepted(true)} />
+      )}
     </div>
   );
 }
