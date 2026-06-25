@@ -35,7 +35,7 @@ import { useAdminReports } from "./hooks/useAdminReports";
 // ── Reducer métricas ──────────────────────────────────
 const metricsReducer = (_, { count, total }) => ({ count, total });
 
-export default function Admin({ user, isAdmin }) {
+export default function Admin({ isAdmin }) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("pedidos");
 
