@@ -1,4 +1,4 @@
-import { CATEGORIES, calcDiscount } from "./adminUtils";
+import { calcDiscount } from "./adminUtils";
 
 export default function ProductModal({
   productModal,
@@ -8,6 +8,7 @@ export default function ProductModal({
   handleModalChange,
   handleModalSave,
   setProductModal,
+  categories = [],   // ← recebido do Admin.jsx via hook useAdminCategories
 }) {
   return (
     <>
@@ -47,7 +48,7 @@ export default function ProductModal({
                 value={modalForm.category}
                 onChange={handleModalChange}
               >
-                {CATEGORIES.map((c) => (
+                {categories.map((c) => (
                   <option key={c} value={c}>
                     {c}
                   </option>

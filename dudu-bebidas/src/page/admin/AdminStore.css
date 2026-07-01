@@ -1,0 +1,402 @@
+/* ─── ADMINSTORE.CSS ─────────────────────────────────────────────────────────
+   Estilos para o módulo "Loja" do painel admin.
+   Usa os mesmos tokens CSS definidos em Admin.css (--c-*, --r-*, --t, etc.)
+   e reutiliza classes existentes do admin (.adm-*) sem reescrevê-las.
+──────────────────────────────────────────────────────────────────────────── */
+
+/* ── Sub-abas internas ───────────────────────────────────────────────────── */
+.adm-subtabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid var(--c-border);
+  flex-wrap: wrap;
+}
+
+.adm-subtab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--c-text-muted);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 9px 18px;
+  cursor: pointer;
+  transition:
+    color var(--t),
+    border-color var(--t);
+  margin-bottom: -1px; /* sobrepõe a borda do container */
+}
+
+.adm-subtab:hover {
+  color: var(--c-text);
+}
+
+.adm-subtab-active {
+  color: var(--c-accent);
+  border-bottom-color: var(--c-accent);
+}
+
+/* ── Seção genérica ──────────────────────────────────────────────────────── */
+.adm-store-section {
+  margin-top: 4px;
+}
+
+.adm-store-section-header {
+  margin-bottom: 20px;
+}
+
+.adm-store-section-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--c-text);
+  margin-bottom: 6px;
+}
+
+.adm-store-section-desc {
+  font-size: 13px;
+  color: var(--c-text-muted);
+  line-height: 1.5;
+}
+
+/* ── Linha de adição ─────────────────────────────────────────────────────── */
+.adm-store-add-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* ── Feedback de sucesso ─────────────────────────────────────────────────── */
+.adm-store-success {
+  background: rgba(80, 200, 120, 0.1);
+  border: 1px solid rgba(80, 200, 120, 0.25);
+  border-radius: var(--r-sm);
+  color: var(--c-green);
+  font-size: 13px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+}
+
+/* ── Edição inline ───────────────────────────────────────────────────────── */
+.adm-store-inline-edit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.adm-store-inline-input {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--r-sm);
+  color: var(--c-text);
+  padding: 6px 10px;
+  font-size: 13px;
+  min-width: 140px;
+}
+
+.adm-store-inline-frete {
+  max-width: 90px;
+}
+
+.adm-btn-save-inline {
+  background: rgba(80, 200, 120, 0.15);
+  color: var(--c-green);
+  border: 1px solid rgba(80, 200, 120, 0.3);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.adm-btn-save-inline:hover {
+  background: rgba(80, 200, 120, 0.25);
+}
+
+.adm-btn-cancel-inline {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--c-text-muted);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+.adm-btn-cancel-inline:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--c-text);
+}
+
+/* ── Botão excluir ───────────────────────────────────────────────────────── */
+.adm-btn-delete {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: var(--c-red);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  transition: background var(--t);
+}
+
+.adm-btn-delete:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+/* ── Badge de taxa de entrega ────────────────────────────────────────────── */
+.adm-store-frete-badge {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.adm-store-frete-badge.gratis {
+  color: var(--c-green);
+  font-size: 11px;
+  background: rgba(80, 200, 120, 0.12);
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+/* ── Formulário de nova zona ─────────────────────────────────────────────── */
+.adm-store-zone-form {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.adm-store-form-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--c-text);
+  margin-bottom: 16px;
+}
+
+.adm-store-form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+/* ── HORÁRIOS — Flags globais ────────────────────────────────────────────── */
+.adm-store-global-flags {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+
+.adm-store-flag-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  cursor: pointer;
+}
+
+.adm-store-flag-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.adm-store-flag-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.adm-store-flag-desc {
+  font-size: 12px;
+  color: var(--c-text-muted);
+}
+
+/* ── Toggle switch ───────────────────────────────────────────────────────── */
+.adm-store-toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--c-border-2);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--t);
+  outline: none;
+}
+
+.adm-store-toggle.on {
+  background: var(--c-accent);
+}
+
+.adm-store-toggle:focus-visible {
+  box-shadow: 0 0 0 2px var(--c-accent);
+}
+
+.adm-store-toggle-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform var(--t);
+  pointer-events: none;
+}
+
+.adm-store-toggle.on .adm-store-toggle-thumb {
+  transform: translateX(20px);
+}
+
+/* ── HORÁRIOS — Grade de dias ────────────────────────────────────────────── */
+.adm-store-hours-grid {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.adm-store-hours-header,
+.adm-store-hours-row {
+  display: grid;
+  grid-template-columns: 160px 60px 1fr 1fr;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 20px;
+}
+
+.adm-store-hours-header {
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--c-border);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--c-text-muted);
+}
+
+.adm-store-hours-row {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background var(--t);
+}
+
+.adm-store-hours-row:last-child {
+  border-bottom: none;
+}
+
+.adm-store-hours-row.closed {
+  opacity: 0.5;
+}
+
+.adm-store-day-label {
+  font-size: 14px;
+  color: var(--c-text);
+  font-weight: 500;
+}
+
+/* ── Input de hora ───────────────────────────────────────────────────────── */
+.adm-store-time-input {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--r-sm);
+  color: var(--c-text);
+  padding: 7px 10px;
+  font-size: 14px;
+  font-family: var(--font-body);
+  width: 100%;
+  max-width: 120px;
+  cursor: pointer;
+  transition: border-color var(--t);
+}
+
+.adm-store-time-input:focus {
+  outline: none;
+  border-color: var(--c-accent);
+}
+
+.adm-store-time-input:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Chrome/Safari — cor do ícone do time picker */
+.adm-store-time-input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.5;
+  cursor: pointer;
+}
+
+/* ── Botão salvar horários ───────────────────────────────────────────────── */
+.adm-store-hours-save {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.adm-store-hours-hint {
+  font-size: 12px;
+  color: var(--c-text-dim);
+}
+
+/* ── Responsividade ──────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .adm-store-hours-header,
+  .adm-store-hours-row {
+    grid-template-columns: 1fr 50px 1fr 1fr;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+
+  .adm-store-add-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .adm-store-form-actions {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .adm-store-hours-header {
+    display: none;
+  }
+
+  .adm-store-hours-row {
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 8px;
+  }
+
+  .adm-store-day-label {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .adm-store-toggle {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .adm-store-time-input {
+    max-width: 100%;
+  }
+
+  .adm-store-time-input:first-of-type {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .adm-store-time-input:last-of-type {
+    grid-column: 2;
+    grid-row: 2;
+  }
+}

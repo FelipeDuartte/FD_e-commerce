@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import "./Checkout.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import { saveOrder } from "../../supabase/saveOrder";
-import { getStoreStatus } from "../../utils/storeHours";
+import { useStoreStatus } from "../../context/StoreStatusContext";
 import {
   loadLastDeliveryAddress,
   saveLastDeliveryAddress,
@@ -263,7 +263,7 @@ export default function Checkout({ user, clearCart }) {
         : "Confirmar Pedido →";
 
   // ── Render ────────────────────────────────────────────
-  const storeStatus = getStoreStatus();
+  const storeStatus = useStoreStatus();
   const closed = !storeStatus.open;
   return (
     <div className="co-root">

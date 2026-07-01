@@ -1,18 +1,9 @@
 import ProductCard from "../ProductCard/ProductCard";
 import "./Products.css";
 import { useState } from "react";
+import { useProductCategories } from "../../hooks/useProductCategories";
 
 const PAGE_SIZE = 12;
-
-const CATEGORIES = [
-  { id: "todos",        label: "Todos",         icon: "bi-grid-fill" },
-  { id: "cerveja",      label: "Cervejas",      icon: "bi-cup-straw" },
-  { id: "vinho",        label: "Vinhos",        icon: "bi-cup" },
-  { id: "destilado",    label: "Destilados",    icon: "bi-droplet-fill" },
-  { id: "refrigerante", label: "Refri / Sucos", icon: "bi-cup-straw" },
-  { id: "energetico",   label: "Energéticos",   icon: "bi-lightning-charge-fill" },
-  { id: "outros",       label: "Outros",        icon: "bi-bag" },
-];
 
 export default function ProductList({
   filteredProducts,
@@ -21,6 +12,9 @@ export default function ProductList({
   addToCart,
 }) {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
+  // Categorias dinâmicas do banco (com fallback estático embutido no hook)
+  const { categories: CATEGORIES } = useProductCategories();
 
   const productsCount   = filteredProducts.length;
   const hasProducts     = productsCount > 0;

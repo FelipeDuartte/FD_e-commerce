@@ -12,7 +12,7 @@ import {
   LogOut,
 } from "lucide-react";
 import "./Header.css";
-import { getStoreStatus } from "../../utils/storeHours";
+import { useStoreStatus } from "../../context/StoreStatusContext";
 
 export default function Header({
   searchTerm,
@@ -52,7 +52,7 @@ export default function Header({
   const firstName = user?.user_metadata?.full_name
     ? user.user_metadata.full_name.split(" ")[0]
     : (user?.email?.split("@")[0] ?? "");
-  const storeStatus = getStoreStatus();
+  const storeStatus = useStoreStatus();
 
   return (
     <header

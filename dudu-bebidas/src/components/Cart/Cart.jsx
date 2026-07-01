@@ -13,16 +13,8 @@ import {
   Store,
 } from "lucide-react";
 import "./Cart.css";
-import { getStoreStatus } from "../../utils/storeHours";
-
-// ── Opções de entrega / retirada ───────────────────────
-const BAIRROS = [
-  { nome: "Retirada na Loja", frete: 0, isRetirada: true },
-  { nome: "Minas Caixas", frete: 3.20 },
-  { nome: "Serra Verde", frete: 5.20 },
-  { nome: "Parque São Pedro", frete: 3.20 },
-  { nome: "Venda Nova", frete: 5.20 },
-];
+import { useStoreStatus } from "../../context/StoreStatusContext";
+import { useDeliveryZones } from "../../hooks/useDeliveryZones";
 
 const HORARIO_ENTREGA = { abertura: 9 * 60, fechamento: 17 * 60 + 30 };
 const HORARIO_RETIRADA = { abertura: 9 * 60, fechamento: 19 * 60 };
@@ -76,6 +68,17 @@ export default function Cart({
 }) {
   const navigate = useNavigate();
 
+  // ── Status da loja via contexto (dinâmico, carregado do banco no App) ──────
+  const storeStatus = useStoreStatus();
+
+  // ── Bairros dinâmicos do banco (com fallback estático) ─────
+  // Normaliza campo: banco usa is_retirada, código antigo usava isRetirada
+  const { zones: rawZones } = useDeliveryZones();
+  const BAIRROS = rawZones.map((z) => ({
+    ...z,
+    isRetirada: z.isRetirada ?? z.is_retirada ?? false,
+  }));
+
   const [bairroSelecionado, setBairroSelecionado] = useState(null);
   const [isBairroOpen, setIsBairroOpen] = useState(false);
   const [horarioAviso, setHorarioAviso] = useState(null);
@@ -116,7 +119,7 @@ export default function Cart({
   };
 
   const handleCheckout = () => {
-    const storeStatus = getStoreStatus();
+    // storeStatus vem do StoreStatusContext — carregado do banco no App
     if (!storeStatus.open) {
       setHorarioAviso(storeStatus.message);
       return;

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Plus, Check, X } from "lucide-react";
 import { imgProduto } from "../../utils/Cloudnary";
 import "./ProductCard.css";
-import { getStoreStatus } from "../../utils/storeHours";
+import { useStoreStatus } from "../../context/StoreStatusContext";
 
 const RESET_TIME = 2000;
 
@@ -15,7 +15,7 @@ export default function ProductCard({ produto, addToCart }) {
   const hasOldPrice = hasPromo && Boolean(produto.precoAntigo);
   const isLowStock = produto.estoque > 0 && produto.estoque < 15;
   const isOutOfStock = produto.estoque <= 0 || produto.isActive === false;
-  const storeStatus = getStoreStatus();
+  const storeStatus = useStoreStatus();
 
   const handleAddToCart = () => {
     if (!storeStatus.open) {

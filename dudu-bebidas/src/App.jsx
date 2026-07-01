@@ -29,6 +29,7 @@ import Confirm       from "./page/Confirm/Confirm";
 import Admin         from "./page/admin/Admin";
 import PrivacyPolicy from "./page/privacy-politcy/PrivacyPoclicy";
 import TermsOfService from "./page/terms-service/TermsService";
+import { StoreStatusProvider } from "./context/StoreStatusContext";
 
 export default function DuduBebidas() {
   // ==== UI States ====
@@ -140,6 +141,7 @@ export default function DuduBebidas() {
 
   // ==== Render ====
   return (
+    <StoreStatusProvider>
     <div style={{ minHeight: "100vh", background: "#1a1a1a" }}>
       <Scrolltotop />
       <Routes>
@@ -214,5 +216,6 @@ export default function DuduBebidas() {
         <AgeGate onAccept={() => setAgeGateAccepted(true)} />
       )}
     </div>
+    </StoreStatusProvider>
   );
 }

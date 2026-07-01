@@ -4,7 +4,6 @@ import { supabase } from "../../supabase/Supabaseclient";
 import "./Admin.css";
 import {
   PAGE_SIZE,
-  CATEGORIES,
   EMPTY_PRODUCT,
   formatBRL,
   useVariableVirtualList,
@@ -30,7 +29,9 @@ import OrderCard from "./OrderCard";
 import ProductModal from "./ProductModal";
 import RejectModal from "./RejectModal";
 import AdminReports from "./AdminReports";
+import AdminStore from "./AdminStore";
 import { useAdminReports } from "./hooks/useAdminReports";
+import { useAdminCategories } from "./hooks/useAdminCategories";
 
 // ── Reducer métricas ──────────────────────────────────
 const metricsReducer = (_, { count, total }) => ({ count, total });
@@ -67,6 +68,9 @@ export default function Admin({ isAdmin }) {
     setPeriod,
     refresh: refreshReports,
   } = useAdminReports(activeTab === "relatorios");
+
+  // Categorias dinâmicas do banco (com fallback estático)
+  const { categories: dbCategories } = useAdminCategories();
 
   // ── Estados de produtos ───────────────────────────
   const [products, setProducts] = useState([]);
@@ -399,6 +403,7 @@ export default function Admin({ isAdmin }) {
             handleModalChange={handleModalChange}
             handleModalSave={handleModalSave}
             setProductModal={setProductModal}
+            categories={dbCategories}
           />
         )}
 
@@ -425,6 +430,7 @@ export default function Admin({ isAdmin }) {
             { key: "pedidos", label: "📦 Pedidos", badge: orders.length },
             { key: "produtos", label: "🍺 Produtos", badge: products.length },
             { key: "relatorios", label: "📊 Relatórios", badge: null },
+            { key: "loja", label: "🏪 Loja", badge: null },
           ].map(({ key, label, badge }) => (
             <button
               key={key}
@@ -623,7 +629,7 @@ export default function Admin({ isAdmin }) {
                 onChange={(e) => setProductCategory(e.target.value)}
               >
                 <option value="todos">Todas categorias</option>
-                {CATEGORIES.map((c) => (
+                {dbCategories.map((c) => (
                   <option key={c} value={c}>
                     {c}
                   </option>
@@ -727,6 +733,8 @@ export default function Admin({ isAdmin }) {
             refresh={refreshReports}
           />
         )}
+        {/* ══ ABA LOJA ══ */}
+        {activeTab === "loja" && <AdminStore />}
       </div>
     </div>
   );
