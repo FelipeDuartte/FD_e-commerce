@@ -4,27 +4,47 @@ import { supabase } from "../supabase/Supabaseclient";
 // Fallback estático — usado enquanto carrega ou se o banco falhar.
 // Mantém o mesmo formato/ordem que já existia hardcoded no ProductList.
 const FALLBACK_CATEGORIES = [
-  { id: "cerveja",      label: "Cervejas",      icon: "bi-cup-straw" },
-  { id: "vinho",        label: "Vinhos",        icon: "bi-cup" },
-  { id: "destilado",    label: "Destilados",    icon: "bi-droplet-fill" },
+  { id: "cerveja", label: "Cervejas", icon: "bi-cup-straw" },
+  { id: "vinho", label: "Vinhos", icon: "bi-cup" },
+  { id: "destilado", label: "Destilados", icon: "bi-droplet-fill" },
   { id: "refrigerante", label: "Refri / Sucos", icon: "bi-cup-straw" },
-  { id: "energetico",   label: "Energéticos",   icon: "bi-lightning-charge-fill" },
-  { id: "outros",       label: "Outros",        icon: "bi-bag" },
+  { id: "energetico", label: "Energéticos", icon: "bi-lightning-charge-fill" },
+  { id: "outros", label: "Outros", icon: "bi-bag" },
 ];
 
 // Ícones por nome de categoria conhecida — categorias novas criadas pelo
 // admin caem no ícone padrão "bi-tag".
 const ICON_MAP = {
-  cerveja:      "bi-cup-straw",
-  vinho:        "bi-cup",
-  destilado:    "bi-droplet-fill",
+  cerveja: "bi-cup-straw",
+  vinho: "bi-cup",
+  destilado: "bi-droplet-fill",
   refrigerante: "bi-cup-straw",
-  energetico:   "bi-lightning-charge-fill",
-  outros:       "bi-bag",
+  energetico: "bi-lightning-charge-fill",
+  outros: "bi-bag",
 };
 
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function isOtherCategory(category) {
+  const source = `${category?.id ?? ""} ${category?.label ?? ""}`.toLowerCase();
+  return source.includes("outros");
+}
+
+function sortCategories(items) {
+  return [...items].sort((a, b) => {
+    const isOtherA = isOtherCategory(a);
+    const isOtherB = isOtherCategory(b);
+
+    if (isOtherA && !isOtherB) return 1;
+    if (!isOtherA && isOtherB) return -1;
+
+    const labelA = (a.label ?? a.id ?? "").toString().toLowerCase();
+    const labelB = (b.label ?? b.id ?? "").toString().toLowerCase();
+
+    return labelA.localeCompare(labelB);
+  });
 }
 
 /**
@@ -33,7 +53,9 @@ function capitalize(str) {
  * Usa fallback estático em caso de erro ou enquanto carrega.
  */
 export function useProductCategories() {
-  const [categories, setCategories] = useState(FALLBACK_CATEGORIES);
+  const [categories, setCategories] = useState(() =>
+    sortCategories(FALLBACK_CATEGORIES),
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -50,14 +72,19 @@ export function useProductCategories() {
         if (cancelled) return;
 
         if (error) {
-          console.warn("[useProductCategories] Usando fallback:", error.message);
+          console.warn(
+            "[useProductCategories] Usando fallback:",
+            error.message,
+          );
         } else if (data && data.length > 0) {
           setCategories(
-            data.map(({ name }) => ({
-              id: name,
-              label: capitalize(name),
-              icon: ICON_MAP[name] ?? "bi-tag",
-            }))
+            sortCategories(
+              data.map(({ name }) => ({
+                id: name,
+                label: capitalize(name),
+                icon: ICON_MAP[name] ?? "bi-tag",
+              })),
+            ),
           );
         }
       } catch (e) {
@@ -68,7 +95,9 @@ export function useProductCategories() {
     }
 
     fetch();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Sempre com "Todos" na frente
