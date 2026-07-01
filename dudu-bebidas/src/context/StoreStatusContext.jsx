@@ -2,15 +2,13 @@ import { createContext, useContext, useState, useEffect } from "react";
 import { supabase } from "../supabase/Supabaseclient";
 import { getStoreStatus, createStoreChecker } from "../utils/storeHours";
 
-// ── Contexto ──────────────────────────────────────────────────────────────────
-const StoreStatusContext = createContext(null);
+// ── Dois contextos separados — interface de useStoreStatus não muda ───────────
+const StoreStatusContext = createContext(null); // storeStatus object
+const StoreHoursContext  = createContext(null); // { config, hours } raw data
 
-/**
- * Carrega os horários do banco UMA VEZ e disponibiliza para toda a árvore.
- * Enquanto carrega usa o status estático (comportamento atual) como fallback.
- */
 export function StoreStatusProvider({ children }) {
   const [storeStatus, setStoreStatus] = useState(() => getStoreStatus());
+  const [hoursData,   setHoursData]   = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -24,14 +22,13 @@ export function StoreStatusProvider({ children }) {
           ]);
 
         if (cancelled) return;
-
-        // Se qualquer tabela falhar, mantém o fallback estático sem erro visível
         if (cfgErr || hrsErr || !cfg || !hrs) return;
 
         const checker = createStoreChecker(cfg, hrs);
         setStoreStatus(checker.getStatus());
+        setHoursData({ config: cfg, hours: hrs });
       } catch {
-        // Mantém o fallback estático — tabelas podem não existir ainda
+        // Mantém fallback estático
       }
     }
 
@@ -41,17 +38,27 @@ export function StoreStatusProvider({ children }) {
 
   return (
     <StoreStatusContext.Provider value={storeStatus}>
-      {children}
+      <StoreHoursContext.Provider value={hoursData}>
+        {children}
+      </StoreHoursContext.Provider>
     </StoreStatusContext.Provider>
   );
 }
 
 /**
- * Hook para consumir o status da loja em qualquer componente filho.
- * Retorna o mesmo objeto { open, reason, message, shortMessage } que getStoreStatus().
+ * Retorna o status atual da loja { open, reason, message, shortMessage }.
+ * Interface idêntica à anterior — nenhum consumer precisa mudar.
  */
 export function useStoreStatus() {
   const ctx = useContext(StoreStatusContext);
-  // Fallback seguro caso seja usado fora do Provider
   return ctx ?? getStoreStatus();
+}
+
+/**
+ * Retorna os horários brutos do banco: { config, hours }
+ * hours é um array com uma entrada por dia da semana (0=Dom … 6=Sáb).
+ * Retorna null enquanto carrega ou se o banco não estiver disponível.
+ */
+export function useStoreHoursData() {
+  return useContext(StoreHoursContext);
 }

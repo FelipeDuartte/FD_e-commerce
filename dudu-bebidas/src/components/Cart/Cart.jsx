@@ -13,49 +13,18 @@ import {
   Store,
 } from "lucide-react";
 import "./Cart.css";
-import { useStoreStatus } from "../../context/StoreStatusContext";
+import { useStoreStatus, useStoreHoursData } from "../../context/StoreStatusContext";
 import { useDeliveryZones } from "../../hooks/useDeliveryZones";
 
-const HORARIO_ENTREGA = { abertura: 9 * 60, fechamento: 17 * 60 + 30 };
-const HORARIO_RETIRADA = { abertura: 9 * 60, fechamento: 19 * 60 };
-
-function getMinutosAgora() {
-  const agora = new Date();
-  return agora.getHours() * 60 + agora.getMinutes();
-}
-
-function verificarHorario(isRetirada) {
-  const minutos = getMinutosAgora();
-  const horario = isRetirada ? HORARIO_RETIRADA : HORARIO_ENTREGA;
-  if (minutos < horario.abertura) {
-    const h = Math.floor(horario.abertura / 60)
-      .toString()
-      .padStart(2, "0");
-    const m = (horario.abertura % 60).toString().padStart(2, "0");
-    return {
-      disponivel: false,
-      mensagem: `Ainda não abrimos. ${isRetirada ? "Retirada" : "Entrega"} disponível a partir das ${h}h${m}.`,
-    };
-  }
-  if (minutos >= horario.fechamento) {
-    const h = Math.floor(horario.abertura / 60)
-      .toString()
-      .padStart(2, "0");
-    const m = (horario.abertura % 60).toString().padStart(2, "0");
-    return {
-      disponivel: false,
-      mensagem: `Fora do horário. ${isRetirada ? "Retirada" : "Entrega"} retoma amanhã às ${h}h${m}.`,
-    };
-  }
-  return { disponivel: true, mensagem: null };
-}
-
 function formatarHorario(minutos) {
-  const h = Math.floor(minutos / 60)
-    .toString()
-    .padStart(2, "0");
+  const h = Math.floor(minutos / 60).toString().padStart(2, "0");
   const m = (minutos % 60).toString().padStart(2, "0");
   return `${h}:${m}`;
+}
+
+/** Converte "HH:MM:SS" ou "HH:MM" do banco para "HH:MM" de exibição */
+function sliceTime(t) {
+  return t ? t.slice(0, 5) : null;
 }
 
 export default function Cart({
@@ -68,8 +37,16 @@ export default function Cart({
 }) {
   const navigate = useNavigate();
 
-  // ── Status da loja via contexto (dinâmico, carregado do banco no App) ──────
+  // Status da loja (open/closed) + horários reais do banco
   const storeStatus = useStoreStatus();
+  const hoursData   = useStoreHoursData();
+
+  // Horários do dia atual vindos do banco (ou null se ainda carregando)
+  const todayHours = hoursData?.hours?.find(
+    (h) => h.day_of_week === new Date().getDay()
+  ) ?? null;
+  const horaAbertura  = sliceTime(todayHours?.open_time)  ?? "09:00";
+  const horaFechamento = sliceTime(todayHours?.close_time) ?? "19:00";
 
   // ── Bairros dinâmicos do banco (com fallback estático) ─────
   // Normaliza campo: banco usa is_retirada, código antigo usava isRetirada
@@ -119,7 +96,7 @@ export default function Cart({
   };
 
   const handleCheckout = () => {
-    // storeStatus vem do StoreStatusContext — carregado do banco no App
+    // storeStatus vem do StoreStatusContext — cobre dia da semana, feriados e horário
     if (!storeStatus.open) {
       setHorarioAviso(storeStatus.message);
       return;
@@ -127,13 +104,6 @@ export default function Cart({
     if (cartItems.length === 0) return;
     if (!bairroSelecionado) {
       alert("Por favor, selecione seu bairro ou retirada para continuar.");
-      return;
-    }
-
-    const isRetirada = bairroSelecionado.isRetirada ?? false;
-    const { disponivel, mensagem } = verificarHorario(isRetirada);
-    if (!disponivel) {
-      setHorarioAviso(mensagem);
       return;
     }
 
@@ -260,20 +230,18 @@ export default function Cart({
         {/* Footer — só aparece se tiver itens */}
         {cartItems.length > 0 && (
           <div className="cart-footer">
-            {/* Horários */}
+            {/* Horários — dinâmicos do banco, fallback para valores padrão */}
             <div className="horarios-info">
               <div className="horario-row">
                 <MapPin size={13} />
                 <span>
-                  Entrega: {formatarHorario(HORARIO_ENTREGA.abertura)} –{" "}
-                  {formatarHorario(HORARIO_ENTREGA.fechamento)}
+                  Entrega: {horaAbertura} – {horaFechamento}
                 </span>
               </div>
               <div className="horario-row">
                 <Store size={13} />
                 <span>
-                  Retirada: {formatarHorario(HORARIO_RETIRADA.abertura)} –{" "}
-                  {formatarHorario(HORARIO_RETIRADA.fechamento)}
+                  Retirada: {horaAbertura} – {horaFechamento}
                 </span>
               </div>
             </div>
