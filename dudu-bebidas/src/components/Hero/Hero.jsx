@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { ShoppingCart } from "lucide-react";
 import "./Hero.css";
+import { useProductCategories } from "../../hooks/useProductCategories";
 
 // Imagens pequenas
 import bannerCerveja from "../../assets/CervejaBanner.png";
@@ -76,6 +77,14 @@ export default function Hero({ onCategorySelect }) {
   const carouselRef = useRef(null);
   const totalSlides = BANNERS.length;
 
+  // Os banners abaixo são conteúdo editorial (imagem/texto fixos por
+  // categoria), então não dá pra buscá-los do banco. Mas usamos a lista
+  // de categorias ativas para conferir, no clique, se o id ainda existe
+  // — se a categoria "cerveja"/"vinho"/"destilado" for renomeada ou
+  // excluída no admin, o clique cai em "Todos" em vez de mostrar uma
+  // lista vazia sem explicação.
+  const { categories: liveCategories } = useProductCategories();
+
   const nextSlide = useCallback(() => {
     setCurrentSlide((prev) => (prev + 1) % totalSlides);
   }, [totalSlides]);
@@ -86,11 +95,17 @@ export default function Hero({ onCategorySelect }) {
 
   const handleBannerClick = useCallback(
     (category) => {
-      onCategorySelect?.(category);
+      const stillExists = liveCategories.some((c) => c.id === category);
+      if (!stillExists) {
+        console.warn(
+          `[Hero] Categoria "${category}" não existe mais (renomeada/excluída) — mostrando "Todos".`,
+        );
+      }
+      onCategorySelect?.(stillExists ? category : "todos");
       const produtosSection = document.getElementById("produtos");
       produtosSection?.scrollIntoView({ behavior: "smooth" });
     },
-    [onCategorySelect]
+    [onCategorySelect, liveCategories],
   );
 
   // Touch handlers
@@ -152,14 +167,15 @@ export default function Hero({ onCategorySelect }) {
                 <div className="row justify-content-center">
                   <div className="col-10 col-sm-9 col-md-8 col-lg-7 col-xl-6">
                     <div className="carousel-content">
-
                       {/* Badge */}
                       <span className="banner-badge">{banner.badge}</span>
 
                       {/* Título */}
                       <h2 className="banner-title">
                         {banner.title}
-                        <span className="banner-highlight">{banner.subtitle}</span>
+                        <span className="banner-highlight">
+                          {banner.subtitle}
+                        </span>
                       </h2>
 
                       {/* Descrição (oculta em tablet/mobile via CSS) */}
@@ -174,7 +190,6 @@ export default function Hero({ onCategorySelect }) {
                         <ShoppingCart size={18} />
                         {banner.ctaText}
                       </button>
-
                     </div>
                   </div>
                 </div>

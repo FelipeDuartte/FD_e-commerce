@@ -1,18 +1,9 @@
 import logo from "../../assets/logo_dudu-bebidas.png";
 import { useNavigate } from "react-router-dom";
-import {
-  ShoppingCart,
-  User,
-  Search,
-  Wine,
-  Beer,
-  Droplets,
-  CupSoda,
-  Zap,
-  LogOut,
-} from "lucide-react";
+import { ShoppingCart, User, Search, LogOut } from "lucide-react";
 import "./Header.css";
 import { useStoreStatus } from "../../context/StoreStatusContext";
+import { useProductCategories } from "../../hooks/useProductCategories";
 
 export default function Header({
   searchTerm,
@@ -29,13 +20,16 @@ export default function Header({
   isAdmin,
 }) {
   const navigate = useNavigate();
-  const categories = [
-    { name: "Vinhos", icon: Wine, categoryId: "vinho" },
-    { name: "Cervejas", icon: Beer, categoryId: "cerveja" },
-    { name: "Destilados", icon: Droplets, categoryId: "destilado" },
-    { name: "Refri / Sucos", icon: CupSoda, categoryId: "refrigerante" },
-    { name: "Energéticos", icon: Zap, categoryId: "energetico" },
-  ];
+
+  // Categorias vêm do banco (mesma fonte que os filtros da loja em
+  // ProductList.jsx), em vez de uma lista fixa no código. Antes, essa
+  // lista tinha "refrigerante" fixo — se a categoria fosse renomeada no
+  // admin (ex.: para "refri / sucos"), este menu continuava mandando o
+  // id antigo e o filtro passava a não encontrar nenhum produto.
+  const { categories: allCategories } = useProductCategories();
+  const categories = allCategories
+    .filter((c) => c.id !== "todos")
+    .map((c) => ({ name: c.label, icon: c.icon, categoryId: c.id }));
 
   const handleCategoryClick = (categoryId) => {
     if (onCategoryClick) {
@@ -59,7 +53,9 @@ export default function Header({
       className={`sticky-top navbar-custom ${scrolled ? "scrolled" : ""}`}
     >
       {!storeStatus.open && (
-        <div className="site-closed-banner text-black text-center fw-bold bg-warning p-1">{storeStatus.message}</div>
+        <div className="site-closed-banner text-black text-center fw-bold bg-warning p-1">
+          {storeStatus.message}
+        </div>
       )}
       <nav className="navbar navbar-dark">
         {/* ── BARRA PRINCIPAL ── */}
@@ -173,19 +169,19 @@ export default function Header({
         <div className="categories-bar d-none d-lg-block w-100">
           <div className="container-fluid px-3 px-lg-4">
             <div className="categories-wrapper">
-              {categories.map((category, index) => {
-                const IconComponent = category.icon;
-                return (
-                  <button
-                    key={index}
-                    onClick={() => handleCategoryClick(category.categoryId)}
-                    className="category-item"
-                  >
-                    <IconComponent size={18} />
-                    <span>{category.name}</span>
-                  </button>
-                );
-              })}
+              {categories.map((category) => (
+                <button
+                  key={category.categoryId}
+                  onClick={() => handleCategoryClick(category.categoryId)}
+                  className="category-item"
+                >
+                  <i
+                    className={`bi ${category.icon}`}
+                    style={{ fontSize: 18 }}
+                  />
+                  <span>{category.name}</span>
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -238,23 +234,20 @@ export default function Header({
             </a>
 
             {/* Categorias no mobile menu */}
-            {categories.map((category, index) => {
-              const IconComponent = category.icon;
-              return (
-                <button
-                  key={index}
-                  onClick={() => {
-                    handleCategoryClick(category.categoryId);
-                    setMenuOpen(false);
-                  }}
-                  className="d-flex align-items-center gap-2 text-white text-decoration-none py-2 px-3 rounded mb-1 w-100 text-start border-0 bg-transparent"
-                  style={{ fontSize: "14px" }}
-                >
-                  <IconComponent size={16} />
-                  {category.name}
-                </button>
-              );
-            })}
+            {categories.map((category) => (
+              <button
+                key={category.categoryId}
+                onClick={() => {
+                  handleCategoryClick(category.categoryId);
+                  setMenuOpen(false);
+                }}
+                className="d-flex align-items-center gap-2 text-white text-decoration-none py-2 px-3 rounded mb-1 w-100 text-start border-0 bg-transparent"
+                style={{ fontSize: "14px" }}
+              >
+                <i className={`bi ${category.icon}`} style={{ fontSize: 16 }} />
+                {category.name}
+              </button>
+            ))}
 
             <a
               href="#contato"
