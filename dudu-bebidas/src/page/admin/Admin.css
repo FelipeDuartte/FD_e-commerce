@@ -931,6 +931,21 @@ button:disabled {
   padding: 10px 14px;
   font-size: 14px;
 }
+/* A caixa fechada do <select> segue o tema escuro acima normalmente.
+   Mas a LISTA de opções que abre é renderizada pelo SO/navegador de
+   quem está acessando, não pelo nosso CSS — sem isso, ela pode sair
+   ilegível (texto e fundo com a mesma cor) dependendo do tema do
+   sistema de cada admin. Forçamos "light" pra sempre renderizar
+   texto escuro sobre fundo claro, de forma previsível em qualquer
+   máquina.
+*/
+.adm-product-cat-filter {
+  color-scheme: light;
+}
+.adm-product-cat-filter option {
+  background-color: #ffffff;
+  color: #111111;
+}
 .adm-product-search {
   flex: 1;
   min-width: 200px;
@@ -1085,6 +1100,15 @@ button:disabled {
   color: var(--c-text);
   padding: 9px 12px;
   font-size: 14px;
+}
+/* Mesmo motivo do .adm-product-cat-filter acima: a lista de opções é
+   renderizada pelo SO, não pelo nosso CSS. */
+.adm-form-field select {
+  color-scheme: light;
+}
+.adm-form-field select option {
+  background-color: #ffffff;
+  color: #111111;
 }
 .adm-form-field input:disabled {
   opacity: 0.4;
