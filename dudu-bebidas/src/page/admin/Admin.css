@@ -1291,3 +1291,101 @@ button:disabled {
     font-size: 22px;
   }
 }
+
+/* ─── ABAS: não deixa estourar a tela, rola na horizontal em vez de
+   espremer/quebrar os 4 botões ─────────────────────────────────── */
+@media (max-width: 768px) {
+  .adm-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .adm-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .adm-tab {
+    white-space: nowrap;
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+
+  .adm-product-filters {
+    flex-direction: column;
+  }
+  .adm-product-search,
+  .adm-product-cat-filter {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+/* ─── FORM DO PRODUTO: uma coluna em telas bem estreitas ─────────── */
+@media (max-width: 420px) {
+  .adm-form-row {
+    grid-template-columns: 1fr;
+  }
+  .adm-modal-product {
+    padding: 24px 16px;
+  }
+}
+
+/* ─── TABELA DE PRODUTOS → CARDS EMPILHADOS NO MOBILE ─────────────
+   Abaixo de 768px a tabela vira uma lista de cards (um por produto),
+   cada célula rotulada via data-label (ver Admin.jsx). Sem isso, era
+   uma tabela de 7 colunas só rolando na horizontal — praticamente
+   ilegível em tela de celular. */
+@media (max-width: 768px) {
+  .adm-product-table-wrap {
+    overflow-x: visible;
+  }
+  .adm-product-table,
+  .adm-product-table tbody,
+  .adm-product-table tr {
+    display: block;
+    width: 100%;
+  }
+  .adm-product-table thead {
+    display: none;
+  }
+  .adm-product-table tr {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+    margin-bottom: 12px;
+    padding: 12px 14px;
+  }
+  .adm-product-table td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    text-align: right;
+  }
+  .adm-product-table td:last-child {
+    border-bottom: none;
+  }
+  .adm-product-table td::before {
+    content: attr(data-label);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--c-text-muted);
+    text-align: left;
+    flex-shrink: 0;
+  }
+  .adm-td-name {
+    max-width: none;
+    text-align: right;
+  }
+  .adm-td-actions {
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+  .adm-td-actions::before {
+    display: none;
+  }
+}

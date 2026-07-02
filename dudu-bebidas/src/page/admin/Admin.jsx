@@ -193,9 +193,7 @@ export default function Admin({ isAdmin }) {
           status: filterStatus,
         });
         setOrders((prev) =>
-          reset || pageNum === 0
-            ? result.orders
-            : [...prev, ...result.orders],
+          reset || pageNum === 0 ? result.orders : [...prev, ...result.orders],
         );
         setHasMore(result.hasMore);
         setTotalCount(result.count);
@@ -670,27 +668,31 @@ export default function Admin({ isAdmin }) {
                         key={p.id}
                         className={!p.is_active ? "adm-row-inactive" : ""}
                       >
-                        <td className="adm-td-id">{p.id}</td>
-                        <td className="adm-td-name">{p.name}</td>
-                        <td>
+                        <td className="adm-td-id" data-label="ID">
+                          {p.id}
+                        </td>
+                        <td className="adm-td-name" data-label="Nome">
+                          {p.name}
+                        </td>
+                        <td data-label="Categoria">
                           <span className="adm-cat-badge">{p.category}</span>
                         </td>
-                        <td>{formatBRL(p.price)}</td>
-                        <td>
+                        <td data-label="Preço">{formatBRL(p.price)}</td>
+                        <td data-label="Estoque">
                           <span
                             className={`adm-stock-badge ${p.stock === 0 ? "zero" : p.stock < 10 ? "low" : "ok"}`}
                           >
                             {p.stock}
                           </span>
                         </td>
-                        <td>
+                        <td data-label="Status">
                           <span
                             className={`adm-status-pill ${p.is_active ? "active" : "inactive"}`}
                           >
                             {p.is_active ? "✅ Ativo" : "🚫 Inativo"}
                           </span>
                         </td>
-                        <td className="adm-td-actions">
+                        <td className="adm-td-actions" data-label="Ações">
                           <button
                             className="adm-btn-edit"
                             onClick={() => openEditProduct(p)}
