@@ -16,12 +16,6 @@ import "./Cart.css";
 import { useStoreStatus, useStoreHoursData } from "../../context/StoreStatusContext";
 import { useDeliveryZones } from "../../hooks/useDeliveryZones";
 
-function formatarHorario(minutos) {
-  const h = Math.floor(minutos / 60).toString().padStart(2, "0");
-  const m = (minutos % 60).toString().padStart(2, "0");
-  return `${h}:${m}`;
-}
-
 /** Converte "HH:MM:SS" ou "HH:MM" do banco para "HH:MM" de exibição */
 function sliceTime(t) {
   return t ? t.slice(0, 5) : null;
@@ -68,6 +62,8 @@ export default function Cart({
   );
   const frete = bairroSelecionado ? bairroSelecionado.frete : null;
   const total = frete !== null ? subtotal + frete : subtotal;
+  // isRetirada: normaliza campo do banco (is_retirada) e legado (isRetirada)
+  const isRetirada = bairroSelecionado?.isRetirada ?? bairroSelecionado?.is_retirada ?? false;
 
   useEffect(() => {
     const handleClickOutside = (e) => {
