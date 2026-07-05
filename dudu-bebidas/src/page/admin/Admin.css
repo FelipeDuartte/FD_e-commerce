@@ -931,21 +931,6 @@ button:disabled {
   padding: 10px 14px;
   font-size: 14px;
 }
-/* A caixa fechada do <select> segue o tema escuro acima normalmente.
-   Mas a LISTA de opções que abre é renderizada pelo SO/navegador de
-   quem está acessando, não pelo nosso CSS — sem isso, ela pode sair
-   ilegível (texto e fundo com a mesma cor) dependendo do tema do
-   sistema de cada admin. Forçamos "light" pra sempre renderizar
-   texto escuro sobre fundo claro, de forma previsível em qualquer
-   máquina.
-*/
-.adm-product-cat-filter {
-  color-scheme: light;
-}
-.adm-product-cat-filter option {
-  background-color: #ffffff;
-  color: #111111;
-}
 .adm-product-search {
   flex: 1;
   min-width: 200px;
@@ -1101,15 +1086,6 @@ button:disabled {
   padding: 9px 12px;
   font-size: 14px;
 }
-/* Mesmo motivo do .adm-product-cat-filter acima: a lista de opções é
-   renderizada pelo SO, não pelo nosso CSS. */
-.adm-form-field select {
-  color-scheme: light;
-}
-.adm-form-field select option {
-  background-color: #ffffff;
-  color: #111111;
-}
 .adm-form-field input:disabled {
   opacity: 0.4;
   cursor: not-allowed;
@@ -1127,6 +1103,118 @@ button:disabled {
   font-size: 14px;
   color: #ccc;
   cursor: pointer;
+}
+
+/* ─── IMAGEM INTELIGENTE (busca + upload) ─────────────────────────── */
+.adm-image-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.adm-image-status {
+  font-size: 12.5px;
+  padding: 6px 10px;
+  border-radius: var(--r-sm);
+  width: fit-content;
+}
+.adm-image-status-searching {
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.06);
+}
+.adm-image-status-found {
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+}
+.adm-image-status-not-found {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+}
+.adm-image-status-error {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.1);
+}
+
+.adm-image-dropzone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 110px;
+  border: 1.5px dashed rgba(255, 255, 255, 0.18);
+  border-radius: var(--r-sm);
+  color: var(--c-text-muted);
+  font-size: 13px;
+  padding: 16px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+.adm-image-dropzone:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.04);
+}
+.adm-image-dropzone-active {
+  border-color: var(--c-accent, #4ade80);
+  background: rgba(74, 222, 128, 0.06);
+}
+
+.adm-image-preview-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.adm-image-preview {
+  width: 88px;
+  height: 88px;
+  object-fit: contain;
+  background: #fff;
+  border-radius: var(--r-sm);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.adm-image-preview-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.adm-image-change-btn,
+.adm-image-remove-btn {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--r-sm);
+  color: var(--c-text);
+  font-size: 12.5px;
+  padding: 7px 12px;
+  cursor: pointer;
+  text-align: left;
+}
+.adm-image-change-btn:hover,
+.adm-image-remove-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+.adm-image-change-btn:disabled,
+.adm-image-remove-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.adm-image-progress-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+.adm-image-progress-fill {
+  height: 100%;
+  background: #4ade80;
+  transition: width 0.15s ease;
+}
+
+.adm-image-hint {
+  font-size: 12px;
+  color: var(--c-text-muted);
+  margin: 0;
 }
 
 /* ─── PROMOÇÃO NO MODAL ───────────────────────────────────────────── */
@@ -1289,103 +1377,5 @@ button:disabled {
   }
   .adm-stat-num {
     font-size: 22px;
-  }
-}
-
-/* ─── ABAS: não deixa estourar a tela, rola na horizontal em vez de
-   espremer/quebrar os 4 botões ─────────────────────────────────── */
-@media (max-width: 768px) {
-  .adm-tabs {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-  .adm-tabs::-webkit-scrollbar {
-    display: none;
-  }
-  .adm-tab {
-    white-space: nowrap;
-    padding: 10px 14px;
-    font-size: 14px;
-  }
-
-  .adm-product-filters {
-    flex-direction: column;
-  }
-  .adm-product-search,
-  .adm-product-cat-filter {
-    width: 100%;
-    min-width: 0;
-  }
-}
-
-/* ─── FORM DO PRODUTO: uma coluna em telas bem estreitas ─────────── */
-@media (max-width: 420px) {
-  .adm-form-row {
-    grid-template-columns: 1fr;
-  }
-  .adm-modal-product {
-    padding: 24px 16px;
-  }
-}
-
-/* ─── TABELA DE PRODUTOS → CARDS EMPILHADOS NO MOBILE ─────────────
-   Abaixo de 768px a tabela vira uma lista de cards (um por produto),
-   cada célula rotulada via data-label (ver Admin.jsx). Sem isso, era
-   uma tabela de 7 colunas só rolando na horizontal — praticamente
-   ilegível em tela de celular. */
-@media (max-width: 768px) {
-  .adm-product-table-wrap {
-    overflow-x: visible;
-  }
-  .adm-product-table,
-  .adm-product-table tbody,
-  .adm-product-table tr {
-    display: block;
-    width: 100%;
-  }
-  .adm-product-table thead {
-    display: none;
-  }
-  .adm-product-table tr {
-    background: var(--c-surface);
-    border: 1px solid var(--c-border);
-    border-radius: var(--r-md);
-    margin-bottom: 12px;
-    padding: 12px 14px;
-  }
-  .adm-product-table td {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 8px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    text-align: right;
-  }
-  .adm-product-table td:last-child {
-    border-bottom: none;
-  }
-  .adm-product-table td::before {
-    content: attr(data-label);
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--c-text-muted);
-    text-align: left;
-    flex-shrink: 0;
-  }
-  .adm-td-name {
-    max-width: none;
-    text-align: right;
-  }
-  .adm-td-actions {
-    justify-content: flex-end;
-    flex-wrap: wrap;
-  }
-  .adm-td-actions::before {
-    display: none;
   }
 }

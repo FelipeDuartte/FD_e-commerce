@@ -32,6 +32,7 @@ import AdminReports from "./AdminReports";
 import AdminStore from "./AdminStore";
 import { useAdminReports } from "./hooks/useAdminReports";
 import { useAdminCategories } from "./hooks/useAdminCategories";
+import { useProductImageSearch } from "./hooks/useProductImageSearch";
 
 // ── Reducer métricas ──────────────────────────────────
 const metricsReducer = (_, { count, total }) => ({ count, total });
@@ -83,6 +84,21 @@ export default function Admin({ isAdmin }) {
   const [modalSaving, setModalSaving] = useState(false);
   const [modalError, setModalError] = useState("");
   const [togglingId, setTogglingId] = useState(null);
+
+  // ── Busca inteligente / upload de imagem do produto ───────────
+  const handleImageResolved = useCallback((url) => {
+    setModalForm((prev) => ({ ...prev, image: url }));
+  }, []);
+
+  const productModalKey =
+    productModal === "new" ? "new" : (productModal?.id ?? "closed");
+
+  const productImageSearch = useProductImageSearch(
+    modalForm.name,
+    productModal && productModal !== "new" ? productModal.image : "",
+    handleImageResolved,
+    productModalKey,
+  );
 
   // ── Fetch produtos ────────────────────────────────
   const fetchProducts = useCallback(async () => {
@@ -402,6 +418,11 @@ export default function Admin({ isAdmin }) {
             handleModalSave={handleModalSave}
             setProductModal={setProductModal}
             categories={dbCategories}
+            imageStatus={productImageSearch.status}
+            imageError={productImageSearch.error}
+            imageProgress={productImageSearch.progress}
+            onUploadImage={productImageSearch.uploadImage}
+            onResetImage={productImageSearch.resetToManual}
           />
         )}
 
@@ -668,31 +689,27 @@ export default function Admin({ isAdmin }) {
                         key={p.id}
                         className={!p.is_active ? "adm-row-inactive" : ""}
                       >
-                        <td className="adm-td-id" data-label="ID">
-                          {p.id}
-                        </td>
-                        <td className="adm-td-name" data-label="Nome">
-                          {p.name}
-                        </td>
-                        <td data-label="Categoria">
+                        <td className="adm-td-id">{p.id}</td>
+                        <td className="adm-td-name">{p.name}</td>
+                        <td>
                           <span className="adm-cat-badge">{p.category}</span>
                         </td>
-                        <td data-label="Preço">{formatBRL(p.price)}</td>
-                        <td data-label="Estoque">
+                        <td>{formatBRL(p.price)}</td>
+                        <td>
                           <span
                             className={`adm-stock-badge ${p.stock === 0 ? "zero" : p.stock < 10 ? "low" : "ok"}`}
                           >
                             {p.stock}
                           </span>
                         </td>
-                        <td data-label="Status">
+                        <td>
                           <span
                             className={`adm-status-pill ${p.is_active ? "active" : "inactive"}`}
                           >
                             {p.is_active ? "✅ Ativo" : "🚫 Inativo"}
                           </span>
                         </td>
-                        <td className="adm-td-actions" data-label="Ações">
+                        <td className="adm-td-actions">
                           <button
                             className="adm-btn-edit"
                             onClick={() => openEditProduct(p)}

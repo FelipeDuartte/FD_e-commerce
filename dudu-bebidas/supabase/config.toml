@@ -1,2 +1,8 @@
 [functions.notify-whatsapp]
 verify_jwt = false
+
+[functions.find-master-image]
+verify_jwt = true
+
+[functions.upload-product-image]
+verify_jwt = true
