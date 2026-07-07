@@ -154,6 +154,68 @@ export default function ProductModal({
         role="dialog"
         aria-modal="true"
       >
+        <div className="alert bg-black text-white alert-light border shadow-sm mb-3">
+  <h6 className="text-warning fw-bold mb-3">
+    <i className="bi bi-info-circle-fill me-2"></i>
+    Regras para cadastrar o nome do produto
+  </h6>
+
+  <p className="small text-white mb-3">
+    Utilize sempre esse padrão. Isso melhora a busca de produtos,
+    evita duplicidade e permite localizar automaticamente as imagens.
+  </p>
+
+  <div className="mb-3">
+    <h6 className="fw-semibold mb-2">
+      <i className="bi bi-box-seam me-2 text-primary"></i>
+      Cerveja em caixa
+    </h6>
+
+    <div className="bg-light border text-dark rounded p-2 small">
+      <div>• Brahma 600ml caixa</div>
+      <div>• Brahma Zero 600ml caixa</div>
+    </div>
+  </div>
+
+  <div className="mb-3">
+    <h6 className="fw-semibold mb-2">
+      <i className="bi bi-collection me-2 text-success"></i>
+      Cerveja em pack
+    </h6>
+
+    <div className="bg-light border rounded text-dark p-2 small">
+      <div>• Brahma 473ml pack</div>
+      <div>• Brahma Zero 473ml pack</div>
+    </div>
+  </div>
+
+  <div className="mb-3">
+    <h6 className="fw-semibold mb-2">
+      <i className="bi bi-cup-straw me-2 text-danger"></i>
+      Unidade
+    </h6>
+
+    <div className="bg-light border rounded text-dark p-2 small">
+      <div>• Brahma 600ml</div>
+      <div>• Brahma lata 473ml</div>
+      <div>• Brahma Zero lata 473ml</div>
+      <div>• Brahma litro 1L</div>
+      <div>• Brahma lata 350ml</div>
+      <div>• Brahma Zero lata 350ml</div>
+      <div>• Brahma Malzbier lata 350ml</div>
+      <div>• Brahma Long Neck</div>
+      <div>• Brahma Malzbier Long Neck</div>
+      <div>• Brahma litrinho 300ml</div>
+      <div>• Beats GT Gin Tônica 269ml</div>
+    </div>
+  </div>
+
+  <div className="alert alert-warning mb-0 py-2 small">
+    <i className="bi bi-lightbulb-fill me-2"></i>
+    <strong>Dica:</strong> Sempre que possível, utilize o nome do produto conforme consta na embalagem.
+     Evite abreviações e siglas.
+  </div>
+</div>
         <div className="adm-modal-icon">
           {productModal === "new" ? "➕" : "✏️"}
         </div>
