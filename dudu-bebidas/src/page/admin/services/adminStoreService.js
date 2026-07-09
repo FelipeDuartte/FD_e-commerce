@@ -1,4 +1,4 @@
-import { supabase } from "../../../supabase/Supabaseclient";
+import { supabase, getCurrentStoreId } from "../../../supabase/Supabaseclient";
 import { AdminServiceError } from "./AdminServiceError";
 
 // ── CATEGORIAS ────────────────────────────────────────────────────────────────
@@ -27,7 +27,7 @@ export async function createCategory(name) {
 
   const { error } = await supabase
     .from("categories")
-    .insert({ name: normalized });
+    .insert({ name: normalized, store_id: getCurrentStoreId() });
 
   console.log("[categories] createCategory ←", { error });
 
@@ -220,7 +220,13 @@ export async function createDeliveryZone({ nome, frete, is_retirada = false }) {
 
   const { data, error } = await supabase
     .from("delivery_zones")
-    .insert({ nome: nome.trim(), frete: freteNum, is_retirada, sort_order })
+    .insert({
+      nome: nome.trim(),
+      frete: freteNum,
+      is_retirada,
+      sort_order,
+      store_id: getCurrentStoreId(),
+    })
     .select()
     .single();
 
@@ -280,7 +286,7 @@ export async function getStoreConfig() {
   const { data, error } = await supabase
     .from("store_config")
     .select("*")
-    .eq("id", 1)
+    .eq("store_id", getCurrentStoreId())
     .single();
   if (error)
     throw new AdminServiceError(
@@ -294,7 +300,7 @@ export async function updateStoreConfig(config) {
   const { error } = await supabase
     .from("store_config")
     .update({ ...config, updated_at: new Date().toISOString() })
-    .eq("id", 1);
+    .eq("store_id", getCurrentStoreId());
   if (error)
     throw new AdminServiceError(
       "Não foi possível salvar as configurações.",
@@ -318,6 +324,7 @@ export async function listStoreHours() {
 }
 
 export async function upsertStoreHours(rows) {
+  const storeId = getCurrentStoreId();
   for (const row of rows) {
     const toTime = (t) => (t && t.length === 5 ? `${t}:00` : (t ?? "09:00:00"));
     const { error } = await supabase
@@ -327,6 +334,7 @@ export async function upsertStoreHours(rows) {
         open_time: toTime(row.open_time),
         close_time: toTime(row.close_time),
       })
+      .eq("store_id", storeId)
       .eq("day_of_week", row.day_of_week);
     if (error)
       throw new AdminServiceError(

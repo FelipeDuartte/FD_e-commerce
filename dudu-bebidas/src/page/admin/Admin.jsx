@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useReducer, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../../supabase/Supabaseclient";
+import { supabase, getCurrentStoreId } from "../../supabase/Supabaseclient";
 import "./Admin.css";
 import {
   PAGE_SIZE,
@@ -230,13 +230,18 @@ export default function Admin({ isAdmin }) {
   }, [isAdmin, fetchOrders, fetchTodayMetrics]);
 
   // Realtime: novos pedidos e cancelamentos
+  // MULTI-LOJA: filtro por store_id — sem isso, o admin de uma loja
+  // receberia som/refetch também quando OUTRA loja tivesse um pedido novo.
   useEffect(() => {
     if (!isAdmin) return;
+    const storeId = getCurrentStoreId();
+    if (!storeId) return;
+
     const channel = supabase
-      .channel("admin-orders")
+      .channel(`admin-orders-${storeId}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "orders" },
+        { event: "INSERT", schema: "public", table: "orders", filter: `store_id=eq.${storeId}` },
         () => {
           playNotificationSound();
           fetchOrders(0, true);
@@ -245,7 +250,7 @@ export default function Admin({ isAdmin }) {
       )
       .on(
         "postgres_changes",
-        { event: "DELETE", schema: "public", table: "orders" },
+        { event: "DELETE", schema: "public", table: "orders", filter: `store_id=eq.${storeId}` },
         () => {
           fetchOrders(0, true);
           fetchTodayMetrics();

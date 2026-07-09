@@ -5,7 +5,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 // ==== Styles ====
 import "./App.css";
 // ==== Supabase ====
-import { supabase } from "./supabase/Supabaseclient";
+import { supabase, getCurrentStoreId } from "./supabase/Supabaseclient";
 // ==== Data ====
 import { useProducts } from "./hooks/useProducts";
 import { useCart }     from "./hooks/useCart";
@@ -83,11 +83,18 @@ export default function DuduBebidas() {
 
     supabase
       .from("profiles")
-      .select("is_admin")
+      .select("is_admin, store_id")
       .eq("id", user.id)
       .single()
       .then(({ data, error }) => {
-        setIsAdmin(!error && data?.is_admin === true);
+        // MULTI-LOJA: is_admin sozinho não basta — o auth.users é compartilhado
+        // entre TODAS as lojas (mesmo projeto Supabase). Um admin da Loja B
+        // logado no site da Loja A não pode ver o painel admin da Loja A.
+        const admin =
+          !error &&
+          data?.is_admin === true &&
+          data?.store_id === getCurrentStoreId();
+        setIsAdmin(admin);
       });
   }, [user]);
 

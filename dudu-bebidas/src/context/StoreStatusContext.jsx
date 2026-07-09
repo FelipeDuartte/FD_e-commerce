@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { supabase } from "../supabase/Supabaseclient";
+import { supabase, getCurrentStoreId } from "../supabase/Supabaseclient";
 import { getStoreStatus, createStoreChecker } from "../utils/storeHours";
 
 // ── Dois contextos separados — interface de useStoreStatus não muda ───────────
@@ -17,7 +17,7 @@ export function StoreStatusProvider({ children }) {
       try {
         const [{ data: cfg, error: cfgErr }, { data: hrs, error: hrsErr }] =
           await Promise.all([
-            supabase.from("store_config").select("*").eq("id", 1).single(),
+            supabase.from("store_config").select("*").eq("store_id", getCurrentStoreId()).single(),
             supabase.from("store_hours").select("*").order("day_of_week"),
           ]);
 

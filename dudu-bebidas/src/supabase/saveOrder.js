@@ -1,4 +1,4 @@
-import { supabase } from "./Supabaseclient";
+import { supabase, getCurrentStoreId } from "./Supabaseclient";
 
 const GENERIC_ORDER_ERROR =
   "Não foi possível criar o pedido. Tente novamente.";
@@ -27,9 +27,15 @@ export async function saveOrder(order) {
   if (validationError) return { error: validationError };
 
   try {
-    // ✅ Chama a Edge Function — usa service role internamente, bypassa RLS
+    const storeId = getCurrentStoreId();
+
+    // ✅ Chama a Edge Function — usa service role internamente, bypassa RLS.
+    // MULTI-LOJA: envia a loja tanto no header (padrão usado em toda chamada
+    // ao Supabase) quanto no corpo (fallback), pra Edge Function identificar
+    // corretamente qual loja está criando o pedido.
     const { data, error } = await supabase.functions.invoke("create-order", {
-      body: order,
+      body: { ...order, storeId },
+      headers: storeId ? { "x-store-id": storeId } : undefined,
     });
 
     if (error) {

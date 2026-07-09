@@ -1,4 +1,4 @@
-import { supabase } from "../../../supabase/Supabaseclient";
+import { supabase, getCurrentStoreId } from "../../../supabase/Supabaseclient";
 import { calcDiscount } from "../adminUtils";
 import { AdminServiceError } from "./AdminServiceError";
 
@@ -15,6 +15,7 @@ export function buildProductPayload(form) {
 
   return {
     id: String(form.id).trim(),
+    store_id: getCurrentStoreId(), // multi-loja: obrigatório desde a migração
     name: String(form.name).trim(),
     category: form.category,
     price,
@@ -69,7 +70,11 @@ export async function listAdminProducts() {
 export async function saveAdminProduct(product, isNew) {
   const query = isNew
     ? supabase.from("products").insert(product)
-    : supabase.from("products").update(product).eq("id", product.id);
+    : supabase
+        .from("products")
+        .update(product)
+        .eq("id", product.id)
+        .eq("store_id", product.store_id);
 
   const { error } = await query;
 
@@ -83,7 +88,8 @@ export async function toggleAdminProductActive(product) {
   const { error } = await supabase
     .from("products")
     .update({ is_active: nextActive })
-    .eq("id", product.id);
+    .eq("id", product.id)
+    .eq("store_id", product.store_id);
 
   if (error) {
     throw new AdminServiceError("Não foi possível alterar o status.", error);

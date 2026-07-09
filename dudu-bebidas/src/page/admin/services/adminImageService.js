@@ -1,9 +1,19 @@
-import { supabase } from "../../../supabase/Supabaseclient";
+import { supabase, getCurrentStore } from "../../../supabase/Supabaseclient";
 import { AdminServiceError } from "./AdminServiceError";
 
-// ── Identificador da loja para uploads (Fdtech/stores/{storeId}/products/) ──
-// Mesmo cloud name usado em src/utils/Cloudnary.js.
-const STORE_ID = "dudu-bebidas";
+// ── Identificador da loja para uploads (Fdtech/stores/{storeSlug}/products/) ──
+// Antes era fixo ("dudu-bebidas"); agora vem da loja resolvida no boot do app
+// (Supabaseclient.js → resolveStore()), então cada projeto/cliente grava na
+// própria pasta do Cloudinary automaticamente.
+function getStoreSlugForUpload() {
+  const store = getCurrentStore();
+  if (!store?.slug) {
+    throw new AdminServiceError(
+      "Loja não identificada — recarregue a página antes de enviar imagens.",
+    );
+  }
+  return store.slug;
+}
 
 /**
  * Busca no catálogo mestre do Cloudinary uma imagem cujo nome
@@ -42,7 +52,7 @@ export async function uploadProductImage(file) {
   const fileBase64 = await fileToBase64(file);
 
   const { data, error } = await supabase.functions.invoke("upload-product-image", {
-    body: { storeId: STORE_ID, fileBase64 },
+    body: { storeId: getStoreSlugForUpload(), fileBase64 },
   });
 
   if (error) {
