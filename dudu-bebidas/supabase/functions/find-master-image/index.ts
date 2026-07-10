@@ -17,7 +17,7 @@ import { getCloudinaryConfig, searchByFilename } from "../_shared/cloudinary.ts"
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-store-id",
 };
 
 const MASTER_FOLDER = "Fdtech/master/bebidas";

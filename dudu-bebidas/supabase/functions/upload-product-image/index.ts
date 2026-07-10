@@ -24,7 +24,7 @@ import {
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-store-id",
 };
 
 const MAX_BASE64_LENGTH = 8_000_000; // ~6MB de imagem, margem de segurança
