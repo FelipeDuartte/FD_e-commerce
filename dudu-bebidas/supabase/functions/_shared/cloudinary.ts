@@ -84,8 +84,12 @@ async function searchResources(
 }
 
 /**
- * Busca EXATA (mantida por compatibilidade e por ser o caminho mais rápido
- * quando o nome do produto já bate certinho com o arquivo no catálogo).
+ * Busca EXATA de verdade: usa o operador "=" do Cloudinary, que exige que
+ * o valor do campo seja idêntico ao buscado — diferente de ":" (usado antes),
+ * que na prática casa por QUALQUER palavra dentro do nome (ex: buscar
+ * "kaiser-600ml" com ":" também "acha" "caixa-kaiser-600ml", porque os dois
+ * contêm os tokens "kaiser" e "600ml"). Mantida por compatibilidade e por
+ * ser o caminho mais rápido quando existe um arquivo com nome idêntico.
  */
 export async function searchByFilename(
   config: CloudinaryConfig,
@@ -94,7 +98,7 @@ export async function searchByFilename(
 ): Promise<{ secure_url: string } | null> {
   const results = await searchResources(
     config,
-    `folder:${folderPrefix}/* AND filename:${filenameSlug}`,
+    `folder:${folderPrefix}/* AND filename=${filenameSlug}`,
     1,
   );
   return results[0] ?? null;
