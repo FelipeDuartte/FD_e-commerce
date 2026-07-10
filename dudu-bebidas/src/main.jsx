@@ -18,7 +18,7 @@ const rootElement = document.getElementById('root')
 
 function renderStoreError(message) {
   rootElement.innerHTML = `
-    <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#1a1a1a;color:#fff;font-family:sans-serif;text-align:center;padding:24px;">
+    <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0d0d0d;color:#fff;font-family:sans-serif;text-align:center;padding:24px;">
       <div>
         <h1 style="font-size:20px;margin-bottom:8px;">Não foi possível carregar a loja</h1>
         <p style="opacity:.7;font-size:14px;">${message}</p>
