@@ -172,8 +172,8 @@ export default function ProductModal({
     </h6>
 
     <div className="bg-light border text-dark rounded p-2 small">
-      <div>• Brahma 600ml caixa</div>
-      <div>• Brahma Zero 600ml caixa</div>
+      <div>• Caixa Brahma 600ml</div>
+      <div>• Caixa Brahma Zero 600ml</div>
     </div>
   </div>
 
@@ -184,8 +184,8 @@ export default function ProductModal({
     </h6>
 
     <div className="bg-light border rounded text-dark p-2 small">
-      <div>• Brahma 473ml pack</div>
-      <div>• Brahma Zero 473ml pack</div>
+      <div>• Pack Brahma 473ml</div>
+      <div>• Pack Brahma Zero 473ml</div>
     </div>
   </div>
 
