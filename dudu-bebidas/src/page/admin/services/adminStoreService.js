@@ -5,13 +5,10 @@ import { AdminServiceError } from "./AdminServiceError";
 // Padrão idêntico ao adminProductService.js que já funciona no projeto.
 
 export async function listCategories() {
-  console.log("[categories] listCategories →");
   const { data, error } = await supabase
     .from("categories")
     .select("*")
     .order("name");
-
-  console.log("[categories] listCategories ←", { data, error });
 
   if (error)
     throw new AdminServiceError(
@@ -23,13 +20,10 @@ export async function listCategories() {
 
 export async function createCategory(name) {
   const normalized = name.trim().toLowerCase();
-  console.log("[categories] createCategory →", { normalized });
 
   const { error } = await supabase
     .from("categories")
     .insert({ name: normalized, store_id: getCurrentStoreId() });
-
-  console.log("[categories] createCategory ←", { error });
 
   if (error) {
     if (error.code === "23505") {
@@ -62,11 +56,6 @@ export async function updateCategory(id, name) {
   }
 
   const previousName = currentCategory.name;
-  console.log("[categories] updateCategory →", {
-    id,
-    previousName,
-    normalized,
-  });
 
   if (previousName === normalized) return;
 
@@ -90,8 +79,6 @@ export async function updateCategory(id, name) {
     .from("categories")
     .update({ name: normalized })
     .eq("id", id);
-
-  console.log("[categories] updateCategory ←", { error });
 
   if (error) {
     if (error.code === "23505") {
@@ -122,12 +109,6 @@ export async function updateCategory(id, name) {
 
     const affectedCount = updatedRows?.length ?? 0;
 
-    console.log("[categories] updateCategory products ←", {
-      expectedCount,
-      affectedCount,
-      productError,
-    });
-
     if (productError || affectedCount !== expectedCount) {
       await supabase
         .from("categories")
@@ -145,14 +126,10 @@ export async function updateCategory(id, name) {
 }
 
 export async function toggleCategory(id, is_active) {
-  console.log("[categories] toggleCategory →", { id, is_active });
-
   const { error } = await supabase
     .from("categories")
     .update({ is_active })
     .eq("id", id);
-
-  console.log("[categories] toggleCategory ←", { error });
 
   if (error)
     throw new AdminServiceError(
@@ -162,14 +139,10 @@ export async function toggleCategory(id, is_active) {
 }
 
 export async function deleteCategory(id, categoryName) {
-  console.log("[categories] deleteCategory →", { id, categoryName });
-
   const { count, error: countError } = await supabase
     .from("products")
     .select("id", { count: "exact", head: true })
     .eq("category", categoryName);
-
-  console.log("[categories] deleteCategory count ←", { count, countError });
 
   if (countError)
     throw new AdminServiceError(
@@ -183,8 +156,6 @@ export async function deleteCategory(id, categoryName) {
   }
 
   const { error } = await supabase.from("categories").delete().eq("id", id);
-
-  console.log("[categories] deleteCategory delete ←", { error });
 
   if (error)
     throw new AdminServiceError("Não foi possível excluir a categoria.", error);

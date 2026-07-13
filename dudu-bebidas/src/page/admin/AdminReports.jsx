@@ -95,6 +95,13 @@ const PERIODS = [
   { value: 12, label: "12 meses" },
 ];
 
+const RANK_MEDALS = ["🥇", "🥈", "🥉"];
+
+/** Retorna a medalha para as 3 primeiras posições, ou a posição numérica (1-based) depois disso. */
+function rankMedal(index) {
+  return RANK_MEDALS[index] ?? index + 1;
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function AdminReports({
@@ -245,9 +252,7 @@ export default function AdminReports({
               <tbody>
                 {topProducts.map((p, i) => (
                   <tr key={p.name}>
-                    <td className="rpt-rank">
-                      {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1}
-                    </td>
+                    <td className="rpt-rank">{rankMedal(i)}</td>
                     <td className="rpt-product-name">{p.name}</td>
                     <td className="rpt-qty">{p.quantity}</td>
                     <td className="rpt-revenue">{formatBRL(p.revenue)}</td>
@@ -276,9 +281,7 @@ export default function AdminReports({
               <tbody>
                 {topCustomers.map((c, i) => (
                   <tr key={c.displayName}>
-                    <td className="rpt-rank">
-                      {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : i + 1}
-                    </td>
+                    <td className="rpt-rank">{rankMedal(i)}</td>
                     <td className="rpt-customer-name">{c.displayName}</td>
                     <td className="rpt-qty">{c.count}</td>
                     <td className="rpt-revenue">{formatBRL(c.total)}</td>

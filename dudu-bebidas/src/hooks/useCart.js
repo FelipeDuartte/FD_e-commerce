@@ -1,5 +1,5 @@
 // src/hooks/useCart.js
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   clearStoredCart,
   loadStoredCart,
@@ -39,7 +39,11 @@ export function useCart() {
   }, []);
 
   // ── Handlers ──────────────────────────────────────
-  const addToCart = (produto) => {
+  // Envolvidos em useCallback: dependem apenas de `setCartItems` (estável,
+  // vindo de useState) e de imports de módulo (também estáveis), então a
+  // referência da função nunca muda. Isso permite que componentes filhos
+  // (ex.: ProductCard) usem React.memo com efeito real.
+  const addToCart = useCallback((produto) => {
     setCartItems((prev) => {
       const exists = prev.find((item) => item.id === produto.id);
       if (exists) {
@@ -52,9 +56,9 @@ export function useCart() {
       // Quando adiciona novo item, limita à quantidade em estoque
       return [...prev, { ...produto, quantity: Math.min(1, produto.estoque) }];
     });
-  };
+  }, []);
 
-  const updateQuantity = (id, quantity) => {
+  const updateQuantity = useCallback((id, quantity) => {
     if (quantity < 1) return;
     setCartItems((prev) =>
       prev.map((item) => {
@@ -67,16 +71,16 @@ export function useCart() {
         return item;
       }),
     );
-  };
+  }, []);
 
-  const removeItem = (id) => {
+  const removeItem = useCallback((id) => {
     setCartItems((prev) => prev.filter((item) => item.id !== id));
-  };
+  }, []);
 
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     setCartItems([]);
     clearStoredCart();
-  };
+  }, []);
 
   const cartCount = useMemo(
     () => cartItems.reduce((sum, item) => sum + item.quantity, 0),

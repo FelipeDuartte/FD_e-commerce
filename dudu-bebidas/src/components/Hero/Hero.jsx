@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { ShoppingCart } from "lucide-react";
 import "./Hero.css";
 import { useProductCategories } from "../../hooks/useProductCategories";

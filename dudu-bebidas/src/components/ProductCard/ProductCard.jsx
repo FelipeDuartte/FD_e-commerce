@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo } from "react";
 import { Plus, Check, X } from "lucide-react";
 import { imgProduto } from "../../utils/Cloudnary";
 import "./ProductCard.css";
@@ -8,7 +8,7 @@ const RESET_TIME = 2000;
 
 const formatBRL = (value) => `R$ ${Number(value).toFixed(2)}`;
 
-export default function ProductCard({ produto, addToCart }) {
+function ProductCard({ produto, addToCart }) {
   const [isAdded, setIsAdded] = useState(false);
 
   const hasPromo = Boolean(produto.promocao);
@@ -153,3 +153,10 @@ export default function ProductCard({ produto, addToCart }) {
     </>
   );
 }
+
+// memo evita re-render deste card quando a lista de produtos re-renderiza
+// por um motivo que não afeta este item específico (ex.: digitação na busca
+// antes do filtro mudar a lista, ou "Ver mais/Ver menos"). Como `addToCart`
+// agora é estável (useCallback em useCart.js), a comparação rasa de props
+// funciona como esperado.
+export default memo(ProductCard);

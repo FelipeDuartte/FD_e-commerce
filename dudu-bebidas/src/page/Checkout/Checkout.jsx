@@ -3,6 +3,7 @@ import "./Checkout.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import { saveOrder } from "../../supabase/saveOrder";
 import { useStoreStatus } from "../../context/StoreStatusContext";
+import { formatBRL } from "../../utils/currency";
 import {
   loadLastDeliveryAddress,
   saveLastDeliveryAddress,
@@ -580,10 +581,7 @@ export default function Checkout({ user, clearCart }) {
                       </div>
                     </div>
                     <div className="co-item-price">
-                      R${" "}
-                      {(item.price * item.quantity)
-                        .toFixed(2)
-                        .replace(".", ",")}
+                      {formatBRL(item.price * item.quantity)}
                     </div>
                   </div>
                 ))
@@ -593,14 +591,12 @@ export default function Checkout({ user, clearCart }) {
             <div className="co-summary-rows">
               <div className="co-summary-row">
                 <span>Subtotal</span>
-                <span>R$ {cartTotal.toFixed(2).replace(".", ",")}</span>
+                <span>{formatBRL(cartTotal)}</span>
               </div>
               <div className="co-summary-row">
                 <span>{isRetirada ? "Retirada" : "Entrega"}</span>
                 <span>
-                  {DELIVERY === 0
-                    ? "GRÁTIS"
-                    : `R$ ${DELIVERY.toFixed(2).replace(".", ",")}`}
+                  {DELIVERY === 0 ? "GRÁTIS" : formatBRL(DELIVERY)}
                 </span>
               </div>
             </div>
@@ -608,7 +604,7 @@ export default function Checkout({ user, clearCart }) {
             <div className="co-total-row">
               <span className="co-total-label">Total</span>
               <span className="co-total-value">
-                R$ {(cartTotal + DELIVERY).toFixed(2).replace(".", ",")}
+                {formatBRL(cartTotal + DELIVERY)}
               </span>
             </div>
 

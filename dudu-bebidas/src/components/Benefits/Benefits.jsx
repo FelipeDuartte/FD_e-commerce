@@ -1,4 +1,3 @@
-import React from "react";
 import "./Benefits.css";
 
 export default function Benefits({ benefits }) {

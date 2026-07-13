@@ -1,12 +1,7 @@
 import { supabase } from "../Supabaseclient";
+import { createServiceError } from "../../utils/serviceError";
 
-export class ShopServiceError extends Error {
-  constructor(message, cause) {
-    super(message);
-    this.name = "ShopServiceError";
-    this.cause = cause;
-  }
-}
+export const ShopServiceError = createServiceError("ShopServiceError");
 
 export function normalizeProduct(product) {
   return {

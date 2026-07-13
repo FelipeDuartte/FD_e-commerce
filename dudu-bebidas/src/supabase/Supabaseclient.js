@@ -89,5 +89,5 @@ export const loginGoogle = async () => {
     },
   });
 
-  if (error) console.log(error);
+  if (error) console.error(error);
 };

@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../../supabase/Supabaseclient";
+import { formatBRL } from "../../utils/currency";
+import { shortOrderId } from "../../utils/orderId";
 import "./Confirm.css";
 
 // ── Constantes ────────────────────────────────────────
@@ -63,9 +65,6 @@ function resolveOrderData(locationState) {
   }
   return EMPTY_ORDER;
 }
-
-// ── Formatação de BRL ─────────────────────────────────
-const formatBRL = (value) => `R$ ${Number(value).toFixed(2).replace(".", ",")}`;
 
 // ══════════════════════════════════════════════════════
 //  COMPONENTE PRINCIPAL
@@ -232,7 +231,7 @@ export default function Confirmacao() {
   }
 
   const paymentInfo = PAYMENT_LABELS[payment] ?? { icon: "💳", label: payment };
-  const shortId = orderId ? orderId.slice(-8).toUpperCase() : "RETIRADA";
+  const shortId = orderId ? shortOrderId(orderId) : "RETIRADA";
   const currentStep = STATUS_STEP[status] ?? 0;
   const canCancel = status === "pending" && (orderId || isRetirada);
   const entityLabel = isRetirada ? "retirada" : "pedido";
@@ -525,7 +524,7 @@ export default function Confirmacao() {
                   </p>
                   <a href="https://wa.me/553183077990" target="_blank" className="text-bold text-decoration-none fs-6 text-white">
                     <div className="border border-secondary rounded bg-success p-2">
-                      <span>Falar com atendente <i class="bi bi-whatsapp"></i></span>
+                      <span>Falar com atendente <i className="bi bi-whatsapp"></i></span>
                     </div>
                   </a>
                 </div>

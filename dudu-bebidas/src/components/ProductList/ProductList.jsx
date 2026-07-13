@@ -71,8 +71,8 @@ export default function ProductList({
         {/* Grid */}
         <div className="row row-cols-2 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3 g-md-4">
           {hasProducts ? (
-            visibleProducts.map((produto, index) => (
-              <ProductCard key={produto.id} produto={produto} index={index} addToCart={addToCart} />
+            visibleProducts.map((produto) => (
+              <ProductCard key={produto.id} produto={produto} addToCart={addToCart} />
             ))
           ) : (
             <div className="col-12 text-center py-5">

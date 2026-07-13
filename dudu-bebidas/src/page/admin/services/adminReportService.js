@@ -1,6 +1,11 @@
 import { supabase } from "../../../supabase/Supabaseclient";
 import { AdminServiceError } from "./AdminServiceError";
 
+// Máximo de linhas que o Supabase retorna por request — usado para paginar
+// tanto a busca de pedidos quanto a de itens de pedido (evita truncar dados
+// silenciosamente em lojas com muitos pedidos).
+const REPORTS_PAGE_SIZE = 1000;
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 /** ISO string for the 1st of the month, N months ago */
@@ -49,11 +54,10 @@ function buildMonthlyBuckets(orders, numMonths = 12) {
  * Fetches ALL orders from the last 12 months with automatic pagination.
  *
  * Supabase returns at most 1 000 rows per request by default. This loop
- * keeps fetching until it gets a page smaller than PAGE_SIZE, guaranteeing
+ * keeps fetching until it gets a page smaller than REPORTS_PAGE_SIZE, guaranteeing
  * that stores with thousands of orders never receive truncated data silently.
  */
 export async function fetchOrdersForReports() {
-  const PAGE_SIZE = 1000;
   const cutoff = monthsAgo(12);
   const allOrders = [];
   let from = 0;
@@ -64,7 +68,7 @@ export async function fetchOrdersForReports() {
       .select("id, total, created_at, address")
       .gte("created_at", cutoff)
       .order("created_at", { ascending: true })
-      .range(from, from + PAGE_SIZE - 1);
+      .range(from, from + REPORTS_PAGE_SIZE - 1);
 
     if (error) {
       throw new AdminServiceError(
@@ -76,9 +80,9 @@ export async function fetchOrdersForReports() {
     const rows = data ?? [];
     allOrders.push(...rows);
 
-    // Fewer rows than PAGE_SIZE → last page reached
-    if (rows.length < PAGE_SIZE) break;
-    from += PAGE_SIZE;
+    // Fewer rows than REPORTS_PAGE_SIZE → last page reached
+    if (rows.length < REPORTS_PAGE_SIZE) break;
+    from += REPORTS_PAGE_SIZE;
   }
 
   return allOrders;
@@ -97,7 +101,6 @@ export async function fetchOrderItemsForReports(orderIds) {
   if (!orderIds.length) return [];
 
   const ID_CHUNK = 500;  // max IDs per `.in()` call
-  const PAGE_SIZE = 1000; // max rows per Supabase request
 
   // Split orderIds into safe chunks for the `.in()` filter
   const idChunks = [];
@@ -115,7 +118,7 @@ export async function fetchOrderItemsForReports(orderIds) {
         .from("order_items")
         .select("order_id, name, quantity, price")
         .in("order_id", ids)
-        .range(from, from + PAGE_SIZE - 1);
+        .range(from, from + REPORTS_PAGE_SIZE - 1);
 
       if (error) {
         throw new AdminServiceError(
@@ -127,8 +130,8 @@ export async function fetchOrderItemsForReports(orderIds) {
       const rows = data ?? [];
       allItems.push(...rows);
 
-      if (rows.length < PAGE_SIZE) break;
-      from += PAGE_SIZE;
+      if (rows.length < REPORTS_PAGE_SIZE) break;
+      from += REPORTS_PAGE_SIZE;
     }
   }
 

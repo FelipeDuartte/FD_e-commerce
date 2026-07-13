@@ -1,6 +1,13 @@
 // Utils e constantes compartilhadas pelo painel admin
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { formatBRL } from "../../utils/currency";
+
 export const PAGE_SIZE = 20;
+
+// Re-exportado para manter compatível todo import existente
+// (`import { formatBRL } from "./adminUtils"`) — implementação real
+// agora vive em src/utils/currency.js, compartilhada com o resto do app.
+export { formatBRL };
 
 export const STATUS_PICKUP = {
   pending: {
@@ -94,9 +101,6 @@ export const formatDate = (iso) =>
     hour: "2-digit",
     minute: "2-digit",
   });
-
-export const formatBRL = (value) =>
-  `R$ ${Number(value).toFixed(2).replace(".", ",")}`;
 
 export const calcDiscount = (oldPrice, newPrice) =>
   oldPrice > 0 ? Math.round((1 - newPrice / oldPrice) * 100) : null;
