@@ -252,10 +252,10 @@
   border-radius: 4px;
   border: 1px solid #fecaca;
   white-space: nowrap;
-  animation: slideDown 0.3s ease;
+  animation: cart-slide-down 0.3s ease;
 }
 
-@keyframes slideDown {
+@keyframes cart-slide-down {
   from {
     opacity: 0;
     transform: translateY(-4px);

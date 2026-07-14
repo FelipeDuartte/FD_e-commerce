@@ -65,7 +65,10 @@ button {
     background var(--t),
     transform var(--t);
 }
-button:disabled {
+/* Escopado a .adm-root: antes era um seletor global (button:disabled) que
+   vazava para qualquer botão desabilitado do site inteiro (ex.: botão
+   "fechado" da loja), já que este CSS não é isolado por módulo. */
+.adm-root button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
   transform: none !important;
