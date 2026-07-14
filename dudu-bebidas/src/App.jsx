@@ -1,5 +1,5 @@
 // ==== React imports ====
-import { useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Route, Routes } from "react-router-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 // ==== Styles ====
@@ -26,10 +26,14 @@ import Checkout      from "./page/Checkout/Checkout";
 import Scrolltotop   from "./data/scrolltotop/Scrolltotop";
 import About         from "./components/About/About";
 import Confirm       from "./page/Confirm/Confirm";
-import Admin         from "./page/admin/Admin";
 import PrivacyPolicy from "./page/privacy-politcy/PrivacyPoclicy";
 import TermsOfService from "./page/terms-service/TermsService";
 import { StoreStatusProvider } from "./context/StoreStatusContext";
+
+// Painel admin carregado sob demanda: reduz o bundle inicial de quem só
+// está comprando (a maioria dos acessos), já que só quem entra em /admin
+// precisa desse código. Não muda nenhum comportamento do painel em si.
+const Admin = lazy(() => import("./page/admin/Admin"));
 
 export default function DuduBebidas() {
   // ==== UI States ====
@@ -204,7 +208,20 @@ export default function DuduBebidas() {
         <Route path="/terms-service"   element={<TermsOfService />} />
         <Route path="/checkout"        element={<Checkout user={user} clearCart={clearCart} />} />
         <Route path="/confirmacao"     element={<Confirm user={user} />} />
-        <Route path="/admin"           element={<Admin user={user} isAdmin={isAdmin} />} />
+        <Route
+          path="/admin"
+          element={
+            <Suspense
+              fallback={
+                <div style={{ textAlign: "center", padding: "4rem", color: "#fff" }}>
+                  Carregando painel...
+                </div>
+              }
+            >
+              <Admin user={user} isAdmin={isAdmin} />
+            </Suspense>
+          }
+        />
       </Routes>
 
       <Cart
