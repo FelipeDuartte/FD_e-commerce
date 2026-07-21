@@ -1,4 +1,4 @@
-# 🍺 E-commerce com crm de estoque e pedidos
+# 🍺 E-commerce completo
 - Loja virtual de bebidas com carrinho, checkout, autenticação e painel administrativo.
 - 🔗 https://dudu-bebidas.vercel.app/
 ---
@@ -9,14 +9,19 @@
 - Autenticação via Google (Supabase Auth)
 - Checkout com entrega ou retirada na loja
 - Controle de estoque em tempo real
-- Painel admin com gestão de pedidos e produtos
+- Painel admin com gestão completa da loja e de pedidos e produtos
 - Integração API meta whatsapp
+- Integração API Ifood
+- PDV (ponto de venda)
 ---
 ## 🛠 Tecnologias
 
 - API rest
 - React 19 + Vite
-- Supabase — banco de dados, autenticação e realtime
+- Javascript
+- TypeScript
+- SQL
+- Supabase - Postgresql
 - React Router DOM v7
 - Bootstrap 5
 - Deploy na Vercel
