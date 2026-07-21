@@ -1,9 +1,9 @@
 import { useEffect, useState, useRef } from "react";
 import "./Checkout.css";
+import { imgProduto } from "../../utils/Cloudnary";
 import { useNavigate, useLocation } from "react-router-dom";
 import { saveOrder } from "../../supabase/saveOrder";
 import { useStoreStatus } from "../../context/StoreStatusContext";
-import { formatBRL } from "../../utils/currency";
 import {
   loadLastDeliveryAddress,
   saveLastDeliveryAddress,
@@ -561,7 +561,7 @@ export default function Checkout({ user, clearCart }) {
                     <div className="co-item-icon">
                       {item.icon ? (
                         <img
-                          src={item.icon}
+                          src={imgProduto(item.icon)}
                           alt={item.name}
                           style={{
                             width: 36,
@@ -581,7 +581,10 @@ export default function Checkout({ user, clearCart }) {
                       </div>
                     </div>
                     <div className="co-item-price">
-                      {formatBRL(item.price * item.quantity)}
+                      R${" "}
+                      {(item.price * item.quantity)
+                        .toFixed(2)
+                        .replace(".", ",")}
                     </div>
                   </div>
                 ))
@@ -591,12 +594,14 @@ export default function Checkout({ user, clearCart }) {
             <div className="co-summary-rows">
               <div className="co-summary-row">
                 <span>Subtotal</span>
-                <span>{formatBRL(cartTotal)}</span>
+                <span>R$ {cartTotal.toFixed(2).replace(".", ",")}</span>
               </div>
               <div className="co-summary-row">
                 <span>{isRetirada ? "Retirada" : "Entrega"}</span>
                 <span>
-                  {DELIVERY === 0 ? "GRÁTIS" : formatBRL(DELIVERY)}
+                  {DELIVERY === 0
+                    ? "GRÁTIS"
+                    : `R$ ${DELIVERY.toFixed(2).replace(".", ",")}`}
                 </span>
               </div>
             </div>
@@ -604,7 +609,7 @@ export default function Checkout({ user, clearCart }) {
             <div className="co-total-row">
               <span className="co-total-label">Total</span>
               <span className="co-total-value">
-                {formatBRL(cartTotal + DELIVERY)}
+                R$ {(cartTotal + DELIVERY).toFixed(2).replace(".", ",")}
               </span>
             </div>
 

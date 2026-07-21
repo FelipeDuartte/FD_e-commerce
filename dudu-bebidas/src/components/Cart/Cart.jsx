@@ -13,6 +13,7 @@ import {
   Store,
 } from "lucide-react";
 import "./Cart.css";
+import { imgProduto } from "../../utils/Cloudnary";
 import { useStoreStatus, useStoreHoursData } from "../../context/StoreStatusContext";
 import { useDeliveryZones } from "../../hooks/useDeliveryZones";
 
@@ -166,7 +167,7 @@ export default function Cart({
               {cartItems.map((item) => (
                 <div key={item.id} className="cart-item">
                   <img
-                    src={item.imagem}
+                    src={imgProduto(item.imagem)}
                     alt={item.nome}
                     className="cart-item-image"
                   />

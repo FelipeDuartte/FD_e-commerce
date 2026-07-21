@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase, getCurrentStoreId } from "../../supabase/Supabaseclient";
 import "./Confirm.css";
+import { imgProduto } from "../../utils/Cloudnary";
 
 // ── Constantes ────────────────────────────────────────
 const PAYMENT_LABELS = {
@@ -449,7 +450,7 @@ export default function Confirmacao() {
                     <div className="cf-item-img">
                       {item.imagem || item.icon ? (
                         <img
-                          src={item.imagem || item.icon}
+                          src={imgProduto(item.imagem || item.icon)}
                           alt={item.nome || item.name}
                         />
                       ) : (
