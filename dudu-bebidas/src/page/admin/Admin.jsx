@@ -208,11 +208,17 @@ export default function Admin({ isAdmin }) {
           page: pageNum,
           status: filterStatus,
         });
+        // Filtra pedidos "velhos" (24h+, exceto pending) já aqui no fetch —
+        // sem isso, eles apareciam por até 1 minuto (até o próximo tick do
+        // intervalo) toda vez que a página era carregada/recarregada.
+        const visibleOrders = result.orders.filter((o) => !shouldRemoveOrder(o));
+        const removedNow = result.orders.length - visibleOrders.length;
+
         setOrders((prev) =>
-          reset || pageNum === 0 ? result.orders : [...prev, ...result.orders],
+          reset || pageNum === 0 ? visibleOrders : [...prev, ...visibleOrders],
         );
         setHasMore(result.hasMore);
-        setTotalCount(result.count);
+        setTotalCount(Math.max(0, result.count - removedNow));
       } catch (error) {
         console.error(error);
         setOrdersError(error.message);
@@ -229,36 +235,9 @@ export default function Admin({ isAdmin }) {
     fetchTodayMetrics();
   }, [isAdmin, fetchOrders, fetchTodayMetrics]);
 
-  // Realtime: novos pedidos e cancelamentos
-  // MULTI-LOJA: filtro por store_id — sem isso, o admin de uma loja
-  // receberia som/refetch também quando OUTRA loja tivesse um pedido novo.
-  useEffect(() => {
-    if (!isAdmin) return;
-    const storeId = getCurrentStoreId();
-    if (!storeId) return;
-
-    const channel = supabase
-      .channel(`admin-orders-${storeId}`)
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "orders", filter: `store_id=eq.${storeId}` },
-        () => {
-          playNotificationSound();
-          fetchOrders(0, true);
-          fetchTodayMetrics();
-        },
-      )
-      .on(
-        "postgres_changes",
-        { event: "DELETE", schema: "public", table: "orders", filter: `store_id=eq.${storeId}` },
-        () => {
-          fetchOrders(0, true);
-          fetchTodayMetrics();
-        },
-      )
-      .subscribe();
-    return () => supabase.removeChannel(channel);
-  }, [isAdmin]); // eslint-disable-line
+  // Realtime: novos pedidos e cancelamentos — movido pra depois da
+  // declaração de updateOrderStatusLocally (ver mais abaixo), porque agora
+  // depende dela.
 
   // Reset ao mudar filtro
   useEffect(() => {
@@ -302,6 +281,48 @@ export default function Admin({ isAdmin }) {
       }),
     [],
   );
+
+  // Realtime: novos pedidos, exclusões e mudanças de status
+  // MULTI-LOJA: filtro por store_id — sem isso, o admin de uma loja
+  // receberia som/refetch também quando OUTRA loja tivesse um pedido novo.
+  useEffect(() => {
+    if (!isAdmin) return;
+    const storeId = getCurrentStoreId();
+    if (!storeId) return;
+
+    const channel = supabase
+      .channel(`admin-orders-${storeId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "orders", filter: `store_id=eq.${storeId}` },
+        () => {
+          playNotificationSound();
+          fetchOrders(0, true);
+          fetchTodayMetrics();
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "orders", filter: `store_id=eq.${storeId}` },
+        () => {
+          fetchOrders(0, true);
+          fetchTodayMetrics();
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "orders", filter: `store_id=eq.${storeId}` },
+        (payload) => {
+          // Reflete em tempo real qualquer mudança de status feita em outro
+          // lugar — inclusive o cliente cancelando o próprio pedido
+          // (Confirm.jsx), sem precisar dar refresh na página.
+          updateOrderStatusLocally(payload.new.id, payload.new.status);
+          fetchTodayMetrics();
+        },
+      )
+      .subscribe();
+    return () => supabase.removeChannel(channel);
+  }, [isAdmin, updateOrderStatusLocally]); // eslint-disable-line
 
   const advanceStatus = useCallback(
     async (order) => {
@@ -351,11 +372,13 @@ export default function Admin({ isAdmin }) {
       return;
     }
 
-    setOrders((prev) => prev.filter((o) => o.id !== rejectModal));
-    setTotalCount((prev) => prev - 1);
+    // rejectAdminOrder não apaga mais — só atualiza o status localmente
+    // (updateOrderStatusLocally já cuida de sumir da tela só se passar 24h,
+    // igual todo o resto).
+    updateOrderStatusLocally(rejectModal, "rejected");
     setRejectModal(null);
     setRejecting(false);
-  }, [rejectModal]);
+  }, [rejectModal, updateOrderStatusLocally]);
 
   const closeRejectModal = useCallback(() => {
     if (!rejecting) {
@@ -376,7 +399,7 @@ export default function Admin({ isAdmin }) {
       if (o.status in acc) acc[o.status]++;
       return acc;
     },
-    { all: 0, pending: 0, preparing: 0, on_the_way: 0, delivered: 0 },
+    { all: 0, pending: 0, preparing: 0, on_the_way: 0, delivered: 0, rejected: 0, cancelled: 0 },
   );
 
   const { containerRef, totalHeight, offsets, start, end, measureRef } =
@@ -534,6 +557,18 @@ export default function Admin({ isAdmin }) {
                   icon: "✅",
                   num: counts.delivered,
                   label: "Entregue",
+                },
+                {
+                  key: "rejected",
+                  icon: "❌",
+                  num: counts.rejected,
+                  label: "Rejeitado",
+                },
+                {
+                  key: "cancelled",
+                  icon: "🚫",
+                  num: counts.cancelled,
+                  label: "Cancelado",
                 },
               ].map(({ key, icon, num, label }) => (
                 <button

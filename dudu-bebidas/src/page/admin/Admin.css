@@ -65,10 +65,7 @@ button {
     background var(--t),
     transform var(--t);
 }
-/* Escopado a .adm-root: antes era um seletor global (button:disabled) que
-   vazava para qualquer botão desabilitado do site inteiro (ex.: botão
-   "fechado" da loja), já que este CSS não é isolado por módulo. */
-.adm-root button:disabled {
+button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
   transform: none !important;
@@ -251,8 +248,12 @@ button {
 /* ─── STATS / FILTROS ─────────────────────────────────────────────── */
 .adm-stats {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 12px;
+  /* Se adapta sozinho à largura disponível — não depende de saber quantos
+     cards existem (hoje são 7: Total, Aguardando, Preparando, Em entrega,
+     Entregue, Rejeitado, Cancelado). Cada card nunca fica menor que 100px;
+     acima disso, quantas colunas couberem. */
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 10px;
   margin-bottom: 24px;
 }
 
@@ -260,12 +261,13 @@ button {
   background: var(--c-surface);
   border: 1px solid var(--c-border);
   border-radius: var(--r-lg);
-  padding: 20px 16px;
+  padding: 16px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
   cursor: pointer;
+  min-width: 0; /* evita que texto/número estourem a largura do card */
 }
 .adm-stat:hover {
   border-color: var(--c-border-2);
@@ -277,21 +279,26 @@ button {
 }
 
 .adm-stat-icon {
-  font-size: 20px;
+  font-size: 18px;
 }
 .adm-stat-num {
   font-family: var(--font-display);
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 800;
   color: var(--c-accent);
   line-height: 1;
 }
 .adm-stat-label {
-  font-size: 11px;
+  font-size: 10px;
   color: #666;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 /* ─── LOADING / EMPTY ─────────────────────────────────────────────── */
@@ -1287,7 +1294,8 @@ button {
 
 @media (max-width: 900px) {
   .adm-stats {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(85px, 1fr));
+    gap: 8px;
   }
 }
 
@@ -1297,9 +1305,6 @@ button {
   }
   .adm-title {
     font-size: 26px;
-  }
-  .adm-stats {
-    grid-template-columns: repeat(2, 1fr);
   }
   .adm-today-metrics {
     grid-template-columns: 1fr;
@@ -1357,10 +1362,6 @@ button {
 
   .adm-modal {
     padding: 28px 20px;
-    width: 95%;
-  }
-  .adm-modal-product {
-    max-width: 100%;
   }
   .adm-modal-actions {
     flex-direction: column;
@@ -1377,38 +1378,19 @@ button {
 
 @media (max-width: 480px) {
   .adm-stats {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+    gap: 6px;
   }
   .adm-stat {
-    padding: 14px 10px;
+    padding: 12px 8px;
+  }
+  .adm-stat-icon {
+    font-size: 15px;
   }
   .adm-stat-num {
-    font-size: 22px;
-  }
-
-  /* Modal Responsivo */
-  .adm-modal {
-    width: 95%;
-    padding: 20px 16px;
-    max-height: 95vh;
-  }
-  .adm-modal-product {
-    max-width: 100%;
-    max-height: 95vh;
-  }
-  .adm-modal-title {
     font-size: 18px;
   }
-  .adm-modal-desc {
-    font-size: 13px;
-  }
-  .adm-form-row {
-    flex-direction: column;
-  }
-  .adm-form-row .adm-form-field {
-    flex: 1;
-  }
-  .adm-product-form {
-    padding: 0;
+  .adm-stat-label {
+    font-size: 8.5px;
   }
 }

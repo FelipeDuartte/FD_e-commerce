@@ -27,12 +27,15 @@ export async function listAdminOrders({ page = 0, status = "all" }) {
     .order("created_at", { ascending: false })
     .range(from, to);
 
+  // "pending" (Aguardando) nunca some sozinho — precisa de ação. Qualquer
+  // outro status (preparing, on_the_way, delivered, rejected) só fica
+  // visível até 24h depois de criado — depois disso, arquiva.
   if (status === "all") {
-    query = query.or(`status.not.eq.delivered,created_at.gte.${boundary}`);
-  } else if (status === "delivered") {
-    query = query.eq("status", "delivered").gte("created_at", boundary);
-  } else {
+    query = query.or(`status.eq.pending,created_at.gte.${boundary}`);
+  } else if (status === "pending") {
     query = query.eq("status", status);
+  } else {
+    query = query.eq("status", status).gte("created_at", boundary);
   }
 
   const { data, error, count } = await query;
@@ -85,33 +88,15 @@ export async function updateAdminOrderStatus(orderId, status) {
 }
 
 export async function rejectAdminOrder(orderId) {
-  // Marca como "rejected" primeiro para disparar notificação ao cliente
-  const { error: statusError } = await supabase
+  // Antes apagava o pedido e os itens; agora só marca como "rejected" —
+  // o pedido continua no histórico (e some do painel depois de 24h, igual
+  // aos outros status, via shouldRemoveOrder/listAdminOrders).
+  const { error } = await supabase
     .from("orders")
     .update({ status: "rejected" })
     .eq("id", orderId);
 
-  if (statusError) {
-    console.error("Erro ao marcar como rejected:", statusError);
-  }
-
-  // Deleta itens do pedido
-  const { error: itemsError } = await supabase
-    .from("order_items")
-    .delete()
-    .eq("order_id", orderId);
-
-  if (itemsError) {
-    throw new AdminServiceError("Erro ao remover itens do pedido.", itemsError);
-  }
-
-  // Deleta o pedido
-  const { error: orderError } = await supabase
-    .from("orders")
-    .delete()
-    .eq("id", orderId);
-
-  if (orderError) {
-    throw new AdminServiceError("Erro ao rejeitar pedido.", orderError);
+  if (error) {
+    throw new AdminServiceError("Erro ao rejeitar pedido.", error);
   }
 }

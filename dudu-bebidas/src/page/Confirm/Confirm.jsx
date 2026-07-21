@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { supabase } from "../../supabase/Supabaseclient";
-import { formatBRL } from "../../utils/currency";
-import { shortOrderId } from "../../utils/orderId";
+import { supabase, getCurrentStoreId } from "../../supabase/Supabaseclient";
 import "./Confirm.css";
 
 // ── Constantes ────────────────────────────────────────
@@ -65,6 +63,9 @@ function resolveOrderData(locationState) {
   }
   return EMPTY_ORDER;
 }
+
+// ── Formatação de BRL ─────────────────────────────────
+const formatBRL = (value) => `R$ ${Number(value).toFixed(2).replace(".", ",")}`;
 
 // ══════════════════════════════════════════════════════
 //  COMPONENTE PRINCIPAL
@@ -189,10 +190,11 @@ export default function Confirmacao() {
         return;
       }
 
-      // Usa RPC cancel_order para deletar com segurança (security definer)
+      // Usa RPC cancel_order (security definer) — não apaga mais o pedido,
+      // só marca como "cancelled" e devolve o estoque (escopado à loja).
       const { data: rpcResult, error: rpcError } = await supabase.rpc(
         "cancel_order",
-        { p_order_id: orderId },
+        { p_order_id: orderId, p_store_id: getCurrentStoreId() },
       );
 
       if (rpcError || !rpcResult?.success)
@@ -231,7 +233,7 @@ export default function Confirmacao() {
   }
 
   const paymentInfo = PAYMENT_LABELS[payment] ?? { icon: "💳", label: payment };
-  const shortId = orderId ? shortOrderId(orderId) : "RETIRADA";
+  const shortId = orderId ? orderId.slice(-8).toUpperCase() : "RETIRADA";
   const currentStep = STATUS_STEP[status] ?? 0;
   const canCancel = status === "pending" && (orderId || isRetirada);
   const entityLabel = isRetirada ? "retirada" : "pedido";
@@ -524,7 +526,7 @@ export default function Confirmacao() {
                   </p>
                   <a href="https://wa.me/553183077990" target="_blank" className="text-bold text-decoration-none fs-6 text-white">
                     <div className="border border-secondary rounded bg-success p-2">
-                      <span>Falar com atendente <i className="bi bi-whatsapp"></i></span>
+                      <span>Falar com atendente <i class="bi bi-whatsapp"></i></span>
                     </div>
                   </a>
                 </div>

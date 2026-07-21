@@ -1,13 +1,6 @@
 // Utils e constantes compartilhadas pelo painel admin
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { formatBRL } from "../../utils/currency";
-
 export const PAGE_SIZE = 20;
-
-// Re-exportado para manter compatível todo import existente
-// (`import { formatBRL } from "./adminUtils"`) — implementação real
-// agora vive em src/utils/currency.js, compartilhada com o resto do app.
-export { formatBRL };
 
 export const STATUS_PICKUP = {
   pending: {
@@ -17,6 +10,8 @@ export const STATUS_PICKUP = {
     next: "delivered",
   },
   delivered: { label: "Entregue", icon: "✅", color: "#50c878", next: null },
+  rejected: { label: "Rejeitado", icon: "❌", color: "#e74c3c", next: null },
+  cancelled: { label: "Cancelado", icon: "🚫", color: "#888", next: null },
 };
 
 export const STATUS_DELIVERY = {
@@ -39,6 +34,8 @@ export const STATUS_DELIVERY = {
     next: "delivered",
   },
   delivered: { label: "Entregue", icon: "✅", color: "#aaa", next: null },
+  rejected: { label: "Rejeitado", icon: "❌", color: "#e74c3c", next: null },
+  cancelled: { label: "Cancelado", icon: "🚫", color: "#888", next: null },
 };
 
 export const DELIVERY_STATUS_ORDER = [
@@ -102,11 +99,16 @@ export const formatDate = (iso) =>
     minute: "2-digit",
   });
 
+export const formatBRL = (value) =>
+  `R$ ${Number(value).toFixed(2).replace(".", ",")}`;
+
 export const calcDiscount = (oldPrice, newPrice) =>
   oldPrice > 0 ? Math.round((1 - newPrice / oldPrice) * 100) : null;
 
 export const shouldRemoveOrder = (order) => {
-  if (order.status !== "delivered") return false;
+  // Some do painel 24h depois de criado, pra qualquer status — exceto
+  // "pending" (Aguardando), que precisa continuar visível até alguém agir.
+  if (order.status === "pending") return false;
   const createdTime = new Date(order.created_at).getTime();
   const now = Date.now();
   const hoursPassed = (now - createdTime) / (1000 * 60 * 60);
