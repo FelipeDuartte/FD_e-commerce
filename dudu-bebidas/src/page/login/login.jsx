@@ -7,6 +7,7 @@ export default function Login({ isOpen, onClose }) {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [formData, setFormData] = useState({
@@ -121,6 +122,31 @@ export default function Login({ isOpen, onClose }) {
     setShowPassword(false);
   };
 
+  const handleForgotPassword = async () => {
+    setErrorMsg("");
+    setSuccessMsg("");
+
+    if (!formData.email) {
+      setErrorMsg("Digite seu e-mail para receber o link de recuperação.");
+      return;
+    }
+
+    setForgotLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(formData.email);
+    setForgotLoading(false);
+
+    if (error) {
+      setErrorMsg(
+        error.message ?? "Não foi possível enviar o link. Tente novamente.",
+      );
+      return;
+    }
+
+    setSuccessMsg(
+      "Link de recuperação enviado. Verifique seu e-mail e procure por uma mensagem do Supabase.",
+    );
+  };
+
   const toggleMode = () => {
     setIsLogin(!isLogin);
     resetForm();
@@ -214,6 +240,19 @@ export default function Login({ isOpen, onClose }) {
             </div>
           </div>
 
+          {isLogin && (
+            <div className="forgot-password-wrapper">
+              <button
+                type="button"
+                className="forgot-password-link"
+                onClick={handleForgotPassword}
+                disabled={loading || forgotLoading}
+              >
+                {forgotLoading ? "Enviando..." : "Esqueci a senha"}
+              </button>
+            </div>
+          )}
+
           {!isLogin && (
             <div className="form-group">
               <label className="form-label">Confirmar Senha</label>
@@ -299,9 +338,13 @@ export default function Login({ isOpen, onClose }) {
         <div className="login-footer">
           <p>Ao continuar, você concorda com nossos</p>
           <div className="footer-links">
-            <a href="/terms-service" target="_blank">Termos de Uso</a>
+            <a href="/terms-service" target="_blank">
+              Termos de Uso
+            </a>
             <span>•</span>
-            <a href="/privacy-policy" target="_blank">Política de Privacidade</a>
+            <a href="/privacy-policy" target="_blank">
+              Política de Privacidade
+            </a>
           </div>
         </div>
       </div>
