@@ -96,6 +96,7 @@ export default function Confirmacao() {
 
   // ── Modal pedido rejeitado pelo admin ─────────────
   const [showRejectedModal, setShowRejectedModal] = useState(false);
+  const [showCancelledModal, setShowCancelledModal] = useState(false);
 
   // ── Persiste no localStorage ──────────────────────
   useEffect(() => {
@@ -130,9 +131,17 @@ export default function Confirmacao() {
       .maybeSingle()
       .then(({ data, error }) => {
         if (error) console.error("Erro ao buscar status:", error);
-        if (data?.status) setStatus(data.status);
+        if (data?.status) {
+          setStatus(data.status);
+          // Pedido já chegou rejeitado/cancelado antes da pessoa abrir/
+          // reabrir essa página — ex: pelo botão de "pedido em andamento".
+          if (data.status === "rejected") setShowRejectedModal(true);
+          if (data.status === "cancelled") setShowCancelledModal(true);
+        }
         if (data === null && !error) {
-          // Pedido não existe mais (rejeitado e removido)
+          // Pedido não existe mais (fallback — hoje rejeição não apaga mais
+          // a linha, mas mantido por segurança caso algum pedido antigo
+          // ainda tenha sido removido do jeito antigo).
           setStatus("rejected");
           setShowRejectedModal(true);
         }
@@ -154,6 +163,12 @@ export default function Confirmacao() {
             if (payload.status === "rejected") {
               setStatus("rejected");
               setShowRejectedModal(true);
+              localStorage.removeItem("lastOrder");
+              return;
+            }
+            if (payload.status === "cancelled") {
+              setStatus("cancelled");
+              setShowCancelledModal(true);
               localStorage.removeItem("lastOrder");
               return;
             }
@@ -298,6 +313,30 @@ export default function Confirmacao() {
               Infelizmente seu {entityLabel} <strong>#{shortId}</strong> foi{" "}
               <strong>rejeitado</strong> pela loja. Nenhum valor foi cobrado. Se
               tiver dúvidas, entre em contato com a loja.
+            </p>
+            <div className="cf-modal-actions">
+              <button
+                className="cf-modal-btn-confirm"
+                onClick={() => navigate("/")}
+              >
+                Voltar para a loja
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* MODAL — PEDIDO CANCELADO (pelo próprio cliente) */}
+      {showCancelledModal && (
+        <>
+          <div className="cf-modal-overlay" />
+          <div className="cf-modal" role="dialog" aria-modal="true">
+            <div className="cf-modal-icon">🚫</div>
+            <h3 className="cf-modal-title">Pedido cancelado</h3>
+            <p className="cf-modal-desc">
+              Seu {entityLabel} <strong>#{shortId}</strong> foi{" "}
+              <strong>cancelado</strong>. Nenhum valor foi cobrado. Se foi um
+              engano, é só fazer um novo pedido.
             </p>
             <div className="cf-modal-actions">
               <button
