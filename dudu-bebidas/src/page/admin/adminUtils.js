@@ -48,7 +48,9 @@ export const PICKUP_STATUS_ORDER = ["pending", "delivered"];
 
 export const PAYMENT_LABEL = {
   pix: { icon: "⚡", label: "PIX" },
-  card: { icon: "💳", label: "Cartão" },
+  debit_card: { icon: "💳", label: "Débito" },
+  credit_card: { icon: "💳", label: "Crédito" },
+  card: { icon: "💳", label: "Cartão" }, // pedidos antigos, antes de separar débito/crédito
   cash: { icon: "💵", label: "Dinheiro" },
 };
 

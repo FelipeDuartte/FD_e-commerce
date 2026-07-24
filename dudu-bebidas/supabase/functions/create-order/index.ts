@@ -21,6 +21,26 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-store-id",
 };
 
+// Taxas reais da maquininha (crédito) — mesma tabela usada em Checkout.jsx
+// pra exibir o total ao cliente. Duplicada aqui de propósito: o total final
+// é sempre recalculado no servidor (nunca confia no que o front manda), então
+// essa tabela precisa existir nos dois lugares. Se a taxa da maquininha mudar,
+// atualize aqui E no Checkout.jsx.
+const INSTALLMENT_FEE_RATE: Record<number, number> = {
+  1: 0.0326,
+  2: 0.057,
+  3: 0.0652,
+  4: 0.0736,
+  5: 0.0819,
+  6: 0.0903,
+  7: 0.0988,
+  8: 0.1073,
+};
+
+function roundCents(v: number): number {
+  return Math.round(v * 100) / 100;
+}
+
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -40,7 +60,7 @@ Deno.serve(async (req) => {
     //    quanto um campo storeId no corpo (fallback, caso algum client antigo
     //    ainda não tenha sido atualizado).
     const body = await req.json();
-    const { userId, deliveryFee = 0, paymentMethod, address, cartItems, storeId: storeIdFromBody } = body;
+    const { userId, deliveryFee = 0, paymentMethod, installments, address, cartItems, storeId: storeIdFromBody } = body;
 
     const storeId = req.headers.get("x-store-id") ?? storeIdFromBody;
 
@@ -72,6 +92,18 @@ Deno.serve(async (req) => {
 
     if (!paymentMethod) {
       return jsonResponse({ error: "Forma de pagamento não selecionada." }, 400);
+    }
+
+    // installments só faz sentido pra crédito; qualquer outro caso vira null.
+    // Sanitiza pra garantir um inteiro razoável mesmo que o front mande algo
+    // inesperado (defesa extra, já que o valor final vai direto pro banco).
+    let installmentsToSave: number | null = null;
+    if (paymentMethod === "credit_card") {
+      const n = Number(installments);
+      // Limite bate com INSTALLMENT_FEE_RATE acima (e com MAX_INSTALLMENTS
+      // do Checkout.jsx) — sem isso, um valor fora da tabela de taxas caía
+      // no "?? 0" e a pessoa pagaria parcelado sem nenhuma taxa.
+      installmentsToSave = Number.isInteger(n) && n >= 1 && n <= 8 ? n : 1;
     }
 
     // 1. Buscar preços reais no banco — ignora o total enviado pelo front-end.
@@ -107,7 +139,13 @@ Deno.serve(async (req) => {
       return sum + (product?.price ?? 0) * item.quantity;
     }, 0);
     const normalizedDeliveryFee = Math.max(0, Number(deliveryFee) || 0);
-    const calculatedTotal = calculatedProductsTotal + normalizedDeliveryFee;
+    const totalBeforeFee = calculatedProductsTotal + normalizedDeliveryFee;
+
+    // Taxa da maquininha: só entra quando é crédito, usando o installments
+    // já validado/sanitizado acima (installmentsToSave).
+    const cardFeeRate =
+      paymentMethod === "credit_card" ? INSTALLMENT_FEE_RATE[installmentsToSave ?? 1] ?? 0 : 0;
+    const calculatedTotal = roundCents(totalBeforeFee * (1 + cardFeeRate));
 
     // 2. Inserir o pedido com o total calculado no servidor + store_id
     const { data: order, error: orderError } = await supabase
@@ -117,6 +155,7 @@ Deno.serve(async (req) => {
         user_id:        userId ?? null,
         total:          calculatedTotal,
         payment_method: paymentMethod,
+        installments:   installmentsToSave,
         address,
         status:         "pending",
       })

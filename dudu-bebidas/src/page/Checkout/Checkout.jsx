@@ -11,9 +11,42 @@ import {
 
 const paymentOptions = [
   { value: "pix", icon: "⚡", name: "PIX" },
-  { value: "card", icon: "💳", name: "Cartão" },
+  { value: "debit_card", icon: "💳", name: "Débito" },
+  { value: "credit_card", icon: "💳", name: "Crédito" },
   { value: "cash", icon: "💵", name: "Dinheiro" },
 ];
+
+// Pagamento é feito na entrega (maquininha do entregador) — isso só define
+// em quantas vezes o cliente PRETENDE parcelar, pra facilitar quem vai
+// levar a máquina certa. Ajuste o máximo aqui se seu maquininha permitir mais.
+const MAX_INSTALLMENTS = 8;
+const INSTALLMENT_OPTIONS = Array.from({ length: MAX_INSTALLMENTS }, (_, i) => i + 1);
+
+// Taxas reais da maquininha (crédito), tiradas direto do visor dela.
+// Mesmo "à vista" (1x) tem taxa — é assim que a máquina cobra. Parado em 8x
+// porque foi até onde deu pra ler no print com certeza (9x tinha um dígito
+// tampado) — manda o resto que eu completo a tabela.
+// Se a taxa da maquininha mudar um dia, é só atualizar aqui (e no mesmo
+// objeto dentro da Edge Function create-order, que recalcula o total
+// de novo no servidor por segurança).
+const INSTALLMENT_FEE_RATE = {
+  1: 0.0326,
+  2: 0.057,
+  3: 0.0652,
+  4: 0.0736,
+  5: 0.0819,
+  6: 0.0903,
+  7: 0.0988,
+  8: 0.1073,
+};
+
+const roundCents = (v) => Math.round(v * 100) / 100;
+
+function applyCreditCardFee(baseTotal, payment, installments) {
+  if (payment !== "credit_card") return baseTotal;
+  const rate = INSTALLMENT_FEE_RATE[installments] ?? 0;
+  return roundCents(baseTotal * (1 + rate));
+}
 
 const INITIAL_ADDRESS = {
   name: "",
@@ -40,6 +73,14 @@ export default function Checkout({ user, clearCart }) {
   const isProcessingRef = useRef(false);
   const [orderProcessed, setOrderProcessed] = useState(false);
   const [payment, setPayment] = useState("pix");
+  const [installments, setInstallments] = useState(1);
+
+  // Total já com a taxa da maquininha embutida (só quando for crédito)
+  const baseTotal = cartTotal + DELIVERY;
+  const cardFee = payment === "credit_card"
+    ? roundCents(baseTotal * (INSTALLMENT_FEE_RATE[installments] ?? 0))
+    : 0;
+  const finalTotal = baseTotal + cardFee;
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -211,9 +252,10 @@ export default function Checkout({ user, clearCart }) {
 
       const { orderId, error } = await saveOrder({
         userId: user?.id ?? null,
-        total: cartTotal + DELIVERY,
+        total: finalTotal,
         deliveryFee: DELIVERY,
         paymentMethod: payment,
+        installments: payment === "credit_card" ? installments : null,
         address: addressToSave,
         cartItems,
       });
@@ -235,8 +277,9 @@ export default function Checkout({ user, clearCart }) {
         state: {
           orderId,
           cartItems,
-          total: cartTotal + DELIVERY,
+          total: finalTotal,
           payment,
+          installments: payment === "credit_card" ? installments : null,
           address: addressToSave,
           isRetirada,
         },
@@ -536,7 +579,10 @@ export default function Checkout({ user, clearCart }) {
                     name="payment"
                     value={opt.value}
                     checked={payment === opt.value}
-                    onChange={() => setPayment(opt.value)}
+                    onChange={() => {
+                      setPayment(opt.value);
+                      if (opt.value !== "credit_card") setInstallments(1);
+                    }}
                     disabled={isDisabled}
                   />
                   <label className="co-pay-label" htmlFor={opt.value}>
@@ -546,6 +592,35 @@ export default function Checkout({ user, clearCart }) {
                 </div>
               ))}
             </div>
+
+            {payment === "credit_card" && (
+              <div className="co-installments">
+                <label htmlFor="co-installments-select" className="co-installments-label">
+                  Em quantas vezes?
+                </label>
+                <select
+                  id="co-installments-select"
+                  className="co-installments-select"
+                  value={installments}
+                  onChange={(e) => setInstallments(Number(e.target.value))}
+                  disabled={isDisabled}
+                >
+                  {INSTALLMENT_OPTIONS.map((n) => {
+                    const optTotal = applyCreditCardFee(baseTotal, "credit_card", n);
+                    const perInstallment = optTotal / n;
+                    return (
+                      <option key={n} value={n}>
+                        {n}x {n === 1 ? "à vista" : `de R$ ${perInstallment.toFixed(2).replace(".", ",")}`}
+                        {" "}— total R$ {optTotal.toFixed(2).replace(".", ",")}
+                      </option>
+                    );
+                  })}
+                </select>
+                <p className="co-installments-hint">
+                  O valor já inclui a taxa da maquininha pra cada opção. 💳
+                </p>
+              </div>
+            )}
           </div>
 
           {/* ── SUMMARY ── */}
@@ -604,12 +679,18 @@ export default function Checkout({ user, clearCart }) {
                     : `R$ ${DELIVERY.toFixed(2).replace(".", ",")}`}
                 </span>
               </div>
+              {payment === "credit_card" && cardFee > 0 && (
+                <div className="co-summary-row co-summary-row-fee">
+                  <span>Taxa da maquininha ({installments}x)</span>
+                  <span>+ R$ {cardFee.toFixed(2).replace(".", ",")}</span>
+                </div>
+              )}
             </div>
 
             <div className="co-total-row">
               <span className="co-total-label">Total</span>
               <span className="co-total-value">
-                R$ {(cartTotal + DELIVERY).toFixed(2).replace(".", ",")}
+                R$ {(finalTotal).toFixed(2).replace(".", ",")}
               </span>
             </div>
 

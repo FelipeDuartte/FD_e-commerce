@@ -7,7 +7,9 @@ import { imgProduto } from "../../utils/Cloudnary";
 // ── Constantes ────────────────────────────────────────
 const PAYMENT_LABELS = {
   pix: { icon: "⚡", label: "PIX" },
-  card: { icon: "💳", label: "Cartão" },
+  debit_card: { icon: "💳", label: "Débito" },
+  credit_card: { icon: "💳", label: "Crédito" },
+  card: { icon: "💳", label: "Cartão" }, // pedidos antigos
   cash: { icon: "💵", label: "Dinheiro" },
 };
 
@@ -45,6 +47,7 @@ const EMPTY_ORDER = {
   cartItems: [],
   total: 0,
   payment: "pix",
+  installments: null,
   address: {},
   isRetirada: false,
 };
@@ -77,7 +80,7 @@ export default function Confirmacao() {
 
   const [orderData] = useState(() => resolveOrderData(location.state));
 
-  const { orderId, cartItems, total, payment, address, isRetirada } = {
+  const { orderId, cartItems, total, payment, installments, address, isRetirada } = {
     ...EMPTY_ORDER,
     ...orderData,
   };
@@ -104,13 +107,14 @@ export default function Confirmacao() {
           cartItems,
           total,
           payment,
+          installments,
           address,
           isRetirada,
           savedAt: new Date().toISOString(),
         }),
       );
     }
-  }, [orderId, cartItems, total, payment, address, isRetirada]);
+  }, [orderId, cartItems, total, payment, installments, address, isRetirada]);
 
   // ── Realtime status ───────────────────────────────
   useEffect(() => {
@@ -499,7 +503,12 @@ export default function Confirmacao() {
               <div className="cf-card-label">💳 Forma de Pagamento</div>
               <div className="cf-payment">
                 <span className="cf-payment-icon">{paymentInfo.icon}</span>
-                <span className="cf-payment-label">{paymentInfo.label}</span>
+                <span className="cf-payment-label">
+                  {paymentInfo.label}
+                  {payment === "credit_card" && installments > 1
+                    ? ` em ${installments}x`
+                    : ""}
+                </span>
               </div>
             </div>
 

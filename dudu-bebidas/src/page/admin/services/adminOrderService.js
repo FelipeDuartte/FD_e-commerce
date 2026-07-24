@@ -6,6 +6,7 @@ const ORDER_SELECT = `
   id,
   total,
   payment_method,
+  installments,
   address,
   status,
   created_at,

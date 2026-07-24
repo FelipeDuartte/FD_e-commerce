@@ -8,7 +8,6 @@ import {
   formatBRL,
   PAYMENT_LABEL,
 } from "./adminUtils";
-import { shortOrderId } from "../../utils/orderId";
 
 export default function OrderCard({
   order,
@@ -30,7 +29,7 @@ export default function OrderCard({
     icon: "💳",
     label: order.payment_method,
   };
-  const shortId = shortOrderId(order.id);
+  const shortId = order.id.slice(-8).toUpperCase();
 
   return (
     <li className={`adm-order adm-order-${order.status}`}>
@@ -64,6 +63,9 @@ export default function OrderCard({
         <div className="adm-order-payment">
           <span>
             {payment.icon} {payment.label}
+            {order.payment_method === "credit_card" && order.installments > 1
+              ? ` · ${order.installments}x`
+              : ""}
           </span>
           <span className="adm-order-total">{formatBRL(order.total)}</span>
         </div>
