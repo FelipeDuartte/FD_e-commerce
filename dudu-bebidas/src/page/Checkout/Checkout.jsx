@@ -19,7 +19,11 @@ const paymentOptions = [
 // Pagamento é feito na entrega (maquininha do entregador) — isso só define
 // em quantas vezes o cliente PRETENDE parcelar, pra facilitar quem vai
 // levar a máquina certa. Ajuste o máximo aqui se seu maquininha permitir mais.
-const MAX_INSTALLMENTS = 8;
+// Dono da loja pediu pra credito aceitar só à vista (1x) por enquanto —
+// se um dia quiser voltar a parcelar, é só subir esse número de novo (o
+// resto do código já lida com qualquer valor, inclusive o seletor de
+// parcelas mais abaixo, que só aparece quando MAX_INSTALLMENTS > 1).
+const MAX_INSTALLMENTS = 1;
 const INSTALLMENT_OPTIONS = Array.from({ length: MAX_INSTALLMENTS }, (_, i) => i + 1);
 
 // Taxas reais da maquininha (crédito), tiradas direto do visor dela.
@@ -595,29 +599,38 @@ export default function Checkout({ user, clearCart }) {
 
             {payment === "credit_card" && (
               <div className="co-installments">
-                <label htmlFor="co-installments-select" className="co-installments-label">
-                  Em quantas vezes?
-                </label>
-                <select
-                  id="co-installments-select"
-                  className="co-installments-select"
-                  value={installments}
-                  onChange={(e) => setInstallments(Number(e.target.value))}
-                  disabled={isDisabled}
-                >
-                  {INSTALLMENT_OPTIONS.map((n) => {
-                    const optTotal = applyCreditCardFee(baseTotal, "credit_card", n);
-                    const perInstallment = optTotal / n;
-                    return (
-                      <option key={n} value={n}>
-                        {n}x {n === 1 ? "à vista" : `de R$ ${perInstallment.toFixed(2).replace(".", ",")}`}
-                        {" "}— total R$ {optTotal.toFixed(2).replace(".", ",")}
-                      </option>
-                    );
-                  })}
-                </select>
+                {MAX_INSTALLMENTS > 1 ? (
+                  <>
+                    <label htmlFor="co-installments-select" className="co-installments-label">
+                      Em quantas vezes?
+                    </label>
+                    <select
+                      id="co-installments-select"
+                      className="co-installments-select"
+                      value={installments}
+                      onChange={(e) => setInstallments(Number(e.target.value))}
+                      disabled={isDisabled}
+                    >
+                      {INSTALLMENT_OPTIONS.map((n) => {
+                        const optTotal = applyCreditCardFee(baseTotal, "credit_card", n);
+                        const perInstallment = optTotal / n;
+                        return (
+                          <option key={n} value={n}>
+                            {n}x {n === 1 ? "à vista" : `de R$ ${perInstallment.toFixed(2).replace(".", ",")}`}
+                            {" "}— total R$ {optTotal.toFixed(2).replace(".", ",")}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </>
+                ) : (
+                  <p className="co-installments-label">
+                    Pagamento à vista no crédito (1x)
+                  </p>
+                )}
                 <p className="co-installments-hint">
-                  O valor já inclui a taxa da maquininha pra cada opção. 💳
+                  Pagamento na entrega, na maquininha — leve o cartão certo. O
+                  valor já inclui a taxa da maquininha. 💳
                 </p>
               </div>
             )}

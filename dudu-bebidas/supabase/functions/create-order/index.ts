@@ -100,10 +100,12 @@ Deno.serve(async (req) => {
     let installmentsToSave: number | null = null;
     if (paymentMethod === "credit_card") {
       const n = Number(installments);
-      // Limite bate com INSTALLMENT_FEE_RATE acima (e com MAX_INSTALLMENTS
-      // do Checkout.jsx) — sem isso, um valor fora da tabela de taxas caía
-      // no "?? 0" e a pessoa pagaria parcelado sem nenhuma taxa.
-      installmentsToSave = Number.isInteger(n) && n >= 1 && n <= 8 ? n : 1;
+      // Dono da loja pediu pra credito aceitar só à vista (1x) por enquanto.
+      // Se voltar a liberar parcelamento, troque o "1" fixo abaixo pela
+      // validação de faixa (e suba MAX_INSTALLMENTS no Checkout.jsx) — a
+      // tabela de taxas já tem até 8x, não precisa recriar nada.
+      installmentsToSave = 1;
+      void n; // não usado enquanto só 1x é aceito; mantido pra não quebrar o parse acima
     }
 
     // 1. Buscar preços reais no banco — ignora o total enviado pelo front-end.
