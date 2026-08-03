@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
 
     const config = getCloudinaryConfig();
     const keywordTokens = extractKeywordTokens(slug);
-    const result = await searchByFilenameFuzzy(config, MASTER_FOLDER, slug, keywordTokens);
+    const result = await searchByFilenameFuzzy(config, MASTER_FOLDER, slug, keywordTokens, NOISE_WORDS);
 
     if (result) {
       return new Response(

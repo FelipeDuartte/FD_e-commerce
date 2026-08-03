@@ -109,11 +109,19 @@ export async function searchByFilename(
  * 0 a 1 (coeficiente de Dice) — 1 = todas as palavras batem, 0 = nenhuma.
  * Tokens são considerados iguais também quando um é prefixo do outro com
  * pelo menos 4 letras (cobre plural/singular e pequenas variações, ex:
- * "cabare" ~ "cabares", "heineken" ~ "heinek").
+ * "cabare" ~ "cabares", "heineken" ~ "heinek"), e ignora ponto solto (ex:
+ * "1.5l" ~ "15l" — o normalizeSlug do nome digitado remove o ponto, mas
+ * alguns arquivos do catálogo foram salvos com ele).
  */
+function normalizeToken(t: string): string {
+  return t.replace(/\./g, "");
+}
+
 function tokensMatch(a: string, b: string): boolean {
-  if (a === b) return true;
-  if (a.length >= 4 && b.length >= 4 && (a.startsWith(b) || b.startsWith(a))) {
+  const na = normalizeToken(a);
+  const nb = normalizeToken(b);
+  if (na === nb) return true;
+  if (na.length >= 4 && nb.length >= 4 && (na.startsWith(nb) || nb.startsWith(na))) {
     return true;
   }
   return false;
@@ -151,15 +159,30 @@ const MAX_FUZZY_CANDIDATES = 30;
  *      ("ICE CABARE LIMÃO PROMOCIONAL") ou a menos ("ICE CABARE") em relação
  *      ao arquivo cadastrado no catálogo ("ice-cabare-limao-275ml").
  *
+ * REGRA DE OURO (evita trocar de marca): a primeira palavra-chave do nome
+ * digitado — normalmente a marca ("amstel", "stella", "guarana"...) —
+ * PRECISA aparecer no candidato. Sem essa trava, "AMSTEL 473ml PACK" podia
+ * casar com um arquivo "budweiser-473ml-pack" só porque "473ml" e "pack"
+ * batiam — palavras genéricas de embalagem não podem, sozinhas, decidir o
+ * produto. Foi assim que achamos imagem de marca errada em vários produtos.
+ *
  * @param keywordTokens tokens já filtrados (sem tamanho, unidade, número
- *   isolado etc.) usados para a busca ampla da camada 2. Se vazio, pula
- *   direto para "não encontrado".
+ *   isolado, "lata"/"garrafa" etc. — mas "pack" fica de propósito, pra ainda
+ *   dar pra diferenciar "amstel-473ml" de "amstel-473ml-pack") usados na
+ *   busca ampla da camada 2
+ *   E no ranqueamento — o primeiro token da lista é tratado como a "marca"
+ *   pra regra acima. Se vazio, pula direto para "não encontrado".
+ * @param noiseWords mesmo conjunto de palavras genéricas usado pra montar
+ *   keywordTokens — aplicado aqui também aos tokens do CANDIDATO, pra não
+ *   comparar de forma desigual (só filtrar um lado inflava o denominador
+ *   do Dice contra candidatos legítimos que também têm essas palavras).
  */
 export async function searchByFilenameFuzzy(
   config: CloudinaryConfig,
   folderPrefix: string,
   fullSlug: string,
   keywordTokens: string[],
+  noiseWords: Set<string>,
 ): Promise<{ secure_url: string; matchType: "exact" | "fuzzy"; score?: number } | null> {
   // Camada 1: match exato/tokenizado do slug inteiro
   const exact = await searchByFilename(config, folderPrefix, fullSlug);
@@ -179,12 +202,22 @@ export async function searchByFilenameFuzzy(
 
   if (candidates.length === 0) return null;
 
+  const brandToken = keywordTokens[0];
+
   let best: { public_id: string; secure_url: string } | null = null;
   let bestScore = 0;
 
   for (const candidate of candidates) {
     const filename = candidate.public_id.split("/").pop() ?? "";
-    const candidateTokens = filename.split("-").filter(Boolean);
+    const candidateTokens = filename
+      .split("-")
+      .filter(Boolean)
+      .filter((t) => !noiseWords.has(t));
+
+    // Regra de ouro: sem a "marca" no candidato, nem entra na disputa.
+    const brandPresent = candidateTokens.some((ct) => tokensMatch(brandToken, ct));
+    if (!brandPresent) continue;
+
     const score = diceScore(keywordTokens, candidateTokens);
     if (score > bestScore) {
       bestScore = score;
@@ -208,9 +241,22 @@ export async function uploadSignedImage(
   config: CloudinaryConfig,
   base64File: string,
   folder: string,
+  publicId?: string,
 ): Promise<{ secure_url: string }> {
   const timestamp = Math.floor(Date.now() / 1000);
-  const paramsToSign = { folder, timestamp };
+  const paramsToSign: Record<string, string | number> = { folder, timestamp };
+
+  // Quando temos o id do produto, fixamos o public_id e pedimos overwrite —
+  // sem isso, toda troca de imagem criava um arquivo novo com nome aleatório
+  // no Cloudinary, deixando o antigo órfão pra sempre (era a causa da
+  // duplicação de imagens que encontramos). "invalidate" garante que o CDN
+  // não sirva a imagem antiga em cache depois da troca.
+  if (publicId) {
+    paramsToSign.public_id = publicId;
+    paramsToSign.overwrite = "true";
+    paramsToSign.invalidate = "true";
+  }
+
   const signature = await signParams(paramsToSign, config.apiSecret);
 
   const form = new FormData();
@@ -218,6 +264,11 @@ export async function uploadSignedImage(
   form.append("api_key", config.apiKey);
   form.append("timestamp", String(timestamp));
   form.append("folder", folder);
+  if (publicId) {
+    form.append("public_id", publicId);
+    form.append("overwrite", "true");
+    form.append("invalidate", "true");
+  }
   form.append("signature", signature);
 
   const response = await fetch(
