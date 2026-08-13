@@ -2,7 +2,7 @@ import { useEffect, useState, memo } from "react";
 import { Plus, Check, X } from "lucide-react";
 import { imgProduto } from "../../utils/Cloudnary";
 import "./ProductCard.css";
-import { useStoreStatus } from "../../context/StoreStatusContext";
+import { useStoreStatus } from "../../context/useStoreStatus";
 
 const RESET_TIME = 2000;
 

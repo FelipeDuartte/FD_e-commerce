@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import "./Cart.css";
 import { imgProduto } from "../../utils/Cloudnary";
-import { useStoreStatus, useStoreHoursData } from "../../context/StoreStatusContext";
+import { useStoreStatus, useStoreHoursData } from "../../context/useStoreStatus";
 import { useDeliveryZones } from "../../hooks/useDeliveryZones";
 
 /** Converte "HH:MM:SS" ou "HH:MM" do banco para "HH:MM" de exibição */

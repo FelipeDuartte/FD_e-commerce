@@ -61,7 +61,10 @@ function CategoriesSection() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { reload(); }, [reload]);
+  useEffect(() => {
+    const timer = setTimeout(() => { reload(); }, 0);
+    return () => clearTimeout(timer);
+  }, [reload]);
 
   // ── Executora genérica: roda fn, recarrega, exibe feedback ───
   const run = useCallback(async (successMsg, fn) => {
@@ -245,7 +248,10 @@ function DeliveryZonesSection() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { fetchZones(); }, [fetchZones]);
+  useEffect(() => {
+    const timer = setTimeout(() => { fetchZones(); }, 0);
+    return () => clearTimeout(timer);
+  }, [fetchZones]);
 
   const handleAdd = async (e) => {
     e?.preventDefault();
@@ -559,7 +565,10 @@ function TeamSection() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { reload(); }, [reload]);
+  useEffect(() => {
+    const timer = setTimeout(() => { reload(); }, 0);
+    return () => clearTimeout(timer);
+  }, [reload]);
 
   const run = useCallback(async (successMsg, fn) => {
     setBusy(true);

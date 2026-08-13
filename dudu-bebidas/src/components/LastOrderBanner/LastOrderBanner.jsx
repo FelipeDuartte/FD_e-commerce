@@ -36,7 +36,8 @@ export default function LastOrderBanner() {
   // Reconfere sempre que o usuário navega (ex: acabou de finalizar uma
   // compra em outra aba, ou voltou pro site depois de um tempo).
   useEffect(() => {
-    setOrder(readLastOrder());
+    const timer = setTimeout(() => { setOrder(readLastOrder()); }, 0);
+    return () => clearTimeout(timer);
   }, [location.pathname]);
 
   if (!order || HIDDEN_ON.includes(location.pathname)) return null;

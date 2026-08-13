@@ -1,10 +1,7 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { supabase, getCurrentStoreId } from "../supabase/Supabaseclient";
 import { getStoreStatus, createStoreChecker } from "../utils/storeHours";
-
-// ── Dois contextos separados — interface de useStoreStatus não muda ───────────
-const StoreStatusContext = createContext(null); // storeStatus object
-const StoreHoursContext  = createContext(null); // { config, hours } raw data
+import { StoreHoursContext, StoreStatusContext } from "./storeStatusContexts";
 
 export function StoreStatusProvider({ children }) {
   const [storeStatus, setStoreStatus] = useState(() => getStoreStatus());
@@ -43,22 +40,4 @@ export function StoreStatusProvider({ children }) {
       </StoreHoursContext.Provider>
     </StoreStatusContext.Provider>
   );
-}
-
-/**
- * Retorna o status atual da loja { open, reason, message, shortMessage }.
- * Interface idêntica à anterior — nenhum consumer precisa mudar.
- */
-export function useStoreStatus() {
-  const ctx = useContext(StoreStatusContext);
-  return ctx ?? getStoreStatus();
-}
-
-/**
- * Retorna os horários brutos do banco: { config, hours }
- * hours é um array com uma entrada por dia da semana (0=Dom … 6=Sáb).
- * Retorna null enquanto carrega ou se o banco não estiver disponível.
- */
-export function useStoreHoursData() {
-  return useContext(StoreHoursContext);
 }

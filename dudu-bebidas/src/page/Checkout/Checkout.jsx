@@ -3,7 +3,7 @@ import "./Checkout.css";
 import { imgProduto } from "../../utils/Cloudnary";
 import { useNavigate, useLocation } from "react-router-dom";
 import { saveOrder } from "../../supabase/saveOrder";
-import { useStoreStatus } from "../../context/StoreStatusContext";
+import { useStoreStatus } from "../../context/useStoreStatus";
 import {
   loadLastDeliveryAddress,
   saveLastDeliveryAddress,

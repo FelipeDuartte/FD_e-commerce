@@ -4,7 +4,7 @@
 import { useNavigate } from "react-router-dom"; // Hook para navegação entre páginas
 import { ShoppingCart, User, Search, LogOut } from "lucide-react"; // Ícones visuais
 import "./Header.css"; // Estilos específicos do Header
-import { useStoreStatus } from "../../context/StoreStatusContext"; // Hook para status da loja (aberta/fechada)
+import { useStoreStatus } from "../../context/useStoreStatus"; // Hook para status da loja (aberta/fechada)
 import { useProductCategories } from "../../hooks/useProductCategories"; // Hook para obter categorias de produtos
 
 // ─────────────────────────────────────────────────────────
