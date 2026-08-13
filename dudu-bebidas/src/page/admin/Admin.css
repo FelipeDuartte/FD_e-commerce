@@ -1,5 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap");
-
 /* ─── RESET ──────────────────────────────────────────────────────── */
 *,
 *::before,
@@ -72,13 +70,15 @@ button:disabled {
 }
 
 /* ─── CARD BASE ──────────────────────────────────────────────────── */
-.adm-card {
+.adm-metric-card,
+.adm-order {
   background: var(--c-surface);
   border: 1px solid var(--c-border);
   border-radius: var(--r-lg);
   transition: border-color var(--t);
 }
-.adm-card:hover {
+.adm-metric-card:hover,
+.adm-order:hover {
   border-color: var(--c-border-2);
 }
 
@@ -212,7 +212,6 @@ button:disabled {
 }
 
 .adm-metric-card {
-  composes: adm-card;
   padding: 20px 24px;
   display: flex;
   align-items: center;
@@ -370,7 +369,6 @@ button:disabled {
 
 /* ─── CARD DE PEDIDO ──────────────────────────────────────────────── */
 .adm-order {
-  composes: adm-card;
   list-style: none;
 }
 .adm-order-pending {
