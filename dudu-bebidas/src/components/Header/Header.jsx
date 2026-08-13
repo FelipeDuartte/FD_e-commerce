@@ -1,7 +1,6 @@
 // ─────────────────────────────────────────────────────────
 // IMPORTAÇÕES
 // ─────────────────────────────────────────────────────────
-import logo from "../../assets/logo_dudu-bebidas.png"; // Logo da empresa
 import { useNavigate } from "react-router-dom"; // Hook para navegação entre páginas
 import { ShoppingCart, User, Search, LogOut } from "lucide-react"; // Ícones visuais
 import "./Header.css"; // Estilos específicos do Header
@@ -27,6 +26,9 @@ export default function Header({
   onLogout, // Callback quando faz logout
   isAdmin, // Boolean indicando se o usuário é admin
 }) {
+  // logo loja
+  const logo_dudu = "https://res.cloudinary.com/dfcsficmg/image/upload/v1786649996/logo_dudu-bebidas.webp"
+
   // ─────────────────────────────────────────────────────────
   // HOOKS
   // ─────────────────────────────────────────────────────────
@@ -98,7 +100,7 @@ export default function Header({
             style={{ flexShrink: 0 }}
           >
             <div className="logo-image-wrapper">
-              <img src={logo} alt="Dudu Bebidas Logo" className="logo-image" />
+              <img src={logo_dudu} alt="Dudu Bebidas Logo" className="logo-image" />
             </div>
             <div className="brand-text">
               Dudu <span>Bebidas</span>

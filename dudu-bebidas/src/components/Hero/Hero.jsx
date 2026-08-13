@@ -3,23 +3,20 @@ import { ShoppingCart } from "lucide-react";
 import "./Hero.css";
 import { useProductCategories } from "../../hooks/useProductCategories";
 
-// Imagens pequenas
-import bannerCerveja from "../../assets/CervejaBanner.png";
-import bannerWisky from "../../assets/wiskyBanner.png";
-import bannerVinhos from "../../assets/vinhoBanner.png";
-import bannerGin from "../../assets/ginBanner.png";
-
-// Imagens grandes
-import bannerCervejaLg from "../../assets/cervejaBanner-lg.png";
-import bannerWiskyLg from "../../assets/wiskyBanner-lg.png";
-import bannerVinhosLg from "../../assets/vinhoBanner-lg.png";
-import bannerGinLg from "../../assets/ginBanner-lg.png";
-
 // Configurações
 const AUTO_PLAY_DELAY = 5000;
 const MIN_SWIPE_DISTANCE = 50;
 const LARGE_SCREEN_WIDTH = 1080;
-
+// Imagens pequenas
+const banner_pequeno_cerveja = "https://res.cloudinary.com/dfcsficmg/image/upload/v1786649995/CervejaBanner-CAYjoOTV_1_yu45c7.webp"
+const banner_pequeno_vinho = "https://res.cloudinary.com/dfcsficmg/image/upload/v1786649996/vinhoBanner-DUfHVLwr_1_g3mhty.webp"
+const banner_pequeno_wisky = "https://res.cloudinary.com/dfcsficmg/image/upload/v1786649997/wiskyBanner-AhTFNrfB_1_kx6eal.webp"
+const banner_pequeno_gin = "https://res.cloudinary.com/dfcsficmg/image/upload/v1786649996/ginBanner-DM7yVTzI_1_tkthnx.webp"
+// Imagens grandes
+const banner_grande_gin = "https://res.cloudinary.com/dfcsficmg/image/upload/v1786649996/ginBanner-lg-CPtHbopB_1_obe6ug.webp"
+const banner_grande_wisky = "https://res.cloudinary.com/dfcsficmg/image/upload/v1786649998/wiskyBanner-lg-ButYwblz_1_vxgnfo.webp"
+const banner_grande_vinho = "https://res.cloudinary.com/dfcsficmg/image/upload/v1786649997/vinhoBanner-lg-aexSNgB6_1_glalbm.webp"
+const banner_grande_cerveja = "https://res.cloudinary.com/dfcsficmg/image/upload/v1786649996/cervejaBanner-lg-DrKCbcAy_1_mtznt0.webp"
 // Dados do banner
 const BANNERS = [
   {
@@ -28,8 +25,8 @@ const BANNERS = [
     subtitle: "Cervejas Premium",
     description: "Até 40% OFF em cervejas importadas",
     badge: "OFERTA",
-    imageSmall: bannerCerveja,
-    imageLarge: bannerCervejaLg,
+    imageSmall: banner_pequeno_cerveja,
+    imageLarge: banner_grande_cerveja,
     ctaText: "Ver Ofertas",
     category: "cerveja",
   },
@@ -39,8 +36,8 @@ const BANNERS = [
     subtitle: "Vinhos Selecionados",
     description: "Acabou de chegar - Importados direto da Europa",
     badge: "NOVO",
-    imageSmall: bannerVinhos,
-    imageLarge: bannerVinhosLg,
+    imageSmall: banner_pequeno_vinho,
+    imageLarge: banner_grande_vinho,
     ctaText: "Conferir Novidades",
     category: "vinho",
   },
@@ -50,8 +47,8 @@ const BANNERS = [
     subtitle: "Whisky & Destilados",
     description: "Descontos imperdíveis em destilados premium",
     badge: "HOT",
-    imageSmall: bannerWisky,
-    imageLarge: bannerWiskyLg,
+    imageSmall: banner_pequeno_wisky,
+    imageLarge: banner_grande_wisky,
     ctaText: "Aproveitar Agora",
     category: "destilado",
   },
@@ -61,8 +58,8 @@ const BANNERS = [
     subtitle: "Gin Artesanal",
     description: "Sabores exclusivos direto do produtor",
     badge: "EXCLUSIVO",
-    imageSmall: bannerGin,
-    imageLarge: bannerGinLg,
+    imageSmall: banner_pequeno_gin,
+    imageLarge: banner_grande_gin,
     ctaText: "Conhecer Produtos",
     category: "destilado",
   },
