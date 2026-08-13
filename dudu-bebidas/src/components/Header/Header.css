@@ -462,11 +462,6 @@
    RESPONSIVE — SMALL MOBILE (≤ 480px)
 ══════════════════════════════════════════ */
 @media (max-width: 480px) {
-  /* Esconde o texto da marca — só logo-img fica */
-  .brand-text {
-    display: none !important;
-  }
-
   .logo-image-wrapper {
     width: 34px;
     height: 34px;
