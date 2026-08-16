@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 // ─────────────────────────────────────────────────────────────
 // MULTI-LOJA
 //
-// Cada projeto Vercel (dudu-bebidas, adega-premium, ...) define sua própria
+// Cada projeto Vercel (dudu-bebidas ...) define sua própria
 // loja através da env var VITE_STORE_SLUG. Esse client:
 //   1) resolve o slug → { id, name, type, whatsapp } uma única vez, no boot
 //      do app (ver resolveStore(), chamado em main.jsx antes de renderizar);
@@ -84,7 +84,7 @@ export const loginGoogle = async () => {
     options: {
       // Antes era fixo em "https://dudu-bebidas.vercel.app" — agora usa o
       // domínio de quem está logando, então funciona em qualquer projeto
-      // (dudu-bebidas.vercel.app, adega-premium.vercel.app, preview deploys...).
+      // (dudu-bebidas.vercel.app preview deploys...).
       redirectTo: window.location.origin,
     },
   });

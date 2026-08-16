@@ -50,7 +50,6 @@ export default function DuduBebidas() {
 
   useEffect(() => {
     if (location.state?.openCart) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCartOpen(true);
       navigate("/", { replace: true, state: {} });
     }
@@ -81,7 +80,6 @@ export default function DuduBebidas() {
   useEffect(() => {
     if (!user) {
       lastCheckedUid.current = null;
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsAdmin(false);
       return;
     }
