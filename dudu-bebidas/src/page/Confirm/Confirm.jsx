@@ -125,20 +125,17 @@ export default function Confirmacao() {
     }
 
     supabase
-      .from("orders")
-      .select("status")
-      .eq("id", orderId)
-      .maybeSingle()
+      .rpc("get_order_status", { p_order_id: orderId, p_store_id: getCurrentStoreId() })
       .then(({ data, error }) => {
         if (error) console.error("Erro ao buscar status:", error);
-        if (data?.status) {
+        if (data?.success && data?.status) {
           setStatus(data.status);
           // Pedido já chegou rejeitado/cancelado antes da pessoa abrir/
           // reabrir essa página — ex: pelo botão de "pedido em andamento".
           if (data.status === "rejected") setShowRejectedModal(true);
           if (data.status === "cancelled") setShowCancelledModal(true);
         }
-        if (data === null && !error) {
+        if (!data?.success) {
           // Pedido não existe mais (fallback — hoje rejeição não apaga mais
           // a linha, mas mantido por segurança caso algum pedido antigo
           // ainda tenha sido removido do jeito antigo).
