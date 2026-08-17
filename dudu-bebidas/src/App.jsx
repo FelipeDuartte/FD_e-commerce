@@ -1,5 +1,5 @@
 // ==== React imports ====
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, lazy, Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 // ==== Styles ====
@@ -8,48 +8,79 @@ import "./App.css";
 import { supabase, getCurrentStoreId } from "./supabase/Supabaseclient";
 // ==== Data ====
 import { useProducts } from "./hooks/useProducts";
-import { useCart } from "./hooks/useCart";
-import banners from "./data/banners";
+import { useCart }     from "./hooks/useCart";
+import banners  from "./data/banners";
 import benefits from "./data/benefits";
 // ==== Components ====
-import Header from "./components/Header/Header";
-import Banner from "./components/Banner/Banner";
-import Hero from "./components/Hero/Hero";
-import Benefits from "./components/Benefits/Benefits";
-import ProductList from "./components/ProductList/ProductList";
-import Footer from "./components/Footer/Footer";
-import Cart from "./components/Cart/Cart";
+import Header        from "./components/Header/Header";
+import Banner        from "./components/Banner/Banner";
+import Hero          from "./components/Hero/Hero";
+import Benefits      from "./components/Benefits/Benefits";
+import ProductList   from "./components/ProductList/ProductList";
+import Footer        from "./components/Footer/Footer";
+import Cart          from "./components/Cart/Cart";
 import AgeGate from "./components/AgeGate/AgeGate";
 import { hasAcceptedAgeGate } from "./components/AgeGate/ageGateStorage";
-import Login from "./page/login/login";
-import Checkout from "./page/Checkout/Checkout";
-import Scrolltotop from "./data/scrolltotop/Scrolltotop";
-import About from "./components/About/About";
-import Confirm from "./page/Confirm/Confirm";
+import Login         from "./page/login/login";
+import Checkout      from "./page/Checkout/Checkout";
+import Scrolltotop   from "./data/scrolltotop/Scrolltotop";
+import About         from "./components/About/About";
+import Confirm       from "./page/Confirm/Confirm";
 import LastOrderBanner from "./components/LastOrderBanner/LastOrderBanner";
-import Admin from "./page/admin/Admin";
+// Carregado sob demanda: só quem realmente navega pra /admin baixa esse
+// código (painel inteiro + serviços + CSS). Antes era import estático, e
+// todo visitante do site — inclusive quem nunca abre o admin — baixava
+// esse pedaço junto no carregamento inicial.
+const Admin = lazy(() => import("./page/admin/Admin"));
 import PrivacyPolicy from "./page/privacy-politcy/PrivacyPoclicy";
 import TermsOfService from "./page/terms-service/TermsService";
 import { StoreStatusProvider } from "./context/StoreStatusContext";
 
+// Tela leve enquanto o chunk do painel admin baixa (só acontece na
+// primeira vez que alguém acessa /admin — depois fica em cache do navegador).
+function AdminLoadingFallback() {
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "16px",
+        background: "#0d0d0d",
+      }}
+    >
+      <div
+        style={{
+          width: "44px",
+          height: "44px",
+          border: "4px solid rgba(255, 215, 0, 0.15)",
+          borderTopColor: "#ffd700",
+          borderRadius: "50%",
+          animation: "admin-loading-spin 0.8s linear infinite",
+        }}
+      />
+      <style>{`@keyframes admin-loading-spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+}
+
 export default function DuduBebidas() {
   // ==== UI States ====
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [cartOpen, setCartOpen] = useState(false);
-  const [loginOpen, setLoginOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const [ageGateAccepted, setAgeGateAccepted] = useState(() =>
-    hasAcceptedAgeGate(),
-  );
+  const [menuOpen,   setMenuOpen]   = useState(false);
+  const [cartOpen,   setCartOpen]   = useState(false);
+  const [loginOpen,  setLoginOpen]  = useState(false);
+  const [scrolled,   setScrolled]   = useState(false);
+  const [ageGateAccepted, setAgeGateAccepted] = useState(() => hasAcceptedAgeGate());
 
   const location = useLocation();
   const navigate = useNavigate();
-  const isLegalPage = ["/privacy-policy", "/terms-service"].includes(
-    location.pathname,
-  );
+  const isLegalPage = ["/privacy-policy", "/terms-service"].includes(location.pathname);
 
   useEffect(() => {
     if (location.state?.openCart) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCartOpen(true);
       navigate("/", { replace: true, state: {} });
     }
@@ -60,17 +91,15 @@ export default function DuduBebidas() {
   }, [location.state, navigate]);
 
   // ==== Auth ====
-  const [user, setUser] = useState(null);
+  const [user,    setUser]    = useState(null);
   const [isAdmin, setIsAdmin] = useState(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
     });
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) =>
-      setUser(session?.user ?? null),
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => setUser(session?.user ?? null)
     );
     return () => subscription.unsubscribe();
   }, []);
@@ -80,6 +109,7 @@ export default function DuduBebidas() {
   useEffect(() => {
     if (!user) {
       lastCheckedUid.current = null;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsAdmin(false);
       return;
     }
@@ -111,17 +141,10 @@ export default function DuduBebidas() {
   } = useProducts();
 
   // ==== Carrinho ====
-  const {
-    cartItems,
-    cartCount,
-    addToCart,
-    updateQuantity,
-    removeItem,
-    clearCart,
-  } = useCart();
+  const { cartItems, cartCount, addToCart, updateQuantity, removeItem, clearCart } = useCart();
 
   // ==== Filters ====
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm,       setSearchTerm]       = useState("");
   const [selectedCategory, setSelectedCategory] = useState("todos");
 
   // ==== Banner carousel ====
@@ -144,12 +167,8 @@ export default function DuduBebidas() {
   const filteredProducts = useMemo(() => {
     return produtosData
       .filter((produto) => {
-        const matchesSearch = produto.nome
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase());
-        const matchesCategory =
-          selectedCategory === "todos" ||
-          produto.categoria === selectedCategory;
+        const matchesSearch   = produto.nome.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesCategory = selectedCategory === "todos" || produto.categoria === selectedCategory;
         return matchesSearch && matchesCategory;
       })
       .sort((a, b) => {
@@ -160,95 +179,94 @@ export default function DuduBebidas() {
   }, [produtosData, searchTerm, selectedCategory]);
 
   // ==== Logout ====
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-  };
+  const handleLogout = async () => { await supabase.auth.signOut(); };
 
   // ==== Render ====
   return (
     <StoreStatusProvider>
-      <div style={{ minHeight: "100vh", background: "#1a1a1a" }}>
-        <Scrolltotop />
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <>
-                <Banner
-                  banners={banners}
-                  currentBanner={currentBanner}
-                  setCurrentBanner={setCurrentBanner}
+    <div style={{ minHeight: "100vh", background: "#1a1a1a" }}>
+      <Scrolltotop />
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <>
+              <Banner
+                banners={banners}
+                currentBanner={currentBanner}
+                setCurrentBanner={setCurrentBanner}
+              />
+              <Header
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                cartCount={cartCount}
+                menuOpen={menuOpen}
+                setMenuOpen={setMenuOpen}
+                scrolled={scrolled}
+                onCartClick={() => setCartOpen(true)}
+                onLoginClick={() => setLoginOpen(true)}
+                onCategoryClick={setSelectedCategory}
+                user={user}
+                isAdmin={isAdmin}
+                onLogout={handleLogout}
+              />
+              <Hero onCategorySelect={setSelectedCategory} />
+
+              {produtosLoading ? (
+                <div style={{ textAlign: "center", padding: "4rem" }}>
+                  Carregando produtos...
+                </div>
+              ) : produtosError ? (
+                <div style={{ textAlign: "center", padding: "4rem" }}>
+                  {produtosError}
+                </div>
+              ) : (
+                <ProductList
+                  filteredProducts={filteredProducts}
+                  selectedCategory={selectedCategory}
+                  setSelectedCategory={setSelectedCategory}
+                  addToCart={addToCart}
                 />
-                <Header
-                  searchTerm={searchTerm}
-                  setSearchTerm={setSearchTerm}
-                  cartCount={cartCount}
-                  menuOpen={menuOpen}
-                  setMenuOpen={setMenuOpen}
-                  scrolled={scrolled}
-                  onCartClick={() => setCartOpen(true)}
-                  onLoginClick={() => setLoginOpen(true)}
-                  onCategoryClick={setSelectedCategory}
-                  user={user}
-                  isAdmin={isAdmin}
-                  onLogout={handleLogout}
-                />
-                <Hero onCategorySelect={setSelectedCategory} />
+              )}
 
-                {produtosLoading ? (
-                  <div style={{ textAlign: "center", padding: "4rem" }}>
-                    Carregando produtos...
-                  </div>
-                ) : produtosError ? (
-                  <div style={{ textAlign: "center", padding: "4rem" }}>
-                    {produtosError}
-                  </div>
-                ) : (
-                  <ProductList
-                    filteredProducts={filteredProducts}
-                    selectedCategory={selectedCategory}
-                    setSelectedCategory={setSelectedCategory}
-                    addToCart={addToCart}
-                  />
-                )}
-
-                <About />
-                <Benefits benefits={benefits} />
-                <Footer />
-              </>
-            }
-          />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/terms-service" element={<TermsOfService />} />
-          <Route
-            path="/checkout"
-            element={<Checkout user={user} clearCart={clearCart} />}
-          />
-          <Route path="/confirmacao" element={<Confirm user={user} />} />
-          <Route
-            path="/admin"
-            element={<Admin user={user} isAdmin={isAdmin} />}
-          />
-        </Routes>
-
-        <Cart
-          isOpen={cartOpen}
-          onClose={() => setCartOpen(false)}
-          cartItems={cartItems}
-          updateQuantity={updateQuantity}
-          removeItem={removeItem}
-          clearCart={clearCart}
-          user={user}
+              <About />
+              <Benefits benefits={benefits} />
+              <Footer />
+            </>
+          }
         />
+        <Route path="/privacy-policy"  element={<PrivacyPolicy />} />
+        <Route path="/terms-service"   element={<TermsOfService />} />
+        <Route path="/checkout"        element={<Checkout user={user} clearCart={clearCart} />} />
+        <Route path="/confirmacao"     element={<Confirm user={user} />} />
+        <Route
+          path="/admin"
+          element={
+            <Suspense fallback={<AdminLoadingFallback />}>
+              <Admin user={user} isAdmin={isAdmin} />
+            </Suspense>
+          }
+        />
+      </Routes>
 
-        <Login isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
+      <Cart
+        isOpen={cartOpen}
+        onClose={() => setCartOpen(false)}
+        cartItems={cartItems}
+        updateQuantity={updateQuantity}
+        removeItem={removeItem}
+        clearCart={clearCart}
+        user={user}
+      />
 
-        <LastOrderBanner />
+      <Login isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
 
-        {!ageGateAccepted && !isLegalPage && (
-          <AgeGate onAccept={() => setAgeGateAccepted(true)} />
-        )}
-      </div>
+      <LastOrderBanner />
+
+      {!ageGateAccepted && !isLegalPage && (
+        <AgeGate onAccept={() => setAgeGateAccepted(true)} />
+      )}
+    </div>
     </StoreStatusProvider>
   );
 }
