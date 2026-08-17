@@ -15,6 +15,9 @@ const PAYMENT_LABELS = {
 
 const STATUS_STEP = { pending: 0, preparing: 1, on_the_way: 2, delivered: 3 };
 
+const STATUS_POLL_INTERVAL_MS = 5000;
+const TERMINAL_STATUSES = ["rejected", "cancelled", "delivered"];
+
 const STEPS = [
   {
     icon: "✅",
@@ -117,82 +120,79 @@ export default function Confirmacao() {
     }
   }, [orderId, cartItems, total, payment, installments, address, isRetirada]);
 
-  // ── Realtime status ───────────────────────────────
+  // ── Status do pedido (polling via RPC) ─────────────
+  // Antes era Realtime (postgres_changes), mas isso exige uma policy de
+  // SELECT na tabela orders que qualquer anônimo pode explorar pra listar
+  // todos os pedidos da loja (ver get_order_status). Sem essa policy, o
+  // Realtime não consegue mais entregar updates pra esse cliente — então
+  // aqui só reconsultamos o status por polling, que já usa a mesma RPC
+  // segura (escopada por ID) da carga inicial.
   useEffect(() => {
     if (!orderId) {
       setStatusLoading(false);
       return;
     }
 
-    supabase
-      .rpc("get_order_status", { p_order_id: orderId, p_store_id: getCurrentStoreId() })
-      .then(({ data, error }) => {
-        if (error) console.error("Erro ao buscar status:", error);
-        if (data?.success && data?.status) {
-          setStatus(data.status);
-          // Pedido já chegou rejeitado/cancelado antes da pessoa abrir/
-          // reabrir essa página — ex: pelo botão de "pedido em andamento".
-          if (data.status === "rejected") setShowRejectedModal(true);
-          if (data.status === "cancelled") setShowCancelledModal(true);
-        }
-        if (!data?.success) {
-          // Pedido não existe mais (fallback — hoje rejeição não apaga mais
-          // a linha, mas mantido por segurança caso algum pedido antigo
-          // ainda tenha sido removido do jeito antigo).
-          setStatus("rejected");
-          setShowRejectedModal(true);
-        }
-        setStatusLoading(false);
+    let cancelled = false;
+    let intervalId;
+    let lastStatus = null;
+
+    const applyStatus = (newStatus, { animate = false } = {}) => {
+      if (newStatus === "rejected") {
+        setStatus("rejected");
+        setShowRejectedModal(true);
+        localStorage.removeItem("lastOrder");
+        return;
+      }
+      if (newStatus === "cancelled") {
+        setStatus("cancelled");
+        setShowCancelledModal(true);
+        localStorage.removeItem("lastOrder");
+        return;
+      }
+      if (animate) {
+        setAnimating(true);
+        setTimeout(() => setAnimating(false), 600);
+      }
+      setStatus(newStatus);
+    };
+
+    const fetchStatus = async () => {
+      const { data, error } = await supabase.rpc("get_order_status", {
+        p_order_id: orderId,
+        p_store_id: getCurrentStoreId(),
       });
+      if (cancelled) return;
 
-    const channel = supabase
-      .channel(`order-status-${orderId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "orders",
-          filter: `id=eq.${orderId}`,
-        },
-        ({ new: payload }) => {
-          if (payload?.status) {
-            if (payload.status === "rejected") {
-              setStatus("rejected");
-              setShowRejectedModal(true);
-              localStorage.removeItem("lastOrder");
-              return;
-            }
-            if (payload.status === "cancelled") {
-              setStatus("cancelled");
-              setShowCancelledModal(true);
-              localStorage.removeItem("lastOrder");
-              return;
-            }
-            setAnimating(true);
-            setStatus(payload.status);
-            setTimeout(() => setAnimating(false), 600);
-          }
-        },
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "DELETE",
-          schema: "public",
-          table: "orders",
-          filter: `id=eq.${orderId}`,
-        },
-        () => {
-          // Pedido foi deletado (rejeição)
-          setStatus("rejected");
-          setShowRejectedModal(true);
-          localStorage.removeItem("lastOrder");
-        },
-      )
-      .subscribe();
+      if (error) console.error("Erro ao buscar status:", error);
 
-    return () => supabase.removeChannel(channel);
+      if (!data?.success) {
+        // Pedido não encontrado (fallback de segurança — hoje rejeição
+        // não apaga mais a linha, mas mantido caso um pedido antigo
+        // ainda tenha sido removido do jeito antigo).
+        applyStatus("rejected");
+        setStatusLoading(false);
+        clearInterval(intervalId);
+        return;
+      }
+
+      const changed = lastStatus !== null && lastStatus !== data.status;
+      lastStatus = data.status;
+      applyStatus(data.status, { animate: changed });
+      setStatusLoading(false);
+
+      if (TERMINAL_STATUSES.includes(data.status)) {
+        clearInterval(intervalId);
+      }
+    };
+
+    fetchStatus();
+    intervalId = setInterval(fetchStatus, STATUS_POLL_INTERVAL_MS);
+
+    return () => {
+      cancelled = true;
+      clearInterval(intervalId);
+    };
   }, [orderId]);
 
   // ── Cancelamento ──────────────────────────────────
