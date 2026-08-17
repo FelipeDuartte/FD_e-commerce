@@ -77,8 +77,9 @@ interface DatabaseWebhookPayload {
 }
 
 function formatOrderShortId(orderId: string): string {
-  // Usa os 8 primeiros caracteres do UUID como número curto e legível.
-  return orderId.slice(0, 8).toUpperCase();
+  // Últimos 8 caracteres do UUID — precisa bater com o código mostrado na
+  // tela de confirmação e no admin (Confirm.jsx, OrderCard.jsx, utils/orderId.js).
+  return orderId.slice(-8).toUpperCase();
 }
 
 function formatCurrency(value: number): string {
