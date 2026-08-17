@@ -20,6 +20,7 @@ import {
   getCloudinaryConfig,
   uploadSignedImage,
 } from "../_shared/cloudinary.ts";
+import { requireStoreAdmin } from "../_shared/authGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -35,6 +36,14 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const admin = await requireStoreAdmin(req);
+    if (!admin) {
+      return new Response(
+        JSON.stringify({ error: "Acesso restrito a administradores de loja." }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     const { storeId, fileBase64 } = await req.json();
 
     if (!storeId || typeof storeId !== "string") {
@@ -42,6 +51,23 @@ Deno.serve(async (req) => {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // storeId aqui é o SLUG da loja (ver Fdtech/stores/{slug}/products) — resolve
+    // pro id real e confirma que é a MESMA loja da qual quem chamou é admin.
+    // Sem isso, um admin da Loja A poderia enviar imagem pra pasta da Loja B
+    // só adivinhando/sabendo o slug dela.
+    const { data: targetStore } = await admin.client
+      .from("stores")
+      .select("id")
+      .eq("slug", storeId)
+      .maybeSingle();
+
+    if (!targetStore || targetStore.id !== admin.storeId) {
+      return new Response(
+        JSON.stringify({ error: "Você não tem permissão para enviar imagens para esta loja." }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     if (

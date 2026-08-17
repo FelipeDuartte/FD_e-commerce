@@ -21,6 +21,7 @@
 // ─────────────────────────────────────────────────────────────
 
 import { getCloudinaryConfig, searchByFilenameFuzzy } from "../_shared/cloudinary.ts";
+import { requireStoreAdmin } from "../_shared/authGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -71,6 +72,14 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const admin = await requireStoreAdmin(req);
+    if (!admin) {
+      return new Response(
+        JSON.stringify({ error: "Acesso restrito a administradores de loja." }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     const { productName } = await req.json();
 
     if (!productName || typeof productName !== "string") {

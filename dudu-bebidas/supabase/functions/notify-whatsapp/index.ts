@@ -29,6 +29,14 @@ const corsHeaders = {
 // em developers.facebook.com → seu app → WhatsApp → Configuração → Webhooks.
 const META_WEBHOOK_VERIFY_TOKEN = Deno.env.get("META_WEBHOOK_VERIFY_TOKEN") ?? "";
 
+// Segredo compartilhado entre os triggers do banco (orders → notify-whatsapp-*)
+// e esta function. `verify_jwt = false` é obrigatório aqui (Meta e o Database
+// Webhook do Supabase não mandam um JWT de usuário), então SEM isso qualquer
+// pessoa podia forjar um POST com formato de Database Webhook e disparar
+// mensagens de WhatsApp (custo + spam) pro número que quiser. Configurado nos
+// triggers via header x-webhook-secret (ver migração/SQL correspondente).
+const WEBHOOK_SHARED_SECRET = Deno.env.get("WEBHOOK_SHARED_SECRET") ?? "";
+
 // Nomes dos templates — devem bater EXATAMENTE com os aprovados no WhatsApp Manager.
 const TEMPLATES = {
   NOVO_PEDIDO: "novo_pedido",
@@ -232,6 +240,18 @@ Deno.serve(async (req) => {
     // de um evento real da Meta (mensagem recebida / status de entrega)?
     if (!isSupabaseDatabaseWebhook(payload)) {
       return handleMetaWebhookEvent(payload);
+    }
+
+    // Só o trigger do banco (orders → notify-whatsapp-*) conhece esse
+    // segredo. Sem essa checagem, qualquer um podia forjar um payload com
+    // essa forma (table/type/record) e disparar mensagem de WhatsApp real.
+    const providedSecret = req.headers.get("x-webhook-secret");
+    if (!WEBHOOK_SHARED_SECRET || providedSecret !== WEBHOOK_SHARED_SECRET) {
+      console.error("[notify-whatsapp] x-webhook-secret ausente/inválido — payload rejeitado.");
+      return new Response(JSON.stringify({ error: "forbidden" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     if (payload.table !== "orders" || !payload.record) {

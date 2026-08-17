@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
     //    quanto um campo storeId no corpo (fallback, caso algum client antigo
     //    ainda não tenha sido atualizado).
     const body = await req.json();
-    const { userId, deliveryFee = 0, paymentMethod, installments, address, cartItems, storeId: storeIdFromBody } = body;
+    const { deliveryFee = 0, paymentMethod, installments, address, cartItems, storeId: storeIdFromBody } = body;
 
     const storeId = req.headers.get("x-store-id") ?? storeIdFromBody;
 
@@ -73,6 +73,19 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+
+    // userId nunca vem do corpo da requisição (qualquer client poderia mandar
+    // o id de outra pessoa) — é sempre extraído do JWT de quem chamou. Se não
+    // houver sessão (checkout como convidado), o client manda a própria anon
+    // key e getUser() retorna null → pedido gravado sem user_id, como já era
+    // o comportamento esperado pra convidado.
+    const authClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } } },
+    );
+    const { data: { user } } = await authClient.auth.getUser();
+    const userId = user?.id ?? null;
 
     // 0.1 Confirma que a loja existe e está ativa
     const { data: store, error: storeError } = await supabase
