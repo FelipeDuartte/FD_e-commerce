@@ -46,6 +46,9 @@ export default function OrderCard({
             {cfg.label}
           </span>
           {pickup && <span className="adm-retirada-badge">🏪 RETIRADA</span>}
+          {order.channel === "balcao" && (
+            <span className="adm-retirada-badge">🧾 BALCÃO</span>
+          )}
         </div>
 
         <div className="adm-order-info">

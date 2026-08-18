@@ -10,6 +10,7 @@ const ORDER_SELECT = `
   address,
   status,
   created_at,
+  channel,
   order_items ( id, name, price, quantity )
 `;
 
