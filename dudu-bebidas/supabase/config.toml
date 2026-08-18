@@ -6,3 +6,6 @@ verify_jwt = true
 
 [functions.upload-product-image]
 verify_jwt = true
+
+[functions.pdv-sale]
+verify_jwt = true
