@@ -30,6 +30,7 @@ import ProductModal from "./ProductModal";
 import RejectModal from "./RejectModal";
 import AdminReports from "./AdminReports";
 import AdminStore from "./AdminStore";
+import AdminPDV from "./AdminPDV";
 import { useAdminReports } from "./hooks/useAdminReports";
 import { useAdminCategories } from "./hooks/useAdminCategories";
 import { useProductImageSearch } from "./hooks/useProductImageSearch";
@@ -478,6 +479,7 @@ export default function Admin({ isAdmin }) {
             { key: "produtos", label: "🍺 Produtos", badge: products.length },
             { key: "relatorios", label: "📊 Relatórios", badge: null },
             { key: "loja", label: "🏪 Loja", badge: null },
+            { key: "pdv", label: "🧾 PDV", badge: null },
           ].map(({ key, label, badge }) => (
             <button
               key={key}
@@ -794,6 +796,8 @@ export default function Admin({ isAdmin }) {
         )}
         {/* ══ ABA LOJA ══ */}
         {activeTab === "loja" && <AdminStore />}
+        {/* ══ ABA PDV ══ */}
+        {activeTab === "pdv" && <AdminPDV />}
       </div>
     </div>
   );
