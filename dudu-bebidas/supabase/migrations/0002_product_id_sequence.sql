@@ -1,3 +1,5 @@
+BEGIN;
+
 -- ─────────────────────────────────────────────────────────────
 -- Reorganiza products.id pra numeração sequencial (0001, 0002...),
 -- ordenado por categoria e depois nome.
@@ -278,3 +280,5 @@ UPDATE public.products SET id = '0243' WHERE id = '000564' AND store_id = '935e3
 UPDATE public.products SET id = '0244' WHERE id = '000567' AND store_id = '935e3078-fae5-4801-b301-b1828d0df6da'; -- MARTINI BIANCO
 UPDATE public.products SET id = '0245' WHERE id = '000538' AND store_id = '935e3078-fae5-4801-b301-b1828d0df6da'; -- VINHO CHAPINHA TINTO SUAVE
 UPDATE public.products SET id = '0246' WHERE id = '000539' AND store_id = '935e3078-fae5-4801-b301-b1828d0df6da'; -- VINHO PERGOLA 1L
+
+COMMIT;
