@@ -102,10 +102,12 @@ export default function AdminPDV() {
     setClosing(true);
     setCloseError("");
     try {
+      // Só mostra o resumo aqui — NÃO zera a sessão ainda. Se limpar session
+      // logo em seguida, o componente cai no branch "sem caixa aberto" (early
+      // return lá embaixo) antes do usuário ver o resumo, porque esse branch
+      // nem renderiza o modal. A sessão só é limpa quando o resumo é fechado.
       const result = await closeCashSession(session.id, amount);
       setCloseResult(result);
-      setSession(null);
-      setSessionSales([]);
     } catch (e) {
       setCloseError(e.message);
     }
@@ -113,10 +115,15 @@ export default function AdminPDV() {
   };
 
   const resetCloseModal = () => {
+    const wasClosed = closeResult !== null;
     setCloseModalOpen(false);
     setDeclaredAmountInput("");
     setCloseError("");
     setCloseResult(null);
+    if (wasClosed) {
+      setSession(null);
+      setSessionSales([]);
+    }
   };
 
   // ── Carrinho ───────────────────────────────────────
