@@ -18,7 +18,11 @@ import { fulfillOrder, FulfillmentError } from "../_shared/orderFulfillment.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  // x-store-id é injetado automaticamente em TODA chamada pelo Supabaseclient.js
+  // (mesmo fetch global usado pelas queries diretas), então precisa estar
+  // liberado aqui mesmo essa function não usando o header pra nada — senão o
+  // preflight de CORS falha antes da requisição sair do navegador.
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-store-id",
 };
 
 function jsonResponse(body: unknown, status = 200) {
