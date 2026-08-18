@@ -77,11 +77,16 @@ export const EMPTY_PRODUCT = {
   ean: "",
 };
 
-export function generateProductId() {
-  const suffix = Math.floor(Math.random() * 10000)
-    .toString()
-    .padStart(4, "0");
-  return `02${suffix}`;
+// Próximo ID sequencial (0001, 0002...) a partir do maior ID puramente
+// numérico já cadastrado. IDs antigos que não sejam numéricos (nunca deviam
+// existir depois da migration de reorganização, mas por segurança) são
+// ignorados no cálculo do máximo, não quebram a geração.
+export function generateProductId(products = []) {
+  const maxSeq = products.reduce((max, p) => {
+    const n = /^\d+$/.test(p.id) ? Number(p.id) : NaN;
+    return Number.isFinite(n) && n > max ? n : max;
+  }, 0);
+  return String(maxSeq + 1).padStart(4, "0");
 }
 
 export const isPickup = (order) => order.address?.isRetirada === true;

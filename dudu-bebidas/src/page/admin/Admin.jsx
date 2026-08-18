@@ -130,7 +130,7 @@ export default function Admin({ isAdmin }) {
 
   // ── Modal de produto ──────────────────────────────
   const openNewProduct = () => {
-    setModalForm({ ...EMPTY_PRODUCT, id: generateProductId() });
+    setModalForm({ ...EMPTY_PRODUCT, id: generateProductId(products) });
     setModalError("");
     setProductModal("new");
   };
