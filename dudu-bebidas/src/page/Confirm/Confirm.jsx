@@ -480,7 +480,7 @@ export default function Confirmacao() {
                       </button>
                     </div>
                     <button
-                      className="cf-btn-cancel"
+                      className="cf-btn-confirm-payment"
                       onClick={handleMarkPaid}
                       disabled={claimingPaid}
                     >
