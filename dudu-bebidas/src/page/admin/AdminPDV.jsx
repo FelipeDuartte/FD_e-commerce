@@ -39,6 +39,8 @@ export default function AdminPDV() {
   // ── Carrinho / venda ───────────────────────────────
   const [cart, setCart] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState("cash");
+  const [discountMode, setDiscountMode] = useState("amount"); // "amount" (R$) | "percent" (%)
+  const [discountInput, setDiscountInput] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [saleError, setSaleError] = useState("");
   const [saleSuccess, setSaleSuccess] = useState("");
@@ -155,10 +157,22 @@ export default function AdminPDV() {
   const removeFromCart = (id) => setCart((prev) => prev.filter((i) => i.id !== id));
   const clearCart = () => setCart([]);
 
-  const cartTotal = useMemo(
+  const subtotal = useMemo(
     () => cart.reduce((sum, i) => sum + i.price * i.quantity, 0),
     [cart]
   );
+
+  // Desconto que o atendente decide dar (venda de balcão não tem o mesmo
+  // desconto do site) — clampado aqui só pra exibição; a validação real
+  // acontece no servidor, que nunca confia nesse valor.
+  const discountAmount = useMemo(() => {
+    const raw = Number(discountInput);
+    if (!Number.isFinite(raw) || raw <= 0) return 0;
+    const amount = discountMode === "percent" ? subtotal * (raw / 100) : raw;
+    return Math.min(Math.max(0, amount), subtotal);
+  }, [discountInput, discountMode, subtotal]);
+
+  const cartTotal = subtotal - discountAmount;
 
   // ── Busca de produto (nome, código de barras ou id) ─
   const filteredProducts = useMemo(() => {
@@ -184,12 +198,14 @@ export default function AdminPDV() {
         cartItems: cart.map((i) => ({ id: i.id, name: i.name, quantity: i.quantity })),
         paymentMethod,
         cashSessionId: session.id,
+        discountAmount,
       });
       setSessionSales((prev) => [...prev, { orderId: result.orderId, total: cartTotal, paymentMethod }]);
       setSaleSuccess(`Venda registrada — ${formatBRL(cartTotal)}`);
       setTimeout(() => setSaleSuccess(""), 3000);
       clearCart();
       setPaymentMethod("cash");
+      setDiscountInput("");
       loadProducts(); // estoque mudou, recarrega pra não deixar badge desatualizado
     } catch (e) {
       setSaleError(e.message);
@@ -328,9 +344,47 @@ export default function AdminPDV() {
             ))}
           </div>
 
-          <div className="pdv-cart-total">
-            <span>Total</span>
-            <strong>{formatBRL(cartTotal)}</strong>
+          <div className="pdv-discount-row">
+            <div className="pdv-discount-mode">
+              <button
+                className={`pdv-discount-mode-btn ${discountMode === "amount" ? "active" : ""}`}
+                onClick={() => setDiscountMode("amount")}
+              >
+                R$
+              </button>
+              <button
+                className={`pdv-discount-mode-btn ${discountMode === "percent" ? "active" : ""}`}
+                onClick={() => setDiscountMode("percent")}
+              >
+                %
+              </button>
+            </div>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              className="pdv-discount-input"
+              placeholder="Desconto"
+              value={discountInput}
+              onChange={(e) => setDiscountInput(e.target.value)}
+            />
+          </div>
+
+          <div className="pdv-cart-summary">
+            <div className="pdv-cart-subtotal-row">
+              <span>Subtotal</span>
+              <span>{formatBRL(subtotal)}</span>
+            </div>
+            {discountAmount > 0 && (
+              <div className="pdv-cart-subtotal-row pdv-cart-discount-row">
+                <span>Desconto</span>
+                <span>−{formatBRL(discountAmount)}</span>
+              </div>
+            )}
+            <div className="pdv-cart-total">
+              <span>Total</span>
+              <strong>{formatBRL(cartTotal)}</strong>
+            </div>
           </div>
 
           <button

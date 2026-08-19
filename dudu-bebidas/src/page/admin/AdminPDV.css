@@ -150,6 +150,59 @@
   background: rgba(255, 215, 0, 0.12);
 }
 
+.pdv-discount-row {
+  display: flex;
+  gap: 8px;
+}
+
+.pdv-discount-mode {
+  display: flex;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.pdv-discount-mode-btn {
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: var(--c-text);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.pdv-discount-mode-btn.active {
+  background: rgba(255, 215, 0, 0.15);
+  font-weight: 600;
+}
+
+.pdv-discount-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--c-text);
+}
+
+.pdv-cart-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pdv-cart-subtotal-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--c-text-muted);
+}
+
+.pdv-cart-discount-row {
+  color: #ffb84d;
+}
+
 .pdv-cart-total {
   display: flex;
   justify-content: space-between;

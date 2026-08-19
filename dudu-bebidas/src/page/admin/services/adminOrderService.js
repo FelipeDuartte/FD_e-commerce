@@ -5,6 +5,7 @@ import { AdminServiceError } from "./AdminServiceError";
 const ORDER_SELECT = `
   id,
   total,
+  discount_amount,
   payment_method,
   installments,
   address,

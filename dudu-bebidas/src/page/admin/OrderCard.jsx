@@ -70,7 +70,12 @@ export default function OrderCard({
               ? ` · ${order.installments}x`
               : ""}
           </span>
-          <span className="adm-order-total">{formatBRL(order.total)}</span>
+          <span className="adm-order-total">
+            {formatBRL(order.total)}
+            {order.discount_amount > 0 && (
+              <span className="adm-order-discount"> (−{formatBRL(order.discount_amount)})</span>
+            )}
+          </span>
         </div>
 
         {isPending && (

@@ -57,9 +57,9 @@ export async function closeCashSession(sessionId, declaredAmount) {
 
 // ── Venda de balcão ─────────────────────────────────────────────────────────
 
-export async function createPdvSale({ cartItems, paymentMethod, cashSessionId }) {
+export async function createPdvSale({ cartItems, paymentMethod, cashSessionId, discountAmount }) {
   const { data, error } = await supabase.functions.invoke("pdv-sale", {
-    body: { cartItems, paymentMethod, cashSessionId },
+    body: { cartItems, paymentMethod, cashSessionId, discountAmount },
   });
 
   if (error) {
