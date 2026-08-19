@@ -34,6 +34,12 @@ export default function OrderCard({
   const statuses = getStatuses(order);
   const statusMap = getStatusMap(order);
   const isPending = order.status === "pending";
+  // Pix ainda não confirmado pelo admin — não faz sentido aceitar/rejeitar
+  // preparo de algo que ainda não foi pago. "Pagamento na entrega" nasce
+  // com payment_status "aguardando_pagamento" também (é só registro, não
+  // bloqueia nada), então essa checagem é restrita a pix de propósito.
+  const pixAwaitingPayment =
+    order.payment_method === "pix" && order.payment_status === "aguardando_pagamento";
   const payment = PAYMENT_LABEL[order.payment_method] ?? {
     icon: "💳",
     label: order.payment_method,
@@ -78,11 +84,13 @@ export default function OrderCard({
             {order.payment_method === "credit_card" && order.installments > 1
               ? ` · ${order.installments}x`
               : ""}
-            {order.payment_status && order.payment_status !== "pago" && (
-              <span className="adm-order-discount">
-                {" "}· {PAYMENT_STATUS_LABEL[order.payment_status] ?? order.payment_status}
-              </span>
-            )}
+            {order.payment_method === "pix" &&
+              order.payment_status &&
+              order.payment_status !== "pago" && (
+                <span className="adm-order-discount">
+                  {" "}· {PAYMENT_STATUS_LABEL[order.payment_status] ?? order.payment_status}
+                </span>
+              )}
           </span>
           <span className="adm-order-total">
             {formatBRL(order.total)}
@@ -92,7 +100,7 @@ export default function OrderCard({
           </span>
         </div>
 
-        {order.payment_method === "pix" && order.payment_status === "aguardando_pagamento" && (
+        {pixAwaitingPayment && (
           <div className="adm-order-actions" onClick={(e) => e.stopPropagation()}>
             {order.customer_claimed_paid_at && (
               <span className="adm-order-discount">
@@ -109,7 +117,7 @@ export default function OrderCard({
           </div>
         )}
 
-        {isPending && (
+        {isPending && !pixAwaitingPayment && (
           <div
             className="adm-order-actions"
             onClick={(e) => e.stopPropagation()}
@@ -193,7 +201,12 @@ export default function OrderCard({
               {pickup ? "🔄 Status da Retirada" : "🔄 Alterar Status"}
             </div>
 
-            {isPending ? (
+            {isPending && pixAwaitingPayment ? (
+              <div className="adm-delivered-msg">
+                💰 Aguardando confirmação do pagamento — marque como pago acima
+                pra liberar aceitar/rejeitar.
+              </div>
+            ) : isPending ? (
               <div className="adm-accept-reject-detail">
                 <button
                   className="adm-btn-accept-lg"
