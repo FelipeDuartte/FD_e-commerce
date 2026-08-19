@@ -9,7 +9,9 @@
 //
 // Body esperado:
 //   { "cartItems": [{ "id": "...", "quantity": 2 }], "paymentMethod": "cash",
-//     "cashSessionId": "uuid-do-caixa-aberto" }
+//     "cashSessionId": "uuid-do-caixa-aberto", "discountAmount": 5.00 }
+// discountAmount é opcional, em R$, sobre o subtotal — desconto que o
+// atendente decide dar (o site não tem isso hoje).
 // ─────────────────────────────────────────────────────────────
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -43,7 +45,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Acesso restrito a administradores de loja." }, 403);
     }
 
-    const { cartItems, paymentMethod, cashSessionId } = await req.json();
+    const { cartItems, paymentMethod, cashSessionId, discountAmount } = await req.json();
 
     if (!cashSessionId) {
       return jsonResponse({ error: "Nenhum caixa aberto informado." }, 400);
@@ -82,6 +84,7 @@ Deno.serve(async (req) => {
       soldBy: admin.userId,
       status: "delivered", // venda presencial já está completa no ato
       applyCardFee: false, // taxa da maquininha física já embutida no preço, não recalcula aqui
+      discountAmount, // clamp/validação real acontece dentro do fulfillOrder
     });
 
     return jsonResponse({ orderId }, 200);

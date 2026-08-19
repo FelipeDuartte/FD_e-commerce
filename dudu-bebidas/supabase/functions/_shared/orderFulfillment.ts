@@ -36,6 +36,10 @@ export interface FulfillOrderParams {
   cashSessionId?: string | null;
   soldBy?: string | null;
   status: string;
+  // Desconto manual em R$ sobre o subtotal (produtos + entrega), aplicado
+  // antes da taxa de cartão. Hoje só o PDV usa isso (atendente de balcão
+  // pode negociar desconto que o site não oferece).
+  discountAmount?: number;
   // Taxa da maquininha (crédito) só faz sentido pro checkout online — uma
   // venda de balcão cobra o preço de tabela, a taxa física já costuma estar
   // embutida no preço pro lojista.
@@ -69,7 +73,7 @@ export async function fulfillOrder(
   const {
     storeId, userId, cartItems, paymentMethod, installments,
     deliveryFee = 0, address, channel, cashSessionId = null,
-    soldBy = null, status, applyCardFee,
+    soldBy = null, status, applyCardFee, discountAmount = 0,
   } = params;
 
   if (!cartItems || cartItems.length === 0) {
@@ -122,11 +126,19 @@ export async function fulfillOrder(
   const normalizedDeliveryFee = Math.max(0, Number(deliveryFee) || 0);
   const totalBeforeFee = calculatedProductsTotal + normalizedDeliveryFee;
 
+  // Nunca confia no valor cru vindo do client: desconto não pode ser
+  // negativo nem maior que o próprio subtotal (não dá pra "total negativo").
+  const normalizedDiscount = Math.min(
+    Math.max(0, Number(discountAmount) || 0),
+    totalBeforeFee,
+  );
+  const totalAfterDiscount = totalBeforeFee - normalizedDiscount;
+
   const cardFeeRate =
     applyCardFee && paymentMethod === "credit_card"
       ? INSTALLMENT_FEE_RATE[installmentsToSave ?? 1] ?? 0
       : 0;
-  const calculatedTotal = roundCents(totalBeforeFee * (1 + cardFeeRate));
+  const calculatedTotal = roundCents(totalAfterDiscount * (1 + cardFeeRate));
 
   const { data: order, error: orderError } = await supabase
     .from("orders")
@@ -134,6 +146,7 @@ export async function fulfillOrder(
       store_id: storeId,
       user_id: userId,
       total: calculatedTotal,
+      discount_amount: normalizedDiscount,
       payment_method: paymentMethod,
       installments: installmentsToSave,
       address,
