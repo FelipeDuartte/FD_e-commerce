@@ -9,6 +9,59 @@
   margin-top: 16px;
 }
 
+.pdv-shell {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.pdv-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 160px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 16px;
+}
+
+.pdv-sidebar-btn {
+  text-align: left;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--c-text);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.pdv-sidebar-btn.active {
+  border-color: #ffd700;
+  background: rgba(255, 215, 0, 0.12);
+  font-weight: 600;
+}
+
+.pdv-main {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 700px) {
+  .pdv-shell {
+    flex-direction: column;
+  }
+  .pdv-sidebar {
+    flex-direction: row;
+    width: 100%;
+    position: static;
+  }
+  .pdv-sidebar-btn {
+    flex: 1;
+    text-align: center;
+  }
+}
+
 .pdv-layout {
   display: grid;
   grid-template-columns: 1fr 360px;
@@ -246,6 +299,12 @@
 .pdv-sale-time {
   color: var(--c-text-muted);
   font-family: monospace;
+}
+
+.pdv-sale-items {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .pdv-sale-cancelled {

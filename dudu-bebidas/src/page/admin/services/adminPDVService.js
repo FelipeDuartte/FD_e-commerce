@@ -74,7 +74,7 @@ export async function createPdvSale({ cartItems, paymentMethod, cashSessionId, d
 export async function listSessionSales(sessionId) {
   const { data, error } = await supabase
     .from("orders")
-    .select("id, total, discount_amount, payment_method, status, created_at, order_items(quantity)")
+    .select("id, total, discount_amount, payment_method, status, created_at, order_items(name, quantity)")
     .eq("cash_session_id", sessionId)
     .order("created_at", { ascending: false });
 
@@ -82,15 +82,21 @@ export async function listSessionSales(sessionId) {
     throw new AdminServiceError("Não foi possível carregar as vendas da sessão.", error);
   }
 
-  return (data ?? []).map((o) => ({
-    orderId: o.id,
-    total: o.total,
-    discountAmount: o.discount_amount,
-    paymentMethod: o.payment_method,
-    cancelled: o.status === "cancelled",
-    createdAt: o.created_at,
-    itemCount: (o.order_items ?? []).reduce((sum, it) => sum + it.quantity, 0),
-  }));
+  return (data ?? []).map((o) => {
+    const items = o.order_items ?? [];
+    return {
+      orderId: o.id,
+      total: o.total,
+      discountAmount: o.discount_amount,
+      paymentMethod: o.payment_method,
+      cancelled: o.status === "cancelled",
+      createdAt: o.created_at,
+      itemCount: items.reduce((sum, it) => sum + it.quantity, 0),
+      itemsLabel: items
+        .map((it) => (it.quantity > 1 ? `${it.name} x${it.quantity}` : it.name))
+        .join(", "),
+    };
+  });
 }
 
 export async function cancelPdvSale(orderId) {

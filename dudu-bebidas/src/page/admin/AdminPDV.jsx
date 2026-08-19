@@ -18,7 +18,18 @@ const PAYMENT_METHODS = [
   { value: "credit_card", icon: "💳", label: "Crédito" },
 ];
 
+// Menu lateral do PDV — pensado já com o app desktop separado em mente
+// (Tauri, futuramente): cada item aqui vira uma "tela" própria, igual um
+// POS de verdade (Venda / Histórico / ...). Hoje ainda mora dentro do
+// admin web, mas a navegação já fica isolada do resto do painel.
+const PDV_VIEWS = [
+  { key: "venda", label: "🛒 Venda" },
+  { key: "historico", label: "📋 Histórico" },
+];
+
 export default function AdminPDV() {
+  const [pdvView, setPdvView] = useState("venda");
+
   // ── Sessão de caixa ────────────────────────────────
   const [session, setSession] = useState(null);
   const [sessionLoading, setSessionLoading] = useState(true);
@@ -318,6 +329,21 @@ export default function AdminPDV() {
       {saleSuccess && <div className="adm-store-success">✅ {saleSuccess}</div>}
       {saleError && <div className="adm-modal-error">⚠️ {saleError}</div>}
 
+      <div className="pdv-shell">
+        <div className="pdv-sidebar">
+          {PDV_VIEWS.map(({ key, label }) => (
+            <button
+              key={key}
+              className={`pdv-sidebar-btn ${pdvView === key ? "active" : ""}`}
+              onClick={() => setPdvView(key)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <div className="pdv-main">
+          {pdvView === "venda" && (
       <div className="pdv-layout">
         <div className="pdv-catalog">
           <input
@@ -439,46 +465,50 @@ export default function AdminPDV() {
           </button>
         </div>
       </div>
+          )}
 
-      <div className="pdv-session-sales">
-        <h2 className="adm-store-section-title">Vendas desta sessão</h2>
-        {cancelError && <div className="adm-modal-error">⚠️ {cancelError}</div>}
-        {sessionSales.length === 0 ? (
-          <div className="adm-empty"><p>Nenhuma venda registrada ainda nesta sessão.</p></div>
-        ) : (
-          <div className="pdv-sales-list">
-            {sessionSales
-              .slice()
-              .reverse()
-              .map((sale) => {
-                const method = PAYMENT_METHODS.find((m) => m.value === sale.paymentMethod);
-                return (
-                  <div
-                    key={sale.orderId}
-                    className={`pdv-sale-row ${sale.cancelled ? "pdv-sale-cancelled" : ""}`}
-                  >
-                    <span className="pdv-sale-time">
-                      {new Date(sale.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-                    </span>
-                    <span>{sale.itemCount} item(ns)</span>
-                    <span>{method ? `${method.icon} ${method.label}` : sale.paymentMethod}</span>
-                    <strong>{formatBRL(sale.total)}</strong>
-                    {sale.cancelled ? (
-                      <span className="pdv-sale-cancelled-label">Cancelada</span>
-                    ) : (
-                      <button
-                        className="adm-btn-delete"
-                        onClick={() => handleCancelSale(sale)}
-                        disabled={cancellingId === sale.orderId}
+          {pdvView === "historico" && (
+            <div className="pdv-session-sales">
+              <h2 className="adm-store-section-title">Vendas desta sessão</h2>
+              {cancelError && <div className="adm-modal-error">⚠️ {cancelError}</div>}
+              {sessionSales.length === 0 ? (
+                <div className="adm-empty"><p>Nenhuma venda registrada ainda nesta sessão.</p></div>
+              ) : (
+                <div className="pdv-sales-list">
+                  {sessionSales.map((sale) => {
+                    const method = PAYMENT_METHODS.find((m) => m.value === sale.paymentMethod);
+                    return (
+                      <div
+                        key={sale.orderId}
+                        className={`pdv-sale-row ${sale.cancelled ? "pdv-sale-cancelled" : ""}`}
                       >
-                        {cancellingId === sale.orderId ? "..." : "🗑️ Cancelar"}
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-          </div>
-        )}
+                        <span className="pdv-sale-time">
+                          {new Date(sale.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                        <span className="pdv-sale-items" title={sale.itemsLabel}>
+                          {sale.itemsLabel || `${sale.itemCount} item(ns)`}
+                        </span>
+                        <span>{method ? `${method.icon} ${method.label}` : sale.paymentMethod}</span>
+                        <strong>{formatBRL(sale.total)}</strong>
+                        {sale.cancelled ? (
+                          <span className="pdv-sale-cancelled-label">Cancelada</span>
+                        ) : (
+                          <button
+                            className="adm-btn-delete"
+                            onClick={() => handleCancelSale(sale)}
+                            disabled={cancellingId === sale.orderId}
+                          >
+                            {cancellingId === sale.orderId ? "..." : "🗑️ Cancelar"}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {closeModalOpen && (
