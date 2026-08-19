@@ -31,6 +31,7 @@ import RejectModal from "./RejectModal";
 import AdminReports from "./AdminReports";
 import AdminStore from "./AdminStore";
 import AdminPDV from "./AdminPDV";
+import AdminStock from "./AdminStock";
 import { useAdminReports } from "./hooks/useAdminReports";
 import { useAdminCategories } from "./hooks/useAdminCategories";
 import { useProductImageSearch } from "./hooks/useProductImageSearch";
@@ -163,8 +164,9 @@ export default function Admin({ isAdmin }) {
     }
 
     const isNew = productModal === "new";
+    const previousStock = isNew ? null : productModal.stock;
     try {
-      await saveAdminProduct(row, isNew);
+      await saveAdminProduct(row, isNew, previousStock);
       await fetchProducts();
       setProductModal(null);
     } catch (error) {
@@ -480,6 +482,7 @@ export default function Admin({ isAdmin }) {
             { key: "relatorios", label: "📊 Relatórios", badge: null },
             { key: "loja", label: "🏪 Loja", badge: null },
             { key: "pdv", label: "🧾 PDV", badge: null },
+            { key: "estoque", label: "📦 Estoque", badge: null },
           ].map(({ key, label, badge }) => (
             <button
               key={key}
@@ -798,6 +801,8 @@ export default function Admin({ isAdmin }) {
         {activeTab === "loja" && <AdminStore />}
         {/* ══ ABA PDV ══ */}
         {activeTab === "pdv" && <AdminPDV />}
+        {/* ══ ABA ESTOQUE ══ */}
+        {activeTab === "estoque" && <AdminStock />}
       </div>
     </div>
   );
