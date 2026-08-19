@@ -1,275 +1,22 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import "./AdminPDV.css";
-import { formatBRL } from "./adminUtils";
-import { listAdminProducts } from "./services/adminProductService";
-import { PAYMENT_METHODS as PAYMENT_METHOD_LABELS } from "../../utils/paymentMethods";
-import {
-  getOpenCashSession,
-  openCashSession,
-  closeCashSession,
-  createPdvSale,
-  cancelPdvSale,
-  listSessionSales,
-} from "./services/adminPDVService";
-
-// Dinheiro primeiro no PDV (maioria das vendas de balcão é em dinheiro) —
-// ordem diferente do checkout online, mas os rótulos vêm da fonte única.
-const PAYMENT_METHODS = ["cash", "pix", "debit_card", "credit_card"].map((value) => ({
-  value,
-  ...PAYMENT_METHOD_LABELS[value],
-}));
-
-// Menu lateral do PDV — pensado já com o app desktop separado em mente
-// (Tauri, futuramente): cada item aqui vira uma "tela" própria, igual um
-// POS de verdade (Venda / Histórico / ...). Hoje ainda mora dentro do
-// admin web, mas a navegação já fica isolada do resto do painel.
-const PDV_VIEWS = [
-  { key: "venda", label: "🛒 Venda" },
-  { key: "historico", label: "📋 Histórico" },
-];
+import { useCashSession } from "./AdminPDV/hooks/useCashSession";
+import { usePdvCart } from "./AdminPDV/hooks/usePdvCart";
+import { PDV_VIEWS } from "./AdminPDV/constants";
+import OpenSessionForm from "./AdminPDV/components/OpenSessionForm";
+import ProductCatalog from "./AdminPDV/components/ProductCatalog";
+import CartPanel from "./AdminPDV/components/CartPanel";
+import HistorySalesList from "./AdminPDV/components/HistorySalesList";
+import CloseSessionModal from "./AdminPDV/components/CloseSessionModal";
 
 export default function AdminPDV() {
   const [pdvView, setPdvView] = useState("venda");
 
-  // ── Sessão de caixa ────────────────────────────────
-  const [session, setSession] = useState(null);
-  const [sessionLoading, setSessionLoading] = useState(true);
-  const [openingAmountInput, setOpeningAmountInput] = useState("");
-  const [openingSession, setOpeningSession] = useState(false);
-  const [sessionError, setSessionError] = useState("");
-
-  const [closeModalOpen, setCloseModalOpen] = useState(false);
-  const [declaredAmountInput, setDeclaredAmountInput] = useState("");
-  const [closing, setClosing] = useState(false);
-  const [closeError, setCloseError] = useState("");
-  const [closeResult, setCloseResult] = useState(null);
-
-  // ── Produtos ───────────────────────────────────────
-  const [products, setProducts] = useState([]);
-  const [productsLoading, setProductsLoading] = useState(true);
-  const [productsError, setProductsError] = useState("");
-  const [search, setSearch] = useState("");
-
-  // ── Carrinho / venda ───────────────────────────────
-  const [cart, setCart] = useState([]);
-  const [paymentMethod, setPaymentMethod] = useState("cash");
-  const [discountMode, setDiscountMode] = useState("amount"); // "amount" (R$) | "percent" (%)
-  const [discountInput, setDiscountInput] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [saleError, setSaleError] = useState("");
-  const [saleSuccess, setSaleSuccess] = useState("");
-  const [sessionSales, setSessionSales] = useState([]);
-  const [cancellingId, setCancellingId] = useState(null);
-  const [cancelError, setCancelError] = useState("");
-
-  const loadSession = useCallback(async () => {
-    setSessionLoading(true);
-    try {
-      setSession(await getOpenCashSession());
-      setSessionError("");
-    } catch (e) {
-      setSessionError(e.message);
-    }
-    setSessionLoading(false);
-  }, []);
-
-  const loadProducts = useCallback(async () => {
-    setProductsLoading(true);
-    try {
-      setProducts(await listAdminProducts());
-      setProductsError("");
-    } catch (e) {
-      setProductsError(e.message);
-    }
-    setProductsLoading(false);
-  }, []);
-
-  // Busca do banco (não acumula localmente) — assim sobrevive a reload da
-  // página enquanto o caixa continuar aberto, em vez de ser só um contador
-  // que se perde se a aba recarregar.
-  const loadSessionSales = useCallback(async (sessionId) => {
-    if (!sessionId) {
-      setSessionSales([]);
-      return;
-    }
-    try {
-      setSessionSales(await listSessionSales(sessionId));
-    } catch (e) {
-      setCancelError(e.message);
-    }
-  }, []);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      loadSessionSales(session?.id);
-    }, 0);
-    return () => clearTimeout(timer);
-  }, [session?.id, loadSessionSales]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      loadSession();
-      loadProducts();
-    }, 0);
-    return () => clearTimeout(timer);
-  }, [loadSession, loadProducts]);
-
-  // ── Abrir caixa ────────────────────────────────────
-  const handleOpenSession = async () => {
-    const amount = Number(openingAmountInput);
-    if (!Number.isFinite(amount) || amount < 0) {
-      setSessionError("Informe um valor inicial válido.");
-      return;
-    }
-    setOpeningSession(true);
-    setSessionError("");
-    try {
-      setSession(await openCashSession(amount));
-      setOpeningAmountInput("");
-    } catch (e) {
-      setSessionError(e.message);
-    }
-    setOpeningSession(false);
-  };
-
-  // ── Fechar caixa ───────────────────────────────────
-  const handleCloseSession = async () => {
-    const amount = Number(declaredAmountInput);
-    if (!Number.isFinite(amount) || amount < 0) {
-      setCloseError("Informe um valor válido.");
-      return;
-    }
-    setClosing(true);
-    setCloseError("");
-    try {
-      // Só mostra o resumo aqui — NÃO zera a sessão ainda. Se limpar session
-      // logo em seguida, o componente cai no branch "sem caixa aberto" (early
-      // return lá embaixo) antes do usuário ver o resumo, porque esse branch
-      // nem renderiza o modal. A sessão só é limpa quando o resumo é fechado.
-      const result = await closeCashSession(session.id, amount);
-      setCloseResult(result);
-    } catch (e) {
-      setCloseError(e.message);
-    }
-    setClosing(false);
-  };
-
-  const resetCloseModal = () => {
-    const wasClosed = closeResult !== null;
-    setCloseModalOpen(false);
-    setDeclaredAmountInput("");
-    setCloseError("");
-    setCloseResult(null);
-    if (wasClosed) {
-      setSession(null);
-      setSessionSales([]);
-      setCancelError("");
-    }
-  };
-
-  // ── Carrinho ───────────────────────────────────────
-  const addToCart = (product) => {
-    if (product.stock <= 0) return;
-    setCart((prev) => {
-      const existing = prev.find((i) => i.id === product.id);
-      if (existing) {
-        if (existing.quantity >= product.stock) return prev;
-        return prev.map((i) =>
-          i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i
-        );
-      }
-      return [
-        ...prev,
-        { id: product.id, name: product.name, price: product.price, quantity: 1, stock: product.stock },
-      ];
-    });
-  };
-
-  const updateQuantity = (id, quantity) => {
-    setCart((prev) =>
-      prev.map((i) =>
-        i.id === id ? { ...i, quantity: Math.max(1, Math.min(quantity, i.stock)) } : i
-      )
-    );
-  };
-
-  const removeFromCart = (id) => setCart((prev) => prev.filter((i) => i.id !== id));
-  const clearCart = () => setCart([]);
-
-  const subtotal = useMemo(
-    () => cart.reduce((sum, i) => sum + i.price * i.quantity, 0),
-    [cart]
-  );
-
-  // Desconto que o atendente decide dar (venda de balcão não tem o mesmo
-  // desconto do site) — clampado aqui só pra exibição; a validação real
-  // acontece no servidor, que nunca confia nesse valor.
-  const discountAmount = useMemo(() => {
-    const raw = Number(discountInput);
-    if (!Number.isFinite(raw) || raw <= 0) return 0;
-    const amount = discountMode === "percent" ? subtotal * (raw / 100) : raw;
-    return Math.min(Math.max(0, amount), subtotal);
-  }, [discountInput, discountMode, subtotal]);
-
-  const cartTotal = subtotal - discountAmount;
-
-  // ── Busca de produto (nome, código de barras ou id) ─
-  const filteredProducts = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    return products
-      .filter((p) => p.is_active && p.stock > 0)
-      .filter(
-        (p) =>
-          !term ||
-          p.name.toLowerCase().includes(term) ||
-          p.id.toLowerCase().includes(term) ||
-          (p.ean ?? "").toLowerCase() === term
-      );
-  }, [products, search]);
-
-  // ── Finalizar venda ────────────────────────────────
-  const handleFinalizeSale = async () => {
-    if (cart.length === 0 || !session) return;
-    setSubmitting(true);
-    setSaleError("");
-    try {
-      await createPdvSale({
-        cartItems: cart.map((i) => ({ id: i.id, name: i.name, quantity: i.quantity })),
-        paymentMethod,
-        cashSessionId: session.id,
-        discountAmount,
-      });
-      setSaleSuccess(`Venda registrada — ${formatBRL(cartTotal)}`);
-      setTimeout(() => setSaleSuccess(""), 3000);
-      clearCart();
-      setPaymentMethod("cash");
-      setDiscountInput("");
-      loadProducts(); // estoque mudou, recarrega pra não deixar badge desatualizado
-      loadSessionSales(session.id); // busca do banco — pega a venda que acabou de ser criada
-    } catch (e) {
-      setSaleError(e.message);
-    }
-    setSubmitting(false);
-  };
-
-  // ── Cancelar venda da sessão atual ──────────────────
-  const handleCancelSale = async (sale) => {
-    if (sale.cancelled) return;
-    if (!window.confirm(`Cancelar a venda de ${formatBRL(sale.total)}? O estoque volta automaticamente.`)) return;
-    setCancellingId(sale.orderId);
-    setCancelError("");
-    try {
-      await cancelPdvSale(sale.orderId);
-      loadProducts(); // estoque voltou, recarrega
-      loadSessionSales(session.id); // busca do banco — pega o novo status "cancelled"
-    } catch (e) {
-      setCancelError(e.message);
-    }
-    setCancellingId(null);
-  };
+  const cashSession = useCashSession();
+  const pdvCart = usePdvCart(cashSession.session?.id);
 
   // ── Render ─────────────────────────────────────────
-  if (sessionLoading) {
+  if (cashSession.sessionLoading) {
     return (
       <div className="adm-loading">
         <div className="adm-spinner" />
@@ -278,37 +25,15 @@ export default function AdminPDV() {
     );
   }
 
-  if (!session) {
+  if (!cashSession.session) {
     return (
-      <>
-        <div className="adm-title-row">
-          <div>
-            <h1 className="adm-title">PDV — Venda de Balcão</h1>
-            <p className="adm-subtitle">Abra o caixa para começar a vender.</p>
-          </div>
-        </div>
-        <div className="pdv-open-session">
-          {sessionError && <div className="adm-modal-error">⚠️ {sessionError}</div>}
-          <div className="adm-form-field">
-            <label>Valor inicial em caixa (R$)</label>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={openingAmountInput}
-              onChange={(e) => setOpeningAmountInput(e.target.value)}
-              placeholder="0,00"
-            />
-          </div>
-          <button
-            className="adm-btn-new-product"
-            onClick={handleOpenSession}
-            disabled={openingSession}
-          >
-            {openingSession ? "Abrindo..." : "🧾 Abrir caixa"}
-          </button>
-        </div>
-      </>
+      <OpenSessionForm
+        sessionError={cashSession.sessionError}
+        openingAmountInput={cashSession.openingAmountInput}
+        setOpeningAmountInput={cashSession.setOpeningAmountInput}
+        openingSession={cashSession.openingSession}
+        onOpen={cashSession.handleOpenSession}
+      />
     );
   }
 
@@ -318,17 +43,17 @@ export default function AdminPDV() {
         <div>
           <h1 className="adm-title">PDV — Venda de Balcão</h1>
           <p className="adm-subtitle">
-            Caixa aberto às {new Date(session.opened_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-            {" · "}{sessionSales.length} venda(s) nesta sessão
+            Caixa aberto às {new Date(cashSession.session.opened_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+            {" · "}{pdvCart.sessionSales.length} venda(s) nesta sessão
           </p>
         </div>
-        <button className="adm-btn-back" onClick={() => setCloseModalOpen(true)}>
+        <button className="adm-btn-back" onClick={() => cashSession.setCloseModalOpen(true)}>
           🔒 Fechar caixa
         </button>
       </div>
 
-      {saleSuccess && <div className="adm-store-success">✅ {saleSuccess}</div>}
-      {saleError && <div className="adm-modal-error">⚠️ {saleError}</div>}
+      {pdvCart.saleSuccess && <div className="adm-store-success">✅ {pdvCart.saleSuccess}</div>}
+      {pdvCart.saleError && <div className="adm-modal-error">⚠️ {pdvCart.saleError}</div>}
 
       <div className="pdv-shell">
         <div className="pdv-sidebar">
@@ -345,220 +70,55 @@ export default function AdminPDV() {
 
         <div className="pdv-main">
           {pdvView === "venda" && (
-      <div className="pdv-layout">
-        <div className="pdv-catalog">
-          <input
-            className="adm-product-search"
-            placeholder="🔍 Buscar por nome ou código de barras..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            autoFocus
-          />
-
-          {productsError && <div className="adm-modal-error">⚠️ {productsError}</div>}
-
-          {productsLoading ? (
-            <div className="adm-loading">
-              <div className="adm-spinner" />
-              <p>Carregando produtos...</p>
+            <div className="pdv-layout">
+              <ProductCatalog
+                search={pdvCart.search}
+                setSearch={pdvCart.setSearch}
+                productsError={pdvCart.productsError}
+                productsLoading={pdvCart.productsLoading}
+                filteredProducts={pdvCart.filteredProducts}
+                addToCart={pdvCart.addToCart}
+              />
+              <CartPanel
+                cart={pdvCart.cart}
+                updateQuantity={pdvCart.updateQuantity}
+                removeFromCart={pdvCart.removeFromCart}
+                paymentMethod={pdvCart.paymentMethod}
+                setPaymentMethod={pdvCart.setPaymentMethod}
+                discountMode={pdvCart.discountMode}
+                setDiscountMode={pdvCart.setDiscountMode}
+                discountInput={pdvCart.discountInput}
+                setDiscountInput={pdvCart.setDiscountInput}
+                subtotal={pdvCart.subtotal}
+                discountAmount={pdvCart.discountAmount}
+                cartTotal={pdvCart.cartTotal}
+                submitting={pdvCart.submitting}
+                onFinalize={pdvCart.handleFinalizeSale}
+              />
             </div>
-          ) : filteredProducts.length === 0 ? (
-            <div className="adm-empty"><p>Nenhum produto encontrado.</p></div>
-          ) : (
-            <div className="pdv-product-grid">
-              {filteredProducts.map((p) => (
-                <button key={p.id} className="pdv-product-card" onClick={() => addToCart(p)}>
-                  <span className="pdv-product-name">{p.name}</span>
-                  <span className="pdv-product-price">{formatBRL(p.price)}</span>
-                  <span className={`adm-stock-badge ${p.stock < 10 ? "low" : "ok"}`}>
-                    {p.stock} em estoque
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="pdv-cart">
-          <h2 className="adm-store-section-title">Carrinho</h2>
-          {cart.length === 0 ? (
-            <div className="adm-empty"><p>Nenhum item ainda.</p></div>
-          ) : (
-            <div className="pdv-cart-items">
-              {cart.map((item) => (
-                <div key={item.id} className="pdv-cart-item">
-                  <div className="pdv-cart-item-info">
-                    <span className="pdv-cart-item-name">{item.name}</span>
-                    <span className="pdv-cart-item-price">{formatBRL(item.price)} un.</span>
-                  </div>
-                  <div className="pdv-cart-item-qty">
-                    <button onClick={() => updateQuantity(item.id, item.quantity - 1)}>−</button>
-                    <span>{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.id, item.quantity + 1)}>+</button>
-                  </div>
-                  <button className="adm-btn-delete" onClick={() => removeFromCart(item.id)}>🗑️</button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="pdv-payment-methods">
-            {PAYMENT_METHODS.map((m) => (
-              <button
-                key={m.value}
-                className={`pdv-payment-btn ${paymentMethod === m.value ? "active" : ""}`}
-                onClick={() => setPaymentMethod(m.value)}
-              >
-                {m.icon} {m.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="pdv-discount-row">
-            <div className="pdv-discount-mode">
-              <button
-                className={`pdv-discount-mode-btn ${discountMode === "amount" ? "active" : ""}`}
-                onClick={() => setDiscountMode("amount")}
-              >
-                R$
-              </button>
-              <button
-                className={`pdv-discount-mode-btn ${discountMode === "percent" ? "active" : ""}`}
-                onClick={() => setDiscountMode("percent")}
-              >
-                %
-              </button>
-            </div>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              className="pdv-discount-input"
-              placeholder="Desconto"
-              value={discountInput}
-              onChange={(e) => setDiscountInput(e.target.value)}
-            />
-          </div>
-
-          <div className="pdv-cart-summary">
-            <div className="pdv-cart-subtotal-row">
-              <span>Subtotal</span>
-              <span>{formatBRL(subtotal)}</span>
-            </div>
-            {discountAmount > 0 && (
-              <div className="pdv-cart-subtotal-row pdv-cart-discount-row">
-                <span>Desconto</span>
-                <span>−{formatBRL(discountAmount)}</span>
-              </div>
-            )}
-            <div className="pdv-cart-total">
-              <span>Total</span>
-              <strong>{formatBRL(cartTotal)}</strong>
-            </div>
-          </div>
-
-          <button
-            className="adm-btn-new-product pdv-finalize-btn"
-            onClick={handleFinalizeSale}
-            disabled={cart.length === 0 || submitting}
-          >
-            {submitting ? "Registrando..." : "✅ Finalizar venda"}
-          </button>
-        </div>
-      </div>
           )}
 
           {pdvView === "historico" && (
-            <div className="pdv-session-sales">
-              <h2 className="adm-store-section-title">Vendas desta sessão</h2>
-              {cancelError && <div className="adm-modal-error">⚠️ {cancelError}</div>}
-              {sessionSales.length === 0 ? (
-                <div className="adm-empty"><p>Nenhuma venda registrada ainda nesta sessão.</p></div>
-              ) : (
-                <div className="pdv-sales-list">
-                  {sessionSales.map((sale) => {
-                    const method = PAYMENT_METHODS.find((m) => m.value === sale.paymentMethod);
-                    return (
-                      <div
-                        key={sale.orderId}
-                        className={`pdv-sale-row ${sale.cancelled ? "pdv-sale-cancelled" : ""}`}
-                      >
-                        <span className="pdv-sale-time">
-                          {new Date(sale.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-                        </span>
-                        <span className="pdv-sale-items" title={sale.itemsLabel}>
-                          {sale.itemsLabel || `${sale.itemCount} item(ns)`}
-                        </span>
-                        <span>{method ? `${method.icon} ${method.label}` : sale.paymentMethod}</span>
-                        <strong>{formatBRL(sale.total)}</strong>
-                        {sale.cancelled ? (
-                          <span className="pdv-sale-cancelled-label">Cancelada</span>
-                        ) : (
-                          <button
-                            className="adm-btn-delete"
-                            onClick={() => handleCancelSale(sale)}
-                            disabled={cancellingId === sale.orderId}
-                          >
-                            {cancellingId === sale.orderId ? "..." : "🗑️ Cancelar"}
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+            <HistorySalesList
+              cancelError={pdvCart.cancelError}
+              sessionSales={pdvCart.sessionSales}
+              cancellingId={pdvCart.cancellingId}
+              onCancelSale={pdvCart.handleCancelSale}
+            />
           )}
         </div>
       </div>
 
-      {closeModalOpen && (
-        <>
-          <div className="adm-modal-overlay" onClick={() => !closing && resetCloseModal()} />
-          <div className="adm-modal" role="dialog" aria-modal="true">
-            {closeResult ? (
-              <>
-                <h2 className="adm-store-section-title">Caixa fechado</h2>
-                <div className="pdv-close-summary">
-                  <div><span>Esperado</span><strong>{formatBRL(closeResult.expected)}</strong></div>
-                  <div><span>Contado</span><strong>{formatBRL(closeResult.declared)}</strong></div>
-                  <div className={closeResult.difference !== 0 ? "pdv-close-diff-mismatch" : ""}>
-                    <span>Diferença</span><strong>{formatBRL(closeResult.difference)}</strong>
-                  </div>
-                </div>
-                <button className="adm-btn-new-product" onClick={resetCloseModal}>Fechar</button>
-              </>
-            ) : (
-              <>
-                <h2 className="adm-store-section-title">Fechar caixa</h2>
-                <p className="adm-store-section-desc">
-                  Conte o dinheiro em caixa e informe o valor total encontrado.
-                </p>
-                {closeError && <div className="adm-modal-error">⚠️ {closeError}</div>}
-                <div className="adm-form-field">
-                  <label>Valor contado (R$)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={declaredAmountInput}
-                    onChange={(e) => setDeclaredAmountInput(e.target.value)}
-                    placeholder="0,00"
-                    autoFocus
-                  />
-                </div>
-                <div className="adm-store-form-actions">
-                  <button className="adm-btn-new-product" onClick={handleCloseSession} disabled={closing}>
-                    {closing ? "Fechando..." : "Confirmar fechamento"}
-                  </button>
-                  <button className="adm-btn-back" onClick={resetCloseModal} disabled={closing}>
-                    Cancelar
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </>
+      {cashSession.closeModalOpen && (
+        <CloseSessionModal
+          closing={cashSession.closing}
+          closeError={cashSession.closeError}
+          closeResult={cashSession.closeResult}
+          declaredAmountInput={cashSession.declaredAmountInput}
+          setDeclaredAmountInput={cashSession.setDeclaredAmountInput}
+          onConfirm={cashSession.handleCloseSession}
+          onDismiss={cashSession.resetCloseModal}
+        />
       )}
     </>
   );
