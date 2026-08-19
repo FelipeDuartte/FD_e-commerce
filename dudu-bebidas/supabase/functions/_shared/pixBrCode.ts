@@ -33,6 +33,26 @@ function crc16(payload: string): string {
   return crc.toString(16).toUpperCase().padStart(4, "0");
 }
 
+// Chave Pix do tipo telefone PRECISA estar no formato internacional
+// completo (+5531999998888) — sem isso o banco não encontra a chave e
+// recusa o pagamento. Aceita qualquer formato comum que o admin digite
+// ((31) 99999-8888, 31999998888, +5531999998888...) e normaliza.
+// Mesma lógica de normalizePhoneBR (_shared/whatsapp.ts), adaptada pro
+// formato com "+" exigido pelo Pix (o WhatsApp usa sem "+").
+export function normalizePixPhoneKey(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) return raw;
+
+  if (digits.length === 13 && digits.startsWith("55")) return `+${digits}`;
+  if (digits.length === 12 && digits.startsWith("55")) return `+${digits}`;
+  if (digits.length === 11) return `+55${digits}`;
+  if (digits.length === 10) return `+55${digits}`;
+
+  // Não deu pra normalizar com confiança — devolve como veio, mais seguro
+  // que inventar um formato errado.
+  return raw;
+}
+
 export interface PixBrCodeParams {
   pixKey: string;
   merchantName: string;

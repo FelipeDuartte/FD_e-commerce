@@ -12,7 +12,7 @@
 // ─────────────────────────────────────────────────────────────
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { buildPixBrCode } from "../_shared/pixBrCode.ts";
+import { buildPixBrCode, normalizePixPhoneKey } from "../_shared/pixBrCode.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
 
     const { data: config, error: configError } = await supabase
       .from("store_payment_configs")
-      .select("pix_key, pix_merchant_name, pix_merchant_city")
+      .select("pix_key, pix_key_type, pix_merchant_name, pix_merchant_city")
       .eq("store_id", storeId)
       .maybeSingle();
 
@@ -72,12 +72,20 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Esta loja ainda não configurou a chave Pix." }, 400);
     }
 
+    // Chave tipo telefone PRECISA estar em +5531999998888 — sem isso o
+    // banco não encontra a chave e recusa o pagamento (era exatamente o
+    // erro relatado: admin digitou sem o +55).
+    const pixKey =
+      config.pix_key_type === "telefone"
+        ? normalizePixPhoneKey(config.pix_key)
+        : config.pix_key;
+
     // txid derivado do próprio pedido — alfanumérico, sem traços, até 25
     // caracteres (limite do campo pela spec do BACEN).
     const txid = order.id.replace(/-/g, "").toUpperCase();
 
     const brCode = buildPixBrCode({
-      pixKey: config.pix_key,
+      pixKey,
       merchantName: config.pix_merchant_name || "LOJA",
       merchantCity: config.pix_merchant_city || "BRASIL",
       amount: Number(order.total),
@@ -86,7 +94,7 @@ Deno.serve(async (req) => {
 
     return jsonResponse({
       brCode,
-      pixKey: config.pix_key,
+      pixKey,
       merchantName: config.pix_merchant_name || "Loja",
       amount: order.total,
     });

@@ -773,8 +773,17 @@ function PaymentSection() {
             name="pix_key"
             value={config.pix_key}
             onChange={onChange}
-            placeholder="Digite a chave exatamente como cadastrada no banco"
+            placeholder={
+              config.pix_key_type === "telefone"
+                ? "Ex: (31) 99999-8888 — pode digitar com ou sem formatação"
+                : "Digite a chave exatamente como cadastrada no banco"
+            }
           />
+          {config.pix_key_type === "telefone" && (
+            <span className="adm-store-hours-hint">
+              Não precisa digitar o +55 — o sistema ajusta o formato automaticamente.
+            </span>
+          )}
         </div>
         <div className="adm-form-field">
           <label>Nome do recebedor (aparece no QR)</label>
