@@ -7,6 +7,7 @@ import {
   openCashSession,
   closeCashSession,
   createPdvSale,
+  cancelPdvSale,
 } from "./services/adminPDVService";
 
 const PAYMENT_METHODS = [
@@ -45,6 +46,8 @@ export default function AdminPDV() {
   const [saleError, setSaleError] = useState("");
   const [saleSuccess, setSaleSuccess] = useState("");
   const [sessionSales, setSessionSales] = useState([]);
+  const [cancellingId, setCancellingId] = useState(null);
+  const [cancelError, setCancelError] = useState("");
 
   const loadSession = useCallback(async () => {
     setSessionLoading(true);
@@ -125,6 +128,7 @@ export default function AdminPDV() {
     if (wasClosed) {
       setSession(null);
       setSessionSales([]);
+      setCancelError("");
     }
   };
 
@@ -200,7 +204,17 @@ export default function AdminPDV() {
         cashSessionId: session.id,
         discountAmount,
       });
-      setSessionSales((prev) => [...prev, { orderId: result.orderId, total: cartTotal, paymentMethod }]);
+      setSessionSales((prev) => [
+        ...prev,
+        {
+          orderId: result.orderId,
+          total: cartTotal,
+          paymentMethod,
+          itemCount: cart.reduce((sum, i) => sum + i.quantity, 0),
+          createdAt: new Date().toISOString(),
+          cancelled: false,
+        },
+      ]);
       setSaleSuccess(`Venda registrada — ${formatBRL(cartTotal)}`);
       setTimeout(() => setSaleSuccess(""), 3000);
       clearCart();
@@ -211,6 +225,24 @@ export default function AdminPDV() {
       setSaleError(e.message);
     }
     setSubmitting(false);
+  };
+
+  // ── Cancelar venda da sessão atual ──────────────────
+  const handleCancelSale = async (sale) => {
+    if (sale.cancelled) return;
+    if (!window.confirm(`Cancelar a venda de ${formatBRL(sale.total)}? O estoque volta automaticamente.`)) return;
+    setCancellingId(sale.orderId);
+    setCancelError("");
+    try {
+      await cancelPdvSale(sale.orderId);
+      setSessionSales((prev) =>
+        prev.map((s) => (s.orderId === sale.orderId ? { ...s, cancelled: true } : s))
+      );
+      loadProducts(); // estoque voltou, recarrega
+    } catch (e) {
+      setCancelError(e.message);
+    }
+    setCancellingId(null);
   };
 
   // ── Render ─────────────────────────────────────────
@@ -395,6 +427,47 @@ export default function AdminPDV() {
             {submitting ? "Registrando..." : "✅ Finalizar venda"}
           </button>
         </div>
+      </div>
+
+      <div className="pdv-session-sales">
+        <h2 className="adm-store-section-title">Vendas desta sessão</h2>
+        {cancelError && <div className="adm-modal-error">⚠️ {cancelError}</div>}
+        {sessionSales.length === 0 ? (
+          <div className="adm-empty"><p>Nenhuma venda registrada ainda nesta sessão.</p></div>
+        ) : (
+          <div className="pdv-sales-list">
+            {sessionSales
+              .slice()
+              .reverse()
+              .map((sale) => {
+                const method = PAYMENT_METHODS.find((m) => m.value === sale.paymentMethod);
+                return (
+                  <div
+                    key={sale.orderId}
+                    className={`pdv-sale-row ${sale.cancelled ? "pdv-sale-cancelled" : ""}`}
+                  >
+                    <span className="pdv-sale-time">
+                      {new Date(sale.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                    <span>{sale.itemCount} item(ns)</span>
+                    <span>{method ? `${method.icon} ${method.label}` : sale.paymentMethod}</span>
+                    <strong>{formatBRL(sale.total)}</strong>
+                    {sale.cancelled ? (
+                      <span className="pdv-sale-cancelled-label">Cancelada</span>
+                    ) : (
+                      <button
+                        className="adm-btn-delete"
+                        onClick={() => handleCancelSale(sale)}
+                        disabled={cancellingId === sale.orderId}
+                      >
+                        {cancellingId === sale.orderId ? "..." : "🗑️ Cancelar"}
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+          </div>
+        )}
       </div>
 
       {closeModalOpen && (

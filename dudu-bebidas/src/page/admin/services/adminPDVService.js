@@ -70,3 +70,18 @@ export async function createPdvSale({ cartItems, paymentMethod, cashSessionId, d
   }
   return data;
 }
+
+export async function cancelPdvSale(orderId) {
+  const { data, error } = await supabase.rpc("cancel_pdv_sale", {
+    p_order_id: orderId,
+    p_store_id: getCurrentStoreId(),
+  });
+
+  if (error) {
+    throw new AdminServiceError("Não foi possível cancelar a venda.", error);
+  }
+  if (!data?.success) {
+    throw new AdminServiceError(data?.error || "Não foi possível cancelar a venda.");
+  }
+  return data;
+}
