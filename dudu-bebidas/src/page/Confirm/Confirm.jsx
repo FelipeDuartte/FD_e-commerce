@@ -205,7 +205,13 @@ export default function Confirmacao() {
   const isPixPending = payment === "pix" && paymentStatus === "aguardando_pagamento";
 
   useEffect(() => {
-    if (!orderId || !isPixPending || customerClaimedPaidAt || pixCharge || pixLoading) return;
+    // "pixCharge" é a única guarda contra buscar de novo — nunca incluir
+    // "pixLoading" nas dependências: setar pixLoading(true) aqui dentro
+    // re-executaria o efeito, cuja função de cleanup (rodada ANTES da
+    // nova execução) marcaria "cancelled=true" na requisição que acabou
+    // de sair, matando a resposta assim que ela chegasse. Foi exatamente
+    // o bug do "fica carregando pra sempre".
+    if (!orderId || !isPixPending || customerClaimedPaidAt || pixCharge) return;
 
     let cancelled = false;
     setPixLoading(true);
@@ -231,7 +237,7 @@ export default function Confirmacao() {
       });
 
     return () => { cancelled = true; };
-  }, [orderId, isPixPending, customerClaimedPaidAt, pixCharge, pixLoading]);
+  }, [orderId, isPixPending, customerClaimedPaidAt, pixCharge]);
 
   const handleMarkPaid = async () => {
     setClaimingPaid(true);
