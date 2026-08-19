@@ -8,6 +8,7 @@ import {
   closeCashSession,
   createPdvSale,
   cancelPdvSale,
+  listSessionSales,
 } from "./services/adminPDVService";
 
 const PAYMENT_METHODS = [
@@ -70,6 +71,28 @@ export default function AdminPDV() {
     }
     setProductsLoading(false);
   }, []);
+
+  // Busca do banco (não acumula localmente) — assim sobrevive a reload da
+  // página enquanto o caixa continuar aberto, em vez de ser só um contador
+  // que se perde se a aba recarregar.
+  const loadSessionSales = useCallback(async (sessionId) => {
+    if (!sessionId) {
+      setSessionSales([]);
+      return;
+    }
+    try {
+      setSessionSales(await listSessionSales(sessionId));
+    } catch (e) {
+      setCancelError(e.message);
+    }
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadSessionSales(session?.id);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [session?.id, loadSessionSales]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -198,29 +221,19 @@ export default function AdminPDV() {
     setSubmitting(true);
     setSaleError("");
     try {
-      const result = await createPdvSale({
+      await createPdvSale({
         cartItems: cart.map((i) => ({ id: i.id, name: i.name, quantity: i.quantity })),
         paymentMethod,
         cashSessionId: session.id,
         discountAmount,
       });
-      setSessionSales((prev) => [
-        ...prev,
-        {
-          orderId: result.orderId,
-          total: cartTotal,
-          paymentMethod,
-          itemCount: cart.reduce((sum, i) => sum + i.quantity, 0),
-          createdAt: new Date().toISOString(),
-          cancelled: false,
-        },
-      ]);
       setSaleSuccess(`Venda registrada — ${formatBRL(cartTotal)}`);
       setTimeout(() => setSaleSuccess(""), 3000);
       clearCart();
       setPaymentMethod("cash");
       setDiscountInput("");
       loadProducts(); // estoque mudou, recarrega pra não deixar badge desatualizado
+      loadSessionSales(session.id); // busca do banco — pega a venda que acabou de ser criada
     } catch (e) {
       setSaleError(e.message);
     }
@@ -235,10 +248,8 @@ export default function AdminPDV() {
     setCancelError("");
     try {
       await cancelPdvSale(sale.orderId);
-      setSessionSales((prev) =>
-        prev.map((s) => (s.orderId === sale.orderId ? { ...s, cancelled: true } : s))
-      );
       loadProducts(); // estoque voltou, recarrega
+      loadSessionSales(session.id); // busca do banco — pega o novo status "cancelled"
     } catch (e) {
       setCancelError(e.message);
     }

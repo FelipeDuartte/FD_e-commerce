@@ -71,6 +71,28 @@ export async function createPdvSale({ cartItems, paymentMethod, cashSessionId, d
   return data;
 }
 
+export async function listSessionSales(sessionId) {
+  const { data, error } = await supabase
+    .from("orders")
+    .select("id, total, discount_amount, payment_method, status, created_at, order_items(quantity)")
+    .eq("cash_session_id", sessionId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new AdminServiceError("Não foi possível carregar as vendas da sessão.", error);
+  }
+
+  return (data ?? []).map((o) => ({
+    orderId: o.id,
+    total: o.total,
+    discountAmount: o.discount_amount,
+    paymentMethod: o.payment_method,
+    cancelled: o.status === "cancelled",
+    createdAt: o.created_at,
+    itemCount: (o.order_items ?? []).reduce((sum, it) => sum + it.quantity, 0),
+  }));
+}
+
 export async function cancelPdvSale(orderId) {
   const { data, error } = await supabase.rpc("cancel_pdv_sale", {
     p_order_id: orderId,
