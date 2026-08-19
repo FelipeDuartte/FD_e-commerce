@@ -82,6 +82,14 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Loja inválida ou inativa." }, 400);
     }
 
+    // Fase 1 de pagamentos: todo pedido online nasce "aguardando_pagamento"
+    // (dinheiro/cartão na entrega inclusos — o dinheiro só troca de mãos na
+    // entrega mesmo, então isso é só um registro informativo, não bloqueia
+    // nada do fluxo atual). pix usa a chave da própria loja (sem gateway),
+    // por isso o provider é 'pix_manual' — não confundir com uma futura
+    // integração via Mercado Pago.
+    const paymentProvider = paymentMethod === "pix" ? "pix_manual" : null;
+
     const { orderId } = await fulfillOrder(supabase, {
       storeId,
       userId,
@@ -93,6 +101,8 @@ Deno.serve(async (req) => {
       channel: "online",
       status: "pending",
       applyCardFee: true,
+      paymentStatus: "aguardando_pagamento",
+      paymentProvider,
     });
 
     return jsonResponse({ orderId }, 200);

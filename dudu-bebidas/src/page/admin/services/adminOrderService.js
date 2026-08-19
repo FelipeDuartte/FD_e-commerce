@@ -7,6 +7,8 @@ const ORDER_SELECT = `
   total,
   discount_amount,
   payment_method,
+  payment_status,
+  customer_claimed_paid_at,
   installments,
   address,
   status,

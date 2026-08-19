@@ -25,6 +25,7 @@ import {
   rejectAdminOrder,
   updateAdminOrderStatus,
 } from "./services/adminOrderService";
+import { markOrderPaid } from "./services/adminPaymentService";
 import OrderCard from "./OrderCard";
 import ProductModal from "./ProductModal";
 import RejectModal from "./RejectModal";
@@ -361,6 +362,23 @@ export default function Admin({ isAdmin }) {
     [updateOrderStatusLocally],
   );
 
+  // Pix Fase 1: só registro informativo — não mexe em estoque nem no status
+  // de preparo/entrega, só marca payment_status como pago.
+  const markPaid = useCallback(async (orderId) => {
+    setUpdating(orderId);
+    setOrdersError("");
+    try {
+      await markOrderPaid(orderId);
+      setOrders((prev) =>
+        prev.map((o) => (o.id === orderId ? { ...o, payment_status: "pago" } : o)),
+      );
+    } catch (error) {
+      console.error(error);
+      setOrdersError(error.message);
+    }
+    setUpdating(null);
+  }, []);
+
   const confirmReject = useCallback(async () => {
     if (!rejectModal) return;
     setRejecting(true);
@@ -630,6 +648,7 @@ export default function Admin({ isAdmin }) {
                             onReject={() => setRejectModal(order.id)}
                             onAdvance={() => advanceStatus(order)}
                             onSetStatus={(s) => setStatus(order.id, s)}
+                            onMarkPaid={() => markPaid(order.id)}
                           />
                         </div>
                       );

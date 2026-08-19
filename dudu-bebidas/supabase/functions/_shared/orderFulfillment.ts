@@ -44,6 +44,14 @@ export interface FulfillOrderParams {
   // venda de balcão cobra o preço de tabela, a taxa física já costuma estar
   // embutida no preço pro lojista.
   applyCardFee: boolean;
+  // Status de PAGAMENTO — separado do status de preparo/entrega (`status`
+  // acima). Default 'pago' no banco cobre quem não passa isso (PDV, por
+  // exemplo — venda de balcão já é paga no ato). Só create-order passa
+  // 'aguardando_pagamento' pra pix/pagamento na entrega.
+  paymentStatus?: string;
+  // null = sem gateway (pix da própria loja, pagamento na entrega);
+  // 'pix_manual' hoje; futuramente 'mercadopago'.
+  paymentProvider?: string | null;
 }
 
 // Taxas reais da maquininha (crédito) — mesma tabela usada em Checkout.jsx
@@ -74,6 +82,7 @@ export async function fulfillOrder(
     storeId, userId, cartItems, paymentMethod, installments,
     deliveryFee = 0, address, channel, cashSessionId = null,
     soldBy = null, status, applyCardFee, discountAmount = 0,
+    paymentStatus, paymentProvider = null,
   } = params;
 
   if (!cartItems || cartItems.length === 0) {
@@ -154,6 +163,11 @@ export async function fulfillOrder(
       channel,
       cash_session_id: cashSessionId,
       sold_by: soldBy,
+      // Omite as duas chaves quando o caller não informa (ex: pdv-sale) —
+      // assim o DEFAULT 'pago'/null da coluna no banco continua valendo,
+      // em vez de mandar undefined explicitamente.
+      ...(paymentStatus !== undefined ? { payment_status: paymentStatus } : {}),
+      ...(paymentProvider !== null ? { payment_provider: paymentProvider } : {}),
     })
     .select("id")
     .single();

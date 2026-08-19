@@ -9,6 +9,14 @@ import {
   PAYMENT_LABEL,
 } from "./adminUtils";
 
+const PAYMENT_STATUS_LABEL = {
+  aguardando_pagamento: "⏳ Aguardando pagamento",
+  processando_pagamento: "⏳ Processando pagamento",
+  pagamento_recusado: "❌ Pagamento recusado",
+  pagamento_cancelado: "🚫 Pagamento cancelado",
+  pagamento_expirado: "⌛ Pagamento expirado",
+};
+
 export default function OrderCard({
   order,
   isExpanded,
@@ -18,6 +26,7 @@ export default function OrderCard({
   onReject,
   onAdvance,
   onSetStatus,
+  onMarkPaid,
 }) {
   const pickup = isPickup(order);
   const cfg = getConfig(order);
@@ -69,6 +78,11 @@ export default function OrderCard({
             {order.payment_method === "credit_card" && order.installments > 1
               ? ` · ${order.installments}x`
               : ""}
+            {order.payment_status && order.payment_status !== "pago" && (
+              <span className="adm-order-discount">
+                {" "}· {PAYMENT_STATUS_LABEL[order.payment_status] ?? order.payment_status}
+              </span>
+            )}
           </span>
           <span className="adm-order-total">
             {formatBRL(order.total)}
@@ -77,6 +91,23 @@ export default function OrderCard({
             )}
           </span>
         </div>
+
+        {order.payment_method === "pix" && order.payment_status === "aguardando_pagamento" && (
+          <div className="adm-order-actions" onClick={(e) => e.stopPropagation()}>
+            {order.customer_claimed_paid_at && (
+              <span className="adm-order-discount">
+                Cliente informou pagamento às{" "}
+                {new Date(order.customer_claimed_paid_at).toLocaleTimeString("pt-BR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
+            )}
+            <button className="adm-btn-accept" onClick={onMarkPaid} disabled={isUpdating}>
+              {isUpdating ? "..." : "✅ Marcar como pago"}
+            </button>
+          </div>
+        )}
 
         {isPending && (
           <div

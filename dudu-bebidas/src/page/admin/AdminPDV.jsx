@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import "./AdminPDV.css";
 import { formatBRL } from "./adminUtils";
 import { listAdminProducts } from "./services/adminProductService";
+import { PAYMENT_METHODS as PAYMENT_METHOD_LABELS } from "../../utils/paymentMethods";
 import {
   getOpenCashSession,
   openCashSession,
@@ -11,12 +12,12 @@ import {
   listSessionSales,
 } from "./services/adminPDVService";
 
-const PAYMENT_METHODS = [
-  { value: "cash", icon: "💵", label: "Dinheiro" },
-  { value: "pix", icon: "⚡", label: "PIX" },
-  { value: "debit_card", icon: "💳", label: "Débito" },
-  { value: "credit_card", icon: "💳", label: "Crédito" },
-];
+// Dinheiro primeiro no PDV (maioria das vendas de balcão é em dinheiro) —
+// ordem diferente do checkout online, mas os rótulos vêm da fonte única.
+const PAYMENT_METHODS = ["cash", "pix", "debit_card", "credit_card"].map((value) => ({
+  value,
+  ...PAYMENT_METHOD_LABELS[value],
+}));
 
 // Menu lateral do PDV — pensado já com o app desktop separado em mente
 // (Tauri, futuramente): cada item aqui vira uma "tela" própria, igual um

@@ -1,5 +1,6 @@
 // Utils e constantes compartilhadas pelo painel admin
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+export { PAYMENT_METHODS as PAYMENT_LABEL } from "../../utils/paymentMethods";
 export const PAGE_SIZE = 20;
 
 export const STATUS_PICKUP = {
@@ -45,14 +46,6 @@ export const DELIVERY_STATUS_ORDER = [
   "delivered",
 ];
 export const PICKUP_STATUS_ORDER = ["pending", "delivered"];
-
-export const PAYMENT_LABEL = {
-  pix: { icon: "⚡", label: "PIX" },
-  debit_card: { icon: "💳", label: "Débito" },
-  credit_card: { icon: "💳", label: "Crédito" },
-  card: { icon: "💳", label: "Cartão" }, // pedidos antigos, antes de separar débito/crédito
-  cash: { icon: "💵", label: "Dinheiro" },
-};
 
 export const CATEGORIES = [
   "cerveja",

@@ -8,13 +8,13 @@ import {
   loadLastDeliveryAddress,
   saveLastDeliveryAddress,
 } from "../../utils/checkoutAddressStorage";
+import { PAYMENT_METHODS } from "../../utils/paymentMethods";
 
-const paymentOptions = [
-  { value: "pix", icon: "⚡", name: "PIX" },
-  { value: "debit_card", icon: "💳", name: "Débito" },
-  { value: "credit_card", icon: "💳", name: "Crédito" },
-  { value: "cash", icon: "💵", name: "Dinheiro" },
-];
+const paymentOptions = ["pix", "debit_card", "credit_card", "cash"].map((value) => ({
+  value,
+  icon: PAYMENT_METHODS[value].icon,
+  name: PAYMENT_METHODS[value].label,
+}));
 
 // Pagamento é feito na entrega (maquininha do entregador) — isso só define
 // em quantas vezes o cliente PRETENDE parcelar, pra facilitar quem vai

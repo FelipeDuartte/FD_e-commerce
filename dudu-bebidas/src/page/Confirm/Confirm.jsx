@@ -1,17 +1,10 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import QRCode from "qrcode";
 import { supabase, getCurrentStoreId } from "../../supabase/Supabaseclient";
 import "./Confirm.css";
 import { imgProduto } from "../../utils/Cloudnary";
-
-// ── Constantes ────────────────────────────────────────
-const PAYMENT_LABELS = {
-  pix: { icon: "⚡", label: "PIX" },
-  debit_card: { icon: "💳", label: "Débito" },
-  credit_card: { icon: "💳", label: "Crédito" },
-  card: { icon: "💳", label: "Cartão" }, // pedidos antigos
-  cash: { icon: "💵", label: "Dinheiro" },
-};
+import { PAYMENT_METHODS as PAYMENT_LABELS } from "../../utils/paymentMethods";
 
 const STATUS_STEP = { pending: 0, preparing: 1, on_the_way: 2, delivered: 3 };
 
@@ -91,6 +84,16 @@ export default function Confirmacao() {
   const [status, setStatus] = useState("pending");
   const [statusLoading, setStatusLoading] = useState(true);
   const [animating, setAnimating] = useState(false);
+
+  // ── Pagamento via Pix (chave da loja, confirmação manual) ──
+  const [paymentStatus, setPaymentStatus] = useState(null);
+  const [customerClaimedPaidAt, setCustomerClaimedPaidAt] = useState(null);
+  const [pixCharge, setPixCharge] = useState(null);
+  const [pixQrImage, setPixQrImage] = useState(null);
+  const [pixLoading, setPixLoading] = useState(false);
+  const [pixError, setPixError] = useState("");
+  const [claimingPaid, setClaimingPaid] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   // ── Modal cancelamento ────────────────────────────
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -176,6 +179,9 @@ export default function Confirmacao() {
         return;
       }
 
+      setPaymentStatus(data.payment_status ?? null);
+      setCustomerClaimedPaidAt(data.customer_claimed_paid_at ?? null);
+
       const changed = lastStatus !== null && lastStatus !== data.status;
       lastStatus = data.status;
       applyStatus(data.status, { animate: changed });
@@ -194,6 +200,63 @@ export default function Confirmacao() {
       clearInterval(intervalId);
     };
   }, [orderId]);
+
+  // ── Pix pendente: busca o QR/copia-e-cola quando aplicável ─
+  const isPixPending = payment === "pix" && paymentStatus === "aguardando_pagamento";
+
+  useEffect(() => {
+    if (!orderId || !isPixPending || customerClaimedPaidAt || pixCharge || pixLoading) return;
+
+    let cancelled = false;
+    setPixLoading(true);
+    setPixError("");
+
+    supabase.functions
+      .invoke("pix-charge", { body: { orderId, storeId: getCurrentStoreId() } })
+      .then(async ({ data, error }) => {
+        if (cancelled) return;
+        if (error || data?.error) {
+          setPixError(data?.error || "Não foi possível gerar o QR Code do Pix.");
+          setPixLoading(false);
+          return;
+        }
+        setPixCharge(data);
+        try {
+          const qrImage = await QRCode.toDataURL(data.brCode, { width: 260, margin: 1 });
+          if (!cancelled) setPixQrImage(qrImage);
+        } catch (e) {
+          console.error("Erro ao gerar imagem do QR Code:", e);
+        }
+        if (!cancelled) setPixLoading(false);
+      });
+
+    return () => { cancelled = true; };
+  }, [orderId, isPixPending, customerClaimedPaidAt, pixCharge, pixLoading]);
+
+  const handleMarkPaid = async () => {
+    setClaimingPaid(true);
+    try {
+      await supabase.rpc("mark_customer_claimed_paid", {
+        p_order_id: orderId,
+        p_store_id: getCurrentStoreId(),
+      });
+      setCustomerClaimedPaidAt(new Date().toISOString());
+    } catch (e) {
+      console.error("Erro ao registrar 'já paguei':", e);
+    }
+    setClaimingPaid(false);
+  };
+
+  const handleCopyPixCode = async () => {
+    if (!pixCharge?.brCode) return;
+    try {
+      await navigator.clipboard.writeText(pixCharge.brCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (e) {
+      console.error("Erro ao copiar código Pix:", e);
+    }
+  };
 
   // ── Cancelamento ──────────────────────────────────
   const handleCancelOrder = async () => {
@@ -379,8 +442,61 @@ export default function Confirmacao() {
           </div>
         </div>
 
+        {/* PIX PENDENTE — substitui o tracker/retirada até confirmação */}
+        {isPixPending && (
+          <div className="cf-tracker-card">
+            <div className="cf-tracker-header">
+              <span className="cf-tracker-label">⚡ Pagamento via Pix</span>
+            </div>
+
+            {!customerClaimedPaidAt ? (
+              <div className="cf-pix-block">
+                {pixLoading && (
+                  <div className="cf-tracker-loading">
+                    <div className="cf-loading-bar" />
+                    <p>Gerando QR Code...</p>
+                  </div>
+                )}
+                {pixError && <div className="cf-modal-error">⚠️ {pixError}</div>}
+                {pixCharge && !pixLoading && (
+                  <>
+                    <p className="cf-pix-instructions">
+                      Escaneie o QR Code ou copie o código abaixo no app do seu banco.
+                    </p>
+                    {pixQrImage && (
+                      <img src={pixQrImage} alt="QR Code Pix" className="cf-pix-qr" />
+                    )}
+                    <div className="cf-pix-value">{formatBRL(pixCharge.amount)}</div>
+                    <div className="cf-pix-code-row">
+                      <input readOnly value={pixCharge.brCode} className="cf-pix-code-input" />
+                      <button className="cf-btn-home" onClick={handleCopyPixCode}>
+                        {copied ? "✓ Copiado" : "Copiar código"}
+                      </button>
+                    </div>
+                    <button
+                      className="cf-btn-cancel"
+                      onClick={handleMarkPaid}
+                      disabled={claimingPaid}
+                    >
+                      {claimingPaid ? "Aguarde..." : "✅ Já paguei"}
+                    </button>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="cf-pix-waiting">
+                <p className="cf-pix-waiting-title">⏳ Aguardando confirmação do pagamento pela loja</p>
+                <p className="cf-pix-waiting-hint">
+                  Assim que a loja confirmar o recebimento, seu pedido segue pro
+                  preparo normalmente. Isso costuma levar só alguns minutos.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* TRACKER — apenas entrega */}
-        {!isRetirada && (
+        {!isRetirada && !isPixPending && (
           <div className="cf-tracker-card">
             <div className="cf-tracker-header">
               <span className="cf-tracker-label">📦 Acompanhe seu pedido</span>
@@ -454,7 +570,7 @@ export default function Confirmacao() {
         )}
 
         {/* TRACKER — retirada */}
-        {isRetirada && (
+        {isRetirada && !isPixPending && (
           <div className="cf-tracker-card cf-tracker-card--pickup">
             <div className="cf-tracker-header">
               <span className="cf-tracker-label">🏪 RETIRADA NA LOJA</span>
