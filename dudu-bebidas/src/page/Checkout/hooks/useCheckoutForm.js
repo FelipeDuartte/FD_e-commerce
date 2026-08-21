@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { saveOrder } from "../../../supabase/saveOrder";
 import { saveMercadoPagoOrder } from "../../../supabase/saveMercadoPagoOrder";
 import {
@@ -67,18 +67,20 @@ export function useCheckoutForm({ user, cartItems, cartTotal, DELIVERY, isRetira
   }, [orderProcessed, navigate]);
 
   useEffect(() => {
-    if (!user?.id || isRetirada) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setLastAddress(null);
-      return;
-    }
+    const timer = setTimeout(() => {
+      if (!user?.id || isRetirada) {
+        setLastAddress(null);
+        return;
+      }
 
-    const savedAddress = loadLastDeliveryAddress(user.id);
-    const sameDeliveryArea =
-      savedAddress &&
-      (!savedAddress.bairro || savedAddress.bairro === bairroCarrinho);
+      const savedAddress = loadLastDeliveryAddress(user.id);
+      const sameDeliveryArea =
+        savedAddress &&
+        (!savedAddress.bairro || savedAddress.bairro === bairroCarrinho);
 
-    setLastAddress(sameDeliveryArea ? savedAddress : null);
+      setLastAddress(sameDeliveryArea ? savedAddress : null);
+    }, 0);
+    return () => clearTimeout(timer);
   }, [bairroCarrinho, isRetirada, user?.id]);
 
   // ── Handlers ──────────────────────────────────────────
@@ -239,7 +241,17 @@ export function useCheckoutForm({ user, cartItems, cartTotal, DELIVERY, isRetira
   // ── Submit via Mercado Pago (Card Payment Brick) ───────
   // Chamado pelo onSubmit do próprio Brick, já com o cartão tokenizado —
   // não existe botão "Confirmar Pedido" nesse caminho, o botão é o do Brick.
-  const handleMercadoPagoSubmit = async (cardData) => {
+  //
+  // Precisa de identidade de função ESTÁVEL entre renders (por isso o
+  // padrão de ref abaixo, em vez de só useCallback): o SDK do Card Payment
+  // Brick usa a referência de onSubmit como dependência interna pra saber
+  // quando reinicializar o iframe seguro. Como esse componente reagia a
+  // toda letra digitada em QUALQUER campo do formulário (nome, endereço,
+  // etc — tudo re-renderiza o Checkout inteiro), uma função recriada a
+  // cada render fazia o Brick reiniciar em loop, piscando e impedindo
+  // digitar no cartão. Com a ref, a função exposta nunca muda de
+  // identidade, mas sempre executa a versão mais recente da lógica.
+  const handleMercadoPagoSubmitImpl = async (cardData) => {
     if (isProcessingRef.current || orderProcessed || loading) return;
     setErrorMsg("");
 
@@ -302,6 +314,19 @@ export function useCheckoutForm({ user, cartItems, cartTotal, DELIVERY, isRetira
       setLoading(false);
     }
   };
+
+  const handleMercadoPagoSubmitRef = useRef(handleMercadoPagoSubmitImpl);
+  // Atualiza a ref num efeito, não direto no corpo do render — mutar
+  // ref.current durante o render é proibido (quebra a pureza exigida por
+  // renderização concorrente); só precisa estar atualizada antes do
+  // próximo clique no botão do Brick, então useEffect simples já resolve.
+  useEffect(() => {
+    handleMercadoPagoSubmitRef.current = handleMercadoPagoSubmitImpl;
+  });
+  const handleMercadoPagoSubmit = useCallback(
+    (cardData) => handleMercadoPagoSubmitRef.current(cardData),
+    [],
+  );
 
   // ── Derivados ─────────────────────────────────────────
   const isDisabled = loading || orderProcessed;

@@ -1,4 +1,5 @@
 import "./Checkout.css";
+import { useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useStoreStatus } from "../../context/useStoreStatus";
 import { useCheckoutForm } from "./hooks/useCheckoutForm";
@@ -37,6 +38,15 @@ export default function Checkout({ user, clearCart }) {
     ? [{ value: "mercadopago_card", icon: PAYMENT_METHODS.mercadopago_card.icon, name: PAYMENT_METHODS.mercadopago_card.label }]
     : [];
   const isMercadoPagoSelected = payment === "mercadopago_card";
+
+  // Identidade estável de propósito (mesmo motivo do handleMercadoPagoSubmit
+  // em useCheckoutForm.js): o Brick reinicializa sempre que onError muda de
+  // referência, e uma arrow function inline aqui seria recriada a cada
+  // render do Checkout inteiro.
+  const handleMpBrickError = useCallback((err) => {
+    console.error("[MercadoPagoCardBrick] erro:", err);
+    setErrorMsg("Verifique os dados do cartão e tente novamente.");
+  }, [setErrorMsg]);
 
   return (
     <div className="co-root">
@@ -208,10 +218,7 @@ export default function Checkout({ user, clearCart }) {
                 amount={finalTotal}
                 disabled={isDisabled}
                 onSubmit={handleMercadoPagoSubmit}
-                onError={(err) => {
-                  console.error("[MercadoPagoCardBrick] erro:", err);
-                  setErrorMsg("Verifique os dados do cartão e tente novamente.");
-                }}
+                onError={handleMpBrickError}
               />
             </PaymentMethodSection>
           </div>
