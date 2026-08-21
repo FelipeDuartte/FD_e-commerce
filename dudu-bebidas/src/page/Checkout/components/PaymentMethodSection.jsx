@@ -2,14 +2,16 @@ import { paymentOptions, MAX_INSTALLMENTS, INSTALLMENT_OPTIONS, applyCreditCardF
 
 export default function PaymentMethodSection({
   payment, setPayment, installments, setInstallments, isDisabled, baseTotal,
+  extraOptions = [], children,
 }) {
+  const allOptions = [...paymentOptions, ...extraOptions];
   return (
     <>
       <div className="co-divider" />
       <div className="co-section-label">💳 Pagamento</div>
 
       <div className="co-pay-grid">
-        {paymentOptions.map((opt) => (
+        {allOptions.map((opt) => (
           <div className="co-pay-option" key={opt.value}>
             <input
               type="radio"
@@ -68,6 +70,8 @@ export default function PaymentMethodSection({
           </p>
         </div>
       )}
+
+      {payment === "mercadopago_card" && children}
     </>
   );
 }

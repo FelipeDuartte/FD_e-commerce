@@ -6,6 +6,9 @@ export const PAYMENT_METHODS = {
   credit_card: { icon: "💳", label: "Crédito" },
   card: { icon: "💳", label: "Cartão" }, // pedidos antigos, antes de separar débito/crédito
   cash: { icon: "💵", label: "Dinheiro" },
+  // Fase 2: cartão cobrado online via Mercado Pago (Card Payment Brick) —
+  // distinto de credit_card, que continua sendo "cartão físico na entrega".
+  mercadopago_card: { icon: "💳", label: "Cartão de crédito (online)" },
 };
 
 // Lista pra uso em seletores (radio/botões) — ordem usada no checkout e no PDV.

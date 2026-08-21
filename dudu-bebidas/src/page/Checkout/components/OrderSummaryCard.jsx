@@ -3,7 +3,7 @@ import ConfirmCta from "./ConfirmCta";
 
 export default function OrderSummaryCard({
   cartItems, cartTotal, DELIVERY, isRetirada, payment, cardFee, installments,
-  finalTotal, ctaLabel, onConfirm, isDisabled, closed,
+  finalTotal, ctaLabel, onConfirm, isDisabled, closed, hideConfirmButton,
 }) {
   return (
     <div className="co-summary">
@@ -67,7 +67,11 @@ export default function OrderSummaryCard({
         <span className="co-total-value">R$ {finalTotal.toFixed(2).replace(".", ",")}</span>
       </div>
 
-      <ConfirmCta label={ctaLabel} onClick={onConfirm} disabled={isDisabled || closed} />
+      {hideConfirmButton ? (
+        <p className="co-mp-cta-hint">↑ Preencha os dados do cartão para finalizar</p>
+      ) : (
+        <ConfirmCta label={ctaLabel} onClick={onConfirm} disabled={isDisabled || closed} />
+      )}
     </div>
   );
 }

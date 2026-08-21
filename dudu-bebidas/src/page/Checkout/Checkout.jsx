@@ -2,10 +2,13 @@ import "./Checkout.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useStoreStatus } from "../../context/useStoreStatus";
 import { useCheckoutForm } from "./hooks/useCheckoutForm";
+import { useMercadoPagoConfig } from "./hooks/useMercadoPagoConfig";
+import { PAYMENT_METHODS } from "../../utils/paymentMethods";
 import DeliveryFields from "./components/DeliveryFields";
 import PaymentMethodSection from "./components/PaymentMethodSection";
 import OrderSummaryCard from "./components/OrderSummaryCard";
 import ConfirmCta from "./components/ConfirmCta";
+import MercadoPagoCardBrick from "./components/MercadoPagoCardBrick";
 
 export default function Checkout({ user, clearCart }) {
   const navigate = useNavigate();
@@ -22,12 +25,18 @@ export default function Checkout({ user, clearCart }) {
     baseTotal, cardFee, finalTotal, errorMsg, setErrorMsg,
     cep, cepLoading, cepError, address, lastAddress, lastAddressMessage,
     handleAddressChange, handleCepChange, handleCepBlur, handlePhoneChange,
-    handleUseLastAddress, handleConfirmOrder,
+    handleUseLastAddress, handleConfirmOrder, handleMercadoPagoSubmit,
     isDisabled, phoneDigits, cepDigits, ctaLabel,
   } = useCheckoutForm({ user, cartItems, cartTotal, DELIVERY, isRetirada, bairroCarrinho, clearCart, navigate });
 
   const storeStatus = useStoreStatus();
   const closed = !storeStatus.open;
+
+  const mpConfig = useMercadoPagoConfig();
+  const mpExtraOption = mpConfig.enabled
+    ? [{ value: "mercadopago_card", icon: PAYMENT_METHODS.mercadopago_card.icon, name: PAYMENT_METHODS.mercadopago_card.label }]
+    : [];
+  const isMercadoPagoSelected = payment === "mercadopago_card";
 
   return (
     <div className="co-root">
@@ -192,7 +201,19 @@ export default function Checkout({ user, clearCart }) {
               setInstallments={setInstallments}
               isDisabled={isDisabled}
               baseTotal={baseTotal}
-            />
+              extraOptions={mpExtraOption}
+            >
+              <MercadoPagoCardBrick
+                publicKey={mpConfig.publicKey}
+                amount={finalTotal}
+                disabled={isDisabled}
+                onSubmit={handleMercadoPagoSubmit}
+                onError={(err) => {
+                  console.error("[MercadoPagoCardBrick] erro:", err);
+                  setErrorMsg("Verifique os dados do cartão e tente novamente.");
+                }}
+              />
+            </PaymentMethodSection>
           </div>
 
           {/* ── SUMMARY ── */}
@@ -209,14 +230,17 @@ export default function Checkout({ user, clearCart }) {
             onConfirm={handleConfirmOrder}
             isDisabled={isDisabled}
             closed={closed}
+            hideConfirmButton={isMercadoPagoSelected}
           />
         </div>
       </div>
 
       {/* ── BOTÃO FIXO MOBILE ── */}
-      <div className="co-cta-wrap">
-        <ConfirmCta label={ctaLabel} onClick={handleConfirmOrder} disabled={isDisabled || closed} />
-      </div>
+      {!isMercadoPagoSelected && (
+        <div className="co-cta-wrap">
+          <ConfirmCta label={ctaLabel} onClick={handleConfirmOrder} disabled={isDisabled || closed} />
+        </div>
+      )}
     </div>
   );
 }

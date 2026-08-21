@@ -437,6 +437,26 @@
   line-height: 1.4;
 }
 
+/* ─── MERCADO PAGO (Card Payment Brick) ────────────────── */
+.co-mp-brick {
+  margin-top: 14px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.co-mp-brick-disabled {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.co-mp-cta-hint {
+  margin: 14px 0 0;
+  text-align: center;
+  font-size: 12.5px;
+  color: #999;
+  line-height: 1.4;
+}
+
 /* ─── SUMMARY ───────────────────────────────────────── */
 .co-summary {
   background: #111;

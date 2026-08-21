@@ -9,6 +9,7 @@ import { usePixCharge } from "./hooks/usePixCharge";
 import CancelOrderModal from "./components/CancelOrderModal";
 import OrderOutcomeModal from "./components/OrderOutcomeModal";
 import PixPendingCard from "./components/PixPendingCard";
+import MercadoPagoProcessingCard from "./components/MercadoPagoProcessingCard";
 import DeliveryTracker from "./components/DeliveryTracker";
 import PickupCard from "./components/PickupCard";
 import OrderItemsCard from "./components/OrderItemsCard";
@@ -41,6 +42,14 @@ export default function Confirmacao() {
   } = useOrderStatusPolling(orderId);
 
   const isPixPending = payment === "pix" && paymentStatus === "aguardando_pagamento";
+  // Cartão online (Mercado Pago): a confirmação é automática via webhook,
+  // não tem QR nem "já paguei" — só um estado de espera/erro enquanto
+  // payment_status ainda não virou 'pago'.
+  const isMercadoPagoPending =
+    payment === "mercadopago_card" &&
+    ["processando_pagamento", "aguardando_pagamento"].includes(paymentStatus);
+  const isMercadoPagoRejected =
+    payment === "mercadopago_card" && paymentStatus === "pagamento_recusado";
 
   const {
     pixCharge,
@@ -219,11 +228,15 @@ export default function Confirmacao() {
           />
         )}
 
-        {!isRetirada && !isPixPending && (
+        {(isMercadoPagoPending || isMercadoPagoRejected) && (
+          <MercadoPagoProcessingCard rejected={isMercadoPagoRejected} />
+        )}
+
+        {!isRetirada && !isPixPending && !isMercadoPagoPending && !isMercadoPagoRejected && (
           <DeliveryTracker status={status} statusLoading={statusLoading} animating={animating} />
         )}
 
-        {isRetirada && !isPixPending && <PickupCard />}
+        {isRetirada && !isPixPending && !isMercadoPagoPending && !isMercadoPagoRejected && <PickupCard />}
 
         {/* GRID */}
         <div className="cf-grid">

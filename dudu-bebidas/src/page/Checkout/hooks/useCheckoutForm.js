@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { saveOrder } from "../../../supabase/saveOrder";
+import { saveMercadoPagoOrder } from "../../../supabase/saveMercadoPagoOrder";
 import {
   loadLastDeliveryAddress,
   saveLastDeliveryAddress,
@@ -235,6 +236,73 @@ export function useCheckoutForm({ user, cartItems, cartTotal, DELIVERY, isRetira
     }
   };
 
+  // ── Submit via Mercado Pago (Card Payment Brick) ───────
+  // Chamado pelo onSubmit do próprio Brick, já com o cartão tokenizado —
+  // não existe botão "Confirmar Pedido" nesse caminho, o botão é o do Brick.
+  const handleMercadoPagoSubmit = async (cardData) => {
+    if (isProcessingRef.current || orderProcessed || loading) return;
+    setErrorMsg("");
+
+    const validationError = validateForm();
+    if (validationError) {
+      showError(validationError);
+      return;
+    }
+
+    isProcessingRef.current = true;
+    setLoading(true);
+
+    try {
+      const addressToSave = isRetirada
+        ? { name: address.name, phone: address.phone, isRetirada: true }
+        : { ...address, cep, bairro: bairroCarrinho };
+
+      const { orderId, paymentStatus, error } = await saveMercadoPagoOrder({
+        address: addressToSave,
+        cartItems,
+        cardData,
+      });
+
+      if (error) {
+        showError(error);
+        isProcessingRef.current = false;
+        setLoading(false);
+        return;
+      }
+
+      if (paymentStatus === "rejected") {
+        showError("Pagamento recusado pela operadora do cartão. Tente outro cartão ou forma de pagamento.");
+        isProcessingRef.current = false;
+        setLoading(false);
+        return;
+      }
+
+      if (user?.id && !isRetirada) {
+        saveLastDeliveryAddress(user.id, addressToSave);
+      }
+
+      setOrderProcessed(true);
+      clearCart();
+      navigate("/confirmacao", {
+        state: {
+          orderId,
+          cartItems,
+          total: finalTotal,
+          payment: "mercadopago_card",
+          installments: cardData.installments,
+          address: addressToSave,
+          isRetirada,
+        },
+        replace: true,
+      });
+    } catch (err) {
+      console.error("Erro ao processar pagamento:", err);
+      showError("Ocorreu um erro ao processar o pagamento. Tente novamente.");
+      isProcessingRef.current = false;
+      setLoading(false);
+    }
+  };
+
   // ── Derivados ─────────────────────────────────────────
   const isDisabled = loading || orderProcessed;
   const phoneDigits = address.phone.replace(/\D/g, "");
@@ -253,7 +321,7 @@ export function useCheckoutForm({ user, cartItems, cartTotal, DELIVERY, isRetira
     baseTotal, cardFee, finalTotal, loading, errorMsg, setErrorMsg,
     cep, cepLoading, cepError, address, lastAddress, lastAddressMessage,
     handleAddressChange, handleCepChange, handleCepBlur, handlePhoneChange,
-    handleUseLastAddress, handleConfirmOrder,
+    handleUseLastAddress, handleConfirmOrder, handleMercadoPagoSubmit,
     isDisabled, phoneDigits, cepDigits, ctaLabel,
   };
 }

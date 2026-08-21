@@ -37,9 +37,18 @@ export default function OrderCard({
   // Pix ainda não confirmado pelo admin — não faz sentido aceitar/rejeitar
   // preparo de algo que ainda não foi pago. "Pagamento na entrega" nasce
   // com payment_status "aguardando_pagamento" também (é só registro, não
-  // bloqueia nada), então essa checagem é restrita a pix de propósito.
+  // bloqueia nada), então essa checagem é restrita a pix de propósito. Só
+  // esse caso mostra o botão "Marcar como pago" — cartão online (Mercado
+  // Pago) é confirmado sozinho pelo webhook; um botão manual aqui pularia
+  // a baixa de estoque, que só acontece na confirmação real do pagamento.
   const pixAwaitingPayment =
     order.payment_method === "pix" && order.payment_status === "aguardando_pagamento";
+  // Cartão online ainda não aprovado (ou recusado) — mesma lógica de
+  // "não deixa aceitar/rejeitar preparo de algo que ainda não foi pago",
+  // só que sem botão manual: a confirmação é automática via webhook.
+  const mercadopagoNotPaid =
+    order.payment_method === "mercadopago_card" && order.payment_status !== "pago";
+  const paymentBlocksAcceptance = pixAwaitingPayment || mercadopagoNotPaid;
   const payment = PAYMENT_LABEL[order.payment_method] ?? {
     icon: "💳",
     label: order.payment_method,
@@ -81,10 +90,10 @@ export default function OrderCard({
         <div className="adm-order-payment">
           <span>
             {payment.icon} {payment.label}
-            {order.payment_method === "credit_card" && order.installments > 1
+            {["credit_card", "mercadopago_card"].includes(order.payment_method) && order.installments > 1
               ? ` · ${order.installments}x`
               : ""}
-            {order.payment_method === "pix" &&
+            {["pix", "mercadopago_card"].includes(order.payment_method) &&
               order.payment_status &&
               order.payment_status !== "pago" && (
                 <span className="adm-order-discount">
@@ -117,7 +126,17 @@ export default function OrderCard({
           </div>
         )}
 
-        {isPending && !pixAwaitingPayment && (
+        {mercadopagoNotPaid && (
+          <div className="adm-order-actions" onClick={(e) => e.stopPropagation()}>
+            <span className="adm-order-discount">
+              {order.payment_status === "pagamento_recusado"
+                ? "❌ Pagamento recusado pela operadora"
+                : "⏳ Aguardando confirmação automática do pagamento"}
+            </span>
+          </div>
+        )}
+
+        {isPending && !paymentBlocksAcceptance && (
           <div
             className="adm-order-actions"
             onClick={(e) => e.stopPropagation()}
@@ -205,6 +224,12 @@ export default function OrderCard({
               <div className="adm-delivered-msg">
                 💰 Aguardando confirmação do pagamento — marque como pago acima
                 pra liberar aceitar/rejeitar.
+              </div>
+            ) : isPending && mercadopagoNotPaid ? (
+              <div className="adm-delivered-msg">
+                {order.payment_status === "pagamento_recusado"
+                  ? "❌ Pagamento recusado — nada a preparar."
+                  : "⏳ Aguardando confirmação automática do pagamento pelo Mercado Pago."}
               </div>
             ) : isPending ? (
               <div className="adm-accept-reject-detail">

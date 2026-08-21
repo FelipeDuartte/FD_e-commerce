@@ -50,8 +50,14 @@ export interface FulfillOrderParams {
   // 'aguardando_pagamento' pra pix/pagamento na entrega.
   paymentStatus?: string;
   // null = sem gateway (pix da própria loja, pagamento na entrega);
-  // 'pix_manual' hoje; futuramente 'mercadopago'.
+  // 'pix_manual' ou 'mercadopago'.
   paymentProvider?: string | null;
+  // Fase 2 (cartão online MP): o estoque só pode ser baixado quando o
+  // pagamento for de fato aprovado, nunca no momento da criação do pedido
+  // (diferente de todo o resto — pix/entrega baixam na hora, Fase 1). Quem
+  // chama com true precisa baixar o estoque depois via a RPC
+  // confirm_mercadopago_payment, no momento da aprovação.
+  skipStockDecrement?: boolean;
 }
 
 // Taxas reais da maquininha (crédito) — mesma tabela usada em Checkout.jsx
@@ -77,12 +83,12 @@ function roundCents(v: number): number {
 export async function fulfillOrder(
   supabase: SupabaseClient,
   params: FulfillOrderParams,
-): Promise<{ orderId: string }> {
+): Promise<{ orderId: string; total: number }> {
   const {
     storeId, userId, cartItems, paymentMethod, installments,
     deliveryFee = 0, address, channel, cashSessionId = null,
     soldBy = null, status, applyCardFee, discountAmount = 0,
-    paymentStatus, paymentProvider = null,
+    paymentStatus, paymentProvider = null, skipStockDecrement = false,
   } = params;
 
   if (!cartItems || cartItems.length === 0) {
@@ -96,10 +102,18 @@ export async function fulfillOrder(
   // installments só faz sentido pra crédito; qualquer outro caso vira null.
   let installmentsToSave: number | null = null;
   if (paymentMethod === "credit_card") {
-    // Dono da loja pediu pra crédito aceitar só à vista (1x) por enquanto —
-    // ver histórico em create-order. Se voltar a liberar parcelamento, é só
-    // trocar o "1" fixo abaixo pela validação de faixa recebida em `installments`.
+    // Dono da loja pediu pra crédito FÍSICO (na entrega) aceitar só à vista
+    // (1x) por enquanto — ver histórico em create-order. Se voltar a liberar
+    // parcelamento, é só trocar o "1" fixo abaixo pela validação de faixa
+    // recebida em `installments`.
     installmentsToSave = 1;
+  } else if (paymentMethod === "mercadopago_card") {
+    // Cartão online JÁ libera parcelamento de verdade — quem decide quantas
+    // vezes é o próprio Card Payment Brick (baseado no que a bandeira/emissor
+    // permite), não a regra fixa de 1x do cartão físico acima.
+    installmentsToSave = Number.isInteger(installments) && (installments as number) > 0
+      ? (installments as number)
+      : 1;
   }
 
   // Buscar preços reais no banco — ignora qualquer total enviado pelo
@@ -193,6 +207,10 @@ export async function fulfillOrder(
     throw new FulfillmentError("Erro ao salvar itens do pedido.", 500);
   }
 
+  if (skipStockDecrement) {
+    return { orderId: order.id, total: calculatedTotal };
+  }
+
   const rpcItems = cartItems.map((item) => ({
     product_id: String(item.id),
     quantity: item.quantity,
@@ -213,5 +231,5 @@ export async function fulfillOrder(
     throw new FulfillmentError(rpcResult?.error ?? "Erro ao processar estoque.");
   }
 
-  return { orderId: order.id };
+  return { orderId: order.id, total: calculatedTotal };
 }

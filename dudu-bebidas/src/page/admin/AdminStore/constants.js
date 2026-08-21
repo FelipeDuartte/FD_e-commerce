@@ -22,6 +22,12 @@ export const EMPTY_PAYMENT_CONFIG = {
   pix_key_type: "cpf",
   pix_merchant_name: "",
   pix_merchant_city: "",
+  mercadopago_public_key: "",
+  mercadopago_environment: "test",
+  mercadopago_access_token: "",
+  mercadopago_access_token_set: false,
+  mercadopago_webhook_secret: "",
+  mercadopago_webhook_secret_set: false,
 };
 
 export const STORE_TABS = [
