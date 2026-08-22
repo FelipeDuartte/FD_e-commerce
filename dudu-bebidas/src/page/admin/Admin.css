@@ -479,6 +479,13 @@ button:disabled {
   font-weight: 500;
   color: var(--c-text-muted);
 }
+/* Cliente já apertou "já paguei" — diferente de "aguardando pagamento"
+   (que é neutro/cinza), isso pede uma checagem do admin. */
+.adm-order-claimed {
+  font-size: 11px;
+  font-weight: 700;
+  color: #4ade80;
+}
 .adm-order-date {
   font-size: 11px;
   color: #444;

@@ -55,6 +55,21 @@ export default function OrderCard({
   };
   const shortId = order.id.slice(-8).toUpperCase();
 
+  // Uma única mensagem de status de pagamento, não duas competindo pelo
+  // mesmo espaço: "aguardando pagamento" (cliente não fez nada ainda) e
+  // "cliente informou pagamento" (cliente JÁ apertou "já paguei") são
+  // estados diferentes — mostrar os dois juntos parecia contraditório.
+  const claimedAt = order.customer_claimed_paid_at
+    ? new Date(order.customer_claimed_paid_at).toLocaleTimeString("pt-BR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : null;
+  const paymentStatusText =
+    pixAwaitingPayment && claimedAt
+      ? `🔔 Cliente informou pagamento às ${claimedAt}`
+      : (PAYMENT_STATUS_LABEL[order.payment_status] ?? order.payment_status);
+
   return (
     <li className={`adm-order adm-order-${order.status}`}>
       <div
@@ -96,8 +111,8 @@ export default function OrderCard({
             {["pix", "mercadopago_card"].includes(order.payment_method) &&
               order.payment_status &&
               order.payment_status !== "pago" && (
-                <span className="adm-order-discount">
-                  {" "}· {PAYMENT_STATUS_LABEL[order.payment_status] ?? order.payment_status}
+                <span className={claimedAt ? "adm-order-claimed" : "adm-order-discount"}>
+                  {" "}· {paymentStatusText}
                 </span>
               )}
           </span>
@@ -111,15 +126,6 @@ export default function OrderCard({
 
         {pixAwaitingPayment && (
           <div className="adm-order-actions" onClick={(e) => e.stopPropagation()}>
-            {order.customer_claimed_paid_at && (
-              <span className="adm-order-discount">
-                Cliente informou pagamento às{" "}
-                {new Date(order.customer_claimed_paid_at).toLocaleTimeString("pt-BR", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
-            )}
             <button className="adm-btn-accept" onClick={onMarkPaid} disabled={isUpdating}>
               {isUpdating ? "..." : "✅ Marcar como pago"}
             </button>
