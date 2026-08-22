@@ -269,7 +269,7 @@ export function useCheckoutForm({ user, cartItems, cartTotal, DELIVERY, isRetira
         ? { name: address.name, phone: address.phone, isRetirada: true }
         : { ...address, cep, bairro: bairroCarrinho };
 
-      const { orderId, paymentStatus, error } = await saveMercadoPagoOrder({
+      const { orderId, paymentStatus, total: chargedTotal, error } = await saveMercadoPagoOrder({
         address: addressToSave,
         cartItems,
         cardData,
@@ -300,7 +300,11 @@ export function useCheckoutForm({ user, cartItems, cartTotal, DELIVERY, isRetira
         state: {
           orderId,
           cartItems,
-          total: finalTotal,
+          // total real cobrado, com a taxa do Mercado Pago já embutida
+          // (calculada no servidor conforme o parcelamento escolhido dentro
+          // do Brick — pode ser diferente de finalTotal, que é só a
+          // estimativa sem taxa mostrada antes do cliente escolher).
+          total: chargedTotal ?? finalTotal,
           payment: "mercadopago_card",
           installments: cardData.installments,
           address: addressToSave,

@@ -104,7 +104,7 @@ Deno.serve(async (req) => {
       address,
       channel: "online",
       status: "pending",
-      applyCardFee: false, // taxa do MP sai da loja, não é repassada ao cliente
+      applyCardFee: true, // taxa do Mercado Pago é repassada ao cliente, não sai da loja
       paymentStatus: "processando_pagamento",
       paymentProvider: "mercadopago",
       skipStockDecrement: true,
@@ -166,7 +166,11 @@ Deno.serve(async (req) => {
     // 'processando_pagamento' e o webhook decide quando a resposta final
     // chegar (aprova ou apaga, mesma lógica de lá).
 
-    return jsonResponse({ orderId, paymentStatus: status, statusDetail: status_detail });
+    // "total" aqui já é o valor real cobrado (com a taxa do Mercado Pago
+    // repassada, calculada no servidor por fulfillOrder) — o front usa isso
+    // pra tela de confirmação em vez do total que ele mesmo calculou antes
+    // de saber quantas parcelas o cliente escolheu dentro do Brick.
+    return jsonResponse({ orderId, paymentStatus: status, statusDetail: status_detail, total });
 
   } catch (err) {
     if (err instanceof FulfillmentError) {

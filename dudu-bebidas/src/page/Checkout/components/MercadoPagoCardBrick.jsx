@@ -25,6 +25,25 @@ export default function MercadoPagoCardBrick({ publicKey, amount, onSubmit, onEr
 
   return (
     <div className={disabled ? "co-mp-brick co-mp-brick-disabled" : "co-mp-brick"}>
+      <div className="co-mp-fee-notice">
+        <p className="co-mp-fee-notice-title">
+          💳 Taxa do Mercado Pago incluída no valor final
+        </p>
+        <p className="co-mp-fee-notice-text">
+          O valor exibido acima no parcelamento é uma estimativa — a cobrança
+          real inclui a taxa do Mercado Pago e pode variar conforme o número
+          de parcelas escolhido:
+        </p>
+        <ul className="co-mp-fee-notice-list">
+          <li>À vista — 4,98%</li>
+          <li>2x a 6x — 2,99%</li>
+          <li>7x a 12x — 3,09%</li>
+          <li>13x a 18x — 3,19%</li>
+        </ul>
+        <p className="co-mp-fee-notice-text">
+          O valor final cobrado aparece confirmado na próxima tela, depois do pagamento.
+        </p>
+      </div>
       <CardPayment
         key={amount}
         initialization={initialization}
