@@ -12,7 +12,7 @@ import { useAdminCategories } from "./hooks/useAdminCategories";
 import { useAdminOrders } from "./Admin/hooks/useAdminOrders";
 import { useAdminProducts } from "./Admin/hooks/useAdminProducts";
 import AdminHeader from "./Admin/components/AdminHeader";
-import AdminTabs from "./Admin/components/AdminTabs";
+import AdminTabs, { SHOW_PDV_TAB } from "./Admin/components/AdminTabs";
 import OrdersTab from "./Admin/components/OrdersTab";
 import ProductsTab from "./Admin/components/ProductsTab";
 
@@ -135,7 +135,7 @@ export default function Admin({ isAdmin }) {
         )}
 
         {activeTab === "loja" && <AdminStore />}
-        {activeTab === "pdv" && <AdminPDV />}
+        {SHOW_PDV_TAB && activeTab === "pdv" && <AdminPDV />}
         {activeTab === "estoque" && <AdminStock />}
       </div>
     </div>
