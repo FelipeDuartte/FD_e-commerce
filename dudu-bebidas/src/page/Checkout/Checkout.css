@@ -754,7 +754,11 @@
 ══════════════════════════════════════════ */
 @media (max-width: 768px) {
   .co-root {
-    padding: 24px 16px 120px;
+    /* 190px de folga no fim (não só 120px): o rodapé fixo de "Confirmar
+       Pedido" tem ~110px de altura própria — com pouca folga, a última
+       fileira do grid de pagamento (Dinheiro / Cartão online) ficava
+       parcialmente atrás do botão fixo durante o scroll, difícil de tocar. */
+    padding: 24px 16px 190px;
   }
 
   .co-header {
@@ -817,6 +821,36 @@
 
   .co-field-row.two-col-mobile {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .co-pay-grid {
+    /* Fixo em 3 colunas (em vez de auto-fit) — largura previsível pra
+       qualquer tela, e a 5ª opção (Cartão online) não fica sozinha
+       espremida numa coluna estreita de sobra. */
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .co-pay-label {
+    flex-direction: row;
+    padding: 10px 4px;
+    gap: 6px;
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  .co-pay-icon {
+    font-size: 16px;
+  }
+
+  .co-pay-name {
+    font-size: 11px;
+    line-height: 1.2;
+    text-align: center;
+  }
+
+  .co-mp-brick {
+    margin-bottom: 8px;
   }
 
   .co-summary {
