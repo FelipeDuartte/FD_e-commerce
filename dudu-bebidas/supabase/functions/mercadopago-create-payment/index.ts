@@ -146,6 +146,14 @@ Deno.serve(async (req) => {
         p_payment_id: String(paymentId),
       });
     } else if (status === "rejected" || status === "cancelled") {
+      // Log do motivo ANTES de apagar o pedido — como a linha some do banco
+      // (de propósito, ver comentário abaixo), esse log nos Edge Function
+      // Logs é o único jeito de diagnosticar recusas depois (ex:
+      // "cc_rejected_high_risk", comum nos primeiros pagamentos de uma
+      // conta de produção recém-ativada).
+      console.log(
+        `[mercadopago-create-payment] Pagamento ${status} — payment_id=${paymentId} status_detail=${status_detail} order_id=${orderId} valor=${total}`,
+      );
       // Recusado pelo banco — o cliente nunca pagou, o pedido nunca chegou
       // a existir de fato. Apaga em vez de só marcar como recusado, pra não
       // deixar rastro de uma "venda" que nunca aconteceu.
