@@ -100,11 +100,12 @@ Deno.serve(async (req) => {
         p_payment_id: String(payment.id),
       });
     } else if (["rejected", "cancelled"].includes(payment.status)) {
-      await supabase.rpc("mark_mercadopago_payment_failed", {
+      // Ficou "in_process" na resposta síncrona e só resolveu como recusado
+      // depois, via webhook — mesmo critério do caminho síncrono: apaga em
+      // vez de manter um registro de venda que nunca aconteceu.
+      await supabase.rpc("delete_rejected_mercadopago_order", {
         p_order_id: orderId,
         p_store_id: storeId,
-        p_status: "pagamento_recusado",
-        p_payment_id: String(payment.id),
       });
     }
     // "in_process"/"pending"/outros: nada a fazer ainda, aguarda próxima notificação.

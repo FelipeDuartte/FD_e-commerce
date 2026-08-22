@@ -128,11 +128,11 @@ Deno.serve(async (req) => {
     });
 
     if (!result.ok || !result.payment) {
-      await supabase.rpc("mark_mercadopago_payment_failed", {
+      // Nem chegou a virar um pagamento de verdade (erro de rede, cartão
+      // malformado, etc.) — apaga o pedido, não faz sentido nenhum registro.
+      await supabase.rpc("delete_rejected_mercadopago_order", {
         p_order_id: orderId,
         p_store_id: storeId,
-        p_status: "pagamento_recusado",
-        p_payment_id: null,
       });
       return jsonResponse({ error: result.error ?? "Não foi possível processar o pagamento." }, 400);
     }
@@ -146,16 +146,17 @@ Deno.serve(async (req) => {
         p_payment_id: String(paymentId),
       });
     } else if (status === "rejected" || status === "cancelled") {
-      await supabase.rpc("mark_mercadopago_payment_failed", {
+      // Recusado pelo banco — o cliente nunca pagou, o pedido nunca chegou
+      // a existir de fato. Apaga em vez de só marcar como recusado, pra não
+      // deixar rastro de uma "venda" que nunca aconteceu.
+      await supabase.rpc("delete_rejected_mercadopago_order", {
         p_order_id: orderId,
         p_store_id: storeId,
-        p_status: "pagamento_recusado",
-        p_payment_id: String(paymentId),
       });
     }
     // "in_process"/"pending": não muda nada aqui — payment_status continua
     // 'processando_pagamento' e o webhook decide quando a resposta final
-    // chegar (mesmas RPCs, idempotentes).
+    // chegar (aprova ou apaga, mesma lógica de lá).
 
     return jsonResponse({ orderId, paymentStatus: status, statusDetail: status_detail });
 
