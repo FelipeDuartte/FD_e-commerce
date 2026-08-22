@@ -273,6 +273,7 @@ export function useCheckoutForm({ user, cartItems, cartTotal, DELIVERY, isRetira
         address: addressToSave,
         cartItems,
         cardData,
+        deliveryFee: DELIVERY,
       });
 
       if (error) {

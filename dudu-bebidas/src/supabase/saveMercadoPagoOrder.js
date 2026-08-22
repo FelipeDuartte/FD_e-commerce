@@ -5,7 +5,7 @@ const GENERIC_ERROR = "Não foi possível processar o pagamento. Tente novamente
 // Cria o pedido E cobra o cartão numa única chamada (mercadopago-create-payment)
 // — cardData vem do onSubmit do Card Payment Brick (token já tokenizado no
 // navegador, nunca o número do cartão em si).
-export async function saveMercadoPagoOrder({ address, cartItems, cardData }) {
+export async function saveMercadoPagoOrder({ address, cartItems, cardData, deliveryFee = 0 }) {
   if (!cartItems || cartItems.length === 0) return { error: "Carrinho vazio." };
 
   try {
@@ -16,6 +16,7 @@ export async function saveMercadoPagoOrder({ address, cartItems, cardData }) {
         storeId,
         address,
         cartItems,
+        deliveryFee,
         token: cardData.token,
         paymentMethodId: cardData.payment_method_id,
         issuerId: cardData.issuer_id,
