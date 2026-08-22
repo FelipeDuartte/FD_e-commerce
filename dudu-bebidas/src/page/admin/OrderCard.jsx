@@ -227,9 +227,18 @@ export default function OrderCard({
             </div>
 
             {isPending && pixAwaitingPayment ? (
-              <div className="adm-delivered-msg">
-                💰 Aguardando confirmação do pagamento — marque como pago acima
-                pra liberar aceitar/rejeitar.
+              <div className="adm-accept-reject-detail">
+                <p className="adm-delivered-msg">
+                  💰 Aguardando confirmação do pagamento — confirme abaixo pra
+                  liberar aceitar/rejeitar.
+                </p>
+                <button
+                  className="adm-btn-accept-lg"
+                  onClick={onMarkPaid}
+                  disabled={isUpdating}
+                >
+                  {isUpdating ? "Processando..." : "✅ Marcar como pago"}
+                </button>
               </div>
             ) : isPending && mercadopagoNotPaid ? (
               <div className="adm-delivered-msg">
