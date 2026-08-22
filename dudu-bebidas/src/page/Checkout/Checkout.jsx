@@ -34,7 +34,7 @@ export default function Checkout({ user, clearCart }) {
   const closed = !storeStatus.open;
 
   const mpConfig = useMercadoPagoConfig();
-  const mpExtraOption = mpConfig.enabled
+  const mpExtraOnlineOption = mpConfig.enabled
     ? [{ value: "mercadopago_card", icon: PAYMENT_METHODS.mercadopago_card.icon, name: PAYMENT_METHODS.mercadopago_card.label }]
     : [];
   const isMercadoPagoSelected = payment === "mercadopago_card";
@@ -211,7 +211,7 @@ export default function Checkout({ user, clearCart }) {
               setInstallments={setInstallments}
               isDisabled={isDisabled}
               baseTotal={baseTotal}
-              extraOptions={mpExtraOption}
+              extraOnlineOptions={mpExtraOnlineOption}
             >
               <MercadoPagoCardBrick
                 publicKey={mpConfig.publicKey}

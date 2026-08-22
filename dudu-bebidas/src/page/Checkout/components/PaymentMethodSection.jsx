@@ -1,37 +1,55 @@
-import { paymentOptions, MAX_INSTALLMENTS, INSTALLMENT_OPTIONS, applyCreditCardFee } from "../checkoutConstants";
+import {
+  deliveryPaymentOptions,
+  onlinePaymentOptions,
+  MAX_INSTALLMENTS,
+  INSTALLMENT_OPTIONS,
+  applyCreditCardFee,
+} from "../checkoutConstants";
+
+function PayOptionGrid({ options, payment, setPayment, setInstallments, isDisabled }) {
+  return (
+    <div className="co-pay-grid">
+      {options.map((opt) => (
+        <div className="co-pay-option" key={opt.value}>
+          <input
+            type="radio"
+            id={opt.value}
+            name="payment"
+            value={opt.value}
+            checked={payment === opt.value}
+            onChange={() => {
+              setPayment(opt.value);
+              if (opt.value !== "credit_card") setInstallments(1);
+            }}
+            disabled={isDisabled}
+          />
+          <label className="co-pay-label" htmlFor={opt.value}>
+            <span className="co-pay-icon">{opt.icon}</span>
+            <span className="co-pay-name">{opt.name}</span>
+          </label>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function PaymentMethodSection({
   payment, setPayment, installments, setInstallments, isDisabled, baseTotal,
-  extraOptions = [], children,
+  extraOnlineOptions = [], children,
 }) {
-  const allOptions = [...paymentOptions, ...extraOptions];
+  const onlineOptions = [...onlinePaymentOptions, ...extraOnlineOptions];
+
   return (
     <>
       <div className="co-divider" />
-      <div className="co-section-label">💳 Pagamento</div>
-
-      <div className="co-pay-grid">
-        {allOptions.map((opt) => (
-          <div className="co-pay-option" key={opt.value}>
-            <input
-              type="radio"
-              id={opt.value}
-              name="payment"
-              value={opt.value}
-              checked={payment === opt.value}
-              onChange={() => {
-                setPayment(opt.value);
-                if (opt.value !== "credit_card") setInstallments(1);
-              }}
-              disabled={isDisabled}
-            />
-            <label className="co-pay-label" htmlFor={opt.value}>
-              <span className="co-pay-icon">{opt.icon}</span>
-              <span className="co-pay-name">{opt.name}</span>
-            </label>
-          </div>
-        ))}
-      </div>
+      <div className="co-section-label">🚚 Pagamento na entrega</div>
+      <PayOptionGrid
+        options={deliveryPaymentOptions}
+        payment={payment}
+        setPayment={setPayment}
+        setInstallments={setInstallments}
+        isDisabled={isDisabled}
+      />
 
       {payment === "credit_card" && (
         <div className="co-installments">
@@ -70,6 +88,16 @@ export default function PaymentMethodSection({
           </p>
         </div>
       )}
+
+      <div className="co-pay-group-divider" />
+      <div className="co-section-label">🌐 Pagamento online</div>
+      <PayOptionGrid
+        options={onlineOptions}
+        payment={payment}
+        setPayment={setPayment}
+        setInstallments={setInstallments}
+        isDisabled={isDisabled}
+      />
 
       {payment === "mercadopago_card" && children}
     </>

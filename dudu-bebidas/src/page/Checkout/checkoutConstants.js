@@ -1,10 +1,21 @@
 import { PAYMENT_METHODS } from "../../utils/paymentMethods";
 
-export const paymentOptions = ["pix", "debit_card", "credit_card", "cash"].map((value) => ({
-  value,
-  icon: PAYMENT_METHODS[value].icon,
-  name: PAYMENT_METHODS[value].label,
-}));
+const buildOptions = (values) =>
+  values.map((value) => ({
+    value,
+    icon: PAYMENT_METHODS[value].icon,
+    name: PAYMENT_METHODS[value].label,
+  }));
+
+// Pago só quando o pedido chega (dinheiro/maquininha na mão, ou Pix
+// informal mostrado ao entregador) — nenhuma dessas opções ativa cobrança
+// automática nem tela de "aguardando confirmação".
+export const deliveryPaymentOptions = buildOptions(["credit_card", "debit_card", "pix_entrega", "cash"]);
+
+// Pago no ato do checkout, antes de qualquer entrega — Pix mostra QR na
+// tela de confirmação; Cartão online (Mercado Pago) só aparece se a loja
+// já configurou as credenciais (ver mpConfig.enabled em Checkout.jsx).
+export const onlinePaymentOptions = buildOptions(["pix"]);
 
 // Pagamento é feito na entrega (maquininha do entregador) — isso só define
 // em quantas vezes o cliente PRETENDE parcelar, pra facilitar quem vai

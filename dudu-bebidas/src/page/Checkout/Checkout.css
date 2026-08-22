@@ -220,6 +220,15 @@
   margin: 28px 0;
 }
 
+/* Separador mais leve entre os dois grupos de pagamento (na entrega /
+   online) — um .co-divider inteiro nos dois lugares deixava a seção de
+   pagamento alta demais em mobile. */
+.co-pay-group-divider {
+  height: 1px;
+  background: #1a1a1a;
+  margin: 18px 0 16px;
+}
+
 /* ─── CEP ───────────────────────────────────────────── */
 .co-cep-wrap {
   position: relative;
@@ -753,12 +762,18 @@
    MOBILE (≤ 768px)
 ══════════════════════════════════════════ */
 @media (max-width: 768px) {
+  html {
+    /* Reserva a altura do rodapé fixo "Confirmar Pedido" (~110px) como
+       margem invisível pro scroll nativo — sem isso, o navegador considera
+       um elemento "visível" assim que ele entra na viewport crua, mesmo que
+       fique embaixo do botão fixo. scroll-padding-bottom faz o
+       scrollIntoView() (nativo ou de foco/acessibilidade) parar num ponto
+       que já deixa esse espaço livre. */
+    scroll-padding-bottom: 130px;
+  }
+
   .co-root {
-    /* 190px de folga no fim (não só 120px): o rodapé fixo de "Confirmar
-       Pedido" tem ~110px de altura própria — com pouca folga, a última
-       fileira do grid de pagamento (Dinheiro / Cartão online) ficava
-       parcialmente atrás do botão fixo durante o scroll, difícil de tocar. */
-    padding: 24px 16px 190px;
+    padding: 24px 16px 160px;
   }
 
   .co-header {
@@ -823,10 +838,22 @@
     grid-template-columns: 1fr 1fr;
   }
 
+  .co-section-label {
+    margin-bottom: 10px;
+  }
+
+  .co-divider {
+    margin: 16px 0;
+  }
+
+  .co-pay-group-divider {
+    margin: 12px 0 10px;
+  }
+
   .co-pay-grid {
     /* Fixo em 3 colunas (em vez de auto-fit) — largura previsível pra
-       qualquer tela, e a 5ª opção (Cartão online) não fica sozinha
-       espremida numa coluna estreita de sobra. */
+       qualquer tela, e opções ímpares não ficam sozinhas espremidas numa
+       coluna estreita de sobra. */
     grid-template-columns: repeat(3, 1fr);
     gap: 6px;
   }
