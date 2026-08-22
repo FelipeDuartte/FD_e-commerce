@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useReducer, useState } from "react";
 import { supabase, getCurrentStoreId } from "../../../../supabase/Supabaseclient";
-import { playNotificationSound, shouldRemoveOrder, getNext } from "../../adminUtils";
+import { playNotificationSound, shouldRemoveOrder, isPhantomMercadoPagoOrder, getNext } from "../../adminUtils";
 import {
   getTodayOrderMetrics,
   listAdminOrders,
@@ -51,8 +51,12 @@ export function useAdminOrders(isAdmin) {
         });
         // Filtra pedidos "velhos" (24h+, exceto pending) já aqui no fetch —
         // sem isso, eles apareciam por até 1 minuto (até o próximo tick do
-        // intervalo) toda vez que a página era carregada/recarregada.
-        const visibleOrders = result.orders.filter((o) => !shouldRemoveOrder(o));
+        // intervalo) toda vez que a página era carregada/recarregada. Também
+        // filtra pedidos de cartão online recusados/cancelados/expirados —
+        // nunca foram vendas de verdade.
+        const visibleOrders = result.orders.filter(
+          (o) => !shouldRemoveOrder(o) && !isPhantomMercadoPagoOrder(o),
+        );
         const removedNow = result.orders.length - visibleOrders.length;
 
         setOrders((prev) =>
@@ -91,7 +95,7 @@ export function useAdminOrders(isAdmin) {
     if (!isAdmin) return;
     const interval = setInterval(() => {
       setOrders((prev) => {
-        const updated = prev.filter((o) => !shouldRemoveOrder(o));
+        const updated = prev.filter((o) => !shouldRemoveOrder(o) && !isPhantomMercadoPagoOrder(o));
         const removed = prev.length - updated.length;
         if (removed > 0) {
           setTotalCount((count) => Math.max(0, count - removed));
@@ -102,13 +106,20 @@ export function useAdminOrders(isAdmin) {
     return () => clearInterval(interval);
   }, [isAdmin]);
 
-  const updateOrderStatusLocally = useCallback(
-    (orderId, newStatus) =>
+  // patch é mesclado no pedido existente antes de reavaliar se ele deve
+  // sumir da lista — precisa receber payment_status/payment_provider (não só
+  // status) pra pegar o caso do cartão Mercado Pago que nasce como
+  // "processando_pagamento" (ainda visível) e vira "pagamento_recusado"
+  // pouco depois via UPDATE (webhook/confirmação síncrona).
+  const updateOrderLocally = useCallback(
+    (orderId, patch) =>
       setOrders((prev) => {
         const updated = prev.reduce((acc, o) => {
           if (o.id !== orderId) return [...acc, o];
-          const nextOrder = { ...o, status: newStatus };
-          return shouldRemoveOrder(nextOrder) ? acc : [...acc, nextOrder];
+          const nextOrder = { ...o, ...patch };
+          return shouldRemoveOrder(nextOrder) || isPhantomMercadoPagoOrder(nextOrder)
+            ? acc
+            : [...acc, nextOrder];
         }, []);
         if (updated.length !== prev.length) {
           setTotalCount((count) => Math.max(0, count - 1));
@@ -116,6 +127,10 @@ export function useAdminOrders(isAdmin) {
         return updated;
       }),
     [],
+  );
+  const updateOrderStatusLocally = useCallback(
+    (orderId, newStatus) => updateOrderLocally(orderId, { status: newStatus }),
+    [updateOrderLocally],
   );
 
   // Realtime: novos pedidos, exclusões e mudanças de status
@@ -131,7 +146,11 @@ export function useAdminOrders(isAdmin) {
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "orders", filter: `store_id=eq.${storeId}` },
-        () => {
+        (payload) => {
+          // Cartão online recusado na hora (ex: teste com cartão "OTHE") não
+          // é uma venda de verdade — não toca som nem gasta um refetch por
+          // causa dele.
+          if (isPhantomMercadoPagoOrder(payload.new)) return;
           playNotificationSound();
           fetchOrders(0, true);
           fetchTodayMetrics();
@@ -151,14 +170,20 @@ export function useAdminOrders(isAdmin) {
         (payload) => {
           // Reflete em tempo real qualquer mudança de status feita em outro
           // lugar — inclusive o cliente cancelando o próprio pedido
-          // (Confirm.jsx), sem precisar dar refresh na página.
-          updateOrderStatusLocally(payload.new.id, payload.new.status);
+          // (Confirm.jsx), sem precisar dar refresh na página. Manda
+          // payment_status/payment_provider junto (não só status) pra pegar
+          // o cartão Mercado Pago que é recusado logo após ser criado.
+          updateOrderLocally(payload.new.id, {
+            status: payload.new.status,
+            payment_status: payload.new.payment_status,
+            payment_provider: payload.new.payment_provider,
+          });
           fetchTodayMetrics();
         },
       )
       .subscribe();
     return () => supabase.removeChannel(channel);
-  }, [isAdmin, updateOrderStatusLocally]); // eslint-disable-line
+  }, [isAdmin, updateOrderLocally]); // eslint-disable-line
 
   const advanceStatus = useCallback(
     async (order) => {

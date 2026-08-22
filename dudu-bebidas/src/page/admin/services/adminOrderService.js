@@ -1,5 +1,5 @@
 import { supabase } from "../../../supabase/Supabaseclient";
-import { PAGE_SIZE } from "../adminUtils";
+import { PAGE_SIZE, isPhantomMercadoPagoOrder } from "../adminUtils";
 import { AdminServiceError } from "./AdminServiceError";
 
 const ORDER_SELECT = `
@@ -8,6 +8,7 @@ const ORDER_SELECT = `
   discount_amount,
   payment_method,
   payment_status,
+  payment_provider,
   customer_claimed_paid_at,
   installments,
   address,
@@ -62,9 +63,9 @@ export async function getTodayOrderMetrics() {
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  const { data, count, error } = await supabase
+  const { data, error } = await supabase
     .from("orders")
-    .select("total", { count: "exact" })
+    .select("total, payment_provider, payment_status")
     .gte("created_at", today.toISOString())
     .lt("created_at", tomorrow.toISOString());
 
@@ -75,9 +76,14 @@ export async function getTodayOrderMetrics() {
     );
   }
 
+  // Cartão online recusado/cancelado/expirado nunca virou venda de verdade —
+  // não deve contar em "pedidos hoje" nem em "vendas hoje" (mesmo critério
+  // usado pra escondê-lo da lista de pedidos, ver isPhantomMercadoPagoOrder).
+  const realOrders = (data ?? []).filter((o) => !isPhantomMercadoPagoOrder(o));
+
   return {
-    count: count ?? 0,
-    total: (data ?? []).reduce((sum, order) => sum + (order.total ?? 0), 0),
+    count: realOrders.length,
+    total: realOrders.reduce((sum, order) => sum + (order.total ?? 0), 0),
   };
 }
 

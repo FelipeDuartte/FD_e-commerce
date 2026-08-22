@@ -105,6 +105,17 @@ export const formatBRL = (value) =>
 export const calcDiscount = (oldPrice, newPrice) =>
   oldPrice > 0 ? Math.round((1 - newPrice / oldPrice) * 100) : null;
 
+// Pedidos de cartão online (Mercado Pago) cuja cobrança falhou nunca viraram
+// venda de verdade — o cliente nunca pagou, o estoque nunca foi baixado. Não
+// faz sentido aparecer no painel como se fosse um pedido esperando ação do
+// admin, então esses nem chegam a entrar na lista (diferente de
+// shouldRemoveOrder, que é sobre "idade" — aqui é "nunca deveria ter
+// aparecido").
+const MERCADOPAGO_FAILED_STATUSES = ["pagamento_recusado", "pagamento_cancelado", "pagamento_expirado"];
+
+export const isPhantomMercadoPagoOrder = (order) =>
+  order.payment_provider === "mercadopago" && MERCADOPAGO_FAILED_STATUSES.includes(order.payment_status);
+
 export const shouldRemoveOrder = (order) => {
   // Some do painel 24h depois de criado, pra qualquer status — exceto
   // "pending" (Aguardando), que precisa continuar visível até alguém agir.
