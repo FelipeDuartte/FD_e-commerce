@@ -2,77 +2,19 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase, getCurrentStoreId } from "../../supabase/Supabaseclient";
 import "./Confirm.css";
-import { imgProduto } from "../../utils/Cloudnary";
-
-// ── Constantes ────────────────────────────────────────
-const PAYMENT_LABELS = {
-  pix: { icon: "⚡", label: "PIX" },
-  debit_card: { icon: "💳", label: "Débito" },
-  credit_card: { icon: "💳", label: "Crédito" },
-  card: { icon: "💳", label: "Cartão" }, // pedidos antigos
-  cash: { icon: "💵", label: "Dinheiro" },
-};
-
-const STATUS_STEP = { pending: 0, preparing: 1, on_the_way: 2, delivered: 3 };
-
-const STATUS_POLL_INTERVAL_MS = 5000;
-const TERMINAL_STATUSES = ["rejected", "cancelled", "delivered"];
-
-const STEPS = [
-  {
-    icon: "✅",
-    title: "Pedido confirmado",
-    desc: "Recebemos seu pedido",
-    activeDesc: "Seu pedido foi registrado com sucesso!",
-  },
-  {
-    icon: "👨‍🍳",
-    title: "Em preparação",
-    desc: "Separando seus produtos",
-    activeDesc: "Estamos preparando tudo com cuidado para você.",
-  },
-  {
-    icon: "🛵",
-    title: "Saiu para entrega",
-    desc: "A caminho do seu endereço",
-    activeDesc: "Seu pedido está a caminho! Fique de olho.",
-  },
-  {
-    icon: "🎉",
-    title: "Entregue",
-    desc: "Pedido finalizado",
-    activeDesc: "Pedido entregue. Bom proveito! 🍺",
-  },
-];
-
-const EMPTY_ORDER = {
-  orderId: null,
-  cartItems: [],
-  total: 0,
-  payment: "pix",
-  installments: null,
-  address: {},
-  isRetirada: false,
-};
-
-// ── Helper: lê order do location.state ou localStorage ──
-function resolveOrderData(locationState) {
-  if (locationState?.orderId || locationState?.cartItems) return locationState;
-  if (locationState?.pedido) return locationState.pedido;
-
-  const saved = localStorage.getItem("lastOrder");
-  if (saved) {
-    try {
-      return JSON.parse(saved);
-    } catch (error) {
-      console.warn("Pedido salvo inválido.", error);
-    }
-  }
-  return EMPTY_ORDER;
-}
-
-// ── Formatação de BRL ─────────────────────────────────
-const formatBRL = (value) => `R$ ${Number(value).toFixed(2).replace(".", ",")}`;
+import { EMPTY_ORDER } from "./confirmConstants";
+import { resolveOrderData } from "./confirmUtils";
+import { useOrderStatusPolling } from "./hooks/useOrderStatusPolling";
+import { usePixCharge } from "./hooks/usePixCharge";
+import CancelOrderModal from "./components/CancelOrderModal";
+import OrderOutcomeModal from "./components/OrderOutcomeModal";
+import PixPendingCard from "./components/PixPendingCard";
+import MercadoPagoProcessingCard from "./components/MercadoPagoProcessingCard";
+import DeliveryTracker from "./components/DeliveryTracker";
+import PickupCard from "./components/PickupCard";
+import OrderItemsCard from "./components/OrderItemsCard";
+import DeliveryAddressCard from "./components/DeliveryAddressCard";
+import PaymentMethodCard from "./components/PaymentMethodCard";
 
 // ══════════════════════════════════════════════════════
 //  COMPONENTE PRINCIPAL
@@ -88,18 +30,47 @@ export default function Confirmacao() {
     ...orderData,
   };
 
-  const [status, setStatus] = useState("pending");
-  const [statusLoading, setStatusLoading] = useState(true);
-  const [animating, setAnimating] = useState(false);
+  const {
+    status,
+    statusLoading,
+    animating,
+    paymentStatus,
+    customerClaimedPaidAt,
+    setCustomerClaimedPaidAt,
+    showRejectedModal,
+    showCancelledModal,
+  } = useOrderStatusPolling(orderId);
+
+  const isPixPending = payment === "pix" && paymentStatus === "aguardando_pagamento";
+  // Cartão online (Mercado Pago): a confirmação é automática via webhook,
+  // não tem QR nem "já paguei" — só um estado de espera/erro enquanto
+  // payment_status ainda não virou 'pago'.
+  const isMercadoPagoPending =
+    payment === "mercadopago_card" &&
+    ["processando_pagamento", "aguardando_pagamento"].includes(paymentStatus);
+  const isMercadoPagoRejected =
+    payment === "mercadopago_card" && paymentStatus === "pagamento_recusado";
+
+  const {
+    pixCharge,
+    pixQrImage,
+    pixLoading,
+    pixError,
+    claimingPaid,
+    copied,
+    handleMarkPaid,
+    handleCopyPixCode,
+  } = usePixCharge({
+    orderId,
+    isPixPending,
+    customerClaimedPaidAt,
+    onMarkPaid: () => setCustomerClaimedPaidAt(new Date().toISOString()),
+  });
 
   // ── Modal cancelamento ────────────────────────────
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState("");
-
-  // ── Modal pedido rejeitado pelo admin ─────────────
-  const [showRejectedModal, setShowRejectedModal] = useState(false);
-  const [showCancelledModal, setShowCancelledModal] = useState(false);
 
   // ── Persiste no localStorage ──────────────────────
   useEffect(() => {
@@ -119,81 +90,6 @@ export default function Confirmacao() {
       );
     }
   }, [orderId, cartItems, total, payment, installments, address, isRetirada]);
-
-  // ── Status do pedido (polling via RPC) ─────────────
-  // Antes era Realtime (postgres_changes), mas isso exige uma policy de
-  // SELECT na tabela orders que qualquer anônimo pode explorar pra listar
-  // todos os pedidos da loja (ver get_order_status). Sem essa policy, o
-  // Realtime não consegue mais entregar updates pra esse cliente — então
-  // aqui só reconsultamos o status por polling, que já usa a mesma RPC
-  // segura (escopada por ID) da carga inicial.
-  useEffect(() => {
-    if (!orderId) {
-      setStatusLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-    let intervalId;
-    let lastStatus = null;
-
-    const applyStatus = (newStatus, { animate = false } = {}) => {
-      if (newStatus === "rejected") {
-        setStatus("rejected");
-        setShowRejectedModal(true);
-        localStorage.removeItem("lastOrder");
-        return;
-      }
-      if (newStatus === "cancelled") {
-        setStatus("cancelled");
-        setShowCancelledModal(true);
-        localStorage.removeItem("lastOrder");
-        return;
-      }
-      if (animate) {
-        setAnimating(true);
-        setTimeout(() => setAnimating(false), 600);
-      }
-      setStatus(newStatus);
-    };
-
-    const fetchStatus = async () => {
-      const { data, error } = await supabase.rpc("get_order_status", {
-        p_order_id: orderId,
-        p_store_id: getCurrentStoreId(),
-      });
-      if (cancelled) return;
-
-      if (error) console.error("Erro ao buscar status:", error);
-
-      if (!data?.success) {
-        // Pedido não encontrado (fallback de segurança — hoje rejeição
-        // não apaga mais a linha, mas mantido caso um pedido antigo
-        // ainda tenha sido removido do jeito antigo).
-        applyStatus("rejected");
-        setStatusLoading(false);
-        clearInterval(intervalId);
-        return;
-      }
-
-      const changed = lastStatus !== null && lastStatus !== data.status;
-      lastStatus = data.status;
-      applyStatus(data.status, { animate: changed });
-      setStatusLoading(false);
-
-      if (TERMINAL_STATUSES.includes(data.status)) {
-        clearInterval(intervalId);
-      }
-    };
-
-    fetchStatus();
-    intervalId = setInterval(fetchStatus, STATUS_POLL_INTERVAL_MS);
-
-    return () => {
-      cancelled = true;
-      clearInterval(intervalId);
-    };
-  }, [orderId]);
 
   // ── Cancelamento ──────────────────────────────────
   const handleCancelOrder = async () => {
@@ -249,9 +145,7 @@ export default function Confirmacao() {
     );
   }
 
-  const paymentInfo = PAYMENT_LABELS[payment] ?? { icon: "💳", label: payment };
   const shortId = orderId ? orderId.slice(-8).toUpperCase() : "RETIRADA";
-  const currentStep = STATUS_STEP[status] ?? 0;
   const canCancel = status === "pending" && (orderId || isRetirada);
   const entityLabel = isRetirada ? "retirada" : "pedido";
 
@@ -261,90 +155,31 @@ export default function Confirmacao() {
       <div className="cf-particle cf-p2" />
       <div className="cf-particle cf-p3" />
 
-      {/* MODAL — CANCELAR */}
       {showCancelModal && (
-        <>
-          <div
-            className="cf-modal-overlay"
-            onClick={() => !cancelling && setShowCancelModal(false)}
-          />
-          <div className="cf-modal">
-            <div className="cf-modal-icon">⚠️</div>
-            <h3 className="cf-modal-title">Cancelar {entityLabel}?</h3>
-            <p className="cf-modal-desc">
-              Tem certeza que deseja cancelar{" "}
-              {isRetirada ? "a retirada" : "o pedido"}{" "}
-              <strong>#{shortId}</strong>? Esta ação não pode ser desfeita.
-            </p>
-            {cancelError && (
-              <div className="cf-modal-error">⚠️ {cancelError}</div>
-            )}
-            <div className="cf-modal-actions">
-              <button
-                className="cf-modal-btn-cancel"
-                onClick={() => setShowCancelModal(false)}
-                disabled={cancelling}
-              >
-                Voltar
-              </button>
-              <button
-                className="cf-modal-btn-confirm"
-                onClick={handleCancelOrder}
-                disabled={cancelling}
-              >
-                {cancelling ? "Cancelando..." : "Sim, cancelar"}
-              </button>
-            </div>
-          </div>
-        </>
+        <CancelOrderModal
+          entityLabel={entityLabel}
+          shortId={shortId}
+          cancelling={cancelling}
+          cancelError={cancelError}
+          onClose={() => setShowCancelModal(false)}
+          onConfirm={handleCancelOrder}
+        />
       )}
 
-      {/* MODAL — PEDIDO REJEITADO PELO ADMIN */}
       {showRejectedModal && (
-        <>
-          <div className="cf-modal-overlay" />
-          <div className="cf-modal" role="dialog" aria-modal="true">
-            <div className="cf-modal-icon">😔</div>
-            <h3 className="cf-modal-title">Pedido rejeitado</h3>
-            <p className="cf-modal-desc">
-              Infelizmente seu {entityLabel} <strong>#{shortId}</strong> foi{" "}
-              <strong>rejeitado</strong> pela loja. Nenhum valor foi cobrado. Se
-              tiver dúvidas, entre em contato com a loja.
-            </p>
-            <div className="cf-modal-actions">
-              <button
-                className="cf-modal-btn-confirm"
-                onClick={() => navigate("/")}
-              >
-                Voltar para a loja
-              </button>
-            </div>
-          </div>
-        </>
+        <OrderOutcomeModal icon="😔" title="Pedido rejeitado" onClose={() => navigate("/")}>
+          Infelizmente seu {entityLabel} <strong>#{shortId}</strong> foi{" "}
+          <strong>rejeitado</strong> pela loja. Nenhum valor foi cobrado. Se
+          tiver dúvidas, entre em contato com a loja.
+        </OrderOutcomeModal>
       )}
 
-      {/* MODAL — PEDIDO CANCELADO (pelo próprio cliente) */}
       {showCancelledModal && (
-        <>
-          <div className="cf-modal-overlay" />
-          <div className="cf-modal" role="dialog" aria-modal="true">
-            <div className="cf-modal-icon">🚫</div>
-            <h3 className="cf-modal-title">Pedido cancelado</h3>
-            <p className="cf-modal-desc">
-              Seu {entityLabel} <strong>#{shortId}</strong> foi{" "}
-              <strong>cancelado</strong>. Nenhum valor foi cobrado. Se foi um
-              engano, é só fazer um novo pedido.
-            </p>
-            <div className="cf-modal-actions">
-              <button
-                className="cf-modal-btn-confirm"
-                onClick={() => navigate("/")}
-              >
-                Voltar para a loja
-              </button>
-            </div>
-          </div>
-        </>
+        <OrderOutcomeModal icon="🚫" title="Pedido cancelado" onClose={() => navigate("/")}>
+          Seu {entityLabel} <strong>#{shortId}</strong> foi{" "}
+          <strong>cancelado</strong>. Nenhum valor foi cobrado. Se foi um
+          engano, é só fazer um novo pedido.
+        </OrderOutcomeModal>
       )}
 
       <div className="cf-wrap">
@@ -379,184 +214,46 @@ export default function Confirmacao() {
           </div>
         </div>
 
-        {/* TRACKER — apenas entrega */}
-        {!isRetirada && (
-          <div className="cf-tracker-card">
-            <div className="cf-tracker-header">
-              <span className="cf-tracker-label">📦 Acompanhe seu pedido</span>
-              {!statusLoading && (
-                <span className={`cf-status-badge cf-status-${status}`}>
-                  {STEPS[currentStep].icon} {STEPS[currentStep].title}
-                </span>
-              )}
-            </div>
-
-            {statusLoading ? (
-              <div className="cf-tracker-loading">
-                <div className="cf-loading-bar" />
-                <p>Carregando status...</p>
-              </div>
-            ) : (
-              <>
-                <div className="cf-progress-track">
-                  <div
-                    className="cf-progress-fill"
-                    style={{ width: `${(currentStep / 3) * 100}%` }}
-                  />
-                </div>
-
-                <div className="cf-steps">
-                  {STEPS.map((step, i) => {
-                    const isDone = i < currentStep;
-                    const isActive = i === currentStep;
-                    const isPending = i > currentStep;
-                    return (
-                      <div
-                        key={i}
-                        className={[
-                          "cf-step",
-                          isDone && "cf-step-done",
-                          isActive && "cf-step-active",
-                          isPending && "cf-step-pending",
-                          animating && isActive && "cf-step-entering",
-                        ]
-                          .filter(Boolean)
-                          .join(" ")}
-                      >
-                        <div className="cf-step-icon-wrap">
-                          <div className="cf-step-icon">
-                            {isDone ? "✓" : step.icon}
-                          </div>
-                          {isActive && <div className="cf-step-pulse" />}
-                        </div>
-                        <div className="cf-step-info">
-                          <span className="cf-step-title">{step.title}</span>
-                          <span className="cf-step-desc">
-                            {isActive ? step.activeDesc : step.desc}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className={`cf-status-msg cf-status-msg-${status}`}>
-                  <span className="cf-status-msg-icon">
-                    {STEPS[currentStep].icon}
-                  </span>
-                  <span className="cf-status-msg-text">
-                    {STEPS[currentStep].activeDesc}
-                  </span>
-                </div>
-              </>
-            )}
-          </div>
+        {isPixPending && (
+          <PixPendingCard
+            customerClaimedPaidAt={customerClaimedPaidAt}
+            pixLoading={pixLoading}
+            pixError={pixError}
+            pixCharge={pixCharge}
+            pixQrImage={pixQrImage}
+            copied={copied}
+            claimingPaid={claimingPaid}
+            onCopyCode={handleCopyPixCode}
+            onMarkPaid={handleMarkPaid}
+          />
         )}
 
-        {/* TRACKER — retirada */}
-        {isRetirada && (
-          <div className="cf-tracker-card cf-tracker-card--pickup">
-            <div className="cf-tracker-header">
-              <span className="cf-tracker-label">🏪 RETIRADA NA LOJA</span>
-            </div>
-            <div className="cf-pickup-body">
-              <div className="cf-pickup-icon">🏪</div>
-              <h3 className="cf-pickup-title">Seu pedido está pronto!</h3>
-              <p className="cf-pickup-desc">
-                Passe na loja com seu código de retirada.
-              </p>
-              <div className="cf-pickup-address">
-                <p className="cf-pickup-address-label">ENDEREÇO</p>
-                <p className="cf-pickup-address-street">
-                  Rua Edgar Torres, 650
-                </p>
-                <p className="cf-pickup-address-city">
-                  Minas Caixa, Belo Horizonte - MG
-                </p>
-              </div>
-            </div>
-          </div>
+        {(isMercadoPagoPending || isMercadoPagoRejected) && (
+          <MercadoPagoProcessingCard rejected={isMercadoPagoRejected} />
         )}
+
+        {!isRetirada && !isPixPending && !isMercadoPagoPending && !isMercadoPagoRejected && (
+          <DeliveryTracker status={status} statusLoading={statusLoading} animating={animating} />
+        )}
+
+        {isRetirada && !isPixPending && !isMercadoPagoPending && !isMercadoPagoRejected && <PickupCard />}
 
         {/* GRID */}
         <div className="cf-grid">
-          {/* Coluna esquerda */}
           <div className="cf-col">
-            <div className="cf-card">
-              <div className="cf-card-label">🛒 Itens do Pedido</div>
-              <div className="cf-items">
-                {cartItems.map((item, i) => (
-                  <div className="cf-item" key={i}>
-                    <div className="cf-item-img">
-                      {item.imagem || item.icon ? (
-                        <img
-                          src={imgProduto(item.imagem || item.icon)}
-                          alt={item.nome || item.name}
-                        />
-                      ) : (
-                        "🍺"
-                      )}
-                    </div>
-                    <div className="cf-item-info">
-                      <span className="cf-item-name">
-                        {item.nome || item.name}
-                      </span>
-                      <span className="cf-item-qty">
-                        {item.quantity} unidade(s)
-                      </span>
-                    </div>
-                    <span className="cf-item-price">
-                      {formatBRL((item.preco || item.price) * item.quantity)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <div className="cf-total-row">
-                <span>Total pago</span>
-                <span className="cf-total-value">{formatBRL(total)}</span>
-              </div>
-            </div>
-
-            {!isRetirada && address?.name && (
-              <div className="cf-card">
-                <div className="cf-card-label">📍 Endereço de Entrega</div>
-                <div className="cf-address">
-                  <p className="cf-address-name">{address.name}</p>
-                  <p>
-                    {address.street}, {address.number}
-                    {address.complement ? ` — ${address.complement}` : ""}
-                  </p>
-                  <p>{address.district}</p>
-                  <p className="cf-address-phone">📞 {address.phone}</p>
-                </div>
-              </div>
-            )}
+            <OrderItemsCard cartItems={cartItems} total={total} />
+            {!isRetirada && address?.name && <DeliveryAddressCard address={address} />}
           </div>
 
-          {/* Coluna direita */}
           <div className="cf-col">
-            <div className="cf-card cf-card-payment">
-              <div className="cf-card-label">💳 Forma de Pagamento</div>
-              <div className="cf-payment">
-                <span className="cf-payment-icon">{paymentInfo.icon}</span>
-                <span className="cf-payment-label">
-                  {paymentInfo.label}
-                  {payment === "credit_card" && installments > 1
-                    ? ` em ${installments}x`
-                    : ""}
-                </span>
-              </div>
-            </div>
+            <PaymentMethodCard payment={payment} installments={installments} />
 
             <button className="cf-btn-home" onClick={() => navigate("/")}>
               🏠 Voltar para a loja
             </button>
 
             {canCancel && (
-              <button
-                className="cf-btn-cancel"
-                onClick={() => setShowCancelModal(true)}
-              >
+              <button className="cf-btn-cancel" onClick={() => setShowCancelModal(true)}>
                 ✕ Cancelar {entityLabel}
               </button>
             )}

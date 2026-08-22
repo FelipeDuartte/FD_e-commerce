@@ -66,6 +66,7 @@ interface OrderRow {
   } | null;
   status: string;
   created_at: string;
+  channel: string;
 }
 
 interface DatabaseWebhookPayload {
@@ -257,6 +258,15 @@ Deno.serve(async (req) => {
 
     if (payload.table !== "orders" || !payload.record) {
       return new Response(JSON.stringify({ skipped: true, reason: "not_orders_table" }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Venda de balcão (PDV) — o admin acabou de registrar em pessoa, não faz
+    // sentido notificar o WhatsApp do próprio admin sobre isso.
+    if (payload.record.channel === "balcao") {
+      return new Response(JSON.stringify({ skipped: true, reason: "balcao_sale" }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

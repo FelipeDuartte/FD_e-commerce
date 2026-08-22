@@ -9,6 +9,14 @@ import {
   PAYMENT_LABEL,
 } from "./adminUtils";
 
+const PAYMENT_STATUS_LABEL = {
+  aguardando_pagamento: "⏳ Aguardando pagamento",
+  processando_pagamento: "⏳ Processando pagamento",
+  pagamento_recusado: "❌ Pagamento recusado",
+  pagamento_cancelado: "🚫 Pagamento cancelado",
+  pagamento_expirado: "⌛ Pagamento expirado",
+};
+
 export default function OrderCard({
   order,
   isExpanded,
@@ -18,6 +26,7 @@ export default function OrderCard({
   onReject,
   onAdvance,
   onSetStatus,
+  onMarkPaid,
 }) {
   const pickup = isPickup(order);
   const cfg = getConfig(order);
@@ -25,11 +34,41 @@ export default function OrderCard({
   const statuses = getStatuses(order);
   const statusMap = getStatusMap(order);
   const isPending = order.status === "pending";
+  // Pix ainda não confirmado pelo admin — não faz sentido aceitar/rejeitar
+  // preparo de algo que ainda não foi pago. "Pagamento na entrega" nasce
+  // com payment_status "aguardando_pagamento" também (é só registro, não
+  // bloqueia nada), então essa checagem é restrita a pix de propósito. Só
+  // esse caso mostra o botão "Marcar como pago" — cartão online (Mercado
+  // Pago) é confirmado sozinho pelo webhook; um botão manual aqui pularia
+  // a baixa de estoque, que só acontece na confirmação real do pagamento.
+  const pixAwaitingPayment =
+    order.payment_method === "pix" && order.payment_status === "aguardando_pagamento";
+  // Cartão online ainda não aprovado (ou recusado) — mesma lógica de
+  // "não deixa aceitar/rejeitar preparo de algo que ainda não foi pago",
+  // só que sem botão manual: a confirmação é automática via webhook.
+  const mercadopagoNotPaid =
+    order.payment_method === "mercadopago_card" && order.payment_status !== "pago";
+  const paymentBlocksAcceptance = pixAwaitingPayment || mercadopagoNotPaid;
   const payment = PAYMENT_LABEL[order.payment_method] ?? {
     icon: "💳",
     label: order.payment_method,
   };
   const shortId = order.id.slice(-8).toUpperCase();
+
+  // Uma única mensagem de status de pagamento, não duas competindo pelo
+  // mesmo espaço: "aguardando pagamento" (cliente não fez nada ainda) e
+  // "cliente informou pagamento" (cliente JÁ apertou "já paguei") são
+  // estados diferentes — mostrar os dois juntos parecia contraditório.
+  const claimedAt = order.customer_claimed_paid_at
+    ? new Date(order.customer_claimed_paid_at).toLocaleTimeString("pt-BR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : null;
+  const paymentStatusText =
+    pixAwaitingPayment && claimedAt
+      ? `🔔 Cliente informou pagamento às ${claimedAt}`
+      : (PAYMENT_STATUS_LABEL[order.payment_status] ?? order.payment_status);
 
   return (
     <li className={`adm-order adm-order-${order.status}`}>
@@ -46,6 +85,9 @@ export default function OrderCard({
             {cfg.label}
           </span>
           {pickup && <span className="adm-retirada-badge">🏪 RETIRADA</span>}
+          {order.channel === "balcao" && (
+            <span className="adm-retirada-badge">🧾 BALCÃO</span>
+          )}
         </div>
 
         <div className="adm-order-info">
@@ -63,14 +105,44 @@ export default function OrderCard({
         <div className="adm-order-payment">
           <span>
             {payment.icon} {payment.label}
-            {order.payment_method === "credit_card" && order.installments > 1
+            {["credit_card", "mercadopago_card"].includes(order.payment_method) && order.installments > 1
               ? ` · ${order.installments}x`
               : ""}
+            {["pix", "mercadopago_card"].includes(order.payment_method) &&
+              order.payment_status &&
+              order.payment_status !== "pago" && (
+                <span className={claimedAt ? "adm-order-claimed" : "adm-order-discount"}>
+                  {" "}· {paymentStatusText}
+                </span>
+              )}
           </span>
-          <span className="adm-order-total">{formatBRL(order.total)}</span>
+          <span className="adm-order-total">
+            {formatBRL(order.total)}
+            {order.discount_amount > 0 && (
+              <span className="adm-order-discount"> (−{formatBRL(order.discount_amount)})</span>
+            )}
+          </span>
         </div>
 
-        {isPending && (
+        {pixAwaitingPayment && (
+          <div className="adm-order-actions" onClick={(e) => e.stopPropagation()}>
+            <button className="adm-btn-accept" onClick={onMarkPaid} disabled={isUpdating}>
+              {isUpdating ? "..." : "✅ Marcar como pago"}
+            </button>
+          </div>
+        )}
+
+        {mercadopagoNotPaid && (
+          <div className="adm-order-actions" onClick={(e) => e.stopPropagation()}>
+            <span className="adm-order-discount">
+              {order.payment_status === "pagamento_recusado"
+                ? "❌ Pagamento recusado pela operadora"
+                : "⏳ Aguardando confirmação automática do pagamento"}
+            </span>
+          </div>
+        )}
+
+        {isPending && !paymentBlocksAcceptance && (
           <div
             className="adm-order-actions"
             onClick={(e) => e.stopPropagation()}
@@ -154,7 +226,27 @@ export default function OrderCard({
               {pickup ? "🔄 Status da Retirada" : "🔄 Alterar Status"}
             </div>
 
-            {isPending ? (
+            {isPending && pixAwaitingPayment ? (
+              <div className="adm-accept-reject-detail">
+                <p className="adm-delivered-msg">
+                  💰 Aguardando confirmação do pagamento — confirme abaixo pra
+                  liberar aceitar/rejeitar.
+                </p>
+                <button
+                  className="adm-btn-accept-lg"
+                  onClick={onMarkPaid}
+                  disabled={isUpdating}
+                >
+                  {isUpdating ? "Processando..." : "✅ Marcar como pago"}
+                </button>
+              </div>
+            ) : isPending && mercadopagoNotPaid ? (
+              <div className="adm-delivered-msg">
+                {order.payment_status === "pagamento_recusado"
+                  ? "❌ Pagamento recusado — nada a preparar."
+                  : "⏳ Aguardando confirmação automática do pagamento pelo Mercado Pago."}
+              </div>
+            ) : isPending ? (
               <div className="adm-accept-reject-detail">
                 <button
                   className="adm-btn-accept-lg"

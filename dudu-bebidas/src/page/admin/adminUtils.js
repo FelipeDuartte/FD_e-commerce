@@ -1,5 +1,6 @@
 // Utils e constantes compartilhadas pelo painel admin
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+export { PAYMENT_METHODS as PAYMENT_LABEL } from "../../utils/paymentMethods";
 export const PAGE_SIZE = 20;
 
 export const STATUS_PICKUP = {
@@ -46,14 +47,6 @@ export const DELIVERY_STATUS_ORDER = [
 ];
 export const PICKUP_STATUS_ORDER = ["pending", "delivered"];
 
-export const PAYMENT_LABEL = {
-  pix: { icon: "⚡", label: "PIX" },
-  debit_card: { icon: "💳", label: "Débito" },
-  credit_card: { icon: "💳", label: "Crédito" },
-  card: { icon: "💳", label: "Cartão" }, // pedidos antigos, antes de separar débito/crédito
-  cash: { icon: "💵", label: "Dinheiro" },
-};
-
 export const CATEGORIES = [
   "cerveja",
   "vinho",
@@ -77,11 +70,16 @@ export const EMPTY_PRODUCT = {
   ean: "",
 };
 
-export function generateProductId() {
-  const suffix = Math.floor(Math.random() * 10000)
-    .toString()
-    .padStart(4, "0");
-  return `02${suffix}`;
+// Próximo ID sequencial (0001, 0002...) a partir do maior ID puramente
+// numérico já cadastrado. IDs antigos que não sejam numéricos (nunca deviam
+// existir depois da migration de reorganização, mas por segurança) são
+// ignorados no cálculo do máximo, não quebram a geração.
+export function generateProductId(products = []) {
+  const maxSeq = products.reduce((max, p) => {
+    const n = /^\d+$/.test(p.id) ? Number(p.id) : NaN;
+    return Number.isFinite(n) && n > max ? n : max;
+  }, 0);
+  return String(maxSeq + 1).padStart(4, "0");
 }
 
 export const isPickup = (order) => order.address?.isRetirada === true;
@@ -106,6 +104,17 @@ export const formatBRL = (value) =>
 
 export const calcDiscount = (oldPrice, newPrice) =>
   oldPrice > 0 ? Math.round((1 - newPrice / oldPrice) * 100) : null;
+
+// Pedidos de cartão online (Mercado Pago) cuja cobrança falhou nunca viraram
+// venda de verdade — o cliente nunca pagou, o estoque nunca foi baixado. Não
+// faz sentido aparecer no painel como se fosse um pedido esperando ação do
+// admin, então esses nem chegam a entrar na lista (diferente de
+// shouldRemoveOrder, que é sobre "idade" — aqui é "nunca deveria ter
+// aparecido").
+const MERCADOPAGO_FAILED_STATUSES = ["pagamento_recusado", "pagamento_cancelado", "pagamento_expirado"];
+
+export const isPhantomMercadoPagoOrder = (order) =>
+  order.payment_provider === "mercadopago" && MERCADOPAGO_FAILED_STATUSES.includes(order.payment_status);
 
 export const shouldRemoveOrder = (order) => {
   // Some do painel 24h depois de criado, pra qualquer status — exceto

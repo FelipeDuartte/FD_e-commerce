@@ -1,0 +1,345 @@
+/* PDV — só o que não existe em Admin.css. Botões, badges, modal, inputs de
+   formulário, loading e empty state reaproveitam as classes adm-* globais. */
+
+.pdv-open-session {
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.pdv-shell {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.pdv-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 160px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 16px;
+}
+
+.pdv-sidebar-btn {
+  text-align: left;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--c-text);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.pdv-sidebar-btn.active {
+  border-color: #ffd700;
+  background: rgba(255, 215, 0, 0.12);
+  font-weight: 600;
+}
+
+.pdv-main {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 700px) {
+  .pdv-shell {
+    flex-direction: column;
+  }
+  .pdv-sidebar {
+    flex-direction: row;
+    width: 100%;
+    position: static;
+  }
+  .pdv-sidebar-btn {
+    flex: 1;
+    text-align: center;
+  }
+}
+
+.pdv-layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .pdv-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pdv-catalog {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pdv-product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.pdv-product-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--c-text);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.pdv-product-card:hover {
+  border-color: rgba(255, 215, 0, 0.5);
+  background: rgba(255, 215, 0, 0.06);
+}
+
+.pdv-product-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--c-text);
+}
+
+.pdv-product-price {
+  color: #ffd700;
+  font-weight: 700;
+}
+
+.pdv-cart {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--c-text);
+  position: sticky;
+  top: 16px;
+}
+
+.pdv-cart-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.pdv-cart-item {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.pdv-cart-item-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pdv-cart-item-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pdv-cart-item-price {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.pdv-cart-item-qty {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pdv-cart-item-qty button {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.pdv-payment-methods {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.pdv-payment-btn {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.pdv-payment-btn.active {
+  border-color: #ffd700;
+  background: rgba(255, 215, 0, 0.12);
+}
+
+.pdv-discount-row {
+  display: flex;
+  gap: 8px;
+}
+
+.pdv-discount-mode {
+  display: flex;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.pdv-discount-mode-btn {
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: var(--c-text);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.pdv-discount-mode-btn.active {
+  background: rgba(255, 215, 0, 0.15);
+  font-weight: 600;
+}
+
+.pdv-discount-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--c-text);
+}
+
+.pdv-cart-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pdv-cart-subtotal-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--c-text-muted);
+}
+
+.pdv-cart-discount-row {
+  color: #ffb84d;
+}
+
+.pdv-cart-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 18px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 215, 0, 0.15);
+}
+
+.pdv-cart-total strong {
+  color: #ffd700;
+}
+
+.pdv-finalize-btn {
+  width: 100%;
+}
+
+.pdv-session-sales {
+  margin-top: 24px;
+}
+
+.pdv-sales-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pdv-sale-row {
+  display: grid;
+  grid-template-columns: 60px 1fr 140px 90px auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 215, 0, 0.1);
+  background: rgba(255, 255, 255, 0.02);
+  font-size: 13px;
+  color: var(--c-text);
+}
+
+.pdv-sale-time {
+  color: var(--c-text-muted);
+  font-family: monospace;
+}
+
+.pdv-sale-items {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.pdv-sale-cancelled {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
+.pdv-sale-cancelled-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #ff6b6b;
+  text-decoration: none;
+}
+
+@media (max-width: 700px) {
+  .pdv-sale-row {
+    grid-template-columns: 1fr 1fr;
+    grid-auto-rows: auto;
+  }
+}
+
+.pdv-close-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.pdv-close-summary > div {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.pdv-close-diff-mismatch strong {
+  color: #ff6b6b;
+}

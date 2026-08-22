@@ -220,6 +220,15 @@
   margin: 28px 0;
 }
 
+/* Separador mais leve entre os dois grupos de pagamento (na entrega /
+   online) — um .co-divider inteiro nos dois lugares deixava a seção de
+   pagamento alta demais em mobile. */
+.co-pay-group-divider {
+  height: 1px;
+  background: #1a1a1a;
+  margin: 18px 0 16px;
+}
+
 /* ─── CEP ───────────────────────────────────────────── */
 .co-cep-wrap {
   position: relative;
@@ -434,6 +443,26 @@
   margin: 10px 0 0;
   font-size: 11.5px;
   color: #777;
+  line-height: 1.4;
+}
+
+/* ─── MERCADO PAGO (Card Payment Brick) ────────────────── */
+.co-mp-brick {
+  margin-top: 14px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.co-mp-brick-disabled {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.co-mp-cta-hint {
+  margin: 14px 0 0;
+  text-align: center;
+  font-size: 12.5px;
+  color: #999;
   line-height: 1.4;
 }
 
@@ -733,8 +762,18 @@
    MOBILE (≤ 768px)
 ══════════════════════════════════════════ */
 @media (max-width: 768px) {
+  html {
+    /* Reserva a altura do rodapé fixo "Confirmar Pedido" (~110px) como
+       margem invisível pro scroll nativo — sem isso, o navegador considera
+       um elemento "visível" assim que ele entra na viewport crua, mesmo que
+       fique embaixo do botão fixo. scroll-padding-bottom faz o
+       scrollIntoView() (nativo ou de foco/acessibilidade) parar num ponto
+       que já deixa esse espaço livre. */
+    scroll-padding-bottom: 130px;
+  }
+
   .co-root {
-    padding: 24px 16px 120px;
+    padding: 24px 16px 160px;
   }
 
   .co-header {
@@ -797,6 +836,48 @@
 
   .co-field-row.two-col-mobile {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .co-section-label {
+    margin-bottom: 10px;
+  }
+
+  .co-divider {
+    margin: 16px 0;
+  }
+
+  .co-pay-group-divider {
+    margin: 12px 0 10px;
+  }
+
+  .co-pay-grid {
+    /* Fixo em 3 colunas (em vez de auto-fit) — largura previsível pra
+       qualquer tela, e opções ímpares não ficam sozinhas espremidas numa
+       coluna estreita de sobra. */
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .co-pay-label {
+    flex-direction: row;
+    padding: 10px 4px;
+    gap: 6px;
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  .co-pay-icon {
+    font-size: 16px;
+  }
+
+  .co-pay-name {
+    font-size: 11px;
+    line-height: 1.2;
+    text-align: center;
+  }
+
+  .co-mp-brick {
+    margin-bottom: 8px;
   }
 
   .co-summary {

@@ -9,37 +9,21 @@
 //   3. Toda consulta a "products" é filtrada por store_id (produtos de outra
 //      loja são tratados como "não encontrados" — nunca vazam nem por engano).
 //   4. O pedido é gravado com store_id. Os itens do pedido NÃO precisam
-//      enviar store_id manualmente: um trigger no banco (05_functions_and_triggers.sql)
-//      preenche isso automaticamente a partir do pedido pai.
-//   5. A RPC process_order agora recebe também p_store_id.
+//      enviar store_id manualmente: um trigger no banco preenche isso
+//      automaticamente a partir do pedido pai.
+//
+// Aceita convidado (sem sessão) — checkout público. Para venda de balcão
+// (admin autenticado, sem entrega), ver a function irmã pdv-sale, que
+// reaproveita a mesma lógica de preço/estoque via _shared/orderFulfillment.ts.
 // ─────────────────────────────────────────────────────────────
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { fulfillOrder, FulfillmentError } from "../_shared/orderFulfillment.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-store-id",
 };
-
-// Taxas reais da maquininha (crédito) — mesma tabela usada em Checkout.jsx
-// pra exibir o total ao cliente. Duplicada aqui de propósito: o total final
-// é sempre recalculado no servidor (nunca confia no que o front manda), então
-// essa tabela precisa existir nos dois lugares. Se a taxa da maquininha mudar,
-// atualize aqui E no Checkout.jsx.
-const INSTALLMENT_FEE_RATE: Record<number, number> = {
-  1: 0.0326,
-  2: 0.057,
-  3: 0.0652,
-  4: 0.0736,
-  5: 0.0819,
-  6: 0.0903,
-  7: 0.0988,
-  8: 0.1073,
-};
-
-function roundCents(v: number): number {
-  return Math.round(v * 100) / 100;
-}
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -98,130 +82,35 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Loja inválida ou inativa." }, 400);
     }
 
-    // Validações básicas
-    if (!cartItems || cartItems.length === 0) {
-      return jsonResponse({ error: "Carrinho vazio." }, 400);
-    }
+    // Fase 1 de pagamentos: todo pedido online nasce "aguardando_pagamento"
+    // (dinheiro/cartão na entrega inclusos — o dinheiro só troca de mãos na
+    // entrega mesmo, então isso é só um registro informativo, não bloqueia
+    // nada do fluxo atual). pix usa a chave da própria loja (sem gateway),
+    // por isso o provider é 'pix_manual' — não confundir com uma futura
+    // integração via Mercado Pago.
+    const paymentProvider = paymentMethod === "pix" ? "pix_manual" : null;
 
-    if (!paymentMethod) {
-      return jsonResponse({ error: "Forma de pagamento não selecionada." }, 400);
-    }
-
-    // installments só faz sentido pra crédito; qualquer outro caso vira null.
-    // Sanitiza pra garantir um inteiro razoável mesmo que o front mande algo
-    // inesperado (defesa extra, já que o valor final vai direto pro banco).
-    let installmentsToSave: number | null = null;
-    if (paymentMethod === "credit_card") {
-      const n = Number(installments);
-      // Dono da loja pediu pra credito aceitar só à vista (1x) por enquanto.
-      // Se voltar a liberar parcelamento, troque o "1" fixo abaixo pela
-      // validação de faixa (e suba MAX_INSTALLMENTS no Checkout.jsx) — a
-      // tabela de taxas já tem até 8x, não precisa recriar nada.
-      installmentsToSave = 1;
-      void n; // não usado enquanto só 1x é aceito; mantido pra não quebrar o parse acima
-    }
-
-    // 1. Buscar preços reais no banco — ignora o total enviado pelo front-end.
-    //    IMPORTANTE: filtrado por store_id, então um product_id que existe em
-    //    outra loja é tratado exatamente como "não encontrado".
-    const productIds = cartItems.map((item: { id: unknown }) => String(item.id));
-
-    const { data: products, error: productsError } = await supabase
-      .from("products")
-      .select("id, price, is_active, stock")
-      .eq("store_id", storeId)
-      .in("id", productIds);
-
-    if (productsError || !products) {
-      console.error("Erro ao buscar produtos:", productsError);
-      return jsonResponse({ error: "Erro ao validar produtos." }, 500);
-    }
-
-    // Valida se todos os produtos existem (nesta loja) e estão ativos
-    for (const item of cartItems) {
-      const product = products.find((p) => p.id === String(item.id));
-      if (!product) {
-        return jsonResponse({ error: `Produto não encontrado: ${item.id}` }, 400);
-      }
-      if (!product.is_active) {
-        return jsonResponse({ error: `Produto indisponível: ${item.name ?? item.id}` }, 400);
-      }
-    }
-
-    // Calcula o total real usando os preços do banco
-    const calculatedProductsTotal = cartItems.reduce((sum: number, item: { id: unknown; quantity: number }) => {
-      const product = products.find((p) => p.id === String(item.id));
-      return sum + (product?.price ?? 0) * item.quantity;
-    }, 0);
-    const normalizedDeliveryFee = Math.max(0, Number(deliveryFee) || 0);
-    const totalBeforeFee = calculatedProductsTotal + normalizedDeliveryFee;
-
-    // Taxa da maquininha: só entra quando é crédito, usando o installments
-    // já validado/sanitizado acima (installmentsToSave).
-    const cardFeeRate =
-      paymentMethod === "credit_card" ? INSTALLMENT_FEE_RATE[installmentsToSave ?? 1] ?? 0 : 0;
-    const calculatedTotal = roundCents(totalBeforeFee * (1 + cardFeeRate));
-
-    // 2. Inserir o pedido com o total calculado no servidor + store_id
-    const { data: order, error: orderError } = await supabase
-      .from("orders")
-      .insert({
-        store_id:       storeId,
-        user_id:        userId ?? null,
-        total:          calculatedTotal,
-        payment_method: paymentMethod,
-        installments:   installmentsToSave,
-        address,
-        status:         "pending",
-      })
-      .select("id")
-      .single();
-
-    if (orderError) {
-      console.error("Erro ao criar pedido:", orderError);
-      return jsonResponse({ error: "Não foi possível criar o pedido." }, 500);
-    }
-
-    // 3. Inserir os itens (store_id é preenchido automaticamente por trigger)
-    const orderItems = cartItems.map((item: { id: unknown; name: string; quantity: number; price?: number }) => ({
-      order_id:   order.id,
-      product_id: String(item.id),
-      name:       item.name,
-      price:      products.find((p) => p.id === String(item.id))?.price ?? item.price,
-      quantity:   item.quantity,
-    }));
-
-    const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
-
-    if (itemsError) {
-      console.error("Erro ao salvar itens:", itemsError);
-      return jsonResponse({ error: "Erro ao salvar itens do pedido." }, 500);
-    }
-
-    // 4. Baixa no estoque via RPC (agora store-aware)
-    const rpcItems = cartItems.map((item: { id: unknown; quantity: number }) => ({
-      product_id: String(item.id),
-      quantity:   item.quantity,
-    }));
-
-    const { data: rpcResult, error: rpcError } = await supabase.rpc("process_order", {
-      p_store_id: storeId,
-      p_order_id: order.id,
-      p_items:    rpcItems,
+    const { orderId } = await fulfillOrder(supabase, {
+      storeId,
+      userId,
+      cartItems,
+      paymentMethod,
+      installments,
+      deliveryFee,
+      address,
+      channel: "online",
+      status: "pending",
+      applyCardFee: true,
+      paymentStatus: "aguardando_pagamento",
+      paymentProvider,
     });
 
-    if (rpcError) {
-      console.error("Erro na RPC:", rpcError);
-      return jsonResponse({ error: "Erro ao atualizar estoque." }, 500);
-    }
-
-    if (!rpcResult?.success) {
-      return jsonResponse({ error: rpcResult?.error ?? "Erro ao processar estoque." }, 400);
-    }
-
-    return jsonResponse({ orderId: order.id }, 200);
+    return jsonResponse({ orderId }, 200);
 
   } catch (err) {
+    if (err instanceof FulfillmentError) {
+      return jsonResponse({ error: err.message }, err.status);
+    }
     console.error("Erro inesperado:", err);
     return jsonResponse({ error: "Erro interno do servidor." }, 500);
   }
