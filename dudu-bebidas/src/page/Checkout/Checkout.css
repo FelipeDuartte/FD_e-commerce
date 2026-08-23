@@ -466,6 +466,21 @@
   line-height: 1.4;
 }
 
+.co-mp-fee-notice {
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  background: rgba(255, 208, 0, 0.05);
+  border: 1px solid rgba(255, 208, 0, 0.15);
+  border-radius: 10px;
+}
+
+.co-mp-fee-notice-text {
+  margin: 0;
+  font-size: 11.5px;
+  color: #999;
+  line-height: 1.4;
+}
+
 /* ─── SUMMARY ───────────────────────────────────────── */
 .co-summary {
   background: #111;

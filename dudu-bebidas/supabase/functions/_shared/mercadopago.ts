@@ -10,6 +10,10 @@ const MP_API_BASE = "https://api.mercadopago.com";
 export interface MercadoPagoPayer {
   email: string;
   identification?: { type: string; number: string };
+  first_name?: string;
+  last_name?: string;
+  phone?: { area_code: string; number: string };
+  address?: { zip_code?: string; street_name?: string; street_number?: string; city?: string };
 }
 
 export interface CreatePaymentParams {
@@ -17,6 +21,7 @@ export interface CreatePaymentParams {
   transactionAmount: number;
   token: string;
   paymentMethodId: string;
+  paymentMethodOptionId?: string;
   issuerId?: string | number;
   installments: number;
   payer: MercadoPagoPayer;
@@ -24,6 +29,16 @@ export interface CreatePaymentParams {
   notificationUrl: string;
   description: string;
   idempotencyKey: string;
+}
+
+export interface PayerCost {
+  installments: number;
+  installment_rate: number;
+  installment_amount: number;
+  total_amount: number;
+  payment_method_option_id: string;
+  min_allowed_amount: number;
+  max_allowed_amount: number;
 }
 
 export interface MercadoPagoPaymentResult {
@@ -53,6 +68,7 @@ export async function createMercadoPagoPayment(
       description: params.description,
       installments: params.installments,
       payment_method_id: params.paymentMethodId,
+      payment_method_option_id: params.paymentMethodOptionId,
       issuer_id: params.issuerId,
       payer: params.payer,
       external_reference: params.externalReference,
@@ -68,6 +84,50 @@ export async function createMercadoPagoPayment(
   }
 
   return { ok: true, status: res.status, payment: data as MercadoPagoPaymentResult };
+}
+
+// GET /v1/card_tokens/{id} — recupera o BIN (6 primeiros dígitos) do
+// cartão a partir do token já criado pelo Brick no navegador do cliente,
+// sem precisar que ele reenvie nenhum dado do cartão. Só precisa da
+// public key (não é segredo) — o BIN em si não é informação sensível.
+export async function getCardTokenBin(
+  publicKey: string,
+  tokenId: string,
+): Promise<string | null> {
+  const res = await fetch(
+    `${MP_API_BASE}/v1/card_tokens/${tokenId}?public_key=${encodeURIComponent(publicKey)}`,
+  );
+  if (!res.ok) {
+    console.error("[mercadopago] Erro ao buscar token do cartão:", res.status, await res.text());
+    return null;
+  }
+  const data = await res.json();
+  return data?.first_six_digits ?? null;
+}
+
+// GET /v1/payment_methods/installments — tabela OFICIAL de parcelas (com
+// juros já calculados pelo próprio Mercado Pago) pra esse BIN/valor/meio de
+// pagamento. Chamado sempre com o valor já validado no SERVIDOR (nunca o
+// que o cliente mandar) — é isso que impede alguém de manipular o valor
+// final cobrado via o número de parcelas.
+export async function getInstallmentOptions(
+  publicKey: string,
+  amount: number,
+  bin: string,
+  paymentMethodId: string,
+): Promise<PayerCost[] | null> {
+  const url = `${MP_API_BASE}/v1/payment_methods/installments` +
+    `?public_key=${encodeURIComponent(publicKey)}` +
+    `&amount=${amount}` +
+    `&bin=${encodeURIComponent(bin)}` +
+    `&payment_method_id=${encodeURIComponent(paymentMethodId)}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    console.error("[mercadopago] Erro ao buscar parcelas:", res.status, await res.text());
+    return null;
+  }
+  const data = await res.json();
+  return data?.[0]?.payer_costs ?? null;
 }
 
 // GET /v1/payments/{id} — usado pelo webhook: NUNCA confia no corpo da

@@ -157,10 +157,13 @@ export async function fulfillOrder(
   );
   const totalAfterDiscount = totalBeforeFee - normalizedDiscount;
 
-  const cardFeeRate =
-    applyCardFee && paymentMethod === "credit_card"
-      ? INSTALLMENT_FEE_RATE[installmentsToSave ?? 1] ?? 0
-      : 0;
+  // Cartão online (Mercado Pago) NÃO entra aqui — a taxa dele é dinâmica
+  // (varia por bandeira/emissor do cartão, consultada em tempo real na API
+  // do MP) e é aplicada depois, em mercadopago-create-payment, via um
+  // UPDATE no total do pedido assim que o valor real com juros é conhecido.
+  const cardFeeRate = !applyCardFee || paymentMethod !== "credit_card"
+    ? 0
+    : INSTALLMENT_FEE_RATE[installmentsToSave ?? 1] ?? 0;
   const calculatedTotal = roundCents(totalAfterDiscount * (1 + cardFeeRate));
 
   const { data: order, error: orderError } = await supabase

@@ -25,6 +25,13 @@ export default function MercadoPagoCardBrick({ publicKey, amount, onSubmit, onEr
 
   return (
     <div className={disabled ? "co-mp-brick co-mp-brick-disabled" : "co-mp-brick"}>
+      <div className="co-mp-fee-notice">
+        <p className="co-mp-fee-notice-text">
+          💳 Uma porcentagem adicional do Mercado Pago é cobrada em cima do
+          valor, variando conforme o número de parcelas escolhido. O valor
+          final aparece confirmado na próxima tela, depois do pagamento.
+        </p>
+      </div>
       <CardPayment
         key={amount}
         initialization={initialization}

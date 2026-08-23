@@ -100,6 +100,9 @@ Deno.serve(async (req) => {
         p_payment_id: String(payment.id),
       });
     } else if (["rejected", "cancelled"].includes(payment.status)) {
+      console.log(
+        `[mercadopago-webhook] Pagamento ${payment.status} — payment_id=${payment.id} status_detail=${payment.status_detail} order_id=${orderId}`,
+      );
       // Ficou "in_process" na resposta síncrona e só resolveu como recusado
       // depois, via webhook — mesmo critério do caminho síncrono: apaga em
       // vez de manter um registro de venda que nunca aconteceu.
