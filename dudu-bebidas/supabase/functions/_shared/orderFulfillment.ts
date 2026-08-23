@@ -76,21 +76,6 @@ const INSTALLMENT_FEE_RATE: Record<number, number> = {
   8: 0.1073,
 };
 
-// Taxas reais do Mercado Pago (Card Payment Brick), tiradas do painel
-// "Taxas e parcelas" da conta da loja — repassadas ao cliente do mesmo
-// jeito que a taxa da maquininha física acima. Faixas por parcela (não por
-// parcela individual) — mesma estrutura que o MP usa pra cobrar da loja.
-// Intencional: à vista (4,98%) é MAIOR que 2x-6x (2,99%) nessa conta — o
-// dono da loja pediu pra repassar exatamente como o MP cobra de verdade,
-// mesmo sendo contra-intuitivo. Se a taxa mudar (confere em "Taxas e
-// parcelas" no painel do MP), atualize aqui E no Checkout.jsx.
-function getMercadoPagoFeeRate(installments: number): number {
-  if (installments <= 1) return 0.0498;
-  if (installments <= 6) return 0.0299;
-  if (installments <= 12) return 0.0309;
-  return 0.0319; // 13x-18x
-}
-
 function roundCents(v: number): number {
   return Math.round(v * 100) / 100;
 }
@@ -172,13 +157,13 @@ export async function fulfillOrder(
   );
   const totalAfterDiscount = totalBeforeFee - normalizedDiscount;
 
-  const cardFeeRate = !applyCardFee
+  // Cartão online (Mercado Pago) NÃO entra aqui — a taxa dele é dinâmica
+  // (varia por bandeira/emissor do cartão, consultada em tempo real na API
+  // do MP) e é aplicada depois, em mercadopago-create-payment, via um
+  // UPDATE no total do pedido assim que o valor real com juros é conhecido.
+  const cardFeeRate = !applyCardFee || paymentMethod !== "credit_card"
     ? 0
-    : paymentMethod === "credit_card"
-      ? INSTALLMENT_FEE_RATE[installmentsToSave ?? 1] ?? 0
-      : paymentMethod === "mercadopago_card"
-        ? getMercadoPagoFeeRate(installmentsToSave ?? 1)
-        : 0;
+    : INSTALLMENT_FEE_RATE[installmentsToSave ?? 1] ?? 0;
   const calculatedTotal = roundCents(totalAfterDiscount * (1 + cardFeeRate));
 
   const { data: order, error: orderError } = await supabase
