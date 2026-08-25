@@ -16,6 +16,14 @@ export interface MercadoPagoPayer {
   address?: { zip_code?: string; street_name?: string; street_number?: string; city?: string };
 }
 
+export interface AdditionalInfoItem {
+  id: string;
+  title: string;
+  description: string;
+  quantity: number;
+  unit_price: number;
+}
+
 export interface CreatePaymentParams {
   accessToken: string;
   transactionAmount: number;
@@ -29,6 +37,11 @@ export interface CreatePaymentParams {
   notificationUrl: string;
   description: string;
   idempotencyKey: string;
+  // Nome que aparece na fatura do cartão do cliente e itens do carrinho —
+  // recomendações da própria medição de qualidade do MP pra reduzir
+  // contestações e recusas do antifraude deles.
+  statementDescriptor?: string;
+  items?: AdditionalInfoItem[];
 }
 
 export interface PayerCost {
@@ -73,6 +86,8 @@ export async function createMercadoPagoPayment(
       payer: params.payer,
       external_reference: params.externalReference,
       notification_url: params.notificationUrl,
+      statement_descriptor: params.statementDescriptor,
+      ...(params.items?.length ? { additional_info: { items: params.items } } : {}),
     }),
   });
 
