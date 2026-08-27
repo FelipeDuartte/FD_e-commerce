@@ -6,6 +6,7 @@ import {
   cancelPdvSale,
   listSessionSales,
 } from "../../services/adminPDVService";
+import { getPdvPrice } from "../constants";
 
 // Concentra catálogo/busca, carrinho, desconto e o histórico de vendas da
 // sessão atual. Recebe sessionId (id do caixa aberto, ou null) — troca de
@@ -17,7 +18,10 @@ export function usePdvCart(sessionId) {
   const [search, setSearch] = useState("");
 
   const [cart, setCart] = useState([]);
-  const [paymentMethod, setPaymentMethod] = useState("cash");
+  const [paymentMethod, setPaymentMethodRaw] = useState("cash");
+  const [receivedAmountInput, setReceivedAmountInput] = useState("");
+  const [splitMode, setSplitMode] = useState(false);
+  const [splitPayments, setSplitPayments] = useState([]);
   const [discountMode, setDiscountMode] = useState("amount"); // "amount" (R$) | "percent" (%)
   const [discountInput, setDiscountInput] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -82,7 +86,7 @@ export function usePdvCart(sessionId) {
       }
       return [
         ...prev,
-        { id: product.id, name: product.name, price: product.price, quantity: 1, stock: product.stock },
+        { id: product.id, name: product.name, price: getPdvPrice(product), quantity: 1, stock: product.stock },
       ];
     });
   };
@@ -115,6 +119,57 @@ export function usePdvCart(sessionId) {
 
   const cartTotal = subtotal - discountAmount;
 
+  // Troco só faz sentido pra dinheiro — trocar de forma de pagamento limpa
+  // o valor recebido, senão sobraria um troco calculado pra outro método.
+  const setPaymentMethod = (method) => {
+    setPaymentMethodRaw(method);
+    setReceivedAmountInput("");
+  };
+
+  const changeAmount = useMemo(() => {
+    if (paymentMethod !== "cash" || receivedAmountInput === "") return null;
+    const received = Number(receivedAmountInput);
+    if (!Number.isFinite(received)) return null;
+    return received - cartTotal;
+  }, [paymentMethod, receivedAmountInput, cartTotal]);
+
+  const insufficientCash = paymentMethod === "cash" && changeAmount !== null && changeAmount < 0;
+
+  // Pagamento dividido — ex: parte em dinheiro, parte no cartão. Ligar/desligar
+  // reseta as linhas (senão sobraria um valor dividido pra uma venda que virou
+  // pagamento único, ou vice-versa).
+  const toggleSplitMode = () => {
+    setSplitMode((prev) => {
+      const next = !prev;
+      setSplitPayments(next ? [{ method: "cash", amount: "" }, { method: "credit_card", amount: "" }] : []);
+      return next;
+    });
+  };
+
+  const updateSplitLine = (index, field, value) => {
+    setSplitPayments((prev) => prev.map((line, i) => (i === index ? { ...line, [field]: value } : line)));
+  };
+
+  const addSplitLine = () => {
+    setSplitPayments((prev) => [...prev, { method: "cash", amount: "" }]);
+  };
+
+  const removeSplitLine = (index) => {
+    setSplitPayments((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const splitTotal = useMemo(
+    () => splitPayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0),
+    [splitPayments],
+  );
+
+  const splitRemaining = useMemo(() => Math.round((cartTotal - splitTotal) * 100) / 100, [cartTotal, splitTotal]);
+
+  const splitValid =
+    splitPayments.length >= 2 &&
+    splitPayments.every((p) => p.method && Number(p.amount) > 0) &&
+    Math.abs(splitRemaining) < 0.01;
+
   // ── Busca de produto (nome, código de barras ou id) ─
   const filteredProducts = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -131,20 +186,29 @@ export function usePdvCart(sessionId) {
 
   const handleFinalizeSale = async () => {
     if (cart.length === 0 || !sessionId) return;
+    if (splitMode ? !splitValid : insufficientCash) return;
     setSubmitting(true);
     setSaleError("");
     try {
       await createPdvSale({
         cartItems: cart.map((i) => ({ id: i.id, name: i.name, quantity: i.quantity })),
-        paymentMethod,
         cashSessionId: sessionId,
         discountAmount,
+        ...(splitMode
+          ? { payments: splitPayments.map((p) => ({ method: p.method, amount: Number(p.amount) })) }
+          : { paymentMethod }),
       });
-      setSaleSuccess(`Venda registrada — ${formatBRL(cartTotal)}`);
+      setSaleSuccess(
+        changeAmount !== null
+          ? `Venda registrada — ${formatBRL(cartTotal)} (troco: ${formatBRL(changeAmount)})`
+          : `Venda registrada — ${formatBRL(cartTotal)}`,
+      );
       setTimeout(() => setSaleSuccess(""), 3000);
       clearCart();
       setPaymentMethod("cash");
       setDiscountInput("");
+      setSplitMode(false);
+      setSplitPayments([]);
       loadProducts(); // estoque mudou, recarrega pra não deixar badge desatualizado
       loadSessionSales(sessionId); // busca do banco — pega a venda que acabou de ser criada
     } catch (e) {
@@ -173,6 +237,9 @@ export function usePdvCart(sessionId) {
     cart, paymentMethod, setPaymentMethod, discountMode, setDiscountMode,
     discountInput, setDiscountInput, submitting, saleError, saleSuccess,
     sessionSales, cancellingId, cancelError,
+    receivedAmountInput, setReceivedAmountInput, changeAmount, insufficientCash,
+    splitMode, toggleSplitMode, splitPayments, updateSplitLine, addSplitLine,
+    removeSplitLine, splitTotal, splitRemaining, splitValid,
     addToCart, updateQuantity, removeFromCart,
     subtotal, discountAmount, cartTotal, filteredProducts,
     handleFinalizeSale, handleCancelSale,

@@ -5,6 +5,9 @@ export default function CartPanel({
   cart, updateQuantity, removeFromCart,
   paymentMethod, setPaymentMethod, discountMode, setDiscountMode, discountInput, setDiscountInput,
   subtotal, discountAmount, cartTotal, submitting, onFinalize,
+  receivedAmountInput, setReceivedAmountInput, changeAmount, insufficientCash,
+  splitMode, toggleSplitMode, splitPayments, updateSplitLine, addSplitLine,
+  removeSplitLine, splitRemaining, splitValid,
 }) {
   return (
     <div className="pdv-cart">
@@ -30,17 +33,88 @@ export default function CartPanel({
         </div>
       )}
 
-      <div className="pdv-payment-methods">
-        {PAYMENT_METHODS.map((m) => (
-          <button
-            key={m.value}
-            className={`pdv-payment-btn ${paymentMethod === m.value ? "active" : ""}`}
-            onClick={() => setPaymentMethod(m.value)}
-          >
-            {m.icon} {m.label}
+      <button type="button" className="pdv-split-toggle" onClick={toggleSplitMode}>
+        {splitMode ? "← Pagamento único" : "🔀 Dividir pagamento"}
+      </button>
+
+      {!splitMode ? (
+        <>
+          <div className="pdv-payment-methods">
+            {PAYMENT_METHODS.map((m) => (
+              <button
+                key={m.value}
+                className={`pdv-payment-btn ${paymentMethod === m.value ? "active" : ""}`}
+                onClick={() => setPaymentMethod(m.value)}
+              >
+                {m.icon} {m.label}
+              </button>
+            ))}
+          </div>
+
+          {paymentMethod === "cash" && (
+            <div className="pdv-change-row">
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                className="pdv-change-input"
+                placeholder="Valor recebido (R$)"
+                value={receivedAmountInput}
+                onChange={(e) => setReceivedAmountInput(e.target.value)}
+              />
+              {changeAmount !== null && (
+                <span className={`pdv-change-result ${changeAmount < 0 ? "pdv-change-insufficient" : ""}`}>
+                  {changeAmount < 0 ? "Falta" : "Troco"}: {formatBRL(Math.abs(changeAmount))}
+                </span>
+              )}
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="pdv-split-payments">
+          {splitPayments.map((line, i) => (
+            <div className="pdv-split-line" key={i}>
+              <select
+                className="pdv-split-select"
+                value={line.method}
+                onChange={(e) => updateSplitLine(i, "method", e.target.value)}
+              >
+                {PAYMENT_METHODS.map((m) => (
+                  <option key={m.value} value={m.value}>{m.icon} {m.label}</option>
+                ))}
+              </select>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                className="pdv-split-amount"
+                placeholder="Valor (R$)"
+                value={line.amount}
+                onChange={(e) => updateSplitLine(i, "amount", e.target.value)}
+              />
+              <button
+                className="adm-btn-delete"
+                onClick={() => removeSplitLine(i)}
+                disabled={splitPayments.length <= 1}
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+
+          <button type="button" className="pdv-split-add-btn" onClick={addSplitLine}>
+            + Adicionar forma
           </button>
-        ))}
-      </div>
+
+          <div className={`pdv-split-remaining ${Math.abs(splitRemaining) < 0.01 ? "pdv-split-ok" : ""}`}>
+            {splitRemaining > 0.004
+              ? `Falta alocar: ${formatBRL(splitRemaining)}`
+              : splitRemaining < -0.004
+                ? `Excedeu em: ${formatBRL(Math.abs(splitRemaining))}`
+                : "✓ Valores batem com o total"}
+          </div>
+        </div>
+      )}
 
       <div className="pdv-discount-row">
         <div className="pdv-discount-mode">
@@ -88,7 +162,7 @@ export default function CartPanel({
       <button
         className="adm-btn-new-product pdv-finalize-btn"
         onClick={onFinalize}
-        disabled={cart.length === 0 || submitting}
+        disabled={cart.length === 0 || submitting || (splitMode ? !splitValid : insufficientCash)}
       >
         {submitting ? "Registrando..." : "✅ Finalizar venda"}
       </button>

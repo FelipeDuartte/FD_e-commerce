@@ -94,6 +94,18 @@ export default function AdminPDV() {
                 cartTotal={pdvCart.cartTotal}
                 submitting={pdvCart.submitting}
                 onFinalize={pdvCart.handleFinalizeSale}
+                receivedAmountInput={pdvCart.receivedAmountInput}
+                setReceivedAmountInput={pdvCart.setReceivedAmountInput}
+                changeAmount={pdvCart.changeAmount}
+                insufficientCash={pdvCart.insufficientCash}
+                splitMode={pdvCart.splitMode}
+                toggleSplitMode={pdvCart.toggleSplitMode}
+                splitPayments={pdvCart.splitPayments}
+                updateSplitLine={pdvCart.updateSplitLine}
+                addSplitLine={pdvCart.addSplitLine}
+                removeSplitLine={pdvCart.removeSplitLine}
+                splitRemaining={pdvCart.splitRemaining}
+                splitValid={pdvCart.splitValid}
               />
             </div>
           )}

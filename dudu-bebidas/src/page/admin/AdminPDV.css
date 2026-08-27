@@ -203,6 +203,97 @@
   background: rgba(255, 215, 0, 0.12);
 }
 
+.pdv-change-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pdv-change-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--c-text);
+}
+
+.pdv-change-result {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffd700;
+  white-space: nowrap;
+}
+
+.pdv-change-insufficient {
+  color: #ff6b6b;
+}
+
+.pdv-split-toggle {
+  align-self: flex-start;
+  padding: 4px 0;
+  border: none;
+  background: transparent;
+  color: #ffd700;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.pdv-split-payments {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pdv-split-line {
+  display: grid;
+  grid-template-columns: 1fr 110px auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.pdv-split-select {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--c-text);
+  font-size: 13px;
+}
+
+.pdv-split-amount {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--c-text);
+  min-width: 0;
+}
+
+.pdv-split-add-btn {
+  align-self: flex-start;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px dashed rgba(255, 215, 0, 0.3);
+  background: transparent;
+  color: var(--c-text);
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.pdv-split-remaining {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ff6b6b;
+}
+
+.pdv-split-remaining.pdv-split-ok {
+  color: #50c878;
+}
+
 .pdv-discount-row {
   display: flex;
   gap: 8px;
@@ -324,6 +415,36 @@
     grid-template-columns: 1fr 1fr;
     grid-auto-rows: auto;
   }
+}
+
+.pdv-close-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 12px;
+  padding-bottom: 8px;
+}
+
+.pdv-close-breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--c-text-muted);
+  padding: 4px 0;
+}
+
+.pdv-close-breakdown-row strong {
+  color: var(--c-text);
+}
+
+.pdv-close-breakdown-fiado {
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  margin-top: 4px;
+  padding-top: 8px;
+}
+
+.pdv-close-breakdown-fiado strong {
+  color: #ffb84d;
 }
 
 .pdv-close-summary {
