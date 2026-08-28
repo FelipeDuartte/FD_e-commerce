@@ -7,7 +7,7 @@ import OpenSessionForm from "./components/OpenSessionForm";
 import ProductCatalog from "./components/ProductCatalog";
 import CartPanel from "./components/CartPanel";
 import HistorySalesList from "./components/HistorySalesList";
-import FiadoView from "./components/FiadoView";
+import ClientesView from "./components/ClientesView";
 import CloseSessionModal from "./components/CloseSessionModal";
 import CancelSaleModal from "./components/CancelSaleModal";
 
@@ -141,12 +141,13 @@ export default function Pdv() {
             />
           )}
 
-          {pdvView === "fiado" && (
-            <FiadoView
+          {pdvView === "clientes" && (
+            <ClientesView
               customers={fiado.customers}
               customersLoading={fiado.loading}
               customersError={fiado.error}
               payDebt={fiado.payDebt}
+              createCustomer={fiado.createCustomer}
             />
           )}
         </main>

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { listPdvCustomerBalances, createPdvCustomer, registerFiadoPayment } from "../services/fiadoService";
 
-// Compartilhado entre o seletor de cliente na venda (CartPanel) e a aba
-// de gestão do fiado (FiadoView) — uma única lista/carregamento pros dois.
+// Compartilhado entre o seletor de cliente na venda (CartPanel) e o
+// diretório de clientes (ClientesView) — um único carregamento pros dois.
 export function useFiadoCustomers(sessionId) {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);

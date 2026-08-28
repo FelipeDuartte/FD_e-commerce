@@ -469,7 +469,7 @@
 
 .pdv-fiado-view {
   display: grid;
-  grid-template-columns: 320px 1fr;
+  grid-template-columns: 340px 1fr;
   gap: 20px;
   align-items: start;
 }
@@ -530,22 +530,102 @@
   gap: 12px;
 }
 
-.pdv-fiado-detail-balance {
+.pdv-fiado-orders-title {
+  margin-top: 8px;
+}
+
+/* ── Clientes: toolbar (busca + novo), stats e histórico em colunas ── */
+
+.pdv-clientes-toolbar {
+  display: flex;
+  gap: 8px;
+}
+
+.pdv-clientes-toolbar .adm-product-search {
+  flex: 1;
+}
+
+.pdv-clientes-new-btn {
+  flex-shrink: 0;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  background: transparent;
+  color: var(--c-text);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: border-color var(--t), background var(--t);
+}
+
+.pdv-clientes-new-btn:hover {
+  border-color: #ffd700;
+  background: rgba(255, 215, 0, 0.08);
+}
+
+.pdv-clientes-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.pdv-clientes-stat {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-  font-size: 13px;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 215, 0, 0.12);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.pdv-clientes-stat span {
+  font-size: 11px;
   color: var(--c-text-muted);
 }
 
-.pdv-fiado-detail-balance strong {
-  font-size: 20px;
+.pdv-clientes-stat strong {
+  font-size: 18px;
   color: #ffd700;
 }
 
-.pdv-fiado-orders-title {
-  margin-top: 8px;
+.pdv-clientes-stat strong.pdv-fiado-has-debt {
+  color: #ffb84d;
+}
+
+.pdv-clientes-stat strong.pdv-clientes-has-credit {
+  color: #50c878;
+}
+
+@media (max-width: 900px) {
+  .pdv-clientes-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.pdv-clientes-history-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 900px) {
+  .pdv-clientes-history-cols {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pdv-clientes-payment-row {
+  display: grid;
+  grid-template-columns: 90px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 215, 0, 0.1);
+  background: rgba(255, 255, 255, 0.02);
+  font-size: 13px;
+  color: var(--c-text);
 }
 
 .pdv-fiado-orders-list {
@@ -584,6 +664,53 @@
   font-weight: 600;
   color: #50c878;
   text-decoration: none;
+}
+
+/* ── Clientes: filtros + linha da lista com metadados ─────────────── */
+
+.pdv-clientes-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pdv-clientes-filter-btn {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  background: transparent;
+  color: var(--c-text-muted);
+  cursor: pointer;
+  font-size: 12px;
+  transition: background var(--t), border-color var(--t), color var(--t);
+}
+
+.pdv-clientes-filter-btn:hover {
+  border-color: rgba(255, 215, 0, 0.4);
+  color: var(--c-text);
+}
+
+.pdv-clientes-filter-btn.active {
+  border-color: #ffd700;
+  background: rgba(255, 215, 0, 0.12);
+  color: #ffd700;
+  font-weight: 600;
+}
+
+.pdv-clientes-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pdv-clientes-row-meta {
+  font-size: 11px;
+  color: var(--c-text-muted);
+}
+
+.pdv-clientes-has-credit {
+  color: #50c878;
 }
 
 .pdv-split-toggle {

@@ -11,7 +11,7 @@ async function getCurrentUserId() {
 export async function listPdvCustomerBalances() {
   const { data, error } = await supabase
     .from("pdv_customer_balances")
-    .select("customer_id, name, phone, balance, total_paid")
+    .select("customer_id, name, phone, balance, total_paid, total_fiado, last_order_at")
     .order("name");
 
   if (error) {
@@ -23,6 +23,8 @@ export async function listPdvCustomerBalances() {
     phone: c.phone,
     balance: Number(c.balance),
     totalPaid: Number(c.total_paid),
+    totalFiado: Number(c.total_fiado),
+    lastOrderAt: c.last_order_at,
   }));
 }
 
@@ -40,7 +42,7 @@ export async function createPdvCustomer({ name, phone }) {
   if (error) {
     throw new AdminServiceError("Não foi possível cadastrar o cliente.", error);
   }
-  return { id: data.id, name: data.name, phone: data.phone, balance: 0, totalPaid: 0 };
+  return { id: data.id, name: data.name, phone: data.phone, balance: 0, totalPaid: 0, totalFiado: 0, lastOrderAt: null };
 }
 
 // cashSessionId opcional — só entra na conferência do caixa (close_cash_session)
@@ -59,6 +61,24 @@ export async function registerFiadoPayment({ customerId, amount, paymentMethod, 
   if (error) {
     throw new AdminServiceError("Não foi possível registrar o pagamento.", error);
   }
+}
+
+export async function listCustomerPayments(customerId) {
+  const { data, error } = await supabase
+    .from("pdv_customer_payments")
+    .select("id, amount, payment_method, created_at")
+    .eq("customer_id", customerId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new AdminServiceError("Não foi possível carregar os pagamentos.", error);
+  }
+  return (data ?? []).map((p) => ({
+    id: p.id,
+    amount: Number(p.amount),
+    method: p.payment_method,
+    createdAt: p.created_at,
+  }));
 }
 
 export async function listFiadoOrders(customerId) {

@@ -13,8 +13,12 @@ export const SPLIT_PAYMENT_METHODS = PAYMENT_METHODS.filter((m) => m.value !== "
 export const PDV_VIEWS = [
   { key: "venda", label: "🛒 Venda" },
   { key: "historico", label: "📋 Histórico" },
-  { key: "fiado", label: "👤 Fiado" },
+  { key: "clientes", label: "👥 Clientes" },
 ];
+
+// Cliente sem nenhuma compra fiado nesse tanto de dias entra no filtro
+// "Inativos" da aba Clientes.
+export const INACTIVE_CUSTOMER_DAYS = 30;
 
 // Promoção é exclusiva do site — o balcão sempre cobra o preço de tabela
 // (old_price), mesmo com o produto em promoção online. Espelha exatamente
