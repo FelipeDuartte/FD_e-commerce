@@ -93,7 +93,7 @@ function roundCents(v: number): number {
 export async function fulfillOrder(
   supabase: SupabaseClient,
   params: FulfillOrderParams,
-): Promise<{ orderId: string; total: number }> {
+): Promise<{ orderId: string; orderNumber: number; total: number }> {
   const {
     storeId, userId, cartItems, paymentMethod, installments,
     deliveryFee = 0, address, channel, cashSessionId = null,
@@ -249,7 +249,7 @@ export async function fulfillOrder(
       ...(paymentProvider !== null ? { payment_provider: paymentProvider } : {}),
       ...(pdvCustomerId !== null ? { pdv_customer_id: pdvCustomerId } : {}),
     })
-    .select("id")
+    .select("id, order_number")
     .single();
 
   if (orderError) {
@@ -292,7 +292,7 @@ export async function fulfillOrder(
   }
 
   if (skipStockDecrement) {
-    return { orderId: order.id, total: calculatedTotal };
+    return { orderId: order.id, orderNumber: order.order_number, total: calculatedTotal };
   }
 
   const rpcItems = cartItems.map((item) => ({

@@ -25,7 +25,7 @@ export default function Confirmacao() {
 
   const [orderData] = useState(() => resolveOrderData(location.state));
 
-  const { orderId, cartItems, total, payment, installments, address, isRetirada } = {
+  const { orderId, orderNumber, cartItems, total, payment, installments, address, isRetirada } = {
     ...EMPTY_ORDER,
     ...orderData,
   };
@@ -79,6 +79,7 @@ export default function Confirmacao() {
         "lastOrder",
         JSON.stringify({
           orderId,
+          orderNumber,
           cartItems,
           total,
           payment,
@@ -89,7 +90,7 @@ export default function Confirmacao() {
         }),
       );
     }
-  }, [orderId, cartItems, total, payment, installments, address, isRetirada]);
+  }, [orderId, orderNumber, cartItems, total, payment, installments, address, isRetirada]);
 
   // ── Cancelamento ──────────────────────────────────
   const handleCancelOrder = async () => {
@@ -145,7 +146,7 @@ export default function Confirmacao() {
     );
   }
 
-  const shortId = orderId ? orderId.slice(-8).toUpperCase() : "RETIRADA";
+  const shortId = orderNumber ? String(orderNumber) : orderId ? orderId.slice(-8).toUpperCase() : "RETIRADA";
   const canCancel = status === "pending" && (orderId || isRetirada);
   const entityLabel = isRetirada ? "retirada" : "pedido";
 

@@ -1,5 +1,3 @@
-import { shortOrderId } from "../../utils/orderId";
-
 export default function RejectModal({
   rejectModal,
   closeRejectModal,
@@ -15,7 +13,7 @@ export default function RejectModal({
         <h3 className="adm-modal-title">Rejeitar pedido?</h3>
         <p className="adm-modal-desc">
           Tem certeza que deseja <strong>rejeitar</strong> o pedido{" "}
-          <strong>#{shortOrderId(rejectModal)}</strong>? Será{" "}
+          <strong>#{rejectModal?.order_number ?? rejectModal?.id?.slice(-8).toUpperCase()}</strong>? Será{" "}
           <strong>apagado permanentemente</strong>.
         </p>
         {rejectError && <div className="adm-modal-error">⚠️ {rejectError}</div>}

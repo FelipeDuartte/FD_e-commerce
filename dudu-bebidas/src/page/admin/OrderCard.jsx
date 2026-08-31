@@ -53,7 +53,7 @@ export default function OrderCard({
     icon: "💳",
     label: order.payment_method,
   };
-  const shortId = order.id.slice(-8).toUpperCase();
+  const shortId = order.order_number ? String(order.order_number) : order.id.slice(-8).toUpperCase();
 
   // Uma única mensagem de status de pagamento, não duas competindo pelo
   // mesmo espaço: "aguardando pagamento" (cliente não fez nada ainda) e

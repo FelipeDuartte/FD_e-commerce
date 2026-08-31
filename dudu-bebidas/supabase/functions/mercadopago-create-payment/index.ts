@@ -163,7 +163,7 @@ Deno.serve(async (req) => {
     // estoque intocado. Se a API do MP falhar depois, o pedido fica
     // registrado como "processando" em vez de sumir sem rastro; o admin
     // consegue ver e o cliente pode tentar de novo.
-    const { orderId, total: baseTotal } = await fulfillOrder(supabase, {
+    const { orderId, orderNumber, total: baseTotal } = await fulfillOrder(supabase, {
       storeId,
       userId,
       cartItems,
@@ -232,7 +232,7 @@ Deno.serve(async (req) => {
       payer: buildEnrichedPayer(payer, address),
       externalReference: orderId,
       notificationUrl,
-      description: `Pedido #${orderId.slice(-8).toUpperCase()}`,
+      description: `Pedido #${orderNumber}`,
       idempotencyKey: orderId, // 1 pedido = 1 tentativa de cobrança nesta function
       statementDescriptor: buildStatementDescriptor(store.name),
       items: buildAdditionalInfoItems(cartItems),
@@ -281,7 +281,7 @@ Deno.serve(async (req) => {
     // Mercado Pago, consultados na tabela oficial deles acima) — o front
     // usa isso pra tela de confirmação em vez do total que ele mesmo
     // calculou antes de saber quantas parcelas o cliente escolheu no Brick.
-    return jsonResponse({ orderId, paymentStatus: status, statusDetail: status_detail, total: finalAmount });
+    return jsonResponse({ orderId, orderNumber, paymentStatus: status, statusDetail: status_detail, total: finalAmount });
 
   } catch (err) {
     if (err instanceof FulfillmentError) {

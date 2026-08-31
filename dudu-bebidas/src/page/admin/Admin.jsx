@@ -102,7 +102,7 @@ export default function Admin({ isAdmin }) {
             advanceStatus={orders.advanceStatus}
             setStatus={orders.setStatus}
             markPaid={orders.markPaid}
-            onReject={(orderId) => orders.setRejectModal(orderId)}
+            onReject={(order) => orders.setRejectModal(order)}
             handleLoadMore={orders.handleLoadMore}
           />
         )}

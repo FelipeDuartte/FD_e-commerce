@@ -47,7 +47,7 @@ export async function saveOrder(order) {
       return { error: data.error };
     }
 
-    return { orderId: data.orderId };
+    return { orderId: data.orderId, orderNumber: data.orderNumber };
   } catch (err) {
     console.error("Erro inesperado:", err);
     return { error: GENERIC_ORDER_ERROR };

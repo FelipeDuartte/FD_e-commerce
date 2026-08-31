@@ -242,7 +242,7 @@ export function useAdminOrders(isAdmin) {
     setRejectError("");
 
     try {
-      await rejectAdminOrder(rejectModal);
+      await rejectAdminOrder(rejectModal.id);
     } catch (error) {
       console.error(error);
       setRejectError(error.message);
@@ -253,7 +253,7 @@ export function useAdminOrders(isAdmin) {
     // rejectAdminOrder não apaga mais — só atualiza o status localmente
     // (updateOrderStatusLocally já cuida de sumir da tela só se passar 24h,
     // igual todo o resto).
-    updateOrderStatusLocally(rejectModal, "rejected");
+    updateOrderStatusLocally(rejectModal.id, "rejected");
     setRejectModal(null);
     setRejecting(false);
   }, [rejectModal, updateOrderStatusLocally]);

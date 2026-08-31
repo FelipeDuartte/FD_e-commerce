@@ -100,7 +100,7 @@ export default function OrdersTab({
                         setExpandedId((p) => (p === order.id ? null : order.id))
                       }
                       onAccept={() => advanceStatus(order)}
-                      onReject={() => onReject(order.id)}
+                      onReject={() => onReject(order)}
                       onAdvance={() => advanceStatus(order)}
                       onSetStatus={(s) => setStatus(order.id, s)}
                       onMarkPaid={() => markPaid(order.id)}

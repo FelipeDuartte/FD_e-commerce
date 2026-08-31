@@ -195,7 +195,7 @@ export function useCheckoutForm({ user, cartItems, cartTotal, DELIVERY, isRetira
         ? { name: address.name, phone: address.phone, isRetirada: true }
         : { ...address, cep, bairro: bairroCarrinho };
 
-      const { orderId, error } = await saveOrder({
+      const { orderId, orderNumber, error } = await saveOrder({
         userId: user?.id ?? null,
         total: finalTotal,
         deliveryFee: DELIVERY,
@@ -221,6 +221,7 @@ export function useCheckoutForm({ user, cartItems, cartTotal, DELIVERY, isRetira
       navigate("/confirmacao", {
         state: {
           orderId,
+          orderNumber,
           cartItems,
           total: finalTotal,
           payment,
@@ -269,7 +270,7 @@ export function useCheckoutForm({ user, cartItems, cartTotal, DELIVERY, isRetira
         ? { name: address.name, phone: address.phone, isRetirada: true }
         : { ...address, cep, bairro: bairroCarrinho };
 
-      const { orderId, paymentStatus, total: chargedTotal, error } = await saveMercadoPagoOrder({
+      const { orderId, orderNumber, paymentStatus, total: chargedTotal, error } = await saveMercadoPagoOrder({
         address: addressToSave,
         cartItems,
         cardData,
@@ -299,6 +300,7 @@ export function useCheckoutForm({ user, cartItems, cartTotal, DELIVERY, isRetira
       navigate("/confirmacao", {
         state: {
           orderId,
+          orderNumber,
           cartItems,
           // total real cobrado, com a taxa do Mercado Pago já embutida
           // (calculada no servidor conforme o parcelamento escolhido dentro

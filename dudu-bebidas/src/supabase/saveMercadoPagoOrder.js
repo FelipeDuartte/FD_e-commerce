@@ -34,7 +34,7 @@ export async function saveMercadoPagoOrder({ address, cartItems, cardData, deliv
       return { error: data.error };
     }
 
-    return { orderId: data.orderId, paymentStatus: data.paymentStatus, total: data.total };
+    return { orderId: data.orderId, orderNumber: data.orderNumber, paymentStatus: data.paymentStatus, total: data.total };
   } catch (err) {
     console.error("Erro inesperado:", err);
     return { error: GENERIC_ERROR };

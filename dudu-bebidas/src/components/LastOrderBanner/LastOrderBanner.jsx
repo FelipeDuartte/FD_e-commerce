@@ -42,7 +42,7 @@ export default function LastOrderBanner() {
 
   if (!order || HIDDEN_ON.includes(location.pathname)) return null;
 
-  const shortId = order.orderId.slice(-8).toUpperCase();
+  const shortId = order.orderNumber ? String(order.orderNumber) : order.orderId.slice(-8).toUpperCase();
 
   const handleDismiss = (e) => {
     e.stopPropagation();

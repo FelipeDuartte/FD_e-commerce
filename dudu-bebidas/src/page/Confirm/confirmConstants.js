@@ -32,6 +32,7 @@ export const STEPS = [
 
 export const EMPTY_ORDER = {
   orderId: null,
+  orderNumber: null,
   cartItems: [],
   total: 0,
   payment: "pix",
