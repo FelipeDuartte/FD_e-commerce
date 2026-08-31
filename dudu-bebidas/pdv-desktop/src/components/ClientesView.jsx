@@ -319,7 +319,14 @@ export default function ClientesView({
 
       <div className="pdv-fiado-detail">
         {!selected ? (
-          <div className="adm-empty"><p>Selecione um cliente pra ver o perfil.</p></div>
+          <div className="pdv-clientes-empty-detail">
+            <span className="pdv-clientes-empty-icon">👤</span>
+            <p className="pdv-clientes-empty-title">Nenhum cliente selecionado</p>
+            <p className="pdv-clientes-empty-desc">
+              Escolha um cliente na lista ao lado pra ver o perfil completo — saldo, histórico de
+              compras e pagamentos.
+            </p>
+          </div>
         ) : editing ? (
           <div className="pdv-clientes-edit-form">
             <h2 className="adm-store-section-title">Editar cliente</h2>

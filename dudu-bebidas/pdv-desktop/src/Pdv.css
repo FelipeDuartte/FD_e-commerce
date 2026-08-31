@@ -726,6 +726,35 @@
   opacity: 0.55;
 }
 
+.pdv-clientes-empty-detail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 420px;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.pdv-clientes-empty-icon {
+  font-size: 40px;
+  opacity: 0.35;
+  margin-bottom: 6px;
+}
+
+.pdv-clientes-empty-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--c-text-muted);
+}
+
+.pdv-clientes-empty-desc {
+  font-size: 13px;
+  max-width: 320px;
+  color: var(--c-text-dim);
+}
+
 .pdv-clientes-inactive-badge {
   margin-left: 8px;
   padding: 2px 8px;
