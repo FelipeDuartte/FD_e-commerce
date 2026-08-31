@@ -85,6 +85,7 @@ function mapSaleRow(o) {
   const items = o.order_items ?? [];
   return {
     orderId: o.id,
+    orderNumber: o.order_number,
     total: o.total,
     discountAmount: o.discount_amount,
     paymentMethod: o.payment_method,
@@ -101,7 +102,7 @@ function mapSaleRow(o) {
 async function queryPdvSales({ sessionId, sinceDays, onlyCancelled, limit } = {}) {
   let query = supabase
     .from("orders")
-    .select("id, total, discount_amount, payment_method, status, created_at, cash_session_id, order_items(name, quantity)")
+    .select("id, order_number, total, discount_amount, payment_method, status, created_at, cash_session_id, order_items(name, quantity)")
     .eq("channel", "balcao")
     .order("created_at", { ascending: false });
 

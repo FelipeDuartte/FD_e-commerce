@@ -4,10 +4,10 @@ import { PAYMENT_METHODS } from "../constants";
 import { listRecentSales, listCancelledSales, listFullHistorySales } from "../services/pdvService";
 
 const FILTERS = [
-  { key: "atual", label: "Caixa atual" },
-  { key: "recentes", label: "Recentes (7 dias)" },
-  { key: "canceladas", label: "Canceladas (30 dias)" },
-  { key: "completo", label: "Completo (últimas 150)" },
+  { key: "atual", label: "Caixa atual", hint: "Vendas da sessão de caixa aberta agora" },
+  { key: "recentes", label: "Recentes", hint: "Últimos 7 dias, todas as sessões" },
+  { key: "canceladas", label: "Canceladas", hint: "Vendas canceladas nos últimos 30 dias" },
+  { key: "completo", label: "Completo", hint: "Histórico geral — últimas 150 vendas" },
 ];
 
 function methodLabel(method) {
@@ -56,16 +56,21 @@ export default function HistorySalesList({ currentSessionId, sessionSales, cance
   const loading = filter !== "atual" && otherLoading;
   const error = filter === "atual" ? cancelError : otherError;
   const summary = summarize(sales);
+  const activeFilter = FILTERS.find((f) => f.key === filter);
 
   return (
-    <div className="pdv-session-sales">
-      <h2 className="adm-store-section-title">Histórico de vendas</h2>
+    <div className="pdv-history">
+      <div>
+        <h2 className="adm-store-section-title">Histórico de vendas</h2>
+        <p className="adm-store-section-desc">{activeFilter.hint}</p>
+      </div>
 
       <div className="pdv-clientes-filters">
         {FILTERS.map((f) => (
           <button
             key={f.key}
             className={`pdv-clientes-filter-btn ${filter === f.key ? "active" : ""}`}
+            title={f.hint}
             onClick={() => setFilter(f.key)}
           >
             {f.label}
@@ -75,15 +80,21 @@ export default function HistorySalesList({ currentSessionId, sessionSales, cance
 
       {sales.length > 0 && (
         <div className="pdv-history-summary">
-          <div className="pdv-history-summary-row">
-            <span>{summary.activeCount} venda(s){summary.cancelledCount > 0 ? ` · ${summary.cancelledCount} cancelada(s)` : ""}</span>
-            <strong>{formatBRL(summary.total)}</strong>
+          <div className="pdv-history-summary-main">
+            <span className="pdv-history-summary-count">
+              {summary.activeCount} venda(s)
+              {summary.cancelledCount > 0 && (
+                <span className="pdv-history-summary-cancelled"> · {summary.cancelledCount} cancelada(s)</span>
+              )}
+            </span>
+            <strong className="pdv-history-summary-total">{formatBRL(summary.total)}</strong>
           </div>
           {Object.keys(summary.byMethod).length > 0 && (
             <div className="pdv-history-summary-methods">
               {Object.entries(summary.byMethod).map(([method, amount]) => (
                 <span key={method} className="pdv-history-summary-method">
-                  {methodLabel(method)}: {formatBRL(amount)}
+                  <span>{methodLabel(method)}</span>
+                  <strong>{formatBRL(amount)}</strong>
                 </span>
               ))}
             </div>
@@ -106,10 +117,13 @@ export default function HistorySalesList({ currentSessionId, sessionSales, cance
                 key={sale.orderId}
                 className={`pdv-sale-row ${sale.cancelled ? "pdv-sale-cancelled" : ""}`}
               >
-                <span className="pdv-sale-time" title={new Date(sale.createdAt).toLocaleString("pt-BR")}>
-                  {new Date(sale.createdAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}{" "}
-                  {new Date(sale.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-                </span>
+                <div className="pdv-sale-id-col">
+                  {sale.orderNumber != null && <strong className="pdv-sale-number">#{sale.orderNumber}</strong>}
+                  <span className="pdv-sale-time" title={new Date(sale.createdAt).toLocaleString("pt-BR")}>
+                    {new Date(sale.createdAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}{" "}
+                    {new Date(sale.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                </div>
                 <span className="pdv-sale-items" title={sale.itemsLabel}>
                   {sale.itemsLabel || `${sale.itemCount} item(ns)`}
                 </span>

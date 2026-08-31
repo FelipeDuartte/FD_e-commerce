@@ -183,7 +183,7 @@ export function usePdvCart(sessionId, { onFiadoSale } = {}) {
     setSubmitting(true);
     setSaleError("");
     try {
-      await createPdvSale({
+      const { orderNumber } = await createPdvSale({
         cartItems: cart.map((i) => ({ id: i.id, name: i.name, quantity: i.quantity })),
         cashSessionId: sessionId,
         discountAmount,
@@ -191,12 +191,13 @@ export function usePdvCart(sessionId, { onFiadoSale } = {}) {
           ? { payments: splitPayments.map((p) => ({ method: p.method, amount: Number(p.amount) })) }
           : { paymentMethod, pdvCustomerId: paymentMethod === "fiado" ? fiadoCustomer.id : undefined }),
       });
+      const orderTag = orderNumber ? `Pedido #${orderNumber} — ` : "";
       setSaleSuccess(
         paymentMethod === "fiado"
-          ? `Venda fiado registrada — ${formatBRL(cartTotal)} (${fiadoCustomer.name})`
+          ? `${orderTag}Venda fiado registrada — ${formatBRL(cartTotal)} (${fiadoCustomer.name})`
           : changeAmount !== null
-            ? `Venda registrada — ${formatBRL(cartTotal)} (troco: ${formatBRL(changeAmount)})`
-            : `Venda registrada — ${formatBRL(cartTotal)}`,
+            ? `${orderTag}Venda registrada — ${formatBRL(cartTotal)} (troco: ${formatBRL(changeAmount)})`
+            : `${orderTag}Venda registrada — ${formatBRL(cartTotal)}`,
       );
       setTimeout(() => setSaleSuccess(""), 3000);
       if (paymentMethod === "fiado") onFiadoSale?.();

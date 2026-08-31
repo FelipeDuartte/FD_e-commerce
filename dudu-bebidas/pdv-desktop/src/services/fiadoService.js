@@ -84,7 +84,7 @@ export async function listCustomerPayments(customerId) {
 export async function listFiadoOrders(customerId) {
   const { data, error } = await supabase
     .from("orders")
-    .select("id, total, status, created_at, order_items(name, quantity)")
+    .select("id, order_number, total, status, created_at, order_items(name, quantity)")
     .eq("pdv_customer_id", customerId)
     .eq("payment_method", "fiado")
     .order("created_at", { ascending: false });
@@ -94,6 +94,7 @@ export async function listFiadoOrders(customerId) {
   }
   return (data ?? []).map((o) => ({
     orderId: o.id,
+    orderNumber: o.order_number,
     total: o.total,
     cancelled: o.status === "cancelled",
     createdAt: o.created_at,

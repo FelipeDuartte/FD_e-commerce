@@ -854,8 +854,11 @@
   width: 100%;
 }
 
-.pdv-session-sales {
-  margin-top: 24px;
+.pdv-history {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 8px;
 }
 
 .pdv-sales-list {
@@ -866,9 +869,9 @@
 
 .pdv-sale-row {
   display: grid;
-  grid-template-columns: 100px 1fr 140px 90px auto;
+  grid-template-columns: 84px 1fr 130px 90px auto;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   padding: 10px 14px;
   border-radius: 8px;
   border: 1px solid rgba(255, 215, 0, 0.1);
@@ -877,9 +880,21 @@
   color: var(--c-text);
 }
 
+.pdv-sale-id-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.pdv-sale-number {
+  font-size: 12px;
+  color: var(--c-accent);
+}
+
 .pdv-sale-time {
   color: var(--c-text-muted);
   font-family: monospace;
+  font-size: 11px;
   white-space: nowrap;
 }
 
@@ -891,31 +906,54 @@
 .pdv-history-summary {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 12px 14px;
+  gap: 10px;
+  padding: 14px 16px;
   border-radius: 10px;
   border: 1px solid rgba(255, 215, 0, 0.12);
   background: color-mix(in srgb, var(--c-text) 3%, transparent);
 }
 
-.pdv-history-summary-row {
+.pdv-history-summary-main {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  font-size: 14px;
+  align-items: baseline;
 }
 
-.pdv-history-summary-row strong {
-  font-size: 18px;
+.pdv-history-summary-count {
+  font-size: 13px;
+  color: var(--c-text-muted);
+}
+
+.pdv-history-summary-cancelled {
+  color: #ff6b6b;
+}
+
+.pdv-history-summary-total {
+  font-size: 22px;
   color: var(--c-accent);
 }
 
 .pdv-history-summary-methods {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 16px;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.pdv-history-summary-method {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--c-text) 4%, transparent);
   font-size: 12px;
   color: var(--c-text-muted);
+}
+
+.pdv-history-summary-method strong {
+  color: var(--c-text);
 }
 
 .pdv-sale-items {

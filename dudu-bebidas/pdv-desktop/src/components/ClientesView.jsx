@@ -276,7 +276,9 @@ export default function ClientesView({ customers, customersLoading, customersErr
                           <span className="pdv-sale-time">
                             {new Date(o.createdAt).toLocaleDateString("pt-BR")}
                           </span>
-                          <span className="pdv-sale-items" title={o.itemsLabel}>{o.itemsLabel}</span>
+                          <span className="pdv-sale-items" title={o.itemsLabel}>
+                            {o.orderNumber ? `#${o.orderNumber} · ` : ""}{o.itemsLabel}
+                          </span>
                           <strong>{formatBRL(o.total)}</strong>
                           {o.cancelled && <span className="pdv-sale-cancelled-label">Cancelada</span>}
                           {paid && <span className="pdv-fiado-order-paid-label">Pago</span>}
