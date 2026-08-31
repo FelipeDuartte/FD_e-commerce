@@ -866,7 +866,7 @@
 
 .pdv-sale-row {
   display: grid;
-  grid-template-columns: 60px 1fr 140px 90px auto;
+  grid-template-columns: 100px 1fr 140px 90px auto;
   align-items: center;
   gap: 10px;
   padding: 10px 14px;
@@ -880,6 +880,42 @@
 .pdv-sale-time {
   color: var(--c-text-muted);
   font-family: monospace;
+  white-space: nowrap;
+}
+
+.pdv-sale-locked-label {
+  color: var(--c-text-dim);
+  text-align: center;
+}
+
+.pdv-history-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 215, 0, 0.12);
+  background: color-mix(in srgb, var(--c-text) 3%, transparent);
+}
+
+.pdv-history-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+
+.pdv-history-summary-row strong {
+  font-size: 18px;
+  color: var(--c-accent);
+}
+
+.pdv-history-summary-methods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  font-size: 12px;
+  color: var(--c-text-muted);
 }
 
 .pdv-sale-items {

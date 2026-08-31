@@ -147,6 +147,7 @@ export default function Pdv({ theme, onToggleTheme }) {
 
           {pdvView === "historico" && (
             <HistorySalesList
+              currentSessionId={cashSession.session.id}
               cancelError={pdvCart.cancelError}
               sessionSales={pdvCart.sessionSales}
               cancellingId={pdvCart.cancellingId}
