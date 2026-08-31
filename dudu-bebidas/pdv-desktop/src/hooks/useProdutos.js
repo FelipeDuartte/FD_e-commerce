@@ -1,17 +1,19 @@
 import { useCallback, useEffect, useState } from "react";
-import { EMPTY_PRODUCT, generateProductId } from "../../adminUtils";
+import { EMPTY_PRODUCT, generateProductId } from "../utils/productConstants";
 import {
   buildProductPayload,
+  deleteAdminProduct,
   listAdminProducts,
   saveAdminProduct,
   toggleAdminProductActive,
   validateProductPayload,
-} from "../../services/adminProductService";
-import { useProductImageSearch } from "../../hooks/useProductImageSearch";
+} from "../services/productService";
+import { useProductImageSearch } from "./useProductImageSearch";
 
-// Concentra todo o estado/lógica da aba "Produtos": listagem, filtros, e o
-// modal de criar/editar (incluindo a busca/upload de imagem do produto).
-export function useAdminProducts(activeTab) {
+// Concentra todo o estado/lógica da view "Produtos": listagem, filtros, o
+// modal de criar/editar (incluindo a busca/upload de imagem do produto) e
+// a exclusão (com confirmação em modal próprio).
+export function useProdutos() {
   const [products, setProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(false);
   const [productsError, setProductsError] = useState("");
@@ -22,13 +24,15 @@ export function useAdminProducts(activeTab) {
   const [modalSaving, setModalSaving] = useState(false);
   const [modalError, setModalError] = useState("");
   const [togglingId, setTogglingId] = useState(null);
+  const [productToDelete, setProductToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   const handleImageResolved = useCallback((url) => {
     setModalForm((prev) => ({ ...prev, image: url }));
   }, []);
 
-  const productModalKey =
-    productModal === "new" ? "new" : (productModal?.id ?? "closed");
+  const productModalKey = productModal === "new" ? "new" : (productModal?.id ?? "closed");
 
   const productImageSearch = useProductImageSearch(
     modalForm.name,
@@ -50,16 +54,12 @@ export function useAdminProducts(activeTab) {
   }, []);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (activeTab === "produtos" && products.length === 0) fetchProducts();
-  }, [activeTab, fetchProducts, products.length]);
+    fetchProducts();
+  }, [fetchProducts]);
 
   const filteredProducts = products.filter((p) => {
-    const matchSearch = p.name
-      .toLowerCase()
-      .includes(productSearch.toLowerCase());
-    const matchCategory =
-      productCategory === "todos" || p.category === productCategory;
+    const matchSearch = p.name.toLowerCase().includes(productSearch.toLowerCase());
+    const matchCategory = productCategory === "todos" || p.category === productCategory;
     return matchSearch && matchCategory;
   });
 
@@ -115,14 +115,38 @@ export function useAdminProducts(activeTab) {
     setProductsError("");
     try {
       const updatedProduct = await toggleAdminProductActive(product);
-      setProducts((prev) =>
-        prev.map((p) => (p.id === product.id ? updatedProduct : p)),
-      );
+      setProducts((prev) => prev.map((p) => (p.id === product.id ? updatedProduct : p)));
     } catch (error) {
       console.error(error);
       setProductsError(error.message);
     }
     setTogglingId(null);
+  };
+
+  const requestDelete = (product) => {
+    setDeleteError("");
+    setProductToDelete(product);
+  };
+
+  const dismissDelete = () => {
+    if (deleting) return;
+    setProductToDelete(null);
+    setDeleteError("");
+  };
+
+  const confirmDelete = async () => {
+    if (!productToDelete) return;
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      await deleteAdminProduct(productToDelete);
+      setProducts((prev) => prev.filter((p) => p.id !== productToDelete.id));
+      setProductToDelete(null);
+    } catch (error) {
+      console.error(error);
+      setDeleteError(error.message);
+    }
+    setDeleting(false);
   };
 
   return {
@@ -131,5 +155,6 @@ export function useAdminProducts(activeTab) {
     modalForm, modalSaving, modalError, togglingId, filteredProducts,
     openNewProduct, openEditProduct, handleModalChange, handleModalSave,
     handleToggleActive, productImageSearch,
+    productToDelete, deleting, deleteError, requestDelete, dismissDelete, confirmDelete,
   };
 }

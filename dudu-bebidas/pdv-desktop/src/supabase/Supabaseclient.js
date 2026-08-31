@@ -46,3 +46,8 @@ export async function resolveStore() {
 export function getCurrentStoreId() {
   return cachedStore?.id ?? null;
 }
+
+/** Retorna a loja já resolvida (id, slug, name...), ou null se resolveStore() ainda não rodou. */
+export function getCurrentStore() {
+  return cachedStore;
+}

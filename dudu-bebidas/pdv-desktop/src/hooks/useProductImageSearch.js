@@ -1,8 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  findMasterImage,
-  uploadProductImage,
-} from "../services/adminImageService";
+import { findMasterImage, uploadProductImage } from "../services/adminImageService";
 
 const DEBOUNCE_MS = 500;
 
@@ -26,12 +23,7 @@ const DEBOUNCE_MS = 500;
  *   Sempre que mudar, o estado interno é reiniciado — evita "vazar" o resultado
  *   da busca de um produto para o próximo quando o modal é reaberto.
  */
-export function useProductImageSearch(
-  productName,
-  currentImage,
-  onImageResolved,
-  resetKey,
-) {
+export function useProductImageSearch(productName, currentImage, onImageResolved, resetKey) {
   const [status, setStatus] = useState(currentImage ? "manual" : "idle");
   const [error, setError] = useState("");
   const [progress, setProgress] = useState(0);
@@ -78,9 +70,7 @@ export function useProductImageSearch(
       } catch (err) {
         console.error(err);
         setStatus("not_found");
-        setError(
-          "Não foi possível buscar automaticamente. Envie a imagem manualmente.",
-        );
+        setError("Não foi possível buscar automaticamente. Envie a imagem manualmente.");
       }
     }, DEBOUNCE_MS);
 

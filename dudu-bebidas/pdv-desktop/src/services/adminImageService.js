@@ -1,15 +1,14 @@
-import { supabase, getCurrentStore } from "../../../supabase/Supabaseclient";
+import { supabase, getCurrentStore } from "../supabase/Supabaseclient";
 import { AdminServiceError } from "./AdminServiceError";
 
 // ── Identificador da loja para uploads (Fdtech/stores/{storeSlug}/products/) ──
-// Antes era fixo ("dudu-bebidas"); agora vem da loja resolvida no boot do app
-// (Supabaseclient.js → resolveStore()), então cada projeto/cliente grava na
-// própria pasta do Cloudinary automaticamente.
+// Vem da loja resolvida no boot do app (Supabaseclient.js → resolveStore()),
+// então cada projeto/cliente grava na própria pasta do Cloudinary automaticamente.
 function getStoreSlugForUpload() {
   const store = getCurrentStore();
   if (!store?.slug) {
     throw new AdminServiceError(
-      "Loja não identificada — recarregue a página antes de enviar imagens.",
+      "Loja não identificada — reinicie o app antes de enviar imagens.",
     );
   }
   return store.slug;

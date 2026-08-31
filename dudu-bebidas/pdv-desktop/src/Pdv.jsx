@@ -2,12 +2,16 @@ import { useState } from "react";
 import { useCashSession } from "./hooks/useCashSession";
 import { usePdvCart } from "./hooks/usePdvCart";
 import { useFiadoCustomers } from "./hooks/useFiadoCustomers";
+import { useProdutos } from "./hooks/useProdutos";
+import { useAdminCategories } from "./hooks/useAdminCategories";
 import { PDV_VIEWS } from "./constants";
 import OpenSessionForm from "./components/OpenSessionForm";
 import ProductCatalog from "./components/ProductCatalog";
 import CartPanel from "./components/CartPanel";
 import HistorySalesList from "./components/HistorySalesList";
 import ClientesView from "./components/ClientesView";
+import ProdutosView from "./components/ProdutosView";
+import EstoqueView from "./components/EstoqueView";
 import CloseSessionModal from "./components/CloseSessionModal";
 import CancelSaleModal from "./components/CancelSaleModal";
 
@@ -17,6 +21,8 @@ export default function Pdv({ theme, onToggleTheme }) {
   const cashSession = useCashSession();
   const fiado = useFiadoCustomers(cashSession.session?.id);
   const pdvCart = usePdvCart(cashSession.session?.id, { onFiadoSale: fiado.reload });
+  const produtos = useProdutos();
+  const { categories: dbCategories } = useAdminCategories();
 
   const themeToggleBtn = (
     <button
@@ -170,6 +176,12 @@ export default function Pdv({ theme, onToggleTheme }) {
               onCancelSale={pdvCart.handleCancelSale}
             />
           )}
+
+          {pdvView === "produtos" && (
+            <ProdutosView produtos={produtos} categories={dbCategories} />
+          )}
+
+          {pdvView === "estoque" && <EstoqueView />}
         </main>
       </div>
 

@@ -1,12 +1,51 @@
-import { formatBRL } from "../../adminUtils";
+import { formatBRL } from "../utils/format";
+import ProductModal from "./ProductModal";
+import DeleteProductModal from "./DeleteProductModal";
 
-export default function ProductsTab({
-  products, filteredProducts, productsLoading, productsError,
-  productSearch, setProductSearch, productCategory, setProductCategory,
-  dbCategories, togglingId, openNewProduct, openEditProduct, handleToggleActive,
-}) {
+export default function ProdutosView({ produtos, categories }) {
+  const {
+    products, filteredProducts, productsLoading, productsError,
+    productSearch, setProductSearch, productCategory, setProductCategory,
+    productModal, setProductModal, modalForm, modalSaving, modalError,
+    handleModalChange, handleModalSave, togglingId, openNewProduct,
+    openEditProduct, handleToggleActive, productImageSearch,
+    productToDelete, deleting, deleteError, requestDelete, dismissDelete, confirmDelete,
+  } = produtos;
+
   return (
     <>
+      {productModal && (
+        <ProductModal
+          productModal={productModal}
+          modalForm={modalForm}
+          modalSaving={modalSaving}
+          modalError={modalError}
+          handleModalChange={handleModalChange}
+          handleModalSave={handleModalSave}
+          setProductModal={setProductModal}
+          categories={categories}
+          imageStatus={productImageSearch.status}
+          imageError={productImageSearch.error}
+          imageProgress={productImageSearch.progress}
+          onUploadImage={productImageSearch.uploadImage}
+          onResetImage={productImageSearch.resetToManual}
+          onRequestDelete={(product) => {
+            setProductModal(null);
+            requestDelete(product);
+          }}
+        />
+      )}
+
+      {productToDelete && (
+        <DeleteProductModal
+          product={productToDelete}
+          deleting={deleting}
+          deleteError={deleteError}
+          onConfirm={confirmDelete}
+          onDismiss={dismissDelete}
+        />
+      )}
+
       <div className="adm-title-row">
         <div>
           <h1 className="adm-title">Gestão de Produtos</h1>
@@ -32,7 +71,7 @@ export default function ProductsTab({
           onChange={(e) => setProductCategory(e.target.value)}
         >
           <option value="todos">Todas categorias</option>
-          {dbCategories.map((c) => (
+          {categories.map((c) => (
             <option key={c} value={c}>
               {c}
             </option>
@@ -67,9 +106,7 @@ export default function ProductsTab({
                   </td>
                   <td>{formatBRL(p.price)}</td>
                   <td>
-                    <span
-                      className={`adm-stock-badge ${p.stock === 0 ? "zero" : p.stock < 10 ? "low" : "ok"}`}
-                    >
+                    <span className={`adm-stock-badge ${p.stock === 0 ? "zero" : p.stock < 10 ? "low" : "ok"}`}>
                       {p.stock}
                     </span>
                   </td>
@@ -88,6 +125,9 @@ export default function ProductsTab({
                       disabled={togglingId === p.id}
                     >
                       {togglingId === p.id ? "..." : p.is_active ? "🚫 Desativar" : "✅ Ativar"}
+                    </button>
+                    <button className="adm-btn-delete" onClick={() => requestDelete(p)} title="Excluir produto">
+                      🗑️ Excluir
                     </button>
                   </td>
                 </tr>

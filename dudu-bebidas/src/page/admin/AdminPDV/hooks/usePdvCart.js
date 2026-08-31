@@ -1,12 +1,20 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { formatBRL } from "../../adminUtils";
-import { listAdminProducts } from "../../services/adminProductService";
+import { supabase } from "../../../../supabase/Supabaseclient";
 import {
   createPdvSale,
   cancelPdvSale,
   listSessionSales,
 } from "../../services/adminPDVService";
 import { getPdvPrice } from "../constants";
+
+// Gestão de produtos (CRUD/imagem) foi migrada pro PDV desktop — este
+// carrinho legado (flag SHOW_PDV_TAB) só precisa listar pra vender.
+async function listAdminProducts() {
+  const { data, error } = await supabase.from("products").select("*").order("name");
+  if (error) throw error;
+  return data ?? [];
+}
 
 // Concentra catálogo/busca, carrinho, desconto e o histórico de vendas da
 // sessão atual. Recebe sessionId (id do caixa aberto, ou null) — troca de

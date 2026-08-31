@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { listStockMovements } from "./services/adminStockService";
+import { listStockMovements } from "../services/stockService";
 
 const REASON_ICON = {
   venda: "🛒",
@@ -7,7 +7,7 @@ const REASON_ICON = {
   ajuste_manual: "✏️",
 };
 
-export default function AdminStock() {
+export default function EstoqueView() {
   const [movements, setMovements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -33,10 +33,7 @@ export default function AdminStock() {
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchPage(0, false);
-    }, 0);
-    return () => clearTimeout(timer);
+    fetchPage(0, false);
   }, [fetchPage]);
 
   const handleLoadMore = () => {

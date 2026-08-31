@@ -4,14 +4,12 @@
 // quando for liberar.
 export const SHOW_PDV_TAB = false;
 
-export default function AdminTabs({ activeTab, onChange, ordersCount, productsCount }) {
+export default function AdminTabs({ activeTab, onChange, ordersCount }) {
   const tabs = [
     { key: "pedidos", label: "📦 Pedidos", badge: ordersCount },
-    { key: "produtos", label: "🍺 Produtos", badge: productsCount },
     { key: "relatorios", label: "📊 Relatórios", badge: null },
     { key: "loja", label: "🏪 Loja", badge: null },
     ...(SHOW_PDV_TAB ? [{ key: "pdv", label: "🧾 PDV", badge: null }] : []),
-    { key: "estoque", label: "📦 Estoque", badge: null },
   ];
 
   return (

@@ -14,6 +14,8 @@ export const PDV_VIEWS = [
   { key: "venda", label: "🛒 Venda" },
   { key: "historico", label: "📋 Histórico" },
   { key: "clientes", label: "👥 Clientes" },
+  { key: "produtos", label: "🍺 Produtos" },
+  { key: "estoque", label: "📦 Estoque" },
 ];
 
 // Cliente sem nenhuma compra fiado nesse tanto de dias entra no filtro

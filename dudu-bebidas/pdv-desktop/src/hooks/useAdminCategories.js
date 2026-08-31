@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { supabase } from "../../../supabase/Supabaseclient";
-import { CATEGORIES as FALLBACK } from "../adminUtils";
+import { supabase } from "../supabase/Supabaseclient";
+import { CATEGORIES as FALLBACK } from "../utils/productConstants";
 
 /**
- * Busca categorias ativas do banco para uso no painel admin.
+ * Busca categorias ativas do banco para uso no PDV.
  * Se o banco falhar ou retornar vazio, usa o array estático
- * de adminUtils.js como fallback (sem quebrar nada).
+ * de productConstants.js como fallback (sem quebrar nada).
  *
  * Retorna um array de strings: ["cerveja", "vinho", ...]
  */
