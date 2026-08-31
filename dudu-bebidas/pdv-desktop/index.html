@@ -4,6 +4,22 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PDV — Dudu Bebidas</title>
+    <!--
+      Aplica o tema salvo ANTES da primeira pintura da janela — roda
+      síncrono, antes do CSS/JS do React carregar. Sem isso, a janela
+      sempre nasceria no tema escuro padrão e só trocaria pro claro alguns
+      milissegundos depois (quando o useEffect do React rodasse), causando
+      um "flash" visível do tema errado toda vez que o app abre.
+    -->
+    <script>
+      (function () {
+        try {
+          if (localStorage.getItem("pdv-theme") === "light") {
+            document.documentElement.setAttribute("data-theme", "light");
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
 
   <body>

@@ -1,4 +1,4 @@
-export default function AdminHeader({ onBack }) {
+export default function AdminHeader({ onBack, theme, onToggleTheme }) {
   return (
     <header className="adm-header">
       <div className="adm-header-left">
@@ -10,6 +10,13 @@ export default function AdminHeader({ onBack }) {
       </div>
       <div className="adm-header-right">
         <span className="adm-admin-email">👤 Dudu bebidas</span>
+        <button
+          className="adm-theme-toggle"
+          onClick={onToggleTheme}
+          title={theme === "light" ? "Mudar para tema escuro" : "Mudar para tema claro"}
+        >
+          {theme === "light" ? "🌙" : "☀️"}
+        </button>
         <button className="adm-btn-back" onClick={onBack}>
           ← Voltar à loja
         </button>

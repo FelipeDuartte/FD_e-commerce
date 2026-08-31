@@ -38,6 +38,23 @@
   --t: 0.2s;
 }
 
+/* Tema claro — opt-in via data-theme="light" no <html> (ver useTheme.js);
+   padrão continua escuro, sem mudar nada pra quem nunca mexer no botão de
+   tema. Cores de acento (verde/laranja/vermelho) ficam iguais nos dois
+   temas — já têm contraste suficiente em fundo claro ou escuro; só o
+   dourado escurece um pouco pra não ficar ilegível como texto no claro. */
+:root[data-theme="light"] {
+  --c-bg: #f7f7f5;
+  --c-surface: #ffffff;
+  --c-surface-2: #f0f0ee;
+  --c-border: #e2e2df;
+  --c-border-2: #d0d0cc;
+  --c-text: #1a1a1a;
+  --c-text-muted: #6b6b68;
+  --c-text-dim: #a3a39f;
+  --c-accent: #b8860b;
+}
+
 /* ─── ROOT & LAYOUT ──────────────────────────────────────────────── */
 .adm-root {
   background: var(--c-bg);
@@ -88,7 +105,7 @@ button:disabled {
   align-items: center;
   justify-content: space-between;
   padding: 20px 0;
-  border-bottom: 1px solid #1a1a1a;
+  border-bottom: 1px solid var(--c-border);
   margin-bottom: 36px;
   flex-wrap: wrap;
   gap: 12px;
@@ -130,7 +147,7 @@ button:disabled {
 
 .adm-admin-email {
   font-size: 12px;
-  color: var(--c-dim, #555);
+  color: var(--c-text-dim);
 }
 
 .adm-btn-back {
@@ -144,6 +161,22 @@ button:disabled {
 .adm-btn-back:hover {
   border-color: var(--c-accent);
   color: var(--c-accent);
+}
+
+.adm-theme-toggle {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--c-border-2);
+  border-radius: var(--r-md);
+  font-size: 16px;
+  line-height: 1;
+}
+.adm-theme-toggle:hover {
+  border-color: var(--c-accent);
 }
 
 /* ─── TÍTULO ──────────────────────────────────────────────────────── */
@@ -238,7 +271,7 @@ button:disabled {
 
 .adm-metric-label {
   font-size: 12px;
-  color: #666;
+  color: var(--c-text-muted);
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -289,7 +322,7 @@ button:disabled {
 }
 .adm-stat-label {
   font-size: 10px;
-  color: #666;
+  color: var(--c-text-muted);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -327,7 +360,7 @@ button:disabled {
   width: 16px;
   height: 16px;
   border-width: 2px;
-  border-color: #333;
+  border-color: var(--c-border-2);
   border-top-color: var(--c-accent);
 }
 
@@ -340,7 +373,7 @@ button:disabled {
 .adm-empty {
   text-align: center;
   padding: 80px 0;
-  color: #444;
+  color: var(--c-text-dim);
   font-size: 15px;
 }
 
@@ -381,7 +414,7 @@ button:disabled {
   border-left: 3px solid var(--c-green);
 }
 .adm-order-delivered {
-  border-left: 3px solid #333;
+  border-left: 3px solid var(--c-border-2);
 }
 
 .adm-order-main {
@@ -394,7 +427,7 @@ button:disabled {
   transition: background var(--t);
 }
 .adm-order-main:hover {
-  background: #161616;
+  background: color-mix(in srgb, var(--c-text) 4%, transparent);
 }
 
 .adm-order-status {
@@ -442,7 +475,7 @@ button:disabled {
 .adm-order-name {
   font-size: 15px;
   font-weight: 600;
-  color: #ddd;
+  color: var(--c-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -465,7 +498,7 @@ button:disabled {
   align-items: flex-end;
   gap: 4px;
   font-size: 13px;
-  color: #666;
+  color: var(--c-text-muted);
   white-space: nowrap;
 }
 .adm-order-total {
@@ -488,13 +521,13 @@ button:disabled {
 }
 .adm-order-date {
   font-size: 11px;
-  color: #444;
+  color: var(--c-text-dim);
   white-space: nowrap;
 }
 
 .adm-chevron {
   font-size: 16px;
-  color: #333;
+  color: var(--c-text-dim);
   transition: transform var(--t);
 }
 .adm-chevron.open {
@@ -578,7 +611,7 @@ button:disabled {
 
 /* ─── DETALHES EXPANDIDOS ────────────────────────────────────────── */
 .adm-order-detail {
-  border-top: 1px solid #1a1a1a;
+  border-top: 1px solid var(--c-border);
   padding: 24px 20px;
   display: grid;
   gap: 24px;
@@ -628,12 +661,12 @@ button:disabled {
   padding: 10px 12px;
   background: var(--c-surface);
   border-radius: 10px;
-  border: 1px solid #1a1a1a;
+  border: 1px solid var(--c-border);
 }
 .adm-item-name {
   flex: 1;
   font-size: 13px;
-  color: #ccc;
+  color: var(--c-text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -665,7 +698,7 @@ button:disabled {
   line-height: 1.5;
 }
 .adm-address strong {
-  color: #ccc;
+  color: var(--c-text);
 }
 
 /* ─── STATUS PILLS ────────────────────────────────────────────────── */
@@ -680,7 +713,7 @@ button:disabled {
   border-radius: 20px;
   border: 1px solid #222;
   background: var(--c-surface);
-  color: #666;
+  color: var(--c-text-muted);
   font-size: 12px;
   font-weight: 600;
 }
@@ -704,7 +737,7 @@ button:disabled {
   margin-top: 4px;
 }
 .adm-btn-advance:hover:not(:disabled) {
-  background: #ffe033;
+  background: var(--c-accent);
   transform: translateY(-1px);
   box-shadow: 0 6px 20px rgba(255, 208, 0, 0.2);
 }
@@ -823,7 +856,7 @@ button:disabled {
   color: var(--c-text-muted);
 }
 .adm-modal-btn-back:hover:not(:disabled) {
-  border-color: #444;
+  border-color: var(--c-border-2);
   color: var(--c-text);
 }
 
@@ -877,7 +910,7 @@ button:disabled {
   text-align: center;
   margin-top: 24px;
   font-size: 13px;
-  color: #333;
+  color: var(--c-text-dim);
 }
 
 /* ─── ABAS ───────────────────────────────────────────────────────── */
@@ -885,7 +918,7 @@ button:disabled {
   display: flex;
   gap: 8px;
   margin-bottom: 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid color-mix(in srgb, var(--c-text) 10%, transparent);
 }
 
 .adm-tab {
@@ -944,8 +977,8 @@ button:disabled {
 
 .adm-product-search,
 .adm-product-cat-filter {
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: color-mix(in srgb, var(--c-text) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--c-text) 10%, transparent);
   border-radius: var(--r-sm);
   color: var(--c-text);
   padding: 10px 14px;
@@ -973,12 +1006,12 @@ button:disabled {
   padding: 10px 12px;
   color: var(--c-text-muted);
   font-weight: 500;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid color-mix(in srgb, var(--c-text) 8%, transparent);
 }
 .adm-product-table td {
   padding: 10px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  color: #ddd;
+  border-bottom: 1px solid color-mix(in srgb, var(--c-text) 5%, transparent);
+  color: var(--c-text);
 }
 .adm-row-inactive td {
   opacity: 0.45;
@@ -987,7 +1020,7 @@ button:disabled {
 .adm-td-id {
   font-family: monospace;
   font-size: 12px;
-  color: #666;
+  color: var(--c-text-muted);
 }
 .adm-td-name {
   font-weight: 500;
@@ -1044,15 +1077,15 @@ button:disabled {
 
 /* Botões de ação na tabela */
 .adm-btn-edit {
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #ddd;
+  background: color-mix(in srgb, var(--c-text) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--c-text) 12%, transparent);
+  color: var(--c-text);
   border-radius: 6px;
   padding: 5px 10px;
   font-size: 12px;
 }
 .adm-btn-edit:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: color-mix(in srgb, var(--c-text) 12%, transparent);
 }
 
 .adm-btn-toggle {
@@ -1099,8 +1132,8 @@ button:disabled {
 
 .adm-form-field input,
 .adm-form-field select {
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: color-mix(in srgb, var(--c-text) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--c-text) 12%, transparent);
   border-radius: var(--r-sm);
   color: var(--c-text);
   padding: 9px 12px;
@@ -1121,7 +1154,7 @@ button:disabled {
   align-items: center;
   gap: 8px;
   font-size: 14px;
-  color: #ccc;
+  color: var(--c-text);
   cursor: pointer;
 }
 
@@ -1140,7 +1173,7 @@ button:disabled {
 }
 .adm-image-status-searching {
   color: #cbd5e1;
-  background: rgba(255, 255, 255, 0.06);
+  background: color-mix(in srgb, var(--c-text) 6%, transparent);
 }
 .adm-image-status-found {
   color: #4ade80;
@@ -1161,7 +1194,7 @@ button:disabled {
   justify-content: center;
   text-align: center;
   min-height: 110px;
-  border: 1.5px dashed rgba(255, 255, 255, 0.18);
+  border: 1.5px dashed color-mix(in srgb, var(--c-text) 18%, transparent);
   border-radius: var(--r-sm);
   color: var(--c-text-muted);
   font-size: 13px;
@@ -1172,8 +1205,8 @@ button:disabled {
     background 0.15s ease;
 }
 .adm-image-dropzone:hover {
-  border-color: rgba(255, 255, 255, 0.35);
-  background: rgba(255, 255, 255, 0.04);
+  border-color: color-mix(in srgb, var(--c-text) 35%, transparent);
+  background: color-mix(in srgb, var(--c-text) 4%, transparent);
 }
 .adm-image-dropzone-active {
   border-color: var(--c-accent, #4ade80);
@@ -1191,7 +1224,7 @@ button:disabled {
   object-fit: contain;
   background: #fff;
   border-radius: var(--r-sm);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid color-mix(in srgb, var(--c-text) 12%, transparent);
 }
 .adm-image-preview-actions {
   display: flex;
@@ -1200,8 +1233,8 @@ button:disabled {
 }
 .adm-image-change-btn,
 .adm-image-remove-btn {
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: color-mix(in srgb, var(--c-text) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--c-text) 12%, transparent);
   border-radius: var(--r-sm);
   color: var(--c-text);
   font-size: 12.5px;
@@ -1211,7 +1244,7 @@ button:disabled {
 }
 .adm-image-change-btn:hover,
 .adm-image-remove-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: color-mix(in srgb, var(--c-text) 12%, transparent);
 }
 .adm-image-change-btn:disabled,
 .adm-image-remove-btn:disabled {
@@ -1222,7 +1255,7 @@ button:disabled {
 .adm-image-progress-track {
   height: 6px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
+  background: color-mix(in srgb, var(--c-text) 8%, transparent);
   overflow: hidden;
 }
 .adm-image-progress-fill {
@@ -1270,12 +1303,12 @@ button:disabled {
 
 .adm-preview-label {
   font-size: 11px;
-  color: #666;
+  color: var(--c-text-muted);
   margin-right: 4px;
 }
 .adm-preview-old {
   font-size: 13px;
-  color: #666;
+  color: var(--c-text-muted);
   text-decoration: line-through;
 }
 .adm-preview-new {

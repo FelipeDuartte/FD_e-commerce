@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase, getCurrentStoreId } from "./supabase/Supabaseclient";
+import { useTheme } from "./hooks/useTheme";
 import Login from "./Login";
 import Pdv from "./Pdv";
 import "./theme.css";
@@ -12,6 +13,10 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(null);
   const lastCheckedUid = useRef(null);
+  // Chamado aqui (não dentro de Pdv.jsx) pra já aplicar o tema escolhido
+  // mesmo antes do login — senão a tela de login sempre nasceria escura,
+  // não importa o que o operador tinha escolhido da última vez.
+  const theme = useTheme();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -53,7 +58,7 @@ export default function App() {
     );
   }
 
-  if (!isAdmin) return <Login />;
+  if (!isAdmin) return <Login theme={theme.theme} onToggleTheme={theme.toggleTheme} />;
 
-  return <Pdv />;
+  return <Pdv theme={theme.theme} onToggleTheme={theme.toggleTheme} />;
 }

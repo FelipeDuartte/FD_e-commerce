@@ -2,11 +2,18 @@
    formulário, loading e empty state reaproveitam as classes adm-* globais. */
 
 .pdv-login-screen {
+  position: relative;
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--c-bg);
+}
+
+.pdv-login-theme-toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
 }
 
 .pdv-login-card {
@@ -121,7 +128,7 @@
 }
 
 .pdv-navrail-btn:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: color-mix(in srgb, var(--c-text) 3%, transparent);
   color: var(--c-text);
 }
 
@@ -229,7 +236,7 @@
   padding: 12px;
   border-radius: 10px;
   border: 1px solid rgba(255, 215, 0, 0.15);
-  background: rgba(255, 255, 255, 0.03);
+  background: color-mix(in srgb, var(--c-text) 3%, transparent);
   color: var(--c-text);
   cursor: pointer;
   text-align: left;
@@ -248,7 +255,7 @@
 }
 
 .pdv-product-price {
-  color: #ffd700;
+  color: var(--c-accent);
   font-weight: 700;
 }
 
@@ -259,7 +266,7 @@
   padding: 16px;
   border-radius: 10px;
   border: 1px solid rgba(255, 215, 0, 0.15);
-  background: rgba(255, 255, 255, 0.03);
+  background: color-mix(in srgb, var(--c-text) 3%, transparent);
   color: var(--c-text);
   position: sticky;
   top: 16px;
@@ -333,7 +340,7 @@
 }
 
 .pdv-payment-btn.active {
-  border-color: #ffd700;
+  border-color: var(--c-accent);
   background: rgba(255, 215, 0, 0.12);
 }
 
@@ -349,14 +356,14 @@
   padding: 8px 10px;
   border-radius: 8px;
   border: 1px solid rgba(255, 215, 0, 0.2);
-  background: rgba(255, 255, 255, 0.03);
+  background: color-mix(in srgb, var(--c-text) 3%, transparent);
   color: var(--c-text);
 }
 
 .pdv-change-result {
   font-size: 13px;
   font-weight: 600;
-  color: #ffd700;
+  color: var(--c-accent);
   white-space: nowrap;
 }
 
@@ -376,7 +383,7 @@
   padding: 8px 10px;
   border-radius: 8px;
   border: 1px solid rgba(255, 215, 0, 0.2);
-  background: rgba(255, 255, 255, 0.03);
+  background: color-mix(in srgb, var(--c-text) 3%, transparent);
   color: var(--c-text);
 }
 
@@ -395,7 +402,7 @@
   padding: 8px 10px;
   border-radius: 8px;
   border: 1px solid rgba(255, 215, 0, 0.12);
-  background: rgba(255, 255, 255, 0.02);
+  background: color-mix(in srgb, var(--c-text) 2%, transparent);
   color: var(--c-text);
   cursor: pointer;
   font-size: 13px;
@@ -428,7 +435,7 @@
   padding: 8px 10px;
   border-radius: 8px;
   border: 1px solid rgba(255, 215, 0, 0.2);
-  background: rgba(255, 255, 255, 0.03);
+  background: color-mix(in srgb, var(--c-text) 3%, transparent);
   color: var(--c-text);
 }
 
@@ -458,7 +465,7 @@
   align-self: flex-start;
   border: none;
   background: transparent;
-  color: #ffd700;
+  color: var(--c-accent);
   text-decoration: underline;
   cursor: pointer;
   font-size: 12px;
@@ -501,7 +508,7 @@
   padding: 10px 12px;
   border-radius: 8px;
   border: 1px solid rgba(255, 215, 0, 0.12);
-  background: rgba(255, 255, 255, 0.02);
+  background: color-mix(in srgb, var(--c-text) 2%, transparent);
   color: var(--c-text);
   cursor: pointer;
   font-size: 13px;
@@ -509,7 +516,7 @@
 }
 
 .pdv-fiado-customer-row.active {
-  border-color: #ffd700;
+  border-color: var(--c-accent);
   background: rgba(255, 215, 0, 0.1);
 }
 
@@ -559,7 +566,7 @@
 }
 
 .pdv-clientes-new-btn:hover {
-  border-color: #ffd700;
+  border-color: var(--c-accent);
   background: rgba(255, 215, 0, 0.08);
 }
 
@@ -576,7 +583,7 @@
   padding: 12px 14px;
   border-radius: 10px;
   border: 1px solid rgba(255, 215, 0, 0.12);
-  background: rgba(255, 255, 255, 0.02);
+  background: color-mix(in srgb, var(--c-text) 2%, transparent);
 }
 
 .pdv-clientes-stat span {
@@ -586,7 +593,7 @@
 
 .pdv-clientes-stat strong {
   font-size: 18px;
-  color: #ffd700;
+  color: var(--c-accent);
 }
 
 .pdv-clientes-stat strong.pdv-fiado-has-debt {
@@ -623,7 +630,7 @@
   padding: 10px 14px;
   border-radius: 8px;
   border: 1px solid rgba(255, 215, 0, 0.1);
-  background: rgba(255, 255, 255, 0.02);
+  background: color-mix(in srgb, var(--c-text) 2%, transparent);
   font-size: 13px;
   color: var(--c-text);
 }
@@ -642,7 +649,7 @@
   padding: 10px 14px;
   border-radius: 8px;
   border: 1px solid rgba(255, 215, 0, 0.1);
-  background: rgba(255, 255, 255, 0.02);
+  background: color-mix(in srgb, var(--c-text) 2%, transparent);
   font-size: 13px;
   color: var(--c-text);
 }
@@ -691,9 +698,9 @@
 }
 
 .pdv-clientes-filter-btn.active {
-  border-color: #ffd700;
+  border-color: var(--c-accent);
   background: rgba(255, 215, 0, 0.12);
-  color: #ffd700;
+  color: var(--c-accent);
   font-weight: 600;
 }
 
@@ -718,7 +725,7 @@
   padding: 4px 0;
   border: none;
   background: transparent;
-  color: #ffd700;
+  color: var(--c-accent);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -742,7 +749,7 @@
   padding: 8px 10px;
   border-radius: 8px;
   border: 1px solid rgba(255, 215, 0, 0.2);
-  background: rgba(255, 255, 255, 0.03);
+  background: color-mix(in srgb, var(--c-text) 3%, transparent);
   color: var(--c-text);
   font-size: 13px;
 }
@@ -751,7 +758,7 @@
   padding: 8px 10px;
   border-radius: 8px;
   border: 1px solid rgba(255, 215, 0, 0.2);
-  background: rgba(255, 255, 255, 0.03);
+  background: color-mix(in srgb, var(--c-text) 3%, transparent);
   color: var(--c-text);
   min-width: 0;
 }
@@ -809,7 +816,7 @@
   padding: 8px 10px;
   border-radius: 8px;
   border: 1px solid rgba(255, 215, 0, 0.2);
-  background: rgba(255, 255, 255, 0.03);
+  background: color-mix(in srgb, var(--c-text) 3%, transparent);
   color: var(--c-text);
 }
 
@@ -840,7 +847,7 @@
 }
 
 .pdv-cart-total strong {
-  color: #ffd700;
+  color: var(--c-accent);
 }
 
 .pdv-finalize-btn {
@@ -865,7 +872,7 @@
   padding: 10px 14px;
   border-radius: 8px;
   border: 1px solid rgba(255, 215, 0, 0.1);
-  background: rgba(255, 255, 255, 0.02);
+  background: color-mix(in srgb, var(--c-text) 2%, transparent);
   font-size: 13px;
   color: var(--c-text);
 }
@@ -921,7 +928,7 @@
 }
 
 .pdv-close-breakdown-fiado {
-  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  border-top: 1px dashed color-mix(in srgb, var(--c-text) 10%, transparent);
   margin-top: 4px;
   padding-top: 8px;
 }
@@ -941,7 +948,7 @@
   display: flex;
   justify-content: space-between;
   padding: 8px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid color-mix(in srgb, var(--c-text) 8%, transparent);
 }
 
 .pdv-close-diff-mismatch strong {

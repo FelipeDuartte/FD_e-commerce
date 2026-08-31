@@ -11,18 +11,29 @@ import ClientesView from "./components/ClientesView";
 import CloseSessionModal from "./components/CloseSessionModal";
 import CancelSaleModal from "./components/CancelSaleModal";
 
-export default function Pdv() {
+export default function Pdv({ theme, onToggleTheme }) {
   const [pdvView, setPdvView] = useState("venda");
 
   const cashSession = useCashSession();
   const fiado = useFiadoCustomers(cashSession.session?.id);
   const pdvCart = usePdvCart(cashSession.session?.id, { onFiadoSale: fiado.reload });
 
+  const themeToggleBtn = (
+    <button
+      className="adm-theme-toggle"
+      onClick={onToggleTheme}
+      title={theme === "light" ? "Mudar para tema escuro" : "Mudar para tema claro"}
+    >
+      {theme === "light" ? "🌙" : "☀️"}
+    </button>
+  );
+
   if (cashSession.sessionLoading) {
     return (
       <div className="pdv-app-shell">
         <div className="pdv-topbar">
           <span className="pdv-topbar-brand">🧾 PDV — Dudu Bebidas</span>
+          {themeToggleBtn}
         </div>
         <div className="pdv-loading-screen">
           <div className="adm-spinner" />
@@ -37,6 +48,7 @@ export default function Pdv() {
       <div className="pdv-app-shell">
         <div className="pdv-topbar">
           <span className="pdv-topbar-brand">🧾 PDV — Dudu Bebidas</span>
+          {themeToggleBtn}
         </div>
         <OpenSessionForm
           sessionError={cashSession.sessionError}
@@ -61,6 +73,7 @@ export default function Pdv() {
           <button className="pdv-topbar-close-btn" onClick={() => cashSession.setCloseModalOpen(true)}>
             🔒 Fechar caixa
           </button>
+          {themeToggleBtn}
         </div>
       </div>
 

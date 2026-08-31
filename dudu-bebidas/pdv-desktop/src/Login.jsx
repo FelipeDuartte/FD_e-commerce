@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { supabase } from "./supabase/Supabaseclient";
 
-export default function Login() {
+export default function Login({ theme, onToggleTheme }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -28,6 +28,14 @@ export default function Login() {
 
   return (
     <div className="pdv-login-screen">
+      <button
+        type="button"
+        className="adm-theme-toggle pdv-login-theme-toggle"
+        onClick={onToggleTheme}
+        title={theme === "light" ? "Mudar para tema escuro" : "Mudar para tema claro"}
+      >
+        {theme === "light" ? "🌙" : "☀️"}
+      </button>
       <form className="pdv-login-card" onSubmit={handleSubmit}>
         <h1 className="adm-title">🧾 PDV</h1>
         <p className="adm-subtitle">Entre com sua conta de administrador da loja.</p>
