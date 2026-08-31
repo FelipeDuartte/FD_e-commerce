@@ -11,7 +11,7 @@ async function getCurrentUserId() {
 export async function listPdvCustomerBalances() {
   const { data, error } = await supabase
     .from("pdv_customer_balances")
-    .select("customer_id, name, phone, balance, total_paid, total_fiado, last_order_at")
+    .select("customer_id, name, phone, email, address, is_active, balance, total_paid, total_fiado, last_order_at")
     .order("name");
 
   if (error) {
@@ -21,6 +21,9 @@ export async function listPdvCustomerBalances() {
     id: c.customer_id,
     name: c.name,
     phone: c.phone,
+    email: c.email,
+    address: c.address,
+    isActive: c.is_active,
     balance: Number(c.balance),
     totalPaid: Number(c.total_paid),
     totalFiado: Number(c.total_fiado),
@@ -28,21 +31,72 @@ export async function listPdvCustomerBalances() {
   }));
 }
 
-export async function createPdvCustomer({ name, phone }) {
+export async function createPdvCustomer({ name, phone, email, address }) {
   const { data, error } = await supabase
     .from("pdv_customers")
     .insert({
       store_id: getCurrentStoreId(),
       name: String(name).trim(),
       phone: phone ? String(phone).trim() || null : null,
+      email: email ? String(email).trim() || null : null,
+      address: address ? String(address).trim() || null : null,
     })
-    .select("id, name, phone")
+    .select("id, name, phone, email, address")
     .single();
 
   if (error) {
     throw new AdminServiceError("Não foi possível cadastrar o cliente.", error);
   }
-  return { id: data.id, name: data.name, phone: data.phone, balance: 0, totalPaid: 0, totalFiado: 0, lastOrderAt: null };
+  return {
+    id: data.id, name: data.name, phone: data.phone, email: data.email, address: data.address,
+    isActive: true, balance: 0, totalPaid: 0, totalFiado: 0, lastOrderAt: null,
+  };
+}
+
+export async function updatePdvCustomer(customerId, { name, phone, email, address }) {
+  const { error } = await supabase
+    .from("pdv_customers")
+    .update({
+      name: String(name).trim(),
+      phone: phone ? String(phone).trim() || null : null,
+      email: email ? String(email).trim() || null : null,
+      address: address ? String(address).trim() || null : null,
+    })
+    .eq("id", customerId);
+
+  if (error) {
+    throw new AdminServiceError("Não foi possível atualizar o cliente.", error);
+  }
+}
+
+// Desativar é reversível (esconde do seletor de cliente na venda, mas
+// mantém todo o histórico) — diferente de excluir, que é permanente.
+export async function setPdvCustomerActive(customerId, isActive) {
+  const { error } = await supabase
+    .from("pdv_customers")
+    .update({ is_active: isActive })
+    .eq("id", customerId);
+
+  if (error) {
+    throw new AdminServiceError("Não foi possível atualizar o cliente.", error);
+  }
+}
+
+// Só funciona se o cliente não tiver nenhuma venda/pagamento — a FK em
+// orders.pdv_customer_id e pdv_customer_payments.customer_id garante isso
+// no banco (23503 = foreign_key_violation), não precisa checar antes.
+export async function deletePdvCustomer(customerId) {
+  const { error } = await supabase
+    .from("pdv_customers")
+    .delete()
+    .eq("id", customerId);
+
+  if (error) {
+    if (error.code === "23503") {
+      throw new AdminServiceError("Esse cliente tem vendas ou pagamentos registrados — desative em vez de excluir.");
+    }
+    throw new AdminServiceError("Não foi possível excluir o cliente.", error);
+  }
 }
 
 // cashSessionId opcional — só entra na conferência do caixa (close_cash_session)
@@ -84,7 +138,7 @@ export async function listCustomerPayments(customerId) {
 export async function listFiadoOrders(customerId) {
   const { data, error } = await supabase
     .from("orders")
-    .select("id, order_number, total, status, created_at, order_items(name, quantity)")
+    .select("id, order_number, total, status, created_at, cash_session_id, order_items(name, quantity)")
     .eq("pdv_customer_id", customerId)
     .eq("payment_method", "fiado")
     .order("created_at", { ascending: false });
@@ -98,6 +152,7 @@ export async function listFiadoOrders(customerId) {
     total: o.total,
     cancelled: o.status === "cancelled",
     createdAt: o.created_at,
+    cashSessionId: o.cash_session_id,
     itemsLabel: (o.order_items ?? [])
       .map((it) => (it.quantity > 1 ? `${it.name} x${it.quantity}` : it.name))
       .join(", "),

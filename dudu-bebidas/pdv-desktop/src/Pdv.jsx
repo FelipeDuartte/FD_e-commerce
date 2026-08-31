@@ -162,6 +162,12 @@ export default function Pdv({ theme, onToggleTheme }) {
               customersError={fiado.error}
               payDebt={fiado.payDebt}
               createCustomer={fiado.createCustomer}
+              updateCustomer={fiado.updateCustomer}
+              setCustomerActive={fiado.setCustomerActive}
+              deleteCustomer={fiado.deleteCustomer}
+              currentSessionId={cashSession.session.id}
+              cancellingId={pdvCart.cancellingId}
+              onCancelSale={pdvCart.handleCancelSale}
             />
           )}
         </main>

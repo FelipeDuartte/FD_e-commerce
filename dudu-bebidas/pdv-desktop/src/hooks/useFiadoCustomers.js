@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { listPdvCustomerBalances, createPdvCustomer, registerFiadoPayment } from "../services/fiadoService";
+import {
+  listPdvCustomerBalances,
+  createPdvCustomer,
+  updatePdvCustomer,
+  setPdvCustomerActive,
+  deletePdvCustomer,
+  registerFiadoPayment,
+} from "../services/fiadoService";
 
 // Compartilhado entre o seletor de cliente na venda (CartPanel) e o
 // diretório de clientes (ClientesView) — um único carregamento pros dois.
@@ -26,16 +33,36 @@ export function useFiadoCustomers(sessionId) {
     return () => clearTimeout(timer);
   }, [load]);
 
-  const createCustomer = async ({ name, phone }) => {
-    const customer = await createPdvCustomer({ name, phone });
+  const createCustomer = async ({ name, phone, email, address }) => {
+    const customer = await createPdvCustomer({ name, phone, email, address });
     load();
     return customer;
   };
 
+  const updateCustomer = async (customerId, fields) => {
+    await updatePdvCustomer(customerId, fields);
+    load();
+  };
+
+  const setCustomerActive = async (customerId, isActive) => {
+    await setPdvCustomerActive(customerId, isActive);
+    load();
+  };
+
+  const deleteCustomer = async (customerId) => {
+    await deletePdvCustomer(customerId);
+    load();
+  };
+
+  // Pagar quita da conta mais velha pra mais nova (FIFO) — muda tanto o
+  // saldo do cliente quanto quais pedidos continuam na fila em aberto.
   const payDebt = async ({ customerId, amount, paymentMethod }) => {
     await registerFiadoPayment({ customerId, amount, paymentMethod, cashSessionId: sessionId });
     load();
   };
 
-  return { customers, loading, error, reload: load, createCustomer, payDebt };
+  return {
+    customers, loading, error, reload: load,
+    createCustomer, updateCustomer, setCustomerActive, deleteCustomer, payDebt,
+  };
 }

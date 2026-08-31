@@ -23,10 +23,13 @@ export default function FiadoCustomerPicker({ customers, customersLoading, selec
     );
   }
 
+  // Cliente desativado não pode ser escolhido pra fiado novo — continua
+  // existindo (histórico intacto), só não aparece aqui.
+  const active = customers.filter((c) => c.isActive !== false);
   const term = search.trim().toLowerCase();
   const filtered = term
-    ? customers.filter((c) => c.name.toLowerCase().includes(term) || (c.phone ?? "").includes(term))
-    : customers;
+    ? active.filter((c) => c.name.toLowerCase().includes(term) || (c.phone ?? "").includes(term))
+    : active;
 
   const handleCreate = async () => {
     if (!newName.trim()) {

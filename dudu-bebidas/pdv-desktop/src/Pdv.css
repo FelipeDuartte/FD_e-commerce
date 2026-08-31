@@ -720,6 +720,158 @@
   color: #50c878;
 }
 
+/* ── Clientes: status ativo/inativo, ações, edição, transações ────── */
+
+.pdv-clientes-row-inactive {
+  opacity: 0.55;
+}
+
+.pdv-clientes-inactive-badge {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 107, 107, 0.15);
+  color: #ff6b6b;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  vertical-align: middle;
+}
+
+.pdv-clientes-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pdv-clientes-secondary-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  background: transparent;
+  color: var(--c-text-muted);
+  cursor: pointer;
+  font-size: 12px;
+  transition: border-color var(--t), color var(--t);
+}
+
+.pdv-clientes-secondary-btn:hover {
+  border-color: var(--c-accent);
+  color: var(--c-text);
+}
+
+.pdv-clientes-danger-btn:hover {
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+}
+
+.pdv-delete-confirm-btn {
+  background: #ff6b6b !important;
+  color: #1a1a1a !important;
+}
+
+.pdv-clientes-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 420px;
+}
+
+.pdv-clientes-tx-filters {
+  margin: 10px 0 12px;
+}
+
+.pdv-clientes-tx-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pdv-clientes-tx-row {
+  display: grid;
+  grid-template-columns: 90px 100px 1fr 90px auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 215, 0, 0.1);
+  background: color-mix(in srgb, var(--c-text) 2%, transparent);
+  font-size: 13px;
+  color: var(--c-text);
+}
+
+.pdv-clientes-tx-badge {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.pdv-clientes-tx-badge-payment {
+  color: #50c878;
+}
+
+.pdv-clientes-tx-badge-purchase {
+  color: var(--c-text-muted);
+}
+
+.pdv-clientes-tx-credit {
+  color: #50c878;
+}
+
+.pdv-clientes-tx-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.pdv-clientes-print-btn {
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.pdv-clientes-print-btn:hover {
+  border-color: var(--c-accent);
+}
+
+@media (max-width: 700px) {
+  .pdv-clientes-tx-row {
+    grid-template-columns: 1fr 1fr;
+    grid-auto-rows: auto;
+  }
+}
+
+/* Recibo de impressão — invisível na tela, só existe pra virar a única
+   coisa visível quando window.print() dispara (ver ClientesView). */
+.pdv-print-receipt {
+  display: none;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .pdv-print-receipt,
+  .pdv-print-receipt * {
+    visibility: visible;
+  }
+  .pdv-print-receipt {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 24px;
+    color: #000;
+    background: #fff;
+  }
+}
+
 .pdv-split-toggle {
   align-self: flex-start;
   padding: 4px 0;
