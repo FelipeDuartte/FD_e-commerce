@@ -1,6 +1,23 @@
 <!doctype html>
 <html lang="pt-BR">
   <head>
+    <!--
+      Aplica o tema salvo (admin) ANTES da primeira pintura da página —
+      roda síncrono, antes até do CSS/JS do React carregar. Sem isso, a
+      página sempre nasceria no tema escuro padrão e só trocaria pro claro
+      alguns milissegundos depois (quando o useEffect do React rodasse),
+      causando um "flash" visível do tema errado a cada carregamento.
+      Não afeta o site público — só Admin.css reage a data-theme.
+    -->
+    <script>
+      (function () {
+        try {
+          if (localStorage.getItem("adm-theme") === "light") {
+            document.documentElement.setAttribute("data-theme", "light");
+          }
+        } catch (e) {}
+      })();
+    </script>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/webp" href="https://res.cloudinary.com/dfcsficmg/image/upload/v1786649996/logo_dudu-bebidas.webp"/>
     <!--Meta domin-->

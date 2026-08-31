@@ -5,7 +5,9 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  // pdv-desktop é um app Tauri separado, com seu próprio toolchain/globals
+  // (Node no vite.config.js, etc.) — não faz parte do lint do site principal.
+  globalIgnores(['dist', 'pdv-desktop']),
   {
     files: ['**/*.{js,jsx}'],
     extends: [

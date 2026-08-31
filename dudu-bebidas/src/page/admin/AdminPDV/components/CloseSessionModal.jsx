@@ -1,4 +1,10 @@
 import { formatBRL } from "../../adminUtils";
+import { PAYMENT_METHODS } from "../constants";
+
+function methodLabel(method) {
+  const known = PAYMENT_METHODS.find((m) => m.value === method);
+  return known ? `${known.icon} ${known.label}` : method;
+}
 
 export default function CloseSessionModal({
   closing, closeError, closeResult, declaredAmountInput, setDeclaredAmountInput,
@@ -11,8 +17,26 @@ export default function CloseSessionModal({
         {closeResult ? (
           <>
             <h2 className="adm-store-section-title">Caixa fechado</h2>
+
+            {closeResult.breakdown?.length > 0 && (
+              <div className="pdv-close-breakdown">
+                {closeResult.breakdown.map((b) => (
+                  <div key={b.method} className="pdv-close-breakdown-row">
+                    <span>{methodLabel(b.method)}</span>
+                    <strong>{formatBRL(b.amount)}</strong>
+                  </div>
+                ))}
+                {closeResult.fiado_total > 0 && (
+                  <div className="pdv-close-breakdown-row pdv-close-breakdown-fiado">
+                    <span>📒 Vendido fiado (não recebido)</span>
+                    <strong>{formatBRL(closeResult.fiado_total)}</strong>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="pdv-close-summary">
-              <div><span>Esperado</span><strong>{formatBRL(closeResult.expected)}</strong></div>
+              <div><span>Esperado (dinheiro)</span><strong>{formatBRL(closeResult.expected)}</strong></div>
               <div><span>Contado</span><strong>{formatBRL(closeResult.declared)}</strong></div>
               <div className={closeResult.difference !== 0 ? "pdv-close-diff-mismatch" : ""}>
                 <span>Diferença</span><strong>{formatBRL(closeResult.difference)}</strong>

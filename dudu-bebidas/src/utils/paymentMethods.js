@@ -15,4 +15,6 @@ export const PAYMENT_METHODS = {
   // Fase 2: cartão cobrado online via Mercado Pago (Card Payment Brick) —
   // distinto de credit_card, que continua sendo "cartão físico na entrega".
   mercadopago_card: { icon: "💳", label: "Cartão online" },
+  // PDV: venda sem cobrança na hora, vira dívida do cliente (pdv_customers).
+  fiado: { icon: "📒", label: "Fiado" },
 };

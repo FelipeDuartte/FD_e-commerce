@@ -16,6 +16,14 @@ export interface MercadoPagoPayer {
   address?: { zip_code?: string; street_name?: string; street_number?: string; city?: string };
 }
 
+export interface AdditionalInfoItem {
+  id: string;
+  title: string;
+  description: string;
+  quantity: number;
+  unit_price: number;
+}
+
 export interface CreatePaymentParams {
   accessToken: string;
   transactionAmount: number;
@@ -29,6 +37,11 @@ export interface CreatePaymentParams {
   notificationUrl: string;
   description: string;
   idempotencyKey: string;
+  // Nome que aparece na fatura do cartão do cliente e itens do carrinho —
+  // recomendações da própria medição de qualidade do MP pra reduzir
+  // contestações e recusas do antifraude deles.
+  statementDescriptor?: string;
+  items?: AdditionalInfoItem[];
 }
 
 export interface PayerCost {
@@ -73,6 +86,8 @@ export async function createMercadoPagoPayment(
       payer: params.payer,
       external_reference: params.externalReference,
       notification_url: params.notificationUrl,
+      statement_descriptor: params.statementDescriptor,
+      ...(params.items?.length ? { additional_info: { items: params.items } } : {}),
     }),
   });
 
@@ -162,7 +177,12 @@ export async function verifyMercadoPagoSignature({
   dataId: string;
   secret: string;
 }): Promise<boolean> {
-  if (!xSignature || !xRequestId) return false;
+  if (!xSignature || !xRequestId) {
+    console.error(
+      `[mercadopago] Assinatura: header ausente — x-signature=${xSignature ? "presente" : "AUSENTE"} x-request-id=${xRequestId ? "presente" : "AUSENTE"}`,
+    );
+    return false;
+  }
 
   const parts = Object.fromEntries(
     xSignature.split(",").map((p) => {
@@ -172,7 +192,10 @@ export async function verifyMercadoPagoSignature({
   );
   const ts = parts.ts;
   const v1 = parts.v1;
-  if (!ts || !v1) return false;
+  if (!ts || !v1) {
+    console.error(`[mercadopago] Assinatura: x-signature em formato inesperado: "${xSignature}"`);
+    return false;
+  }
 
   const manifest = `id:${dataId.toLowerCase()};request-id:${xRequestId};ts:${ts};`;
 
@@ -188,7 +211,17 @@ export async function verifyMercadoPagoSignature({
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 
-  return timingSafeEqual(computedHex, v1);
+  const valid = timingSafeEqual(computedHex, v1);
+  if (!valid) {
+    // Nunca loga o segredo nem o hash completo — só o suficiente pra
+    // diagnosticar SEM caso seja: manifest errado, secret com espaço/quebra
+    // de linha a mais, ou timestamp fora da janela esperada pelo MP.
+    console.error(
+      `[mercadopago] Assinatura inválida — manifest="${manifest}" secret_len=${secret.length} secret_has_whitespace=${secret !== secret.trim()} ts_age_s=${Math.round(Date.now() / 1000 - Number(ts))} computed_prefix=${computedHex.slice(0, 8)} received_prefix=${v1.slice(0, 8)}`,
+    );
+  }
+
+  return valid;
 }
 
 function timingSafeEqual(a: string, b: string): boolean {

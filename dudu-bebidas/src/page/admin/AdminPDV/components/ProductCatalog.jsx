@@ -1,4 +1,5 @@
 import { formatBRL } from "../../adminUtils";
+import { getPdvPrice } from "../constants";
 
 export default function ProductCatalog({ search, setSearch, productsError, productsLoading, filteredProducts, addToCart }) {
   return (
@@ -25,7 +26,7 @@ export default function ProductCatalog({ search, setSearch, productsError, produ
           {filteredProducts.map((p) => (
             <button key={p.id} className="pdv-product-card" onClick={() => addToCart(p)}>
               <span className="pdv-product-name">{p.name}</span>
-              <span className="pdv-product-price">{formatBRL(p.price)}</span>
+              <span className="pdv-product-price">{formatBRL(getPdvPrice(p))}</span>
               <span className={`adm-stock-badge ${p.stock < 10 ? "low" : "ok"}`}>
                 {p.stock} em estoque
               </span>

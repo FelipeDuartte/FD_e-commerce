@@ -58,6 +58,16 @@ export interface FulfillOrderParams {
   // chama com true precisa baixar o estoque depois via a RPC
   // confirm_mercadopago_payment, no momento da aprovação.
   skipStockDecrement?: boolean;
+  // Pagamento dividido (só PDV/balcão) — ex: parte em dinheiro, parte no
+  // cartão. Quando informado (2+ entradas), `paymentMethod` é ignorado e o
+  // pedido é salvo com payment_method = 'misto'; o detalhamento vai pra
+  // order_payments (usado por close_cash_session pra saber quanto da venda
+  // foi de fato em dinheiro).
+  payments?: { method: string; amount: number }[];
+  // Fiado (só PDV/balcão) — obrigatório quando paymentMethod === 'fiado'.
+  // A venda baixa estoque normalmente, mas não gera dinheiro nenhum na
+  // hora — vira dívida do cliente em pdv_customers (ver 0012_fiado.sql).
+  pdvCustomerId?: string | null;
 }
 
 // Taxas reais da maquininha (crédito) — mesma tabela usada em Checkout.jsx
@@ -89,25 +99,59 @@ export async function fulfillOrder(
     deliveryFee = 0, address, channel, cashSessionId = null,
     soldBy = null, status, applyCardFee, discountAmount = 0,
     paymentStatus, paymentProvider = null, skipStockDecrement = false,
+    payments = null, pdvCustomerId = null,
   } = params;
 
   if (!cartItems || cartItems.length === 0) {
     throw new FulfillmentError("Carrinho vazio.");
   }
 
-  if (!paymentMethod) {
+  const isSplitPayment = Array.isArray(payments) && payments.length >= 2;
+
+  if (!paymentMethod && !isSplitPayment) {
     throw new FulfillmentError("Forma de pagamento não selecionada.");
   }
 
+  if (isSplitPayment) {
+    for (const p of payments!) {
+      if (!p.method || !Number.isFinite(p.amount) || p.amount <= 0) {
+        throw new FulfillmentError("Pagamento dividido inválido.");
+      }
+      if (p.method === "fiado") {
+        throw new FulfillmentError("Fiado não pode ser combinado com pagamento dividido.");
+      }
+    }
+  }
+
+  if (!isSplitPayment && paymentMethod === "fiado") {
+    if (!pdvCustomerId) {
+      throw new FulfillmentError("Selecione o cliente para vender fiado.");
+    }
+    // service role client bypassa RLS — confirma aqui que o cliente é
+    // mesmo dessa loja (nunca confia só no id vindo do client).
+    const { data: customer } = await supabase
+      .from("pdv_customers")
+      .select("id")
+      .eq("id", pdvCustomerId)
+      .eq("store_id", storeId)
+      .maybeSingle();
+    if (!customer) {
+      throw new FulfillmentError("Cliente não encontrado.");
+    }
+  }
+
+  const effectivePaymentMethod = isSplitPayment ? "misto" : paymentMethod!;
+
   // installments só faz sentido pra crédito; qualquer outro caso vira null.
+  // Pagamento dividido não libera parcelamento (fica sempre null).
   let installmentsToSave: number | null = null;
-  if (paymentMethod === "credit_card") {
+  if (!isSplitPayment && paymentMethod === "credit_card") {
     // Dono da loja pediu pra crédito FÍSICO (na entrega) aceitar só à vista
     // (1x) por enquanto — ver histórico em create-order. Se voltar a liberar
     // parcelamento, é só trocar o "1" fixo abaixo pela validação de faixa
     // recebida em `installments`.
     installmentsToSave = 1;
-  } else if (paymentMethod === "mercadopago_card") {
+  } else if (!isSplitPayment && paymentMethod === "mercadopago_card") {
     // Cartão online JÁ libera parcelamento de verdade — quem decide quantas
     // vezes é o próprio Card Payment Brick (baseado no que a bandeira/emissor
     // permite), não a regra fixa de 1x do cartão físico acima.
@@ -123,7 +167,7 @@ export async function fulfillOrder(
 
   const { data: products, error: productsError } = await supabase
     .from("products")
-    .select("id, price, is_active, stock")
+    .select("id, price, old_price, promotion, is_active, stock")
     .eq("store_id", storeId)
     .in("id", productIds);
 
@@ -142,9 +186,18 @@ export async function fulfillOrder(
     }
   }
 
+  // Promoção é exclusiva do site — venda de balcão (PDV) sempre cobra o
+  // preço de tabela (old_price), mesmo que o produto esteja em promoção
+  // online. Sem old_price (produto nunca esteve em promoção), cai no price
+  // normal, que nesse caso é o mesmo valor pros dois canais.
+  const priceFor = (product: { price: number; old_price: number | null; promotion: boolean }) =>
+    channel === "balcao" && product.promotion && product.old_price != null
+      ? product.old_price
+      : product.price;
+
   const calculatedProductsTotal = cartItems.reduce((sum, item) => {
     const product = products.find((p) => p.id === String(item.id));
-    return sum + (product?.price ?? 0) * item.quantity;
+    return sum + (product ? priceFor(product) : 0) * item.quantity;
   }, 0);
   const normalizedDeliveryFee = Math.max(0, Number(deliveryFee) || 0);
   const totalBeforeFee = calculatedProductsTotal + normalizedDeliveryFee;
@@ -166,6 +219,15 @@ export async function fulfillOrder(
     : INSTALLMENT_FEE_RATE[installmentsToSave ?? 1] ?? 0;
   const calculatedTotal = roundCents(totalAfterDiscount * (1 + cardFeeRate));
 
+  if (isSplitPayment) {
+    const paymentsSum = roundCents(payments!.reduce((sum, p) => sum + p.amount, 0));
+    if (Math.abs(paymentsSum - calculatedTotal) > 0.01) {
+      throw new FulfillmentError(
+        `A soma do pagamento dividido (${paymentsSum}) não bate com o total (${calculatedTotal}).`,
+      );
+    }
+  }
+
   const { data: order, error: orderError } = await supabase
     .from("orders")
     .insert({
@@ -173,7 +235,7 @@ export async function fulfillOrder(
       user_id: userId,
       total: calculatedTotal,
       discount_amount: normalizedDiscount,
-      payment_method: paymentMethod,
+      payment_method: effectivePaymentMethod,
       installments: installmentsToSave,
       address,
       status,
@@ -185,6 +247,7 @@ export async function fulfillOrder(
       // em vez de mandar undefined explicitamente.
       ...(paymentStatus !== undefined ? { payment_status: paymentStatus } : {}),
       ...(paymentProvider !== null ? { payment_provider: paymentProvider } : {}),
+      ...(pdvCustomerId !== null ? { pdv_customer_id: pdvCustomerId } : {}),
     })
     .select("id")
     .single();
@@ -194,12 +257,30 @@ export async function fulfillOrder(
     throw new FulfillmentError("Não foi possível criar o pedido.", 500);
   }
 
+  if (isSplitPayment) {
+    const { error: paymentsError } = await supabase.from("order_payments").insert(
+      payments!.map((p) => ({
+        order_id: order.id,
+        store_id: storeId,
+        method: p.method,
+        amount: roundCents(p.amount),
+      })),
+    );
+    if (paymentsError) {
+      console.error("[orderFulfillment] Erro ao salvar pagamento dividido:", paymentsError);
+      throw new FulfillmentError("Erro ao salvar o detalhamento do pagamento.", 500);
+    }
+  }
+
   // store_id dos itens é preenchido automaticamente por trigger no banco
   const orderItems = cartItems.map((item) => ({
     order_id: order.id,
     product_id: String(item.id),
     name: item.name,
-    price: products.find((p) => p.id === String(item.id))?.price ?? item.price,
+    price: (() => {
+      const product = products.find((p) => p.id === String(item.id));
+      return product ? priceFor(product) : item.price;
+    })(),
     quantity: item.quantity,
   }));
 

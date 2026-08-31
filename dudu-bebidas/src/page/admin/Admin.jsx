@@ -11,6 +11,7 @@ import { useAdminReports } from "./hooks/useAdminReports";
 import { useAdminCategories } from "./hooks/useAdminCategories";
 import { useAdminOrders } from "./Admin/hooks/useAdminOrders";
 import { useAdminProducts } from "./Admin/hooks/useAdminProducts";
+import { useTheme } from "./hooks/useTheme";
 import AdminHeader from "./Admin/components/AdminHeader";
 import AdminTabs, { SHOW_PDV_TAB } from "./Admin/components/AdminTabs";
 import OrdersTab from "./Admin/components/OrdersTab";
@@ -19,6 +20,7 @@ import ProductsTab from "./Admin/components/ProductsTab";
 export default function Admin({ isAdmin }) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("pedidos");
+  const { theme, toggleTheme } = useTheme();
 
   const orders = useAdminOrders(isAdmin);
   const products = useAdminProducts(activeTab);
@@ -73,7 +75,7 @@ export default function Admin({ isAdmin }) {
           />
         )}
 
-        <AdminHeader onBack={() => navigate("/")} />
+        <AdminHeader onBack={() => navigate("/")} theme={theme} onToggleTheme={toggleTheme} />
 
         <AdminTabs
           activeTab={activeTab}

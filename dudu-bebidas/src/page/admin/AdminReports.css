@@ -108,7 +108,7 @@
 
 .rpt-summary-label {
   font-size: 11px;
-  color: #666;
+  color: var(--c-text-muted);
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -163,14 +163,14 @@
 }
 
 .rpt-chart-tick-y {
-  fill: #555;
+  fill: var(--c-text-dim);
   font-size: 9px;
   text-anchor: end;
   font-family: var(--font-body);
 }
 
 .rpt-chart-tick-x {
-  fill: #555;
+  fill: var(--c-text-dim);
   font-size: 9px;
   text-anchor: middle;
   font-family: var(--font-body);
@@ -257,14 +257,14 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #555;
+  color: var(--c-text-dim);
   border-bottom: 1px solid var(--c-border);
 }
 
 .rpt-table td {
   padding: 10px 10px;
   border-bottom: 1px solid var(--c-border);
-  color: #ccc;
+  color: var(--c-text);
   vertical-align: middle;
 }
 
@@ -276,7 +276,7 @@
   transition: background var(--t);
 }
 .rpt-table tbody tr:hover {
-  background: #161616;
+  background: color-mix(in srgb, var(--c-text) 4%, transparent);
 }
 
 .rpt-rank {
@@ -289,7 +289,7 @@
 .rpt-product-name,
 .rpt-customer-name {
   font-weight: 600;
-  color: #ddd;
+  color: var(--c-text);
   max-width: 180px;
   white-space: nowrap;
   overflow: hidden;

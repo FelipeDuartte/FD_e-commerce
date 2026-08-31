@@ -75,6 +75,35 @@ function buildEnrichedPayer(basePayer: Record<string, unknown>, address: Record<
   return enriched;
 }
 
+// "Fatura do cartão" — a medição de qualidade do MP recomenda mandar isso
+// pra reduzir contestações (o cliente reconhece a cobrança no extrato).
+// Maiúsculo, sem acento/símbolo, até 22 caracteres (limite comum das
+// bandeiras pro texto exibido na fatura).
+function buildStatementDescriptor(storeName: string | null | undefined): string {
+  const normalized = (storeName ?? "LOJA")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // remove acentos (marcas de combinação Unicode, após NFD)
+    .replace(/[^a-zA-Z0-9 ]/g, "")
+    .toUpperCase()
+    .trim();
+  return (normalized || "LOJA").slice(0, 22);
+}
+
+// "Descrição do item" — a medição de qualidade do MP recomenda mandar os
+// itens da compra (não só o valor total) pra ajudar o motor antifraude
+// deles a validar a compra e reduzir recusas. Não é dado sensível/decisivo
+// pro valor cobrado (isso continua sempre calculado no servidor à parte),
+// então usar o que veio do carrinho aqui é seguro.
+function buildAdditionalInfoItems(cartItems: { id: unknown; name?: string; quantity: number; price?: number }[]) {
+  return cartItems.map((item) => ({
+    id: String(item.id),
+    title: item.name ?? String(item.id),
+    description: item.name ?? String(item.id),
+    quantity: item.quantity,
+    unit_price: Number(item.price) || 0,
+  }));
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -111,7 +140,7 @@ Deno.serve(async (req) => {
 
     const { data: store, error: storeError } = await supabase
       .from("stores")
-      .select("id, is_active")
+      .select("id, is_active, name")
       .eq("id", storeId)
       .maybeSingle();
 
@@ -205,6 +234,8 @@ Deno.serve(async (req) => {
       notificationUrl,
       description: `Pedido #${orderId.slice(-8).toUpperCase()}`,
       idempotencyKey: orderId, // 1 pedido = 1 tentativa de cobrança nesta function
+      statementDescriptor: buildStatementDescriptor(store.name),
+      items: buildAdditionalInfoItems(cartItems),
     });
 
     if (!result.ok || !result.payment) {
