@@ -6,7 +6,7 @@ import { getMercadoPagoPublicConfig } from "../../../utils/mercadopagoConfig";
 // com o suporte deles) — esconde "Cartão de crédito online" do checkout até
 // resolver, sem mexer nas credenciais salvas nem no resto do código. É só
 // virar pra true de novo quando confirmar que os pagamentos aprovam.
-const SHOW_MERCADOPAGO_CARD_OPTION = true;
+const SHOW_MERCADOPAGO_CARD_OPTION = false;
 
 // Só oferece "Cartão de crédito online" no checkout se a loja já configurou
 // as duas credenciais do Mercado Pago (Public Key + Access Token) — ver
