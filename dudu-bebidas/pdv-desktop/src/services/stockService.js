@@ -8,15 +8,20 @@ const REASON_LABEL = {
   ajuste_manual: "Ajuste manual",
 };
 
-export async function listStockMovements({ page = 0 } = {}) {
+export async function listStockMovements({ page = 0, reason = "todos", search = "" } = {}) {
   const from = page * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
 
-  const { data, error, count } = await supabase
+  let query = supabase
     .from("stock_movements")
     .select("id, product_name, quantity, reason, created_at, orders(channel)", { count: "exact" })
-    .order("created_at", { ascending: false })
-    .range(from, to);
+    .order("created_at", { ascending: false });
+
+  if (reason !== "todos") query = query.eq("reason", reason);
+  const trimmedSearch = search.trim();
+  if (trimmedSearch) query = query.ilike("product_name", `%${trimmedSearch}%`);
+
+  const { data, error, count } = await query.range(from, to);
 
   if (error) {
     throw new AdminServiceError("Não foi possível carregar o histórico de estoque.", error);

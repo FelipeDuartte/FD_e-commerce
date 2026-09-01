@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { listStockMovements } from "../services/stockService";
 
 const REASON_ICON = {
@@ -6,6 +6,13 @@ const REASON_ICON = {
   cancelamento: "↩️",
   ajuste_manual: "✏️",
 };
+
+const REASON_FILTERS = [
+  { value: "todos", label: "Todas" },
+  { value: "venda", label: "Vendas" },
+  { value: "cancelamento", label: "Cancelamentos" },
+  { value: "ajuste_manual", label: "Ajustes manuais" },
+];
 
 export default function EstoqueView() {
   const [movements, setMovements] = useState([]);
@@ -15,12 +22,14 @@ export default function EstoqueView() {
   const [count, setCount] = useState(0);
   const [page, setPage] = useState(0);
   const [error, setError] = useState("");
+  const [reasonFilter, setReasonFilter] = useState("todos");
+  const [search, setSearch] = useState("");
 
-  const fetchPage = useCallback(async (nextPage, append) => {
+  const fetchPage = useCallback(async (nextPage, append, filters) => {
     if (append) setLoadingMore(true);
     else setLoading(true);
     try {
-      const result = await listStockMovements({ page: nextPage });
+      const result = await listStockMovements({ page: nextPage, ...filters });
       setMovements((prev) => (append ? [...prev, ...result.movements] : result.movements));
       setHasMore(result.hasMore);
       setCount(result.count);
@@ -32,14 +41,22 @@ export default function EstoqueView() {
     else setLoading(false);
   }, []);
 
+  // Busca por nome dispara com debounce (evita uma consulta por tecla);
+  // trocar o filtro de tipo é instantâneo, já que não depende de digitação.
+  const debounceRef = useRef(null);
   useEffect(() => {
-    fetchPage(0, false);
-  }, [fetchPage]);
+    setPage(0);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      fetchPage(0, false, { reason: reasonFilter, search });
+    }, search ? 400 : 0);
+    return () => clearTimeout(debounceRef.current);
+  }, [fetchPage, reasonFilter, search]);
 
   const handleLoadMore = () => {
     const nextPage = page + 1;
     setPage(nextPage);
-    fetchPage(nextPage, true);
+    fetchPage(nextPage, true, { reason: reasonFilter, search });
   };
 
   return (
@@ -53,6 +70,26 @@ export default function EstoqueView() {
         </div>
       </div>
 
+      <div className="adm-product-filters">
+        <input
+          className="adm-product-search"
+          placeholder="🔍 Buscar por produto..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <select
+          className="adm-product-cat-filter"
+          value={reasonFilter}
+          onChange={(e) => setReasonFilter(e.target.value)}
+        >
+          {REASON_FILTERS.map((f) => (
+            <option key={f.value} value={f.value}>
+              {f.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
       {error && <div className="adm-modal-error">⚠️ {error}</div>}
 
       {loading ? (
@@ -61,7 +98,7 @@ export default function EstoqueView() {
           <p>Carregando...</p>
         </div>
       ) : movements.length === 0 ? (
-        <div className="adm-empty"><p>Nenhuma movimentação registrada ainda.</p></div>
+        <div className="adm-empty"><p>Nenhuma movimentação encontrada.</p></div>
       ) : (
         <div className="adm-product-table-wrap">
           <table className="adm-product-table">
