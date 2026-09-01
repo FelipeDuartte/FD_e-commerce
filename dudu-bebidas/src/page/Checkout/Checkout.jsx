@@ -1,10 +1,11 @@
 import "./Checkout.css";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useStoreStatus } from "../../context/useStoreStatus";
+import { useStoreStatus, useStoreHoursData } from "../../context/useStoreStatus";
 import { useCheckoutForm } from "./hooks/useCheckoutForm";
 import { useMercadoPagoConfig } from "./hooks/useMercadoPagoConfig";
 import { PAYMENT_METHODS } from "../../utils/paymentMethods";
+import { deliveryPaymentOptions, onlinePaymentOptions } from "./checkoutConstants";
 import DeliveryFields from "./components/DeliveryFields";
 import PaymentMethodSection from "./components/PaymentMethodSection";
 import OrderSummaryCard from "./components/OrderSummaryCard";
@@ -33,11 +34,26 @@ export default function Checkout({ user, clearCart }) {
   const storeStatus = useStoreStatus();
   const closed = !storeStatus.open;
 
+  const hoursData = useStoreHoursData();
+  const enabledMethods = hoursData?.config?.payment_methods_enabled;
+  const isMethodEnabled = (value) => enabledMethods?.[value] !== false;
+
   const mpConfig = useMercadoPagoConfig();
-  const mpExtraOnlineOption = mpConfig.enabled
+  const mpExtraOnlineOption = mpConfig.enabled && isMethodEnabled("mercadopago_card")
     ? [{ value: "mercadopago_card", icon: PAYMENT_METHODS.mercadopago_card.icon, name: PAYMENT_METHODS.mercadopago_card.label }]
     : [];
   const isMercadoPagoSelected = payment === "mercadopago_card";
+
+  // Se a forma selecionada foi desligada pelo admin enquanto o cliente
+  // estava na tela (ou já veio desligada), troca pra primeira disponível
+  // em vez de deixar o checkout "preso" numa opção que sumiu da grade.
+  useEffect(() => {
+    if (isMethodEnabled(payment)) return;
+    const firstAvailable = [...deliveryPaymentOptions, ...onlinePaymentOptions, ...mpExtraOnlineOption]
+      .find((opt) => isMethodEnabled(opt.value));
+    if (firstAvailable) setPayment(firstAvailable.value);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabledMethods]);
 
   // Identidade estável de propósito (mesmo motivo do handleMercadoPagoSubmit
   // em useCheckoutForm.js): o Brick reinicializa sempre que onError muda de
@@ -212,6 +228,7 @@ export default function Checkout({ user, clearCart }) {
               isDisabled={isDisabled}
               baseTotal={baseTotal}
               extraOnlineOptions={mpExtraOnlineOption}
+              enabledMethods={enabledMethods}
             >
               <MercadoPagoCardBrick
                 publicKey={mpConfig.publicKey}

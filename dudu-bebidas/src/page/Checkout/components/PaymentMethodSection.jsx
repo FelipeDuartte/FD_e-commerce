@@ -35,21 +35,31 @@ function PayOptionGrid({ options, payment, setPayment, setInstallments, isDisabl
 
 export default function PaymentMethodSection({
   payment, setPayment, installments, setInstallments, isDisabled, baseTotal,
-  extraOnlineOptions = [], children,
+  extraOnlineOptions = [], enabledMethods, children,
 }) {
-  const onlineOptions = [...onlinePaymentOptions, ...extraOnlineOptions];
+  // enabledMethods vem do store_config (payment_methods_enabled) — método
+  // ausente do objeto (loja nunca mexeu nisso, ou ainda carregando) conta
+  // como ligado, pra não sumir opção nenhuma antes do fetch terminar.
+  const isEnabled = (value) => enabledMethods?.[value] !== false;
+
+  const deliveryOptions = deliveryPaymentOptions.filter((opt) => isEnabled(opt.value));
+  const onlineOptions = [...onlinePaymentOptions, ...extraOnlineOptions].filter((opt) => isEnabled(opt.value));
 
   return (
     <>
-      <div className="co-divider" />
-      <div className="co-section-label">🚚 Pagamento na entrega</div>
-      <PayOptionGrid
-        options={deliveryPaymentOptions}
-        payment={payment}
-        setPayment={setPayment}
-        setInstallments={setInstallments}
-        isDisabled={isDisabled}
-      />
+      {deliveryOptions.length > 0 && (
+        <>
+          <div className="co-divider" />
+          <div className="co-section-label">🚚 Pagamento na entrega</div>
+          <PayOptionGrid
+            options={deliveryOptions}
+            payment={payment}
+            setPayment={setPayment}
+            setInstallments={setInstallments}
+            isDisabled={isDisabled}
+          />
+        </>
+      )}
 
       {payment === "credit_card" && (
         <div className="co-installments">
@@ -89,15 +99,19 @@ export default function PaymentMethodSection({
         </div>
       )}
 
-      <div className="co-pay-group-divider" />
-      <div className="co-section-label">🌐 Pagamento online</div>
-      <PayOptionGrid
-        options={onlineOptions}
-        payment={payment}
-        setPayment={setPayment}
-        setInstallments={setInstallments}
-        isDisabled={isDisabled}
-      />
+      {onlineOptions.length > 0 && (
+        <>
+          <div className="co-pay-group-divider" />
+          <div className="co-section-label">🌐 Pagamento online</div>
+          <PayOptionGrid
+            options={onlineOptions}
+            payment={payment}
+            setPayment={setPayment}
+            setInstallments={setInstallments}
+            isDisabled={isDisabled}
+          />
+        </>
+      )}
 
       {payment === "mercadopago_card" && children}
     </>

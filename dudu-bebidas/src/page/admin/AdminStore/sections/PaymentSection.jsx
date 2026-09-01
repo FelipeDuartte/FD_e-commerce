@@ -1,6 +1,108 @@
 import { useState, useEffect } from "react";
 import { getPaymentConfig, updatePaymentConfig } from "../../services/adminPaymentService";
+import { getStoreConfig, updateStoreConfig } from "../../services/adminStoreService";
+import { PAYMENT_METHODS } from "../../../../utils/paymentMethods";
 import { EMPTY_PAYMENT_CONFIG } from "../constants";
+
+// Só as formas que realmente aparecem no checkout do site (ver
+// deliveryPaymentOptions/onlinePaymentOptions em checkoutConstants.js) —
+// "fiado" é exclusivo do PDV e nunca é exibido aqui.
+const TOGGLEABLE_METHODS = ["pix", "pix_entrega", "debit_card", "credit_card", "cash", "mercadopago_card"];
+
+function PaymentMethodsToggleSection() {
+  const [methods, setMethods] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving]   = useState(false);
+  const [error, setError]     = useState("");
+  const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setLoading(true);
+      try {
+        const cfg = await getStoreConfig();
+        if (!cancelled) {
+          const saved = cfg?.payment_methods_enabled ?? {};
+          // Método sem entrada salva ainda conta como ligado (default de
+          // quem nunca mexeu aqui é "tudo ligado", igual já funciona hoje).
+          setMethods(Object.fromEntries(TOGGLEABLE_METHODS.map((m) => [m, saved[m] !== false])));
+        }
+      } catch (e) {
+        if (!cancelled) setError(e.message);
+      }
+      if (!cancelled) setLoading(false);
+    }
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
+  const toggle = (method) => setMethods((prev) => ({ ...prev, [method]: !prev[method] }));
+
+  const handleSave = async () => {
+    setSaving(true); setError(""); setSuccess("");
+    try {
+      await updateStoreConfig({ payment_methods_enabled: methods });
+      setSuccess("Métodos de pagamento salvos!");
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (e) {
+      setError(e.message);
+    }
+    setSaving(false);
+  };
+
+  if (loading || !methods) return (
+    <div className="adm-store-section">
+      <div className="adm-loading"><div className="adm-spinner" /><p>Carregando...</p></div>
+    </div>
+  );
+
+  return (
+    <div className="adm-store-section">
+      <div className="adm-store-section-header">
+        <h2 className="adm-store-section-title">Métodos de pagamento no checkout</h2>
+        <p className="adm-store-section-desc">
+          Escolha quais formas de pagamento o cliente pode escolher no site.
+          Desligar aqui não apaga nada — só some da tela de checkout.
+        </p>
+      </div>
+
+      {error   && <div className="adm-modal-error">⚠️ {error}</div>}
+      {success && <div className="adm-store-success">✅ {success}</div>}
+
+      <div className="adm-store-global-flags">
+        {TOGGLEABLE_METHODS.map((method) => (
+          <label className="adm-store-flag-row" key={method}>
+            <div className="adm-store-flag-info">
+              <span className="adm-store-flag-label">
+                {PAYMENT_METHODS[method].icon} {PAYMENT_METHODS[method].label}
+              </span>
+              {method === "mercadopago_card" && (
+                <span className="adm-store-flag-desc">
+                  Só aparece de verdade se as credenciais do Mercado Pago também estiverem configuradas abaixo.
+                </span>
+              )}
+            </div>
+            <div
+              className={`adm-store-toggle ${methods[method] ? "on" : "off"}`}
+              onClick={() => toggle(method)}
+              role="switch" aria-checked={methods[method]} tabIndex={0}
+              onKeyDown={(e) => e.key === " " && toggle(method)}
+            >
+              <span className="adm-store-toggle-thumb" />
+            </div>
+          </label>
+        ))}
+      </div>
+
+      <div className="adm-store-hours-save">
+        <button className="adm-btn-new-product" type="button" onClick={handleSave} disabled={saving}>
+          {saving ? "Salvando..." : "💾 Salvar métodos"}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function PaymentSection() {
   const [config, setConfig]   = useState(EMPTY_PAYMENT_CONFIG);
@@ -21,14 +123,6 @@ export default function PaymentSection() {
             pix_key_type: data.pix_key_type ?? "cpf",
             pix_merchant_name: data.pix_merchant_name ?? "",
             pix_merchant_city: data.pix_merchant_city ?? "",
-            mercadopago_public_key: data.mercadopago_public_key ?? "",
-            mercadopago_environment: data.mercadopago_environment ?? "test",
-            // Os dois campos sensíveis nunca vêm com o valor real — só a
-            // flag "_set" indica se já tem algo salvo (ver adminPaymentService).
-            mercadopago_access_token: "",
-            mercadopago_access_token_set: data.mercadopago_access_token_set ?? false,
-            mercadopago_webhook_secret: "",
-            mercadopago_webhook_secret_set: data.mercadopago_webhook_secret_set ?? false,
           });
         }
       } catch (e) {
@@ -50,15 +144,6 @@ export default function PaymentSection() {
       await updatePaymentConfig(config);
       setSuccess("Configuração de pagamento salva!");
       setTimeout(() => setSuccess(""), 3000);
-      // Se um campo sensível acabou de ser digitado, marca como "_set" pra
-      // já trocar o placeholder sem precisar recarregar a página.
-      setConfig((prev) => ({
-        ...prev,
-        mercadopago_access_token_set: prev.mercadopago_access_token_set || !!prev.mercadopago_access_token,
-        mercadopago_access_token: "",
-        mercadopago_webhook_secret_set: prev.mercadopago_webhook_secret_set || !!prev.mercadopago_webhook_secret,
-        mercadopago_webhook_secret: "",
-      }));
     } catch (e) {
       setError(e.message);
     }
@@ -72,7 +157,10 @@ export default function PaymentSection() {
   );
 
   return (
-    <form onSubmit={handleSave}>
+    <>
+      <PaymentMethodsToggleSection />
+
+      <form onSubmit={handleSave}>
       <div className="adm-store-section">
         <div className="adm-store-section-header">
           <h2 className="adm-store-section-title">Pix</h2>
@@ -138,71 +226,12 @@ export default function PaymentSection() {
         </div>
       </div>
 
-      <div className="adm-store-section">
-        <div className="adm-store-section-header">
-          <h2 className="adm-store-section-title">Cartão de crédito online (Mercado Pago)</h2>
-          <p className="adm-store-section-desc">
-            Credenciais da aplicação criada no{" "}
-            <a href="https://www.mercadopago.com.br/developers/panel" target="_blank" rel="noreferrer">
-              painel de desenvolvedores do Mercado Pago
-            </a>. Use as credenciais de <strong>teste</strong> (prefixo TEST-)
-            até confirmar que tudo funciona — só depois troque pelas de produção.
-          </p>
-        </div>
-
-        <div className="adm-form-row" style={{ flexWrap: "wrap" }}>
-          <div className="adm-form-field">
-            <label>Ambiente</label>
-            <select name="mercadopago_environment" value={config.mercadopago_environment} onChange={onChange}>
-              <option value="test">Teste (sandbox)</option>
-              <option value="production">Produção</option>
-            </select>
-          </div>
-          <div className="adm-form-field">
-            <label>Public Key</label>
-            <input
-              name="mercadopago_public_key"
-              value={config.mercadopago_public_key}
-              onChange={onChange}
-              placeholder="TEST-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-            />
-          </div>
-          <div className="adm-form-field">
-            <label>Access Token</label>
-            <input
-              name="mercadopago_access_token"
-              type="password"
-              value={config.mercadopago_access_token}
-              onChange={onChange}
-              placeholder={
-                config.mercadopago_access_token_set
-                  ? "•••••••••••••••• (já configurado — digite pra substituir)"
-                  : "TEST-0000000000000000-000000-..."
-              }
-            />
-          </div>
-          <div className="adm-form-field">
-            <label>Chave secreta do Webhook</label>
-            <input
-              name="mercadopago_webhook_secret"
-              type="password"
-              value={config.mercadopago_webhook_secret}
-              onChange={onChange}
-              placeholder={
-                config.mercadopago_webhook_secret_set
-                  ? "•••••••••••••••• (já configurada — digite pra substituir)"
-                  : "Copie da seção Webhooks da aplicação"
-              }
-            />
-          </div>
-        </div>
-      </div>
-
       <div className="adm-store-hours-save">
         <button className="adm-btn-new-product" type="submit" disabled={saving}>
           {saving ? "Salvando..." : "💾 Salvar"}
         </button>
       </div>
-    </form>
+      </form>
+    </>
   );
 }
