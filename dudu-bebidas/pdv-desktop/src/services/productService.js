@@ -29,6 +29,7 @@ export function buildProductPayload(form) {
     image: optionalValue(form.image),
     stock,
     is_active: form.is_active,
+    show_on_site: form.show_on_site,
     promotion: form.promotion,
     supplier: optionalValue(form.supplier),
     ean: optionalValue(form.ean),

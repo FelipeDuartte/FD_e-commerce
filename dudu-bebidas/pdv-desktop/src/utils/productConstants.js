@@ -11,6 +11,7 @@ export const EMPTY_PRODUCT = {
   image: "",
   stock: "",
   is_active: true,
+  show_on_site: true,
   promotion: false,
   supplier: "",
   ean: "",

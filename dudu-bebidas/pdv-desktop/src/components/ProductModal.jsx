@@ -254,15 +254,25 @@ export default function ProductModal({
               Produto ativo
             </label>
             <label className="adm-form-check">
+              <input
+                name="show_on_site"
+                type="checkbox"
+                checked={modalForm.show_on_site}
+                onChange={handleModalChange}
+              />
+              Mostrar no site
+            </label>
+            <label className="adm-form-check">
               <input name="promotion" type="checkbox" checked={modalForm.promotion} onChange={handleModalChange} />
-              Em promoção
+              Em promoção (catálogo online)
             </label>
           </div>
 
           {modalForm.promotion && (
             <div className="adm-promo-fields">
               <p className="adm-promo-hint">
-                💡 <strong>Defina abaixo o novo preço promocional.</strong>
+                💡 <strong>Defina abaixo o novo preço promocional.</strong> Vale só pro site — no balcão o
+                preço cobrado é sempre o de tabela (preço antigo), a promoção não é aplicada no PDV.
               </p>
               <div className="adm-form-row">
                 <div className="adm-form-field">

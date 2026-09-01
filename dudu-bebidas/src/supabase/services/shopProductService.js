@@ -25,6 +25,7 @@ export async function listActiveProducts() {
     .from("products")
     .select("*")
     .eq("is_active", true)
+    .eq("show_on_site", true)
     .order("name");
 
   if (error) {

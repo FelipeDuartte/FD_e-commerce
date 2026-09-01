@@ -70,7 +70,14 @@ export function useProdutos() {
   };
 
   const openEditProduct = (product) => {
-    setModalForm({ ...product, old_price: product.old_price ?? "" });
+    setModalForm({
+      ...product,
+      old_price: product.old_price ?? "",
+      // Produtos salvos antes do campo existir vêm com show_on_site nulo —
+      // tratamos como "aparece no site" (mesmo default de produto novo),
+      // sem mexer em quem já foi salvo explicitamente como desmarcado.
+      show_on_site: product.show_on_site ?? true,
+    });
     setModalError("");
     setProductModal(product);
   };
