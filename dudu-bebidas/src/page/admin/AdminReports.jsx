@@ -166,7 +166,9 @@ export default function AdminReports({
       <div className="adm-title-row">
         <div>
           <h1 className="adm-title">Relatórios</h1>
-          <p className="adm-subtitle">Visão consolidada do negócio</p>
+          <p className="adm-subtitle">
+            Visão consolidada do negócio · não inclui pedidos rejeitados ou cancelados
+          </p>
         </div>
         <div className="rpt-header-actions">
           <div className="rpt-period-selector" role="group" aria-label="Período">

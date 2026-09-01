@@ -67,6 +67,12 @@ export async function fetchOrdersForReports() {
       .from("orders")
       .select("id, total, created_at, address")
       .gte("created_at", cutoff)
+      // Pedido rejeitado ou cancelado nunca virou venda de verdade — não
+      // deve contar em faturamento, ticket médio, produto/cliente mais
+      // vendido, etc. Filtra aqui (não em summariseOrders) porque também
+      // corta os order_items buscados logo depois (fetchOrderItemsForReports
+      // só recebe os IDs que sobraram).
+      .not("status", "in", "(rejected,cancelled)")
       .order("created_at", { ascending: true })
       .range(from, from + REPORTS_PAGE_SIZE - 1);
 
