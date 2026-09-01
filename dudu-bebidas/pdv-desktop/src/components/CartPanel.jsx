@@ -25,11 +25,11 @@ export default function CartPanel({
                 <span className="pdv-cart-item-price">{formatBRL(item.price)} un.</span>
               </div>
               <div className="pdv-cart-item-qty">
-                <button onClick={() => updateQuantity(item.id, item.quantity - 1)}>−</button>
+                <button title="Diminuir quantidade" onClick={() => updateQuantity(item.id, item.quantity - 1)}>−</button>
                 <span>{item.quantity}</span>
-                <button onClick={() => updateQuantity(item.id, item.quantity + 1)}>+</button>
+                <button title="Aumentar quantidade" onClick={() => updateQuantity(item.id, item.quantity + 1)}>+</button>
               </div>
-              <button className="adm-btn-delete" onClick={() => removeFromCart(item.id)}>🗑️</button>
+              <button className="adm-btn-delete" title="Remover item" onClick={() => removeFromCart(item.id)}>🗑️</button>
             </div>
           ))}
         </div>
@@ -106,6 +106,7 @@ export default function CartPanel({
               />
               <button
                 className="adm-btn-delete"
+                title="Remover forma de pagamento"
                 onClick={() => removeSplitLine(i)}
                 disabled={splitPayments.length <= 1}
               >
@@ -132,12 +133,14 @@ export default function CartPanel({
         <div className="pdv-discount-mode">
           <button
             className={`pdv-discount-mode-btn ${discountMode === "amount" ? "active" : ""}`}
+            title="Desconto em reais"
             onClick={() => setDiscountMode("amount")}
           >
             R$
           </button>
           <button
             className={`pdv-discount-mode-btn ${discountMode === "percent" ? "active" : ""}`}
+            title="Desconto em porcentagem"
             onClick={() => setDiscountMode("percent")}
           >
             %

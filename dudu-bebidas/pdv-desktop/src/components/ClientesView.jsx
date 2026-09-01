@@ -255,6 +255,7 @@ export default function ClientesView({
           <button
             type="button"
             className="pdv-clientes-new-btn"
+            title={creatingCustomer ? "Fechar formulário" : "Cadastrar novo cliente"}
             onClick={() => { setCreatingCustomer((v) => !v); setCreateError(""); }}
           >
             {creatingCustomer ? "✕" : "+ Novo"}
@@ -467,6 +468,7 @@ export default function ClientesView({
                           ) : canCancel ? (
                             <button
                               className="adm-btn-delete"
+                              title="Cancelar venda"
                               onClick={() => onCancelSale(t)}
                               disabled={cancellingId === t.orderId}
                             >
