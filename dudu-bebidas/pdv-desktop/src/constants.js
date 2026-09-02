@@ -1,4 +1,4 @@
-import { PAYMENT_METHODS as PAYMENT_METHOD_LABELS } from "./utils/paymentMethods";
+import { PAYMENT_METHODS as PAYMENT_METHOD_LABELS } from "./shared/utils/paymentMethods";
 
 // Dinheiro primeiro (maioria das vendas de balcão é em dinheiro).
 export const PAYMENT_METHODS = ["cash", "pix", "debit_card", "credit_card", "fiado"].map((value) => ({
