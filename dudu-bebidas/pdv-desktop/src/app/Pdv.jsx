@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useCashSession } from "../features/caixa/hooks/useCashSession";
-import { usePdvCart } from "../features/venda/hooks/usePdvCart";
+import { useProductCatalog } from "../features/venda/hooks/useProductCatalog";
+import { useCart } from "../features/venda/hooks/useCart";
+import { useSale } from "../features/venda/hooks/useSale";
 import { useFiadoCustomers } from "../features/clientes/hooks/useFiadoCustomers";
 import { useProdutos } from "../features/produtos/hooks/useProdutos";
 import { useAdminCategories } from "../features/produtos/hooks/useAdminCategories";
@@ -28,7 +30,17 @@ export default function Pdv({ theme, onToggleTheme }) {
 
   const cashSession = useCashSession();
   const fiado = useFiadoCustomers(cashSession.session?.id);
-  const pdvCart = usePdvCart(cashSession.session?.id, { onFiadoSale: fiado.reload });
+  const catalog = useProductCatalog();
+  const cart = useCart();
+  const sale = useSale(
+    cashSession.session?.id,
+    {
+      cart: cart.cart, cartTotal: cart.cartTotal, discountAmount: cart.discountAmount,
+      clearCart: cart.clearCart, resetDiscount: () => cart.setDiscountInput(""),
+      reloadProducts: catalog.reload,
+    },
+    { onFiadoSale: fiado.reload },
+  );
   const produtos = useProdutos();
   const { categories: dbCategories } = useAdminCategories();
 
@@ -82,7 +94,7 @@ export default function Pdv({ theme, onToggleTheme }) {
         <div className="pdv-topbar-status">
           <span>
             Caixa aberto às {new Date(cashSession.session.opened_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-            {" · "}{pdvCart.sessionSales.length} venda(s) nesta sessão
+            {" · "}{sale.sessionSales.length} venda(s) nesta sessão
           </span>
           <button className="pdv-topbar-close-btn" onClick={() => cashSession.setCloseModalOpen(true)}>
             🔒 Fechar caixa
@@ -91,10 +103,10 @@ export default function Pdv({ theme, onToggleTheme }) {
         </div>
       </div>
 
-      {(pdvCart.saleSuccess || pdvCart.saleError) && (
+      {(sale.saleSuccess || sale.saleError) && (
         <div className="pdv-banner-row">
-          {pdvCart.saleSuccess && <div className="adm-store-success">✅ {pdvCart.saleSuccess}</div>}
-          {pdvCart.saleError && <div className="adm-modal-error">⚠️ {pdvCart.saleError}</div>}
+          {sale.saleSuccess && <div className="adm-store-success">✅ {sale.saleSuccess}</div>}
+          {sale.saleError && <div className="adm-modal-error">⚠️ {sale.saleError}</div>}
         </div>
       )}
 
@@ -115,43 +127,43 @@ export default function Pdv({ theme, onToggleTheme }) {
           {pdvView === "venda" && (
             <div className="pdv-layout">
               <ProductCatalog
-                search={pdvCart.search}
-                setSearch={pdvCart.setSearch}
-                productsError={pdvCart.productsError}
-                productsLoading={pdvCart.productsLoading}
-                filteredProducts={pdvCart.filteredProducts}
-                addToCart={pdvCart.addToCart}
+                search={catalog.search}
+                setSearch={catalog.setSearch}
+                productsError={catalog.productsError}
+                productsLoading={catalog.productsLoading}
+                filteredProducts={catalog.filteredProducts}
+                addToCart={cart.addToCart}
               />
               <CartPanel
-                cart={pdvCart.cart}
-                updateQuantity={pdvCart.updateQuantity}
-                removeFromCart={pdvCart.removeFromCart}
-                paymentMethod={pdvCart.paymentMethod}
-                setPaymentMethod={pdvCart.setPaymentMethod}
-                discountMode={pdvCart.discountMode}
-                setDiscountMode={pdvCart.setDiscountMode}
-                discountInput={pdvCart.discountInput}
-                setDiscountInput={pdvCart.setDiscountInput}
-                subtotal={pdvCart.subtotal}
-                discountAmount={pdvCart.discountAmount}
-                cartTotal={pdvCart.cartTotal}
-                submitting={pdvCart.submitting}
-                onFinalize={pdvCart.handleFinalizeSale}
-                receivedAmountInput={pdvCart.receivedAmountInput}
-                setReceivedAmountInput={pdvCart.setReceivedAmountInput}
-                changeAmount={pdvCart.changeAmount}
-                insufficientCash={pdvCart.insufficientCash}
-                splitMode={pdvCart.splitMode}
-                toggleSplitMode={pdvCart.toggleSplitMode}
-                splitPayments={pdvCart.splitPayments}
-                updateSplitLine={pdvCart.updateSplitLine}
-                addSplitLine={pdvCart.addSplitLine}
-                removeSplitLine={pdvCart.removeSplitLine}
-                splitRemaining={pdvCart.splitRemaining}
-                splitValid={pdvCart.splitValid}
-                fiadoCustomer={pdvCart.fiadoCustomer}
-                setFiadoCustomer={pdvCart.setFiadoCustomer}
-                missingFiadoCustomer={pdvCart.missingFiadoCustomer}
+                cart={cart.cart}
+                updateQuantity={cart.updateQuantity}
+                removeFromCart={cart.removeFromCart}
+                paymentMethod={sale.paymentMethod}
+                setPaymentMethod={sale.setPaymentMethod}
+                discountMode={cart.discountMode}
+                setDiscountMode={cart.setDiscountMode}
+                discountInput={cart.discountInput}
+                setDiscountInput={cart.setDiscountInput}
+                subtotal={cart.subtotal}
+                discountAmount={cart.discountAmount}
+                cartTotal={cart.cartTotal}
+                submitting={sale.submitting}
+                onFinalize={sale.handleFinalizeSale}
+                receivedAmountInput={sale.receivedAmountInput}
+                setReceivedAmountInput={sale.setReceivedAmountInput}
+                changeAmount={sale.changeAmount}
+                insufficientCash={sale.insufficientCash}
+                splitMode={sale.splitMode}
+                toggleSplitMode={sale.toggleSplitMode}
+                splitPayments={sale.splitPayments}
+                updateSplitLine={sale.updateSplitLine}
+                addSplitLine={sale.addSplitLine}
+                removeSplitLine={sale.removeSplitLine}
+                splitRemaining={sale.splitRemaining}
+                splitValid={sale.splitValid}
+                fiadoCustomer={sale.fiadoCustomer}
+                setFiadoCustomer={sale.setFiadoCustomer}
+                missingFiadoCustomer={sale.missingFiadoCustomer}
                 fiadoCustomers={fiado.customers}
                 fiadoCustomersLoading={fiado.loading}
                 createFiadoCustomer={fiado.createCustomer}
@@ -162,10 +174,10 @@ export default function Pdv({ theme, onToggleTheme }) {
           {pdvView === "historico" && (
             <HistorySalesList
               currentSessionId={cashSession.session.id}
-              cancelError={pdvCart.cancelError}
-              sessionSales={pdvCart.sessionSales}
-              cancellingId={pdvCart.cancellingId}
-              onCancelSale={pdvCart.handleCancelSale}
+              cancelError={sale.cancelError}
+              sessionSales={sale.sessionSales}
+              cancellingId={sale.cancellingId}
+              onCancelSale={sale.handleCancelSale}
             />
           )}
 
@@ -180,8 +192,8 @@ export default function Pdv({ theme, onToggleTheme }) {
               setCustomerActive={fiado.setCustomerActive}
               deleteCustomer={fiado.deleteCustomer}
               currentSessionId={cashSession.session.id}
-              cancellingId={pdvCart.cancellingId}
-              onCancelSale={pdvCart.handleCancelSale}
+              cancellingId={sale.cancellingId}
+              onCancelSale={sale.handleCancelSale}
             />
           )}
 
@@ -205,12 +217,12 @@ export default function Pdv({ theme, onToggleTheme }) {
         />
       )}
 
-      {pdvCart.confirmingSale && (
+      {sale.confirmingSale && (
         <CancelSaleModal
-          sale={pdvCart.confirmingSale}
-          cancelling={pdvCart.cancellingId === pdvCart.confirmingSale.orderId}
-          onConfirm={pdvCart.confirmCancelSale}
-          onDismiss={pdvCart.dismissCancelSale}
+          sale={sale.confirmingSale}
+          cancelling={sale.cancellingId === sale.confirmingSale.orderId}
+          onConfirm={sale.confirmCancelSale}
+          onDismiss={sale.dismissCancelSale}
         />
       )}
     </div>

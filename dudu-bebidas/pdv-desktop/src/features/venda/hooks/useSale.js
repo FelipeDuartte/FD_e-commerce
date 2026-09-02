@@ -1,27 +1,20 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { formatBRL } from "../../../shared/utils/format";
-import { listAdminProducts } from "../../produtos/services/productService";
 import {
   createPdvSale,
   cancelPdvSale,
   listSessionSales,
 } from "../../../shared/services/salesService";
-import { getPdvPrice } from "../utils/pricing";
 
-export function usePdvCart(sessionId, { onFiadoSale } = {}) {
-  const [products, setProducts] = useState([]);
-  const [productsLoading, setProductsLoading] = useState(true);
-  const [productsError, setProductsError] = useState("");
-  const [search, setSearch] = useState("");
-
-  const [cart, setCart] = useState([]);
+// Forma de pagamento (única ou dividida), troco, cliente fiado, submissão
+// da venda e cancelamento. Recebe o carrinho (de useCart) como dados —
+// não é dono dele, só lê pra montar o payload e as mensagens de sucesso.
+export function useSale(sessionId, { cart, cartTotal, discountAmount, clearCart, resetDiscount, reloadProducts }, { onFiadoSale } = {}) {
   const [paymentMethod, setPaymentMethodRaw] = useState("cash");
   const [receivedAmountInput, setReceivedAmountInput] = useState("");
   const [splitMode, setSplitMode] = useState(false);
   const [splitPayments, setSplitPayments] = useState([]);
   const [fiadoCustomer, setFiadoCustomer] = useState(null);
-  const [discountMode, setDiscountMode] = useState("amount");
-  const [discountInput, setDiscountInput] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [saleError, setSaleError] = useState("");
   const [saleSuccess, setSaleSuccess] = useState("");
@@ -29,17 +22,6 @@ export function usePdvCart(sessionId, { onFiadoSale } = {}) {
   const [cancellingId, setCancellingId] = useState(null);
   const [cancelError, setCancelError] = useState("");
   const [confirmingSale, setConfirmingSale] = useState(null);
-
-  const loadProducts = useCallback(async () => {
-    setProductsLoading(true);
-    try {
-      setProducts(await listAdminProducts());
-      setProductsError("");
-    } catch (e) {
-      setProductsError(e.message);
-    }
-    setProductsLoading(false);
-  }, []);
 
   const loadSessionSales = useCallback(async (id) => {
     if (!id) {
@@ -60,55 +42,6 @@ export function usePdvCart(sessionId, { onFiadoSale } = {}) {
     }, 0);
     return () => clearTimeout(timer);
   }, [sessionId, loadSessionSales]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      loadProducts();
-    }, 0);
-    return () => clearTimeout(timer);
-  }, [loadProducts]);
-
-  const addToCart = (product) => {
-    if (product.stock <= 0) return;
-    setCart((prev) => {
-      const existing = prev.find((i) => i.id === product.id);
-      if (existing) {
-        if (existing.quantity >= product.stock) return prev;
-        return prev.map((i) =>
-          i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i
-        );
-      }
-      return [
-        ...prev,
-        { id: product.id, name: product.name, price: getPdvPrice(product), quantity: 1, stock: product.stock },
-      ];
-    });
-  };
-
-  const updateQuantity = (id, quantity) => {
-    setCart((prev) =>
-      prev.map((i) =>
-        i.id === id ? { ...i, quantity: Math.max(1, Math.min(quantity, i.stock)) } : i
-      )
-    );
-  };
-
-  const removeFromCart = (id) => setCart((prev) => prev.filter((i) => i.id !== id));
-  const clearCart = () => setCart([]);
-
-  const subtotal = useMemo(
-    () => cart.reduce((sum, i) => sum + i.price * i.quantity, 0),
-    [cart]
-  );
-
-  const discountAmount = useMemo(() => {
-    const raw = Number(discountInput);
-    if (!Number.isFinite(raw) || raw <= 0) return 0;
-    const amount = discountMode === "percent" ? subtotal * (raw / 100) : raw;
-    return Math.min(Math.max(0, amount), subtotal);
-  }, [discountInput, discountMode, subtotal]);
-
-  const cartTotal = subtotal - discountAmount;
 
   // Troco só faz sentido pra dinheiro, cliente só faz sentido pra fiado —
   // trocar de forma de pagamento limpa os dois, senão sobraria um valor
@@ -164,19 +97,6 @@ export function usePdvCart(sessionId, { onFiadoSale } = {}) {
     splitPayments.every((p) => p.method && Number(p.amount) > 0) &&
     Math.abs(splitRemaining) < 0.01;
 
-  const filteredProducts = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    return products
-      .filter((p) => p.is_active && p.stock > 0)
-      .filter(
-        (p) =>
-          !term ||
-          p.name.toLowerCase().includes(term) ||
-          p.id.toLowerCase().includes(term) ||
-          (p.ean ?? "").toLowerCase() === term
-      );
-  }, [products, search]);
-
   const handleFinalizeSale = async () => {
     if (cart.length === 0 || !sessionId) return;
     if (splitMode ? !splitValid : insufficientCash || missingFiadoCustomer) return;
@@ -203,10 +123,10 @@ export function usePdvCart(sessionId, { onFiadoSale } = {}) {
       if (paymentMethod === "fiado") onFiadoSale?.();
       clearCart();
       setPaymentMethod("cash");
-      setDiscountInput("");
+      resetDiscount();
       setSplitMode(false);
       setSplitPayments([]);
-      loadProducts();
+      reloadProducts();
       loadSessionSales(sessionId);
     } catch (e) {
       setSaleError(e.message);
@@ -232,7 +152,7 @@ export function usePdvCart(sessionId, { onFiadoSale } = {}) {
     setCancelError("");
     try {
       await cancelPdvSale(sale.orderId);
-      loadProducts();
+      reloadProducts();
       loadSessionSales(sessionId);
     } catch (e) {
       setCancelError(e.message);
@@ -242,16 +162,12 @@ export function usePdvCart(sessionId, { onFiadoSale } = {}) {
   };
 
   return {
-    products, productsLoading, productsError, search, setSearch,
-    cart, paymentMethod, setPaymentMethod, discountMode, setDiscountMode,
-    discountInput, setDiscountInput, submitting, saleError, saleSuccess,
+    paymentMethod, setPaymentMethod, submitting, saleError, saleSuccess,
     sessionSales, cancellingId, cancelError, confirmingSale,
     receivedAmountInput, setReceivedAmountInput, changeAmount, insufficientCash,
     splitMode, toggleSplitMode, splitPayments, updateSplitLine, addSplitLine,
     removeSplitLine, splitTotal, splitRemaining, splitValid,
     fiadoCustomer, setFiadoCustomer, missingFiadoCustomer,
-    addToCart, updateQuantity, removeFromCart,
-    subtotal, discountAmount, cartTotal, filteredProducts,
     handleFinalizeSale, handleCancelSale, confirmCancelSale, dismissCancelSale,
   };
 }
