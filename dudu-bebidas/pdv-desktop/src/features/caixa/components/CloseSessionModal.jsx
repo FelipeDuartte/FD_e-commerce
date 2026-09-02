@@ -1,5 +1,5 @@
 import { formatBRL } from "../../../shared/utils/format";
-import { PAYMENT_METHODS } from "../../../constants";
+import { PAYMENT_METHODS } from "../../../shared/constants";
 
 function methodLabel(method) {
   const known = PAYMENT_METHODS.find((m) => m.value === method);

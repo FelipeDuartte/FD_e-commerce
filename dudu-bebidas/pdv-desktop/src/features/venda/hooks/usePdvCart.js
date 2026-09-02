@@ -6,7 +6,7 @@ import {
   cancelPdvSale,
   listSessionSales,
 } from "../../../shared/services/salesService";
-import { getPdvPrice } from "../../../constants";
+import { getPdvPrice } from "../utils/pricing";
 
 export function usePdvCart(sessionId, { onFiadoSale } = {}) {
   const [products, setProducts] = useState([]);

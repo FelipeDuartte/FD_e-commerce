@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { formatBRL } from "../../../shared/utils/format";
-import { PAYMENT_METHODS } from "../../../constants";
+import { PAYMENT_METHODS } from "../../../shared/constants";
 import { listRecentSales, listCancelledSales, listFullHistorySales } from "../../../shared/services/salesService";
 
 const FILTERS = [

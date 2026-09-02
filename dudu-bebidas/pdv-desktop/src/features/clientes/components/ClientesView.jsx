@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { formatBRL, daysSince, formatLastOrder, formatPhone } from "../../../shared/utils/format";
-import { INACTIVE_CUSTOMER_DAYS, SPLIT_PAYMENT_METHODS } from "../../../constants";
+import { INACTIVE_CUSTOMER_DAYS } from "../constants";
+import { SPLIT_PAYMENT_METHODS } from "../../../shared/constants";
 import { listFiadoOrders, listCustomerPayments } from "../services/fiadoService";
 import PayDebtModal from "./PayDebtModal";
 import DeleteCustomerModal from "./DeleteCustomerModal";

@@ -1,5 +1,5 @@
 import { formatBRL } from "../../../shared/utils/format";
-import { getPdvPrice } from "../../../constants";
+import { getPdvPrice } from "../utils/pricing";
 
 export default function ProductCatalog({ search, setSearch, productsError, productsLoading, filteredProducts, addToCart }) {
   return (

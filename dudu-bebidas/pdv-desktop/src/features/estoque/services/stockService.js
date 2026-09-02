@@ -1,5 +1,5 @@
 import { supabase } from "../../../shared/supabase/Supabaseclient";
-import { PAGE_SIZE } from "../../produtos/utils/productConstants";
+import { PAGE_SIZE } from "../../../shared/constants";
 import { AdminServiceError } from "../../../shared/services/AdminServiceError";
 
 const REASON_LABEL = {

@@ -4,7 +4,6 @@ import { usePdvCart } from "../features/venda/hooks/usePdvCart";
 import { useFiadoCustomers } from "../features/clientes/hooks/useFiadoCustomers";
 import { useProdutos } from "../features/produtos/hooks/useProdutos";
 import { useAdminCategories } from "../features/produtos/hooks/useAdminCategories";
-import { PDV_VIEWS } from "../constants";
 import OpenSessionForm from "../features/caixa/components/OpenSessionForm";
 import ProductCatalog from "../features/venda/components/ProductCatalog";
 import CartPanel from "../features/venda/components/CartPanel";
@@ -14,6 +13,15 @@ import ProdutosView from "../features/produtos/components/ProdutosView";
 import EstoqueView from "../features/estoque/components/EstoqueView";
 import CloseSessionModal from "../features/caixa/components/CloseSessionModal";
 import CancelSaleModal from "../shared/components/CancelSaleModal";
+
+// Config da nav rail — usada só aqui, não vale a pena um arquivo próprio.
+const PDV_VIEWS = [
+  { key: "venda", label: "🛒 Venda" },
+  { key: "historico", label: "📋 Histórico" },
+  { key: "clientes", label: "👥 Clientes" },
+  { key: "produtos", label: "🍺 Produtos" },
+  { key: "estoque", label: "📦 Estoque" },
+];
 
 export default function Pdv({ theme, onToggleTheme }) {
   const [pdvView, setPdvView] = useState("venda");

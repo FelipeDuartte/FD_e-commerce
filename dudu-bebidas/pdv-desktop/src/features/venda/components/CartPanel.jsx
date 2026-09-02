@@ -1,5 +1,5 @@
 import { formatBRL } from "../../../shared/utils/format";
-import { PAYMENT_METHODS, SPLIT_PAYMENT_METHODS } from "../../../constants";
+import { PAYMENT_METHODS, SPLIT_PAYMENT_METHODS } from "../../../shared/constants";
 import FiadoCustomerPicker from "./FiadoCustomerPicker";
 
 export default function CartPanel({

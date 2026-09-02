@@ -1,5 +1,3 @@
-export const PAGE_SIZE = 20;
-
 export const CATEGORIES = ["cerveja", "vinho", "destilado", "refrigerante", "energetico", "outros"];
 
 export const EMPTY_PRODUCT = {

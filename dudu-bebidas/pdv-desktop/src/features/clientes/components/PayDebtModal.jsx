@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { formatBRL } from "../../../shared/utils/format";
-import { SPLIT_PAYMENT_METHODS } from "../../../constants";
+import { SPLIT_PAYMENT_METHODS } from "../../../shared/constants";
 
 // Não oferece "fiado" como forma aqui de propósito — não faz sentido
 // quitar uma dívida com outra dívida (SPLIT_PAYMENT_METHODS já exclui).
