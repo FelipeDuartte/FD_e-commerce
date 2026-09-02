@@ -3,7 +3,7 @@ import {
   getOpenCashSession,
   openCashSession,
   closeCashSession,
-} from "../../../shared/services/pdvService";
+} from "../services/cashSessionService";
 
 export function useCashSession() {
   const [session, setSession] = useState(null);

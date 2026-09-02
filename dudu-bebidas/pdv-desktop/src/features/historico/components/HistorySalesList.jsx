@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { formatBRL } from "../../../shared/utils/format";
 import { PAYMENT_METHODS } from "../../../constants";
-import { listRecentSales, listCancelledSales, listFullHistorySales } from "../../../shared/services/pdvService";
+import { listRecentSales, listCancelledSales, listFullHistorySales } from "../../../shared/services/salesService";
 
 const FILTERS = [
   { key: "atual", label: "Caixa atual", hint: "Vendas da sessão de caixa aberta agora" },

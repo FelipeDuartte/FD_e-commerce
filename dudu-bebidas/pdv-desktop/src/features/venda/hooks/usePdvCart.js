@@ -5,7 +5,7 @@ import {
   createPdvSale,
   cancelPdvSale,
   listSessionSales,
-} from "../../../shared/services/pdvService";
+} from "../../../shared/services/salesService";
 import { getPdvPrice } from "../../../constants";
 
 export function usePdvCart(sessionId, { onFiadoSale } = {}) {
