@@ -6,8 +6,8 @@ import {
   updateDeliveryZone,
   toggleDeliveryZone,
   deleteDeliveryZone,
-} from "../../services/adminStoreService";
-import { EMPTY_ZONE } from "../../constants";
+} from "../services/deliveryZoneService";
+import { EMPTY_ZONE } from "../constants";
 
 export default function DeliveryZonesSection() {
   const [zones, setZones]       = useState([]);

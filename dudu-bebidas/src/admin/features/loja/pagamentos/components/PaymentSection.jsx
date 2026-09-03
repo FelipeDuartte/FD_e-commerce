@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { getPaymentConfig, updatePaymentConfig } from "../services/paymentConfigService";
-import { getStoreConfig, updateStoreConfig } from "../../services/adminStoreService";
+import { getStoreConfig, updateStoreConfig } from "../../services/storeConfigService";
 import { PAYMENT_METHODS } from "../../../../../shared/utils/paymentMethods";
-import { EMPTY_PAYMENT_CONFIG } from "../../constants";
+import { EMPTY_PAYMENT_CONFIG } from "../constants";
 
 // Só as formas que realmente aparecem no checkout do site (ver
 // deliveryPaymentOptions/onlinePaymentOptions em checkoutConstants.js) —

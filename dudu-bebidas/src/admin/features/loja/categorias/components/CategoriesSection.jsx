@@ -5,7 +5,7 @@ import {
   updateCategory,
   toggleCategory,
   deleteCategory,
-} from "../../services/adminStoreService";
+} from "../services/categoryService";
 
 export default function CategoriesSection() {
   const [categories, setCategories] = useState([]);

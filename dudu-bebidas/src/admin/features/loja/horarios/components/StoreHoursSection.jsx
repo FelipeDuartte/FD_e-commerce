@@ -4,8 +4,8 @@ import {
   updateStoreConfig,
   listStoreHours,
   upsertStoreHours,
-} from "../../services/adminStoreService";
-import { DAYS, DEFAULT_HOURS } from "../../constants";
+} from "../../services/storeConfigService";
+import { DAYS, DEFAULT_HOURS } from "../constants";
 
 export default function StoreHoursSection() {
   const [config, setConfig]   = useState(null);
