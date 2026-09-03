@@ -13,9 +13,9 @@ import {
   Store,
 } from "lucide-react";
 import "./Cart.css";
-import { imgProduto } from "../../../../shared/utils/Cloudnary";
-import { useStoreStatus, useStoreHoursData } from "../../../../shared/context/useStoreStatus";
-import { useDeliveryZones } from "../../hooks/useDeliveryZones";
+import { imgProduto } from "../../../shared/utils/Cloudnary";
+import { useStoreStatus, useStoreHoursData } from "../../../shared/context/useStoreStatus";
+import { useDeliveryZones } from "../hooks/useDeliveryZones";
 
 /** Converte "HH:MM:SS" ou "HH:MM" do banco para "HH:MM" de exibição */
 function sliceTime(t) {

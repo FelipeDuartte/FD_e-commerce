@@ -12,13 +12,13 @@ import { useCart }     from "../features/cart/hooks/useCart";
 import banners  from "../features/catalog/data/banners";
 import benefits from "../features/catalog/data/benefits";
 // ==== Components ====
-import Header        from "../features/header/components/Header/Header";
+import Header        from "../features/header/components/Header";
 import Banner        from "../features/catalog/components/Banner/Banner";
 import Hero          from "../features/catalog/components/Hero/Hero";
 import Benefits      from "../features/catalog/components/Benefits/Benefits";
 import ProductList   from "../features/catalog/components/ProductList/ProductList";
 import Footer        from "../shared/components/Footer/Footer";
-import Cart          from "../features/cart/components/Cart/Cart";
+import Cart          from "../features/cart/components/Cart";
 import AgeGate from "../shared/components/AgeGate/AgeGate";
 import { hasAcceptedAgeGate } from "../shared/components/AgeGate/ageGateStorage";
 import Login         from "../features/auth/login";
