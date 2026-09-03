@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { fetchOrderItemsForReports, fetchOrdersForReports } from "../services/reportsFetch";
 import {
   aggregateMonthly,
   aggregateTopCustomers,
   aggregateTopProducts,
-  fetchOrderItemsForReports,
-  fetchOrdersForReports,
   filterByPeriod,
   summariseOrders,
-} from "../services/adminReportService";
+} from "../services/reportsAggregate";
 
 const STALE_MS = 5 * 60 * 1000; // 5 minutes cache
 
