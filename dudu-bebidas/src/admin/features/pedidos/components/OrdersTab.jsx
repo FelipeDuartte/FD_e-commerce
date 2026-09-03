@@ -1,4 +1,6 @@
-import { PAGE_SIZE, formatBRL, useVariableVirtualList } from "../../../shared/adminUtils";
+import { PAGE_SIZE } from "../orderStatus";
+import { formatBRL } from "../../../shared/utils/adminFormat";
+import { useVariableVirtualList } from "../useVariableVirtualList";
 import OrderCard from "./OrderCard";
 
 const STAT_FILTERS = [

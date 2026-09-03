@@ -1,5 +1,5 @@
 import { supabase } from "../../../../shared/supabase/Supabaseclient";
-import { PAGE_SIZE, isPhantomMercadoPagoOrder } from "../../../shared/adminUtils";
+import { PAGE_SIZE, isPhantomMercadoPagoOrder } from "../orderStatus";
 import { AdminServiceError } from "../../../shared/services/AdminServiceError";
 
 const ORDER_SELECT = `

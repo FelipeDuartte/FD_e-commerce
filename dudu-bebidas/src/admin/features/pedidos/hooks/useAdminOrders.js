@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useReducer, useState } from "react";
 import { supabase, getCurrentStoreId } from "../../../../shared/supabase/Supabaseclient";
-import { playNotificationSound, shouldRemoveOrder, isPhantomMercadoPagoOrder, getNext } from "../../../shared/adminUtils";
+import { playNotificationSound } from "../notificationSound";
+import { shouldRemoveOrder, isPhantomMercadoPagoOrder, getNext } from "../orderStatus";
 import {
   getTodayOrderMetrics,
   listAdminOrders,

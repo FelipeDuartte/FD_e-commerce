@@ -1,4 +1,4 @@
-import { formatBRL } from "../../../shared/adminUtils";
+import { formatBRL } from "../../../shared/utils/adminFormat";
 import "./AdminReports.css";
 
 // ── Mini bar-chart ────────────────────────────────────────────────────────────

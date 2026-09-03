@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { formatBRL } from "../../../../shared/adminUtils";
+import { formatBRL } from "../../../../shared/utils/adminFormat";
 import {
   listDeliveryZones,
   createDeliveryZone,

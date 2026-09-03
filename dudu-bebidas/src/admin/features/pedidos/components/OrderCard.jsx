@@ -4,10 +4,9 @@ import {
   getStatuses,
   getStatusMap,
   isPickup,
-  formatDate,
-  formatBRL,
   PAYMENT_LABEL,
-} from "../../../shared/adminUtils";
+} from "../orderStatus";
+import { formatDate, formatBRL } from "../../../shared/utils/adminFormat";
 
 const PAYMENT_STATUS_LABEL = {
   aguardando_pagamento: "⏳ Aguardando pagamento",
