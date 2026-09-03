@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { formatBRL } from "../../adminUtils";
-import { supabase } from "../../../../supabase/Supabaseclient";
+import { supabase } from "../../../../shared/supabase/Supabaseclient";
 import {
   createPdvSale,
   cancelPdvSale,

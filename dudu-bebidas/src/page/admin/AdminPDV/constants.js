@@ -1,4 +1,4 @@
-import { PAYMENT_METHODS as PAYMENT_METHOD_LABELS } from "../../../utils/paymentMethods";
+import { PAYMENT_METHODS as PAYMENT_METHOD_LABELS } from "../../../shared/utils/paymentMethods";
 
 // Dinheiro primeiro no PDV (maioria das vendas de balcão é em dinheiro) —
 // ordem diferente do checkout online, mas os rótulos vêm da fonte única.

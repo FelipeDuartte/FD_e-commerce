@@ -1,4 +1,4 @@
-import { supabase, getCurrentStoreId } from "./Supabaseclient";
+import { supabase, getCurrentStoreId } from "../shared/supabase/Supabaseclient";
 
 const GENERIC_ERROR = "Não foi possível processar o pagamento. Tente novamente.";
 

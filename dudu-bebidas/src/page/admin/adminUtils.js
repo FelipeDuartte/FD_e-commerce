@@ -1,6 +1,6 @@
 // Utils e constantes compartilhadas pelo painel admin
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-export { PAYMENT_METHODS as PAYMENT_LABEL } from "../../utils/paymentMethods";
+export { PAYMENT_METHODS as PAYMENT_LABEL } from "../../shared/utils/paymentMethods";
 export const PAGE_SIZE = 20;
 
 export const STATUS_PICKUP = {

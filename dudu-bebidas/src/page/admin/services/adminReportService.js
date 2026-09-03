@@ -1,4 +1,4 @@
-import { supabase } from "../../../supabase/Supabaseclient";
+import { supabase } from "../../../shared/supabase/Supabaseclient";
 import { AdminServiceError } from "./AdminServiceError";
 
 // Máximo de linhas que o Supabase retorna por request — usado para paginar

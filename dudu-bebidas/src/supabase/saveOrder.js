@@ -1,4 +1,4 @@
-import { supabase, getCurrentStoreId } from "./Supabaseclient";
+import { supabase, getCurrentStoreId } from "../shared/supabase/Supabaseclient";
 
 const GENERIC_ORDER_ERROR =
   "Não foi possível criar o pedido. Tente novamente.";

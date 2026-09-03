@@ -1,4 +1,4 @@
-import { supabase, getCurrentStoreId } from "../../../supabase/Supabaseclient";
+import { supabase, getCurrentStoreId } from "../../../shared/supabase/Supabaseclient";
 import { AdminServiceError } from "./AdminServiceError";
 
 // mercadopago_access_token e mercadopago_webhook_secret nunca voltam pro

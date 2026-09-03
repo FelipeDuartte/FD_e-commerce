@@ -1,4 +1,4 @@
-import { supabase, getCurrentStoreId } from "../../../supabase/Supabaseclient";
+import { supabase, getCurrentStoreId } from "../../../shared/supabase/Supabaseclient";
 import { AdminServiceError } from "./AdminServiceError";
 import { getCurrentUserId } from "./adminTeamService";
 

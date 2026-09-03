@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { getPaymentConfig, updatePaymentConfig } from "../../services/adminPaymentService";
 import { getStoreConfig, updateStoreConfig } from "../../services/adminStoreService";
-import { PAYMENT_METHODS } from "../../../../utils/paymentMethods";
+import { PAYMENT_METHODS } from "../../../../shared/utils/paymentMethods";
 import { EMPTY_PAYMENT_CONFIG } from "../constants";
 
 // Só as formas que realmente aparecem no checkout do site (ver

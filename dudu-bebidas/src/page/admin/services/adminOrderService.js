@@ -1,4 +1,4 @@
-import { supabase } from "../../../supabase/Supabaseclient";
+import { supabase } from "../../../shared/supabase/Supabaseclient";
 import { PAGE_SIZE, isPhantomMercadoPagoOrder } from "../adminUtils";
 import { AdminServiceError } from "./AdminServiceError";
 
