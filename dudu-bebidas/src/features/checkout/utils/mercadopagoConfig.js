@@ -1,4 +1,4 @@
-import { supabase, getCurrentStoreId } from "../shared/supabase/Supabaseclient";
+import { supabase, getCurrentStoreId } from "../../../shared/supabase/Supabaseclient";
 
 // RPC pública (SECURITY DEFINER) — devolve só a Public Key (feita pra ser
 // pública) e se a loja já configurou as duas credenciais. Nunca devolve o

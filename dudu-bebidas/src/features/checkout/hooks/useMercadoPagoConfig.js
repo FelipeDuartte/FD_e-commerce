@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getMercadoPagoPublicConfig } from "../../../utils/mercadopagoConfig";
+import { getMercadoPagoPublicConfig } from "../utils/mercadopagoConfig";
 
 // Kill switch temporário: a conta do Mercado Pago está recusando pagamentos
 // reais (análise de risco de conta de produção recém-ativada, ver conversa

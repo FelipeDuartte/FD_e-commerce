@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { saveOrder } from "../../../supabase/saveOrder";
-import { saveMercadoPagoOrder } from "../../../supabase/saveMercadoPagoOrder";
+import { saveOrder } from "../services/saveOrder";
+import { saveMercadoPagoOrder } from "../services/saveMercadoPagoOrder";
 import {
   loadLastDeliveryAddress,
   saveLastDeliveryAddress,
-} from "../../../utils/checkoutAddressStorage";
+} from "../utils/checkoutAddressStorage";
 import { INITIAL_ADDRESS, INSTALLMENT_FEE_RATE, roundCents } from "../checkoutConstants";
 
 // Concentra todo o estado e as regras do checkout: endereço/CEP, forma de
