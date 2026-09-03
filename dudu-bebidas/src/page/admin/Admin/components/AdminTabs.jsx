@@ -1,15 +1,8 @@
-// Flag temporária: PDV ainda não está pronto pra produção (só a loja de
-// teste/prototipo usa por enquanto). A aba some da lista, mas o código
-// continua todo aqui — é só tirar essa linha (e a mesma flag em Admin.jsx)
-// quando for liberar.
-export const SHOW_PDV_TAB = false;
-
 export default function AdminTabs({ activeTab, onChange, ordersCount }) {
   const tabs = [
     { key: "pedidos", label: "📦 Pedidos", badge: ordersCount },
     { key: "relatorios", label: "📊 Relatórios", badge: null },
     { key: "loja", label: "🏪 Loja", badge: null },
-    ...(SHOW_PDV_TAB ? [{ key: "pdv", label: "🧾 PDV", badge: null }] : []),
   ];
 
   return (

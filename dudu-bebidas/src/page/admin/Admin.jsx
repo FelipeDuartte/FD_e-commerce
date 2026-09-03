@@ -4,12 +4,11 @@ import "./Admin.css";
 import RejectModal from "./RejectModal";
 import AdminReports from "./AdminReports";
 import AdminStore from "./AdminStore";
-import AdminPDV from "./AdminPDV";
 import { useAdminReports } from "./hooks/useAdminReports";
 import { useAdminOrders } from "./Admin/hooks/useAdminOrders";
 import { useTheme } from "./hooks/useTheme";
 import AdminHeader from "./Admin/components/AdminHeader";
-import AdminTabs, { SHOW_PDV_TAB } from "./Admin/components/AdminTabs";
+import AdminTabs from "./Admin/components/AdminTabs";
 import OrdersTab from "./Admin/components/OrdersTab";
 
 export default function Admin({ isAdmin }) {
@@ -92,7 +91,6 @@ export default function Admin({ isAdmin }) {
         )}
 
         {activeTab === "loja" && <AdminStore />}
-        {SHOW_PDV_TAB && activeTab === "pdv" && <AdminPDV />}
       </div>
     </div>
   );
