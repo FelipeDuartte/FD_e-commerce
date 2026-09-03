@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { getStoreStatus } from "../utils/storeHours";
+import { getStoreStatus } from "../utils/storeStatus";
 import { StoreHoursContext, StoreStatusContext } from "./storeStatusContexts";
 
 export function useStoreStatus() {

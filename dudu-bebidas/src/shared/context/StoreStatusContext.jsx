@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase, getCurrentStoreId } from "../supabase/Supabaseclient";
-import { getStoreStatus, createStoreChecker } from "../utils/storeHours";
+import { getStoreStatus } from "../utils/storeStatus";
+import { createStoreChecker } from "../utils/storeChecker";
 import { StoreHoursContext, StoreStatusContext } from "./storeStatusContexts";
 
 export function StoreStatusProvider({ children }) {
