@@ -31,7 +31,7 @@ import LastOrderBanner from "../shared/components/LastOrderBanner/LastOrderBanne
 // código (painel inteiro + serviços + CSS). Antes era import estático, e
 // todo visitante do site — inclusive quem nunca abre o admin — baixava
 // esse pedaço junto no carregamento inicial.
-const Admin = lazy(() => import("../page/admin/Admin"));
+const Admin = lazy(() => import("../admin/app/Admin"));
 import PrivacyPolicy from "../features/legal/privacy-policy/PrivacyPolicy";
 import TermsOfService from "../features/legal/terms-service/TermsService";
 import { StoreStatusProvider } from "../shared/context/StoreStatusContext";
