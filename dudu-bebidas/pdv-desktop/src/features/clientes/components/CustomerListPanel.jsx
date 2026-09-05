@@ -18,22 +18,24 @@ export default function CustomerListPanel({
   const [filter, setFilter] = useState("todos");
   const [search, setSearch] = useState("");
 
-  const isInactiveByRecency = useCallback(
-    (c) => !c.lastOrderAt || daysSince(c.lastOrderAt) > INACTIVE_CUSTOMER_DAYS,
+  // Cliente desativado manualmente entra direto em "Inativos", além de
+  // quem só está sem comprar há muito tempo (inatividade por recência).
+  const isInactive = useCallback(
+    (c) => c.isActive === false || !c.lastOrderAt || daysSince(c.lastOrderAt) > INACTIVE_CUSTOMER_DAYS,
     [],
   );
 
   const counts = useMemo(() => ({
     debito: customers.filter((c) => c.balance > 0.004).length,
     credito: customers.filter((c) => c.balance < -0.004).length,
-    inativos: customers.filter(isInactiveByRecency).length,
-  }), [customers, isInactiveByRecency]);
+    inativos: customers.filter(isInactive).length,
+  }), [customers, isInactive]);
 
   const filtered = useMemo(() => {
     let list = customers;
     if (filter === "debito") list = list.filter((c) => c.balance > 0.004);
     else if (filter === "credito") list = list.filter((c) => c.balance < -0.004);
-    else if (filter === "inativos") list = list.filter(isInactiveByRecency);
+    else if (filter === "inativos") list = list.filter(isInactive);
 
     const term = search.trim().toLowerCase();
     if (term) {
@@ -44,7 +46,7 @@ export default function CustomerListPanel({
     if (filter === "consomem") sorted.sort((a, b) => b.totalFiado - a.totalFiado);
     else sorted.sort((a, b) => a.name.localeCompare(b.name));
     return sorted;
-  }, [customers, filter, search, isInactiveByRecency]);
+  }, [customers, filter, search, isInactive]);
 
   return (
     <div className="pdv-fiado-customers">

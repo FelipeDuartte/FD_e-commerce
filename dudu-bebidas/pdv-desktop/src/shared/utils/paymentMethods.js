@@ -6,5 +6,5 @@ export const PAYMENT_METHODS = {
   cash: { icon: "💵", label: "Dinheiro" },
   pix: { icon: "⚡", label: "Pix" },
   // Venda sem cobrança na hora — vira dívida do cliente (ver pdv_customers).
-  fiado: { icon: "📒", label: "Fiado" },
+  fiado: { icon: "📝", label: "Em Aberto" },
 };

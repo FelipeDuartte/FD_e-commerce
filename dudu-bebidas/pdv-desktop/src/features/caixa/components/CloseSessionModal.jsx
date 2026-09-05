@@ -28,7 +28,7 @@ export default function CloseSessionModal({
                 ))}
                 {closeResult.fiado_total > 0 && (
                   <div className="pdv-close-breakdown-row pdv-close-breakdown-fiado">
-                    <span>📒 Vendido fiado (não recebido)</span>
+                    <span>📝 Vendido em aberto (não recebido)</span>
                     <strong>{formatBRL(closeResult.fiado_total)}</strong>
                   </div>
                 )}
