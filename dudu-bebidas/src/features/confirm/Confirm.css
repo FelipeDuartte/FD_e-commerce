@@ -633,7 +633,8 @@
 
 /* Botões do modal — base compartilhada */
 .cf-modal-btn-cancel,
-.cf-modal-btn-confirm {
+.cf-modal-btn-confirm,
+.cf-modal-btn-whatsapp {
   flex: 1;
   padding: 14px;
   border-radius: var(--r-md);
@@ -643,6 +644,22 @@
   cursor: pointer;
   transition: all var(--t);
   border: none;
+}
+
+.cf-modal-btn-whatsapp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #25d366;
+  color: #fff;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.cf-modal-btn-whatsapp:hover {
+  background: #1ebe5a;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(37, 211, 102, .3);
 }
 
 .cf-modal-btn-cancel {

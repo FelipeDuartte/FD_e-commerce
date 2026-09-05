@@ -9,6 +9,14 @@ export default function OrderOutcomeModal({ icon, title, children, onClose }) {
         <h3 className="cf-modal-title">{title}</h3>
         <p className="cf-modal-desc">{children}</p>
         <div className="cf-modal-actions">
+          <a
+            href="https://wa.me/553183077990"
+            target="_blank"
+            rel="noreferrer"
+            className="cf-modal-btn-whatsapp"
+          >
+            Falar com atendente <i className="bi bi-whatsapp" aria-hidden="true" />
+          </a>
           <button className="cf-modal-btn-confirm" onClick={onClose}>
             Voltar para a loja
           </button>

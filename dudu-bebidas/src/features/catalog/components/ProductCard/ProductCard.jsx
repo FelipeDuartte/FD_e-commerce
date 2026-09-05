@@ -13,7 +13,7 @@ function ProductCard({ produto, addToCart }) {
 
   const hasPromo = Boolean(produto.promocao);
   const hasOldPrice = hasPromo && Boolean(produto.precoAntigo);
-  const isLowStock = produto.estoque > 0 && produto.estoque < 15;
+  const isLowStock = produto.estoque > 0 && produto.estoque < 3;
   const isOutOfStock = produto.estoque <= 0 || produto.isActive === false;
   const storeStatus = useStoreStatus();
 
