@@ -31,7 +31,14 @@ export function useCheckoutForm({ user, cartItems, cartTotal, DELIVERY, isRetira
   const [cepLoading, setCepLoading] = useState(false);
   const [cepError, setCepError] = useState("");
 
-  const [address, setAddress] = useState(INITIAL_ADDRESS);
+  // Bairro já escolhido no carrinho pré-preenche o campo de endereço —
+  // sem isso, ficava vazio até o cliente digitar o CEP, mesmo já tendo
+  // informado o bairro na etapa anterior. O CEP ainda pode sobrescrever
+  // com o nome oficial do bairro vindo do ViaCEP (handleCepBlur).
+  const [address, setAddress] = useState(() => ({
+    ...INITIAL_ADDRESS,
+    district: bairroCarrinho || "",
+  }));
   const [lastAddress, setLastAddress] = useState(null);
   const [lastAddressMessage, setLastAddressMessage] = useState("");
 
