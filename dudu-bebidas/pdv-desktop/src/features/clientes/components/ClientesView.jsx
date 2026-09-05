@@ -4,12 +4,12 @@ import CustomerListPanel from "./CustomerListPanel";
 import CustomerEditForm from "./CustomerEditForm";
 import CustomerDetailHeader from "./CustomerDetailHeader";
 import CustomerTransactionList from "./CustomerTransactionList";
-import CustomerReceipt from "./CustomerReceipt";
 import PayDebtModal from "./PayDebtModal";
+import NewChargeModal from "./NewChargeModal";
 import DeleteCustomerModal from "./DeleteCustomerModal";
 
 export default function ClientesView({
-  customers, customersLoading, customersError, payDebt, createCustomer,
+  customers, customersLoading, customersError, payDebt, addCharge, createCustomer,
   updateCustomer, setCustomerActive, deleteCustomer,
   currentSessionId, cancellingId, onCancelSale,
 }) {
@@ -20,13 +20,14 @@ export default function ClientesView({
   const [payModalOpen, setPayModalOpen] = useState(false);
   const [payError, setPayError] = useState("");
 
+  const [chargeModalOpen, setChargeModalOpen] = useState(false);
+  const [chargeError, setChargeError] = useState("");
+
   const [togglingActive, setTogglingActive] = useState(false);
   const [statusError, setStatusError] = useState("");
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
-
-  const [printingTx, setPrintingTx] = useState(null);
 
   // Deriva do array atualizado em vez de guardar o objeto — assim o saldo
   // exibido sempre reflete o último pagamento, sem precisar sincronizar.
@@ -53,9 +54,22 @@ export default function ClientesView({
     setPayError("");
     try {
       await payDebt({ customerId: selected.id, amount, paymentMethod });
+      detail.reload();
       setPayModalOpen(false);
     } catch (e) {
       setPayError(e.message);
+      throw e;
+    }
+  };
+
+  const handleAddCharge = async ({ amount, description }) => {
+    setChargeError("");
+    try {
+      await addCharge({ customerId: selected.id, amount, description });
+      detail.reload();
+      setChargeModalOpen(false);
+    } catch (e) {
+      setChargeError(e.message);
       throw e;
     }
   };
@@ -82,11 +96,6 @@ export default function ClientesView({
       setDeleteError(e.message);
     }
     setDeleting(false);
-  };
-
-  const handlePrint = (tx) => {
-    setPrintingTx(tx);
-    setTimeout(() => window.print(), 60);
   };
 
   return (
@@ -123,10 +132,12 @@ export default function ClientesView({
               ordersCount={detail.orders.filter((o) => !o.cancelled).length}
               onEdit={() => setEditing(true)}
               onPay={() => setPayModalOpen(true)}
+              onNewCharge={() => setChargeModalOpen(true)}
               onToggleActive={handleToggleActive}
               togglingActive={togglingActive}
               onRequestDelete={() => setDeleteModalOpen(true)}
               payError={payError}
+              chargeError={chargeError}
               statusError={statusError}
             />
 
@@ -135,11 +146,10 @@ export default function ClientesView({
               filteredTransactions={detail.filteredTransactions}
               txFilter={detail.txFilter}
               setTxFilter={detail.setTxFilter}
-              paidOrderIds={detail.paidOrderIds}
+              paidDebitIds={detail.paidDebitIds}
               currentSessionId={currentSessionId}
               cancellingId={cancellingId}
               onCancelSale={onCancelSale}
-              onPrint={handlePrint}
             />
           </>
         )}
@@ -147,6 +157,10 @@ export default function ClientesView({
 
       {payModalOpen && selected && (
         <PayDebtModal customer={selected} onConfirm={handlePay} onDismiss={() => setPayModalOpen(false)} />
+      )}
+
+      {chargeModalOpen && selected && (
+        <NewChargeModal customer={selected} onConfirm={handleAddCharge} onDismiss={() => setChargeModalOpen(false)} />
       )}
 
       {deleteModalOpen && selected && (
@@ -158,8 +172,6 @@ export default function ClientesView({
           onDismiss={() => setDeleteModalOpen(false)}
         />
       )}
-
-      <CustomerReceipt tx={printingTx} customerName={selected?.name} />
     </div>
   );
 }

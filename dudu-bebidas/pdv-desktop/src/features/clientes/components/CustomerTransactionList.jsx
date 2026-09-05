@@ -20,7 +20,7 @@ function formatDateTime(iso) {
 
 export default function CustomerTransactionList({
   ordersLoading, filteredTransactions, txFilter, setTxFilter,
-  paidOrderIds, currentSessionId, cancellingId, onCancelSale, onPrint,
+  paidDebitIds, currentSessionId, cancellingId, onCancelSale,
 }) {
   return (
     <div>
@@ -55,7 +55,19 @@ export default function CustomerTransactionList({
                 </div>
               );
             }
-            const paid = !t.cancelled && paidOrderIds.has(t.orderId);
+            if (t.type === "cobranca") {
+              const paid = paidDebitIds.has(t.id);
+              return (
+                <div key={t.key} className="pdv-clientes-tx-row">
+                  <span className="pdv-sale-time">{formatDateTime(t.createdAt)}</span>
+                  <span className="pdv-clientes-tx-badge pdv-clientes-tx-badge-purchase">📝 Em aberto</span>
+                  <span className="pdv-sale-items" title={t.description}>{t.description}</span>
+                  <strong>{formatBRL(t.amount)}</strong>
+                  {paid ? <span className="pdv-fiado-order-paid-label">Pago</span> : <span />}
+                </div>
+              );
+            }
+            const paid = !t.cancelled && paidDebitIds.has(t.orderId);
             const canCancel = !t.cancelled && t.cashSessionId === currentSessionId;
             return (
               <div key={t.key} className={`pdv-clientes-tx-row ${t.cancelled ? "pdv-sale-cancelled" : ""}`}>
@@ -66,14 +78,6 @@ export default function CustomerTransactionList({
                 <span className="pdv-sale-items" title={t.itemsLabel}>{t.itemsLabel}</span>
                 <strong>{formatBRL(t.total)}</strong>
                 <div className="pdv-clientes-tx-actions">
-                  <button
-                    type="button"
-                    className="pdv-clientes-print-btn"
-                    title="Imprimir"
-                    onClick={() => onPrint(t)}
-                  >
-                    🖨️
-                  </button>
                   {t.cancelled ? (
                     <span className="pdv-sale-cancelled-label">Cancelada</span>
                   ) : paid ? (

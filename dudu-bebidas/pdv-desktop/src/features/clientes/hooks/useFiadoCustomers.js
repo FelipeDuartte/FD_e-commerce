@@ -6,6 +6,7 @@ import {
   setPdvCustomerActive,
   deletePdvCustomer,
   registerFiadoPayment,
+  createPdvCustomerCharge,
 } from "../services/fiadoService";
 
 // Compartilhado entre o seletor de cliente na venda (CartPanel) e o
@@ -61,8 +62,14 @@ export function useFiadoCustomers(sessionId) {
     load();
   };
 
+  // Lançamento livre de dívida (sem carrinho) — ver NewChargeModal.
+  const addCharge = async ({ customerId, amount, description }) => {
+    await createPdvCustomerCharge({ customerId, amount, description, cashSessionId: sessionId });
+    load();
+  };
+
   return {
     customers, loading, error, reload: load,
-    createCustomer, updateCustomer, setCustomerActive, deleteCustomer, payDebt,
+    createCustomer, updateCustomer, setCustomerActive, deleteCustomer, payDebt, addCharge,
   };
 }

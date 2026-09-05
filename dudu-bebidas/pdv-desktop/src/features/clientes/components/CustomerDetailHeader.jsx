@@ -1,8 +1,8 @@
 import { formatBRL, formatLastOrder, formatPhone } from "../../../shared/utils/format";
 
 export default function CustomerDetailHeader({
-  customer, ordersLoading, ordersCount, onEdit, onPay,
-  onToggleActive, togglingActive, onRequestDelete, payError, statusError,
+  customer, ordersLoading, ordersCount, onEdit, onPay, onNewCharge,
+  onToggleActive, togglingActive, onRequestDelete, payError, chargeError, statusError,
 }) {
   return (
     <>
@@ -16,11 +16,16 @@ export default function CustomerDetailHeader({
           {customer.email && <p className="adm-store-section-desc">{customer.email}</p>}
           {customer.address && <p className="adm-store-section-desc">{customer.address}</p>}
         </div>
-        {customer.balance > 0.004 && (
-          <button className="adm-btn-new-product" onClick={onPay}>
-            💰 Receber pagamento
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {customer.balance > 0.004 && (
+            <button className="adm-btn-new-product" onClick={onPay}>
+              💰 Receber pagamento
+            </button>
+          )}
+          <button className="pdv-clientes-secondary-btn" onClick={onNewCharge}>
+            📝 Novo pedido em aberto
           </button>
-        )}
+        </div>
       </div>
 
       <div className="pdv-clientes-actions">
@@ -34,6 +39,7 @@ export default function CustomerDetailHeader({
       </div>
 
       {payError && <div className="adm-modal-error">⚠️ {payError}</div>}
+      {chargeError && <div className="adm-modal-error">⚠️ {chargeError}</div>}
       {statusError && <div className="adm-modal-error">⚠️ {statusError}</div>}
 
       <div className="pdv-clientes-stats">

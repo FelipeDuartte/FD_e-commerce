@@ -135,6 +135,44 @@ export async function listCustomerPayments(customerId) {
   }));
 }
 
+// Lançamento livre de dívida (sem carrinho/estoque) — direto da aba
+// Clientes, pra quando o operador só quer registrar "cliente ficou devendo
+// X" sem passar pela venda. cashSessionId opcional, mesmo padrão de
+// registerFiadoPayment.
+export async function createPdvCustomerCharge({ customerId, amount, description, cashSessionId }) {
+  const userId = await getCurrentUserId();
+  const { error } = await supabase.from("pdv_customer_charges").insert({
+    store_id: getCurrentStoreId(),
+    customer_id: customerId,
+    amount,
+    description: String(description).trim(),
+    cash_session_id: cashSessionId ?? null,
+    created_by: userId,
+  });
+
+  if (error) {
+    throw new AdminServiceError("Não foi possível lançar o pedido em aberto.", error);
+  }
+}
+
+export async function listCustomerCharges(customerId) {
+  const { data, error } = await supabase
+    .from("pdv_customer_charges")
+    .select("id, amount, description, created_at")
+    .eq("customer_id", customerId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new AdminServiceError("Não foi possível carregar os pedidos em aberto.", error);
+  }
+  return (data ?? []).map((c) => ({
+    id: c.id,
+    amount: Number(c.amount),
+    description: c.description,
+    createdAt: c.created_at,
+  }));
+}
+
 export async function listFiadoOrders(customerId) {
   const { data, error } = await supabase
     .from("orders")
