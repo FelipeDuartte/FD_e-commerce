@@ -28,9 +28,12 @@ export async function listAdminOrders({ page = 0, status = "all" }) {
   const to = from + PAGE_SIZE - 1;
   const boundary = getOrdersBoundary();
 
+  // Venda de balcão (PDV) não aparece aqui — tem histórico e relatório
+  // próprios no PDV, misturar com o painel do site só atrapalha o dono.
   let query = supabase
     .from("orders")
     .select(ORDER_SELECT, { count: "exact" })
+    .eq("channel", "online")
     .order("created_at", { ascending: false })
     .range(from, to);
 
@@ -67,6 +70,7 @@ export async function getTodayOrderMetrics() {
   const { data, error } = await supabase
     .from("orders")
     .select("total, payment_provider, payment_status")
+    .eq("channel", "online")
     .gte("created_at", today.toISOString())
     .lt("created_at", tomorrow.toISOString());
 

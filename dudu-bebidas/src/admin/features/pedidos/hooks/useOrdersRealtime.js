@@ -18,6 +18,9 @@ export function useOrdersRealtime(isAdmin, { onRefetch, onUpdateOrderLocally }) 
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "orders", filter: `store_id=eq.${storeId}` },
         (payload) => {
+          // Venda de balcão (PDV) não aparece na lista do site — não toca
+          // som nem gasta um refetch por causa dela.
+          if (payload.new.channel === "balcao") return;
           // Cartão online recusado na hora (ex: teste com cartão "OTHE") não
           // é uma venda de verdade — não toca som nem gasta um refetch por
           // causa dele.
