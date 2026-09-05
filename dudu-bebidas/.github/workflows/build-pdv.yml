@@ -1,0 +1,56 @@
+name: Build PDV Desktop
+
+# Manual — dispara pelo botão "Run workflow" na aba Actions do GitHub.
+# Precisa cross-compilar Windows num runner Windows de verdade (não dá
+# pra gerar .msi/.exe direto de um Mac), então usa matrix macOS + Windows.
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            label: mac
+          - platform: windows-latest
+            label: windows
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instala dependências do frontend
+        working-directory: pdv-desktop
+        run: npm install
+
+      # Vite embute essas variáveis no build — sem elas o app não conecta
+      # no Supabase certo. Cadastre os 3 segredos no repo antes de rodar
+      # (Settings → Secrets and variables → Actions), copiando de
+      # pdv-desktop/.env local.
+      - name: Escreve o .env do build
+        working-directory: pdv-desktop
+        shell: bash
+        run: |
+          echo "VITE_SUPABASE_URL=${{ secrets.PDV_VITE_SUPABASE_URL }}" >> .env
+          echo "VITE_SUPABASE_KEY=${{ secrets.PDV_VITE_SUPABASE_KEY }}" >> .env
+          echo "VITE_STORE_SLUG=${{ secrets.PDV_VITE_STORE_SLUG }}" >> .env
+
+      - uses: tauri-apps/tauri-action@v0
+        with:
+          projectPath: pdv-desktop
+
+      - name: Sobe os instaladores gerados
+        uses: actions/upload-artifact@v4
+        with:
+          name: pdv-desktop-${{ matrix.label }}
+          path: pdv-desktop/src-tauri/target/release/bundle/**
+          if-no-files-found: error
