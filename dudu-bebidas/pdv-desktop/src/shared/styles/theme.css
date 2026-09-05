@@ -1126,6 +1126,7 @@ button:disabled {
 /* ─── FORM DO PRODUTO ─────────────────────────────────────────────── */
 .adm-product-form {
   width: 100%;
+  text-align: left;
 }
 
 .adm-form-row {
@@ -1147,13 +1148,18 @@ button:disabled {
 }
 
 .adm-form-field input,
-.adm-form-field select {
+.adm-form-field select,
+.adm-form-field textarea {
   background: color-mix(in srgb, var(--c-text) 7%, transparent);
   border: 1px solid color-mix(in srgb, var(--c-text) 12%, transparent);
   border-radius: var(--r-sm);
   color: var(--c-text);
   padding: 9px 12px;
   font-size: 14px;
+}
+.adm-form-field textarea {
+  font-family: inherit;
+  resize: vertical;
 }
 .adm-form-field input:disabled {
   opacity: 0.4;

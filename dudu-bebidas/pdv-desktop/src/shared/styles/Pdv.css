@@ -854,50 +854,10 @@
   gap: 6px;
 }
 
-.pdv-clientes-print-btn {
-  padding: 4px 6px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 215, 0, 0.15);
-  background: transparent;
-  cursor: pointer;
-  font-size: 13px;
-  line-height: 1;
-}
-
-.pdv-clientes-print-btn:hover {
-  border-color: var(--c-accent);
-}
-
 @media (max-width: 700px) {
   .pdv-clientes-tx-row {
     grid-template-columns: 1fr 1fr;
     grid-auto-rows: auto;
-  }
-}
-
-/* Recibo de impressão — invisível na tela, só existe pra virar a única
-   coisa visível quando window.print() dispara (ver ClientesView). */
-.pdv-print-receipt {
-  display: none;
-}
-
-@media print {
-  body * {
-    visibility: hidden;
-  }
-  .pdv-print-receipt,
-  .pdv-print-receipt * {
-    visibility: visible;
-  }
-  .pdv-print-receipt {
-    display: block;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    padding: 24px;
-    color: #000;
-    background: #fff;
   }
 }
 
@@ -1252,4 +1212,445 @@
   font-size: 13px;
   color: var(--c-text-muted);
   margin: 0;
+}
+
+/* ─── RELATÓRIOS (portado de src/admin/features/relatorios/) ────────────────── */
+
+.rpt-root {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.rpt-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.rpt-period-selector {
+  display: flex;
+  gap: 4px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  padding: 4px;
+  align-self: flex-start;
+}
+
+.rpt-period-btn {
+  background: transparent;
+  border: none;
+  border-radius: var(--r-sm);
+  color: var(--c-text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: background var(--t), color var(--t);
+}
+.rpt-period-btn:hover {
+  color: var(--c-text);
+}
+.rpt-period-btn-active {
+  background: var(--c-accent);
+  color: #000 !important;
+}
+
+.rpt-refresh-btn {
+  background: transparent;
+  border: 1px solid var(--c-border-2);
+  border-radius: var(--r-sm);
+  color: var(--c-text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: border-color var(--t), color var(--t);
+}
+.rpt-refresh-btn:hover {
+  border-color: var(--c-accent);
+  color: var(--c-accent);
+}
+
+.rpt-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.rpt-summary-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: border-color var(--t);
+}
+.rpt-summary-card:hover {
+  border-color: var(--c-border-2);
+}
+
+.rpt-summary-icon {
+  font-size: 30px;
+  flex-shrink: 0;
+}
+
+.rpt-summary-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.rpt-summary-value {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--c-accent);
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rpt-summary-label {
+  font-size: 11px;
+  color: var(--c-text-muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.rpt-summary-small {
+  font-size: 11px;
+  color: var(--c-text-muted);
+}
+
+.rpt-section {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  padding: 24px;
+}
+
+.rpt-section-title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--c-text);
+  margin: 0 0 20px;
+}
+
+.rpt-no-data {
+  color: var(--c-text-dim);
+  font-size: 14px;
+  text-align: center;
+  padding: 32px 0;
+}
+
+.rpt-chart-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.rpt-chart-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.rpt-chart-grid {
+  stroke: var(--c-border);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+.rpt-chart-tick-y {
+  fill: var(--c-text-dim);
+  font-size: 9px;
+  text-anchor: end;
+  font-family: var(--font-body);
+}
+
+.rpt-chart-tick-x {
+  fill: var(--c-text-dim);
+  font-size: 9px;
+  text-anchor: middle;
+  font-family: var(--font-body);
+  text-transform: capitalize;
+}
+
+.rpt-bar-bg {
+  fill: var(--c-border);
+}
+
+.rpt-bar {
+  fill: var(--c-accent);
+  transition: opacity 0.15s;
+}
+.rpt-bar-group:hover .rpt-bar {
+  opacity: 0.75;
+}
+
+.rpt-chart-legend {
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-top: 1px solid var(--c-border);
+  padding-top: 12px;
+}
+.rpt-chart-legend::-webkit-scrollbar {
+  display: none;
+}
+
+.rpt-chart-legend-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 0 12px;
+  flex: 1;
+  min-width: 64px;
+  border-right: 1px solid var(--c-border);
+}
+.rpt-chart-legend-item:last-child {
+  border-right: none;
+}
+
+.rpt-chart-legend-month {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--c-text-muted);
+  text-transform: capitalize;
+}
+
+.rpt-chart-legend-val {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--c-accent);
+  white-space: nowrap;
+}
+
+.rpt-chart-legend-count {
+  font-size: 10px;
+  color: var(--c-text-dim);
+}
+
+.rpt-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.rpt-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.rpt-table th {
+  text-align: left;
+  padding: 8px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--c-text-dim);
+  border-bottom: 1px solid var(--c-border);
+}
+
+.rpt-table td {
+  padding: 10px 10px;
+  border-bottom: 1px solid var(--c-border);
+  color: var(--c-text);
+  vertical-align: middle;
+}
+
+.rpt-table tr:last-child td {
+  border-bottom: none;
+}
+
+.rpt-table tbody tr {
+  transition: background var(--t);
+}
+.rpt-table tbody tr:hover {
+  background: color-mix(in srgb, var(--c-text) 4%, transparent);
+}
+
+.rpt-rank {
+  width: 36px;
+  font-size: 16px;
+  color: var(--c-text-muted);
+  text-align: center;
+}
+
+.rpt-product-name,
+.rpt-customer-name {
+  font-weight: 600;
+  color: var(--c-text);
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rpt-qty {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--c-text-muted);
+  white-space: nowrap;
+}
+
+.rpt-revenue {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--c-accent);
+  white-space: nowrap;
+}
+
+.rpt-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 64px 0;
+  color: var(--c-red);
+  font-size: 14px;
+}
+
+.rpt-retry-btn {
+  background: transparent;
+  border: 1px solid var(--c-red);
+  border-radius: var(--r-sm);
+  color: var(--c-red);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 20px;
+  cursor: pointer;
+}
+.rpt-retry-btn:hover {
+  background: rgba(239, 68, 68, 0.08);
+}
+
+/* Quebra por forma de pagamento — não existe no admin web, feature nova do PDV. */
+.rpt-payment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.rpt-payment-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 10px;
+  align-items: center;
+}
+
+.rpt-payment-row-top {
+  display: flex;
+  justify-content: space-between;
+  grid-column: 1 / -1;
+}
+
+.rpt-payment-label {
+  font-size: 13px;
+  color: var(--c-text);
+  font-weight: 600;
+}
+
+.rpt-payment-amount {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--c-accent);
+}
+
+.rpt-payment-bar-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--c-border);
+  overflow: hidden;
+}
+
+.rpt-payment-bar-fill {
+  height: 100%;
+  background: var(--c-accent);
+  border-radius: 999px;
+}
+
+.rpt-payment-pct {
+  font-size: 11px;
+  color: var(--c-text-muted);
+  text-align: right;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .rpt-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .rpt-two-col {
+    grid-template-columns: 1fr;
+  }
+  .rpt-header-actions {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+/* ── Contas a Pagar ─────────────────────────────────────────────── */
+
+/* .adm-modal é pensado pra modais curtos de confirmação (text-align:
+   center, max-width 420px) — o formulário de conta tem bem mais campos,
+   então usa largura maior e texto alinhado à esquerda, igual
+   .adm-modal-product faz pro formulário de produto. */
+.adm-modal-bill {
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.pdv-bill-hint {
+  font-size: 12px;
+  color: var(--c-text-muted);
+  margin-top: 4px;
+}
+
+.pdv-bill-status-pill {
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.pdv-bill-status-pill.a_vencer {
+  background: rgba(255, 208, 0, 0.15);
+  color: var(--c-accent);
+}
+.pdv-bill-status-pill.vencido {
+  background: rgba(220, 53, 69, 0.15);
+  color: var(--c-red-dark);
+}
+.pdv-bill-status-pill.parcial {
+  background: rgba(255, 140, 0, 0.15);
+  color: var(--c-orange);
+}
+.pdv-bill-status-pill.pago {
+  background: rgba(80, 200, 120, 0.15);
+  color: var(--c-green);
+}
+
+.pdv-bill-table-total {
+  padding: 12px;
+  text-align: right;
+  font-weight: 600;
+  color: var(--c-text);
+  border-top: 1px solid var(--c-border);
 }

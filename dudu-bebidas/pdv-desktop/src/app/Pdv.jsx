@@ -6,6 +6,7 @@ import { useSale } from "../features/venda/hooks/useSale";
 import { useFiadoCustomers } from "../features/clientes/hooks/useFiadoCustomers";
 import { useProdutos } from "../features/produtos/hooks/useProdutos";
 import { useAdminCategories } from "../features/produtos/hooks/useAdminCategories";
+import { useContasAPagar } from "../features/contas-a-pagar/hooks/useContasAPagar";
 import OpenSessionForm from "../features/caixa/components/OpenSessionForm";
 import ProductCatalog from "../features/venda/components/ProductCatalog";
 import CartPanel from "../features/venda/components/CartPanel";
@@ -13,6 +14,8 @@ import HistorySalesList from "../features/historico/components/HistorySalesList"
 import ClientesView from "../features/clientes/components/ClientesView";
 import ProdutosView from "../features/produtos/components/ProdutosView";
 import EstoqueView from "../features/estoque/components/EstoqueView";
+import RelatoriosView from "../features/relatorios/components/RelatoriosView";
+import ContasAPagarView from "../features/contas-a-pagar/components/ContasAPagarView";
 import CloseSessionModal from "../features/caixa/components/CloseSessionModal";
 import CancelSaleModal from "../shared/components/CancelSaleModal";
 
@@ -21,8 +24,10 @@ const PDV_VIEWS = [
   { key: "venda", label: "🛒 Venda" },
   { key: "historico", label: "📋 Histórico" },
   { key: "clientes", label: "👥 Clientes" },
-  { key: "produtos", label: "🍺 Produtos" },
+  { key: "produtos", label: "🏷️ Produtos" },
   { key: "estoque", label: "📦 Estoque" },
+  { key: "relatorios", label: "📑 Relatórios" },
+  { key: "contas-pagar", label: "💰 Contas a Pagar" },
 ];
 
 export default function Pdv({ theme, onToggleTheme }) {
@@ -43,6 +48,7 @@ export default function Pdv({ theme, onToggleTheme }) {
   );
   const produtos = useProdutos();
   const { categories: dbCategories } = useAdminCategories();
+  const contasAPagar = useContasAPagar();
 
   const themeToggleBtn = (
     <button
@@ -187,6 +193,7 @@ export default function Pdv({ theme, onToggleTheme }) {
               customersLoading={fiado.loading}
               customersError={fiado.error}
               payDebt={fiado.payDebt}
+              addCharge={fiado.addCharge}
               createCustomer={fiado.createCustomer}
               updateCustomer={fiado.updateCustomer}
               setCustomerActive={fiado.setCustomerActive}
@@ -202,6 +209,10 @@ export default function Pdv({ theme, onToggleTheme }) {
           )}
 
           {pdvView === "estoque" && <EstoqueView />}
+
+          {pdvView === "relatorios" && <RelatoriosView />}
+
+          {pdvView === "contas-pagar" && <ContasAPagarView contasAPagar={contasAPagar} />}
         </main>
       </div>
 
