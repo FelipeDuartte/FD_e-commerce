@@ -93,7 +93,7 @@ function roundCents(v: number): number {
 export async function fulfillOrder(
   supabase: SupabaseClient,
   params: FulfillOrderParams,
-): Promise<{ orderId: string; total: number }> {
+): Promise<{ orderId: string; orderNumber: number; total: number }> {
   const {
     storeId, userId, cartItems, paymentMethod, installments,
     deliveryFee = 0, address, channel, cashSessionId = null,
@@ -199,7 +199,26 @@ export async function fulfillOrder(
     const product = products.find((p) => p.id === String(item.id));
     return sum + (product ? priceFor(product) : 0) * item.quantity;
   }, 0);
-  const normalizedDeliveryFee = Math.max(0, Number(deliveryFee) || 0);
+  let normalizedDeliveryFee = Math.max(0, Number(deliveryFee) || 0);
+
+  // Frete grátis a partir de X (store_config.free_shipping_threshold) —
+  // recalculado aqui usando calculatedProductsTotal (já apurado 100% no
+  // servidor, direto do banco), nunca a partir do que o client mandou.
+  // Só consulta quando há frete a cobrar: venda de balcão nunca manda
+  // deliveryFee, então não gasta uma query à toa em toda venda do PDV.
+  if (normalizedDeliveryFee > 0) {
+    const { data: storeConfig } = await supabase
+      .from("store_config")
+      .select("free_shipping_threshold")
+      .eq("store_id", storeId)
+      .maybeSingle();
+
+    const threshold = storeConfig?.free_shipping_threshold;
+    if (threshold != null && threshold > 0 && calculatedProductsTotal >= threshold) {
+      normalizedDeliveryFee = 0;
+    }
+  }
+
   const totalBeforeFee = calculatedProductsTotal + normalizedDeliveryFee;
 
   // Nunca confia no valor cru vindo do client: desconto não pode ser
@@ -249,7 +268,7 @@ export async function fulfillOrder(
       ...(paymentProvider !== null ? { payment_provider: paymentProvider } : {}),
       ...(pdvCustomerId !== null ? { pdv_customer_id: pdvCustomerId } : {}),
     })
-    .select("id")
+    .select("id, order_number")
     .single();
 
   if (orderError) {
@@ -292,7 +311,7 @@ export async function fulfillOrder(
   }
 
   if (skipStockDecrement) {
-    return { orderId: order.id, total: calculatedTotal };
+    return { orderId: order.id, orderNumber: order.order_number, total: calculatedTotal };
   }
 
   const rpcItems = cartItems.map((item) => ({
@@ -315,5 +334,5 @@ export async function fulfillOrder(
     throw new FulfillmentError(rpcResult?.error ?? "Erro ao processar estoque.");
   }
 
-  return { orderId: order.id, total: calculatedTotal };
+  return { orderId: order.id, orderNumber: order.order_number, total: calculatedTotal };
 }

@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    const { orderId } = await fulfillOrder(serviceClient, {
+    const { orderId, orderNumber } = await fulfillOrder(serviceClient, {
       storeId: admin.storeId,
       userId: null, // venda de balcão não tem conta de cliente associada
       cartItems,
@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
       pdvCustomerId, // fiado — obrigatório quando paymentMethod === 'fiado', validado dentro do fulfillOrder
     });
 
-    return jsonResponse({ orderId }, 200);
+    return jsonResponse({ orderId, orderNumber }, 200);
 
   } catch (err) {
     if (err instanceof FulfillmentError) {

@@ -1,0 +1,173 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { formatBRL } from "../../../shared/utils/format";
+import {
+  createPdvSale,
+  cancelPdvSale,
+  listSessionSales,
+} from "../../../shared/services/salesService";
+
+// Forma de pagamento (única ou dividida), troco, cliente fiado, submissão
+// da venda e cancelamento. Recebe o carrinho (de useCart) como dados —
+// não é dono dele, só lê pra montar o payload e as mensagens de sucesso.
+export function useSale(sessionId, { cart, cartTotal, discountAmount, clearCart, resetDiscount, reloadProducts }, { onFiadoSale } = {}) {
+  const [paymentMethod, setPaymentMethodRaw] = useState("cash");
+  const [receivedAmountInput, setReceivedAmountInput] = useState("");
+  const [splitMode, setSplitMode] = useState(false);
+  const [splitPayments, setSplitPayments] = useState([]);
+  const [fiadoCustomer, setFiadoCustomer] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [saleError, setSaleError] = useState("");
+  const [saleSuccess, setSaleSuccess] = useState("");
+  const [sessionSales, setSessionSales] = useState([]);
+  const [cancellingId, setCancellingId] = useState(null);
+  const [cancelError, setCancelError] = useState("");
+  const [confirmingSale, setConfirmingSale] = useState(null);
+
+  const loadSessionSales = useCallback(async (id) => {
+    if (!id) {
+      setSessionSales([]);
+      return;
+    }
+    try {
+      setSessionSales(await listSessionSales(id));
+    } catch (e) {
+      setCancelError(e.message);
+    }
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadSessionSales(sessionId);
+      if (!sessionId) setCancelError("");
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [sessionId, loadSessionSales]);
+
+  // Troco só faz sentido pra dinheiro, cliente só faz sentido pra fiado —
+  // trocar de forma de pagamento limpa os dois, senão sobraria um valor
+  // ou cliente selecionado pra uma forma que não usa mais aquilo.
+  const setPaymentMethod = (method) => {
+    setPaymentMethodRaw(method);
+    setReceivedAmountInput("");
+    setFiadoCustomer(null);
+  };
+
+  const changeAmount = useMemo(() => {
+    if (paymentMethod !== "cash" || receivedAmountInput === "") return null;
+    const received = Number(receivedAmountInput);
+    if (!Number.isFinite(received)) return null;
+    return received - cartTotal;
+  }, [paymentMethod, receivedAmountInput, cartTotal]);
+
+  const insufficientCash = paymentMethod === "cash" && changeAmount !== null && changeAmount < 0;
+  const missingFiadoCustomer = paymentMethod === "fiado" && !fiadoCustomer;
+
+  // Pagamento dividido — ex: parte em dinheiro, parte no cartão. Ligar/desligar
+  // reseta as linhas (senão sobraria um valor dividido pra uma venda que virou
+  // pagamento único, ou vice-versa).
+  const toggleSplitMode = () => {
+    setSplitMode((prev) => {
+      const next = !prev;
+      setSplitPayments(next ? [{ method: "cash", amount: "" }, { method: "credit_card", amount: "" }] : []);
+      return next;
+    });
+  };
+
+  const updateSplitLine = (index, field, value) => {
+    setSplitPayments((prev) => prev.map((line, i) => (i === index ? { ...line, [field]: value } : line)));
+  };
+
+  const addSplitLine = () => {
+    setSplitPayments((prev) => [...prev, { method: "cash", amount: "" }]);
+  };
+
+  const removeSplitLine = (index) => {
+    setSplitPayments((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const splitTotal = useMemo(
+    () => splitPayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0),
+    [splitPayments],
+  );
+
+  const splitRemaining = useMemo(() => Math.round((cartTotal - splitTotal) * 100) / 100, [cartTotal, splitTotal]);
+
+  const splitValid =
+    splitPayments.length >= 2 &&
+    splitPayments.every((p) => p.method && Number(p.amount) > 0) &&
+    Math.abs(splitRemaining) < 0.01;
+
+  const handleFinalizeSale = async () => {
+    if (cart.length === 0 || !sessionId) return;
+    if (splitMode ? !splitValid : insufficientCash || missingFiadoCustomer) return;
+    setSubmitting(true);
+    setSaleError("");
+    try {
+      const { orderNumber } = await createPdvSale({
+        cartItems: cart.map((i) => ({ id: i.id, name: i.name, quantity: i.quantity })),
+        cashSessionId: sessionId,
+        discountAmount,
+        ...(splitMode
+          ? { payments: splitPayments.map((p) => ({ method: p.method, amount: Number(p.amount) })) }
+          : { paymentMethod, pdvCustomerId: paymentMethod === "fiado" ? fiadoCustomer.id : undefined }),
+      });
+      const orderTag = orderNumber ? `Pedido #${orderNumber} — ` : "";
+      setSaleSuccess(
+        paymentMethod === "fiado"
+          ? `${orderTag}Venda fiado registrada — ${formatBRL(cartTotal)} (${fiadoCustomer.name})`
+          : changeAmount !== null
+            ? `${orderTag}Venda registrada — ${formatBRL(cartTotal)} (troco: ${formatBRL(changeAmount)})`
+            : `${orderTag}Venda registrada — ${formatBRL(cartTotal)}`,
+      );
+      setTimeout(() => setSaleSuccess(""), 3000);
+      if (paymentMethod === "fiado") onFiadoSale?.();
+      clearCart();
+      setPaymentMethod("cash");
+      resetDiscount();
+      setSplitMode(false);
+      setSplitPayments([]);
+      reloadProducts();
+      loadSessionSales(sessionId);
+    } catch (e) {
+      setSaleError(e.message);
+    }
+    setSubmitting(false);
+  };
+
+  // window.confirm() não abre diálogo nenhum dentro do WebView do Tauri —
+  // por isso a confirmação de cancelamento precisa ser um modal próprio em
+  // vez do confirm() nativo do navegador (ver CancelSaleModal).
+  const handleCancelSale = (sale) => {
+    if (sale.cancelled) return;
+    setCancelError("");
+    setConfirmingSale(sale);
+  };
+
+  const dismissCancelSale = () => setConfirmingSale(null);
+
+  const confirmCancelSale = async () => {
+    const sale = confirmingSale;
+    if (!sale) return;
+    setCancellingId(sale.orderId);
+    setCancelError("");
+    try {
+      await cancelPdvSale(sale.orderId);
+      reloadProducts();
+      loadSessionSales(sessionId);
+    } catch (e) {
+      setCancelError(e.message);
+    }
+    setCancellingId(null);
+    setConfirmingSale(null);
+  };
+
+  return {
+    paymentMethod, setPaymentMethod, submitting, saleError, saleSuccess,
+    sessionSales, cancellingId, cancelError, confirmingSale,
+    receivedAmountInput, setReceivedAmountInput, changeAmount, insufficientCash,
+    splitMode, toggleSplitMode, splitPayments, updateSplitLine, addSplitLine,
+    removeSplitLine, splitTotal, splitRemaining, splitValid,
+    fiadoCustomer, setFiadoCustomer, missingFiadoCustomer,
+    handleFinalizeSale, handleCancelSale, confirmCancelSale, dismissCancelSale,
+  };
+}

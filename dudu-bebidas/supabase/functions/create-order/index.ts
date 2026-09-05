@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
     // integração via Mercado Pago.
     const paymentProvider = paymentMethod === "pix" ? "pix_manual" : null;
 
-    const { orderId } = await fulfillOrder(supabase, {
+    const { orderId, orderNumber } = await fulfillOrder(supabase, {
       storeId,
       userId,
       cartItems,
@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
       paymentProvider,
     });
 
-    return jsonResponse({ orderId }, 200);
+    return jsonResponse({ orderId, orderNumber }, 200);
 
   } catch (err) {
     if (err instanceof FulfillmentError) {

@@ -56,6 +56,7 @@ const CLIENT_NOTIFY_STATUS: Record<string, string> = {
 
 interface OrderRow {
   id: string;
+  order_number: number;
   total: number;
   payment_method: string;
   address: {
@@ -77,12 +78,6 @@ interface DatabaseWebhookPayload {
   schema: string;
 }
 
-function formatOrderShortId(orderId: string): string {
-  // Últimos 8 caracteres do UUID — precisa bater com o código mostrado na
-  // tela de confirmação e no admin (Confirm.jsx, OrderCard.jsx, utils/orderId.js).
-  return orderId.slice(-8).toUpperCase();
-}
-
 function formatCurrency(value: number): string {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
@@ -99,7 +94,7 @@ async function handleNewOrder(order: OrderRow): Promise<Response> {
   }
 
   const customerName = order.address?.name ?? "Cliente";
-  const shortId = formatOrderShortId(order.id);
+  const shortId = String(order.order_number);
   const total = formatCurrency(order.total ?? 0);
   const tipo = order.address?.isRetirada ? "Retirada" : "Entrega";
 
@@ -155,7 +150,7 @@ async function handleStatusChange(
   }
 
   const customerName = order.address?.name ?? "Cliente";
-  const shortId = formatOrderShortId(order.id);
+  const shortId = String(order.order_number);
 
   // Parâmetros do corpo variam por template — todos usam customer_name e order_id.
   // "pedido_aceito" tem uma terceira variável de tempo estimado (estimated_time).

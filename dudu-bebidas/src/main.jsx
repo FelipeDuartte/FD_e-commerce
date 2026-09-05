@@ -1,11 +1,11 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import App from './App.jsx'
+import App from './app/App.jsx'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap-icons/font/bootstrap-icons.css'
 import { BrowserRouter } from 'react-router-dom'
-import { resolveStore } from './supabase/Supabaseclient'
+import { resolveStore } from './shared/supabase/Supabaseclient'
 
 // ─────────────────────────────────────────────────────────────
 // MULTI-LOJA: resolve a loja (VITE_STORE_SLUG → id) ANTES de montar o app.
