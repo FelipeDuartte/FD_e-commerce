@@ -30,15 +30,8 @@ export default function ProductModal({
         <form onSubmit={handleModalSave} className="adm-product-form">
           <div className="adm-form-row">
             <div className="adm-form-field">
-              <label>ID (código)</label>
-              <input
-                name="id"
-                value={modalForm.id}
-                onChange={handleModalChange}
-                disabled={productModal !== "new"}
-                placeholder="ex: 000468"
-                required
-              />
+              <label>ID (código) — gerado automaticamente</label>
+              <input name="id" value={modalForm.id} disabled required />
             </div>
             <div className="adm-form-field">
               <label>Categoria</label>
