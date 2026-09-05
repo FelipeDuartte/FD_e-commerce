@@ -61,7 +61,15 @@ export default function Cart({
     (sum, item) => sum + item.preco * item.quantity,
     0,
   );
-  const frete = bairroSelecionado ? bairroSelecionado.frete : null;
+
+  // Frete grátis a partir de X (store_config.free_shipping_threshold,
+  // configurado em Taxa por Bairro no admin) — vale pra loja inteira, não
+  // depende do bairro escolhido. null/0 = desativado.
+  const freeShippingThreshold = hoursData?.config?.free_shipping_threshold ?? null;
+  const qualifiesForFreeShipping =
+    freeShippingThreshold != null && freeShippingThreshold > 0 && subtotal >= freeShippingThreshold;
+  const rawFrete = bairroSelecionado ? bairroSelecionado.frete : null;
+  const frete = rawFrete !== null && qualifiesForFreeShipping ? 0 : rawFrete;
   const total = frete !== null ? subtotal + frete : subtotal;
   // isRetirada: normaliza campo do banco (is_retirada) e legado (isRetirada)
   const isRetirada = bairroSelecionado?.isRetirada ?? bairroSelecionado?.is_retirada ?? false;
@@ -295,9 +303,9 @@ export default function Cart({
                         <div className="bairro-item-info">
                           <span className="bairro-item-nome">{b.nome}</span>
                           <span
-                            className={`bairro-item-frete ${b.frete === 0 ? "gratis" : ""}`}
+                            className={`bairro-item-frete ${b.frete === 0 || qualifiesForFreeShipping ? "gratis" : ""}`}
                           >
-                            {b.frete === 0
+                            {b.frete === 0 || qualifiesForFreeShipping
                               ? "GRÁTIS"
                               : `R$ ${b.frete.toFixed(2)}`}
                           </span>
@@ -340,6 +348,12 @@ export default function Cart({
                     : `R$ ${total.toFixed(2)}`}
                 </span>
               </div>
+
+              {freeShippingThreshold > 0 && !qualifiesForFreeShipping && (
+                <p className="free-shipping-hint">
+                  Faltam R$ {(freeShippingThreshold - subtotal).toFixed(2)} para frete grátis! 🚚
+                </p>
+              )}
             </div>
 
             <button

@@ -7,7 +7,87 @@ import {
   toggleDeliveryZone,
   deleteDeliveryZone,
 } from "../services/deliveryZoneService";
+import { getStoreConfig, updateStoreConfig } from "../../services/storeConfigService";
 import { EMPTY_ZONE } from "../constants";
+
+function FreeShippingThresholdSection() {
+  const [value, setValue] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setLoading(true);
+      try {
+        const cfg = await getStoreConfig();
+        if (!cancelled) {
+          setValue(cfg?.free_shipping_threshold != null ? String(cfg.free_shipping_threshold) : "");
+        }
+      } catch (e) {
+        if (!cancelled) setError(e.message);
+      }
+      if (!cancelled) setLoading(false);
+    }
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true); setError(""); setSuccess("");
+    try {
+      const parsed = value.trim() === "" ? null : Number(value);
+      await updateStoreConfig({ free_shipping_threshold: Number.isFinite(parsed) ? parsed : null });
+      setSuccess("Salvo!");
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (e) {
+      setError(e.message);
+    }
+    setSaving(false);
+  };
+
+  if (loading) return (
+    <div className="adm-store-section">
+      <div className="adm-loading"><div className="adm-spinner" /><p>Carregando...</p></div>
+    </div>
+  );
+
+  return (
+    <div className="adm-store-section">
+      <div className="adm-store-section-header">
+        <h2 className="adm-store-section-title">Frete grátis a partir de</h2>
+        <p className="adm-store-section-desc">
+          Compras que atingirem esse valor não pagam frete, em nenhum bairro. Deixe em branco pra desativar.
+        </p>
+      </div>
+
+      {error   && <div className="adm-modal-error">⚠️ {error}</div>}
+      {success && <div className="adm-store-success">✅ {success}</div>}
+
+      <div className="adm-form-row" style={{ flexWrap: "wrap" }}>
+        <div className="adm-form-field">
+          <label>Valor mínimo (R$)</label>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            placeholder="Ex: 50.00 (vazio = desativado)"
+          />
+        </div>
+      </div>
+
+      <div className="adm-store-form-actions">
+        <button className="adm-btn-new-product" type="button" onClick={handleSave} disabled={saving}>
+          {saving ? "Salvando..." : "💾 Salvar"}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function DeliveryZonesSection() {
   const [zones, setZones]       = useState([]);
@@ -87,7 +167,10 @@ export default function DeliveryZonesSection() {
     setEditForm((p) => ({ ...p, [name]: type === "checkbox" ? checked : value }));
 
   return (
-    <div className="adm-store-section">
+    <>
+      <FreeShippingThresholdSection />
+
+      <div className="adm-store-section">
       <div className="adm-store-section-header">
         <h2 className="adm-store-section-title">Taxa por Bairro</h2>
         <p className="adm-store-section-desc">Configure bairros atendidos e taxas de entrega.</p>
@@ -191,6 +274,7 @@ export default function DeliveryZonesSection() {
           </table>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
