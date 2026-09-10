@@ -1,12 +1,11 @@
 import { useEffect, useState, memo } from "react";
 import { Plus, Check, X } from "lucide-react";
 import { imgProduto } from "../../../../shared/utils/Cloudnary";
+import { formatBRL } from "../../../../shared/utils/format";
 import "./ProductCard.css";
 import { useStoreStatus } from "../../../../shared/context/useStoreStatus";
 
 const RESET_TIME = 2000;
-
-const formatBRL = (value) => `R$ ${Number(value).toFixed(2)}`;
 
 function ProductCard({ produto, addToCart }) {
   const [isAdded, setIsAdded] = useState(false);

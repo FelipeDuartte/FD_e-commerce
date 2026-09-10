@@ -1,4 +1,8 @@
-export const formatBRL = (value) => `R$ ${Number(value).toFixed(2).replace(".", ",")}`;
+// toLocaleString cuida dos dois separadores de uma vez (milhar com ponto,
+// decimal com vírgula) — o jeito antigo (toFixed + replace) só trocava o
+// decimal e nunca colocava o ponto de milhar (R$ 1500,00 em vez de R$ 1.500,00).
+export const formatBRL = (value) =>
+  `R$ ${Number(value).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export const daysSince = (iso) => Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
 
