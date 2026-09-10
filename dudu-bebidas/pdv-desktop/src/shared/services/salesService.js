@@ -1,13 +1,25 @@
 import { supabase, getCurrentStoreId } from "../supabase/Supabaseclient";
 import { AdminServiceError } from "./AdminServiceError";
 
-export async function createPdvSale({ cartItems, paymentMethod, cashSessionId, discountAmount, payments, pdvCustomerId }) {
+export async function createPdvSale({ cartItems, paymentMethod, cashSessionId, discountAmount, payments, pdvCustomerId, installments }) {
   const { data, error } = await supabase.functions.invoke("pdv-sale", {
-    body: { cartItems, paymentMethod, cashSessionId, discountAmount, payments, pdvCustomerId },
+    body: { cartItems, paymentMethod, cashSessionId, discountAmount, payments, pdvCustomerId, installments },
   });
 
   if (error) {
-    throw new AdminServiceError("Não foi possível registrar a venda.", error);
+    // supabase-js só devolve isso como um erro de transporte genérico — a
+    // mensagem de verdade que a function respondeu (ex: "Cliente não
+    // encontrado.") fica dentro de error.context (a Response crua). Sem
+    // isso, todo erro de venda aparecia igual, mesmo sendo causas bem
+    // diferentes.
+    let detail = null;
+    try {
+      detail = (await error.context?.json())?.error ?? null;
+    } catch {
+      // corpo não era JSON (ex: 502/timeout) — segue sem detalhe.
+    }
+    console.error("[salesService] Erro ao registrar venda:", detail ?? error);
+    throw new AdminServiceError(detail ?? "Não foi possível registrar a venda.", error);
   }
   if (data?.error) {
     throw new AdminServiceError(data.error);
