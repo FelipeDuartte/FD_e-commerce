@@ -27,14 +27,12 @@ export const onlinePaymentOptions = buildOptions(["pix"]);
 export const MAX_INSTALLMENTS = 1;
 export const INSTALLMENT_OPTIONS = Array.from({ length: MAX_INSTALLMENTS }, (_, i) => i + 1);
 
-// Taxas reais da maquininha (crédito), tiradas direto do visor dela.
-// Mesmo "à vista" (1x) tem taxa — é assim que a máquina cobra. Parado em 8x
-// porque foi até onde deu pra ler no print com certeza (9x tinha um dígito
-// tampado) — manda o resto que eu completo a tabela.
-// Se a taxa da maquininha mudar um dia, é só atualizar aqui (e no mesmo
-// objeto dentro da Edge Function create-order, que recalcula o total
-// de novo no servidor por segurança).
-export const INSTALLMENT_FEE_RATE = {
+// Taxas reais da maquininha (crédito) — fonte primária agora é
+// store_config.credit_installment_fee_rate (lido em Checkout.jsx via
+// useStoreHoursData e passado adiante). Isso aqui é só o fallback, pro
+// caso raro de vir nulo antes do config carregar — não precisa mais
+// atualizar aqui toda vez que a taxa da maquininha mudar, só no banco.
+export const DEFAULT_INSTALLMENT_FEE_RATE = {
   1: 0.0326,
   2: 0.057,
   3: 0.0652,
@@ -47,9 +45,9 @@ export const INSTALLMENT_FEE_RATE = {
 
 export const roundCents = (v) => Math.round(v * 100) / 100;
 
-export function applyCreditCardFee(baseTotal, payment, installments) {
+export function applyCreditCardFee(baseTotal, payment, installments, rateTable = DEFAULT_INSTALLMENT_FEE_RATE) {
   if (payment !== "credit_card") return baseTotal;
-  const rate = INSTALLMENT_FEE_RATE[installments] ?? 0;
+  const rate = rateTable[installments] ?? 0;
   return roundCents(baseTotal * (1 + rate));
 }
 

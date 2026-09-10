@@ -70,12 +70,12 @@ export interface FulfillOrderParams {
   pdvCustomerId?: string | null;
 }
 
-// Taxas reais da maquininha (crédito) — mesma tabela usada em Checkout.jsx
-// pra exibir o total ao cliente. Duplicada aqui de propósito: o total final
-// é sempre recalculado no servidor (nunca confia no que o front manda), então
-// essa tabela precisa existir nos dois lugares. Se a taxa da maquininha mudar,
-// atualize aqui E no Checkout.jsx.
-const INSTALLMENT_FEE_RATE: Record<number, number> = {
+// Taxas reais da maquininha (crédito) — fonte primária agora é
+// store_config.credit_installment_fee_rate (site e PDV leem a mesma
+// coluna pra exibir o total antes de confirmar). Isso aqui vira só
+// fallback, pro caso raro do fetch falhar ou a coluna vir nula — não
+// precisa mais manter isso manualmente sincronizado com o front.
+const FALLBACK_INSTALLMENT_FEE_RATE: Record<number, number> = {
   1: 0.0326,
   2: 0.057,
   3: 0.0652,
@@ -145,12 +145,17 @@ export async function fulfillOrder(
   // installments só faz sentido pra crédito; qualquer outro caso vira null.
   // Pagamento dividido não libera parcelamento (fica sempre null).
   let installmentsToSave: number | null = null;
-  if (!isSplitPayment && paymentMethod === "credit_card") {
-    // Dono da loja pediu pra crédito FÍSICO (na entrega) aceitar só à vista
-    // (1x) por enquanto — ver histórico em create-order. Se voltar a liberar
-    // parcelamento, é só trocar o "1" fixo abaixo pela validação de faixa
-    // recebida em `installments`.
+  if (!isSplitPayment && paymentMethod === "credit_card" && channel === "online") {
+    // Dono da loja pediu pra crédito FÍSICO na ENTREGA (site) aceitar só à
+    // vista (1x) por enquanto. Balcão (PDV) é outro caso — ver bloco abaixo.
     installmentsToSave = 1;
+  } else if (!isSplitPayment && paymentMethod === "credit_card" && channel === "balcao") {
+    // PDV libera parcelamento de verdade na maquininha física do balcão —
+    // valida a faixa (1 a 8x, mesma tabela de INSTALLMENT_FEE_RATE) em vez
+    // de confiar cru no que o client mandou.
+    installmentsToSave = Number.isInteger(installments) && (installments as number) >= 1 && (installments as number) <= 8
+      ? (installments as number)
+      : 1;
   } else if (!isSplitPayment && paymentMethod === "mercadopago_card") {
     // Cartão online JÁ libera parcelamento de verdade — quem decide quantas
     // vezes é o próprio Card Payment Brick (baseado no que a bandeira/emissor
@@ -233,10 +238,26 @@ export async function fulfillOrder(
   // (varia por bandeira/emissor do cartão, consultada em tempo real na API
   // do MP) e é aplicada depois, em mercadopago-create-payment, via um
   // UPDATE no total do pedido assim que o valor real com juros é conhecido.
-  const cardFeeRate = !applyCardFee || paymentMethod !== "credit_card"
-    ? 0
-    : INSTALLMENT_FEE_RATE[installmentsToSave ?? 1] ?? 0;
+  const chargesCardFee = applyCardFee && paymentMethod === "credit_card";
+  let cardFeeRate = 0;
+  if (chargesCardFee) {
+    // Só consulta quando é crédito de verdade — mesmo motivo do
+    // free_shipping_threshold acima, não gasta query à toa nas outras
+    // formas de pagamento.
+    const { data: storeConfig } = await supabase
+      .from("store_config")
+      .select("credit_installment_fee_rate")
+      .eq("store_id", storeId)
+      .maybeSingle();
+
+    const rateTable = storeConfig?.credit_installment_fee_rate ?? FALLBACK_INSTALLMENT_FEE_RATE;
+    cardFeeRate = rateTable[installmentsToSave ?? 1] ?? 0;
+  }
   const calculatedTotal = roundCents(totalAfterDiscount * (1 + cardFeeRate));
+  // Parte do total que é só taxa da maquininha, não valor de produto — o
+  // relatório usa isso pra nunca contar taxa como faturamento (ver
+  // reportsAggregate.js dos dois lados).
+  const cardFeeAmount = roundCents(calculatedTotal - totalAfterDiscount);
 
   if (isSplitPayment) {
     const paymentsSum = roundCents(payments!.reduce((sum, p) => sum + p.amount, 0));
@@ -254,6 +275,7 @@ export async function fulfillOrder(
       user_id: userId,
       total: calculatedTotal,
       discount_amount: normalizedDiscount,
+      card_fee_amount: cardFeeAmount,
       payment_method: effectivePaymentMethod,
       installments: installmentsToSave,
       address,

@@ -8,5 +8,4 @@ export const formatDate = (iso) =>
     minute: "2-digit",
   });
 
-export const formatBRL = (value) =>
-  `R$ ${Number(value).toFixed(2).replace(".", ",")}`;
+export { formatBRL } from "../../../shared/utils/format";

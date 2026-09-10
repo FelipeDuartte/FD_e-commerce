@@ -25,13 +25,11 @@ export async function updateStoreConfig(config) {
     .from("store_config")
     .update({ ...config, updated_at: new Date().toISOString() })
     .eq("store_id", getCurrentStoreId());
-  if (error) {
-    console.error("[storeConfigService] Erro ao salvar store_config:", error);
+  if (error)
     throw new AdminServiceError(
       "Não foi possível salvar as configurações.",
       error,
     );
-  }
 }
 
 export async function listStoreHours() {

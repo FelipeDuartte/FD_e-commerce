@@ -30,7 +30,7 @@ export async function fetchOrdersForReports() {
   while (true) {
     const { data, error } = await supabase
       .from("orders")
-      .select("id, total, created_at, address")
+      .select("id, total, card_fee_amount, created_at, address")
       .gte("created_at", cutoff)
       // Pedido rejeitado ou cancelado nunca virou venda de verdade — não
       // deve contar em faturamento, ticket médio, produto/cliente mais

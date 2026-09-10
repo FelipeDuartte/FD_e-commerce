@@ -44,6 +44,7 @@ function summarise(bills) {
 export default function ContasAPagarView({ contasAPagar }) {
   const {
     bills, filteredBills, loading, error, search, setSearch, statusFilter, setStatusFilter,
+    dueDateFrom, setDueDateFrom, dueDateTo, setDueDateTo,
     billModal, setBillModal, modalForm, repeatMonths, setRepeatMonths, modalSaving, modalError,
     openNewBill, openEditBill, handleModalChange, handleModalSave,
     payingBill, payingSaving, payingError, requestMarkPaid, dismissMarkPaid, confirmMarkPaid,
@@ -131,6 +132,25 @@ export default function ContasAPagarView({ contasAPagar }) {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+        <div className="pdv-bill-date-filter">
+          <label>
+            Vencimento de
+            <input type="date" value={dueDateFrom} onChange={(e) => setDueDateFrom(e.target.value)} />
+          </label>
+          <label>
+            até
+            <input type="date" value={dueDateTo} onChange={(e) => setDueDateTo(e.target.value)} />
+          </label>
+          {(dueDateFrom || dueDateTo) && (
+            <button
+              type="button"
+              className="pdv-bill-date-filter-clear"
+              onClick={() => { setDueDateFrom(""); setDueDateTo(""); }}
+            >
+              ✕ Limpar
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="pdv-clientes-filters" style={{ marginBottom: 20 }}>

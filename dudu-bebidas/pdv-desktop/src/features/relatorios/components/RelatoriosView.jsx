@@ -6,11 +6,14 @@ import RevenueChart from "./RevenueChart";
 import PaymentBreakdownCard from "./PaymentBreakdownCard";
 
 const PERIODS = [
-  { value: 1, label: "1 mês" },
-  { value: 3, label: "3 meses" },
-  { value: 6, label: "6 meses" },
-  { value: 12, label: "12 meses" },
+  { key: "7d", label: "Última semana", value: { unit: "days", amount: 7 } },
+  { key: "1m", label: "1 mês", value: { unit: "months", amount: 1 } },
+  { key: "3m", label: "3 meses", value: { unit: "months", amount: 3 } },
+  { key: "6m", label: "6 meses", value: { unit: "months", amount: 6 } },
+  { key: "12m", label: "12 meses", value: { unit: "months", amount: 12 } },
 ];
+
+const isSamePeriod = (a, b) => a?.unit === b?.unit && a?.amount === b?.amount;
 
 const RANK_MEDALS = ["🥇", "🥈", "🥉"];
 function rankMedal(index) {
@@ -96,10 +99,10 @@ export default function RelatoriosView() {
       <div className="rpt-period-selector" role="group" aria-label="Período">
         {PERIODS.map((p) => (
           <button
-            key={p.value}
-            className={`rpt-period-btn ${period === p.value ? "rpt-period-btn-active" : ""}`}
+            key={p.key}
+            className={`rpt-period-btn ${isSamePeriod(period, p.value) ? "rpt-period-btn-active" : ""}`}
             onClick={() => setPeriod(p.value)}
-            aria-pressed={period === p.value}
+            aria-pressed={isSamePeriod(period, p.value)}
           >
             {p.label}
           </button>

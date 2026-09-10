@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { formatBRL } from "../../../shared/utils/format";
 import { PAYMENT_METHODS } from "../../../shared/constants";
 import { listRecentSales, listCancelledSales, listFullHistorySales } from "../../../shared/services/salesService";
+import SaleReceipt from "./SaleReceipt";
 
 const FILTERS = [
   { key: "atual", label: "Caixa atual", hint: "Vendas da sessão de caixa aberta agora" },
@@ -31,6 +32,12 @@ export default function HistorySalesList({ currentSessionId, sessionSales, cance
   const [otherSales, setOtherSales] = useState([]);
   const [otherLoading, setOtherLoading] = useState(false);
   const [otherError, setOtherError] = useState("");
+  const [printingSale, setPrintingSale] = useState(null);
+
+  const handlePrint = (sale) => {
+    setPrintingSale(sale);
+    setTimeout(() => window.print(), 60);
+  };
 
   useEffect(() => {
     if (filter === "atual") return;
@@ -129,26 +136,38 @@ export default function HistorySalesList({ currentSessionId, sessionSales, cance
                 </span>
                 <span>{methodLabel(sale.paymentMethod)}</span>
                 <strong>{formatBRL(sale.total)}</strong>
-                {sale.cancelled ? (
-                  <span className="pdv-sale-cancelled-label">Cancelada</span>
-                ) : canCancel ? (
+                <div className="pdv-sale-actions">
                   <button
-                    className="adm-btn-delete"
-                    onClick={() => onCancelSale(sale)}
-                    disabled={cancellingId === sale.orderId}
+                    type="button"
+                    className="pdv-print-btn"
+                    title="Imprimir notinha"
+                    onClick={() => handlePrint(sale)}
                   >
-                    {cancellingId === sale.orderId ? "..." : "🗑️ Cancelar"}
+                    🖨️
                   </button>
-                ) : (
-                  <span className="pdv-sale-locked-label" title="Só é possível cancelar vendas do caixa aberto agora">
-                    —
-                  </span>
-                )}
+                  {sale.cancelled ? (
+                    <span className="pdv-sale-cancelled-label">Cancelada</span>
+                  ) : canCancel ? (
+                    <button
+                      className="adm-btn-delete"
+                      onClick={() => onCancelSale(sale)}
+                      disabled={cancellingId === sale.orderId}
+                    >
+                      {cancellingId === sale.orderId ? "..." : "🗑️ Cancelar"}
+                    </button>
+                  ) : (
+                    <span className="pdv-sale-locked-label" title="Só é possível cancelar vendas do caixa aberto agora">
+                      —
+                    </span>
+                  )}
+                </div>
               </div>
             );
           })}
         </div>
       )}
+
+      <SaleReceipt sale={printingSale} />
     </div>
   );
 }

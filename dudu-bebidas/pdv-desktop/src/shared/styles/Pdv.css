@@ -132,6 +132,15 @@
   color: var(--c-text);
 }
 
+.pdv-navrail-shortcut {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--c-text-muted);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+
 .pdv-navrail-btn.active {
   background: rgba(255, 208, 0, 0.1);
   border-color: rgba(255, 208, 0, 0.3);
@@ -323,6 +332,27 @@
   cursor: pointer;
 }
 
+.pdv-cart-item-qty-input {
+  width: 42px;
+  height: 24px;
+  text-align: center;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  background: color-mix(in srgb, var(--c-text) 6%, transparent);
+  color: inherit;
+  font-size: 13px;
+  padding: 0;
+}
+/* remove as setinhas nativas do input number — já tem os botões −/+ do lado */
+.pdv-cart-item-qty-input::-webkit-outer-spin-button,
+.pdv-cart-item-qty-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.pdv-cart-item-qty-input {
+  -moz-appearance: textfield;
+}
+
 .pdv-payment-methods {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -348,6 +378,27 @@
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.pdv-installments {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pdv-installments-label {
+  font-size: 12px;
+  color: var(--c-text-muted);
+}
+
+.pdv-installments-select {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  background: color-mix(in srgb, var(--c-text) 3%, transparent);
+  color: var(--c-text);
+  font-size: 13px;
 }
 
 .pdv-change-input {
@@ -1044,6 +1095,77 @@
   text-align: center;
 }
 
+.pdv-sale-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.pdv-print-btn {
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+}
+.pdv-print-btn:hover {
+  border-color: var(--c-accent);
+}
+
+/* Recibo de impressão — invisível na tela, só existe pra virar a única
+   coisa visível quando window.print() dispara (ver HistorySalesList).
+   Formatado pra bobina térmica de 80mm (padrão Elgin/Bematech/Epson) — se
+   sua impressora for a de 58mm, troca as duas larguras (@page e
+   .pdv-print-receipt) de "80mm" pra "58mm". */
+.pdv-print-receipt {
+  display: none;
+}
+
+.pdv-receipt-header {
+  text-align: center;
+}
+
+.pdv-receipt-divider {
+  border-top: 1px dashed #000;
+  margin: 6px 0;
+}
+
+.pdv-receipt-total {
+  display: flex;
+  justify-content: space-between;
+  margin: 4px 0;
+}
+
+@media print {
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+  body * {
+    visibility: hidden;
+  }
+  .pdv-print-receipt,
+  .pdv-print-receipt * {
+    visibility: visible;
+  }
+  .pdv-print-receipt {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 80mm;
+    padding: 3mm;
+    color: #000;
+    background: #fff;
+    font-family: "Courier New", monospace;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+}
+
 .pdv-history-summary {
   display: flex;
   flex-direction: column;
@@ -1278,6 +1400,7 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
+  margin-bottom: 20px;
 }
 
 .rpt-summary-card {
@@ -1653,4 +1776,38 @@
   font-weight: 600;
   color: var(--c-text);
   border-top: 1px solid var(--c-border);
+}
+
+.pdv-bill-date-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.pdv-bill-date-filter label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--c-text-muted);
+  white-space: nowrap;
+}
+.pdv-bill-date-filter input[type="date"] {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  background: color-mix(in srgb, var(--c-text) 3%, transparent);
+  color: var(--c-text);
+  font-size: 13px;
+}
+.pdv-bill-date-filter-clear {
+  background: transparent;
+  border: none;
+  color: var(--c-text-muted);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 4px 6px;
+}
+.pdv-bill-date-filter-clear:hover {
+  color: var(--c-accent);
 }

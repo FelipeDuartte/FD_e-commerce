@@ -17,4 +17,4 @@ export function resolveOrderData(locationState) {
   return EMPTY_ORDER;
 }
 
-export const formatBRL = (value) => `R$ ${Number(value).toFixed(2).replace(".", ",")}`;
+export { formatBRL } from "../../shared/utils/format";

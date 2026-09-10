@@ -1,5 +1,12 @@
 // ── Aggregation helpers (pure, safe to unit-test) ─────────────────────────────
 
+// Taxa da maquininha (crédito parcelado) não é faturamento de produto — é só
+// repasse de custo. Todo cálculo de "quanto vendi"/"quanto o cliente gastou"
+// usa isso em vez de order.total puro.
+function netRevenue(order) {
+  return (order.total ?? 0) - (order.card_fee_amount ?? 0);
+}
+
 /**
  * Aggregate flat order rows into a 12-month array.
  * Returns entries ordered oldest → newest, one per month.
@@ -23,7 +30,7 @@ function buildMonthlyBuckets(orders, numMonths = 12) {
     const d = new Date(order.created_at);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
     if (key in buckets) {
-      buckets[key].revenue += order.total ?? 0;
+      buckets[key].revenue += netRevenue(order);
       buckets[key].count += 1;
     }
   }
@@ -71,7 +78,7 @@ export function aggregateTopCustomers(orders, limit = 10) {
     if (!map[key]) {
       map[key] = { displayName, total: 0, count: 0 };
     }
-    map[key].total += order.total ?? 0;
+    map[key].total += netRevenue(order);
     map[key].count += 1;
   }
 
@@ -95,7 +102,7 @@ export function filterByPeriod(orders, months) {
  * Summarises an array of orders into { totalRevenue, totalOrders, avgTicket }.
  */
 export function summariseOrders(orders) {
-  const totalRevenue = orders.reduce((s, o) => s + (o.total ?? 0), 0);
+  const totalRevenue = orders.reduce((s, o) => s + netRevenue(o), 0);
   const totalOrders = orders.length;
   const avgTicket = totalOrders > 0 ? totalRevenue / totalOrders : 0;
   return { totalRevenue, totalOrders, avgTicket };

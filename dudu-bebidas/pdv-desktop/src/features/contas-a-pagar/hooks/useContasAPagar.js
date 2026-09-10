@@ -28,6 +28,11 @@ export function useContasAPagar() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("todas");
+  // Filtro por vencimento — datas em texto "YYYY-MM-DD" (mesmo formato do
+  // <input type="date">), comparação direta funciona porque due_date do
+  // banco já vem nesse formato.
+  const [dueDateFrom, setDueDateFrom] = useState("");
+  const [dueDateTo, setDueDateTo] = useState("");
 
   const [billModal, setBillModal] = useState(null);
   const [modalForm, setModalForm] = useState(EMPTY_BILL);
@@ -67,7 +72,9 @@ export function useContasAPagar() {
       b.description.toLowerCase().includes(term) ||
       (b.supplier ?? "").toLowerCase().includes(term) ||
       (b.category ?? "").toLowerCase().includes(term);
-    return matchStatus && matchSearch;
+    const matchDateFrom = !dueDateFrom || b.due_date >= dueDateFrom;
+    const matchDateTo = !dueDateTo || b.due_date <= dueDateTo;
+    return matchStatus && matchSearch && matchDateFrom && matchDateTo;
   });
 
   const openNewBill = () => {
@@ -188,6 +195,7 @@ export function useContasAPagar() {
 
   return {
     bills, filteredBills, loading, error, search, setSearch, statusFilter, setStatusFilter,
+    dueDateFrom, setDueDateFrom, dueDateTo, setDueDateTo,
     billModal, setBillModal, modalForm, repeatMonths, setRepeatMonths, modalSaving, modalError,
     openNewBill, openEditBill, handleModalChange, handleModalSave,
     payingBill, payingSaving, payingError, requestMarkPaid, dismissMarkPaid, confirmMarkPaid,
