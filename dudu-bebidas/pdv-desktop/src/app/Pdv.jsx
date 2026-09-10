@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { useCashSession } from "../features/caixa/hooks/useCashSession";
 import { useProductCatalog } from "../features/venda/hooks/useProductCatalog";
 import { useCart } from "../features/venda/hooks/useCart";
 import { useSale } from "../features/venda/hooks/useSale";
+import { useStoreCreditFeeRate } from "../features/venda/hooks/useStoreCreditFeeRate";
 import { useFiadoCustomers } from "../features/clientes/hooks/useFiadoCustomers";
 import { useProdutos } from "../features/produtos/hooks/useProdutos";
 import { useAdminCategories } from "../features/produtos/hooks/useAdminCategories";
@@ -12,12 +13,25 @@ import ProductCatalog from "../features/venda/components/ProductCatalog";
 import CartPanel from "../features/venda/components/CartPanel";
 import HistorySalesList from "../features/historico/components/HistorySalesList";
 import ClientesView from "../features/clientes/components/ClientesView";
-import ProdutosView from "../features/produtos/components/ProdutosView";
-import EstoqueView from "../features/estoque/components/EstoqueView";
-import RelatoriosView from "../features/relatorios/components/RelatoriosView";
-import ContasAPagarView from "../features/contas-a-pagar/components/ContasAPagarView";
 import CloseSessionModal from "../features/caixa/components/CloseSessionModal";
 import CancelSaleModal from "../shared/components/CancelSaleModal";
+
+// Abas menos usadas no dia a dia (Venda/Histórico/Clientes ficam eager,
+// são as de uso constante) — carregadas sob demanda só quando o operador
+// realmente clica na aba, em vez de todo boot do PDV baixar tudo de uma vez.
+const ProdutosView = lazy(() => import("../features/produtos/components/ProdutosView"));
+const EstoqueView = lazy(() => import("../features/estoque/components/EstoqueView"));
+const RelatoriosView = lazy(() => import("../features/relatorios/components/RelatoriosView"));
+const ContasAPagarView = lazy(() => import("../features/contas-a-pagar/components/ContasAPagarView"));
+
+function TabLoadingFallback() {
+  return (
+    <div className="pdv-loading-screen">
+      <div className="adm-spinner" />
+      <p>Carregando...</p>
+    </div>
+  );
+}
 
 // Config da nav rail — usada só aqui, não vale a pena um arquivo próprio.
 const PDV_VIEWS = [
@@ -30,6 +44,19 @@ const PDV_VIEWS = [
   { key: "contas-pagar", label: "💰 Contas a Pagar" },
 ];
 
+// Atalhos de teclado pras abas mais usadas no dia a dia. preventDefault é
+// necessário pelo menos pro F5 — sem isso, o WebView do Tauri recarrega o
+// app inteiro (mesmo comportamento de um navegador comum).
+const VIEW_SHORTCUTS = {
+  F4: "venda",
+  F5: "historico",
+  F6: "clientes",
+  F7: "contas-pagar",
+};
+const SHORTCUT_BY_VIEW = Object.fromEntries(
+  Object.entries(VIEW_SHORTCUTS).map(([key, view]) => [view, key]),
+);
+
 export default function Pdv({ theme, onToggleTheme }) {
   const [pdvView, setPdvView] = useState("venda");
 
@@ -37,6 +64,7 @@ export default function Pdv({ theme, onToggleTheme }) {
   const fiado = useFiadoCustomers(cashSession.session?.id);
   const catalog = useProductCatalog();
   const cart = useCart();
+  const installmentFeeRate = useStoreCreditFeeRate();
   const sale = useSale(
     cashSession.session?.id,
     {
@@ -44,10 +72,24 @@ export default function Pdv({ theme, onToggleTheme }) {
       clearCart: cart.clearCart, resetDiscount: () => cart.setDiscountInput(""),
       reloadProducts: catalog.reload,
     },
-    { onFiadoSale: fiado.reload },
+    { onFiadoSale: fiado.reload, installmentFeeRate },
   );
   const produtos = useProdutos();
   const { categories: dbCategories } = useAdminCategories();
+
+  // Só ativa os atalhos com o caixa aberto (é quando as abas de fato existem
+  // na tela) — antes disso o app mostra a tela de abrir caixa, sem nav rail.
+  useEffect(() => {
+    if (!cashSession.session) return;
+    const handleKeyDown = (e) => {
+      const view = VIEW_SHORTCUTS[e.key];
+      if (!view) return;
+      e.preventDefault();
+      setPdvView(view);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [cashSession.session]);
   const contasAPagar = useContasAPagar();
 
   const themeToggleBtn = (
@@ -125,6 +167,9 @@ export default function Pdv({ theme, onToggleTheme }) {
               onClick={() => setPdvView(key)}
             >
               {label}
+              {SHORTCUT_BY_VIEW[key] && (
+                <span className="pdv-navrail-shortcut">{SHORTCUT_BY_VIEW[key]}</span>
+              )}
             </button>
           ))}
         </nav>
@@ -146,6 +191,9 @@ export default function Pdv({ theme, onToggleTheme }) {
                 removeFromCart={cart.removeFromCart}
                 paymentMethod={sale.paymentMethod}
                 setPaymentMethod={sale.setPaymentMethod}
+                installments={sale.installments}
+                setInstallments={sale.setInstallments}
+                installmentFeeRate={installmentFeeRate}
                 discountMode={cart.discountMode}
                 setDiscountMode={cart.setDiscountMode}
                 discountInput={cart.discountInput}
@@ -153,6 +201,7 @@ export default function Pdv({ theme, onToggleTheme }) {
                 subtotal={cart.subtotal}
                 discountAmount={cart.discountAmount}
                 cartTotal={cart.cartTotal}
+                saleTotal={sale.saleTotal}
                 submitting={sale.submitting}
                 onFinalize={sale.handleFinalizeSale}
                 receivedAmountInput={sale.receivedAmountInput}
@@ -204,15 +253,17 @@ export default function Pdv({ theme, onToggleTheme }) {
             />
           )}
 
-          {pdvView === "produtos" && (
-            <ProdutosView produtos={produtos} categories={dbCategories} />
-          )}
+          <Suspense fallback={<TabLoadingFallback />}>
+            {pdvView === "produtos" && (
+              <ProdutosView produtos={produtos} categories={dbCategories} />
+            )}
 
-          {pdvView === "estoque" && <EstoqueView />}
+            {pdvView === "estoque" && <EstoqueView />}
 
-          {pdvView === "relatorios" && <RelatoriosView />}
+            {pdvView === "relatorios" && <RelatoriosView />}
 
-          {pdvView === "contas-pagar" && <ContasAPagarView contasAPagar={contasAPagar} />}
+            {pdvView === "contas-pagar" && <ContasAPagarView contasAPagar={contasAPagar} />}
+          </Suspense>
         </main>
       </div>
 

@@ -5,12 +5,18 @@ import {
   cancelPdvSale,
   listSessionSales,
 } from "../../../shared/services/salesService";
+import { applyCreditCardFee, DEFAULT_INSTALLMENT_FEE_RATE } from "../utils/creditFee";
 
 // Forma de pagamento (única ou dividida), troco, cliente fiado, submissão
 // da venda e cancelamento. Recebe o carrinho (de useCart) como dados —
 // não é dono dele, só lê pra montar o payload e as mensagens de sucesso.
-export function useSale(sessionId, { cart, cartTotal, discountAmount, clearCart, resetDiscount, reloadProducts }, { onFiadoSale } = {}) {
+export function useSale(
+  sessionId,
+  { cart, cartTotal, discountAmount, clearCart, resetDiscount, reloadProducts },
+  { onFiadoSale, installmentFeeRate = DEFAULT_INSTALLMENT_FEE_RATE } = {},
+) {
   const [paymentMethod, setPaymentMethodRaw] = useState("cash");
+  const [installments, setInstallments] = useState(1);
   const [receivedAmountInput, setReceivedAmountInput] = useState("");
   const [splitMode, setSplitMode] = useState(false);
   const [splitPayments, setSplitPayments] = useState([]);
@@ -43,14 +49,24 @@ export function useSale(sessionId, { cart, cartTotal, discountAmount, clearCart,
     return () => clearTimeout(timer);
   }, [sessionId, loadSessionSales]);
 
-  // Troco só faz sentido pra dinheiro, cliente só faz sentido pra fiado —
-  // trocar de forma de pagamento limpa os dois, senão sobraria um valor
-  // ou cliente selecionado pra uma forma que não usa mais aquilo.
+  // Troco só faz sentido pra dinheiro, cliente só faz sentido pra fiado,
+  // parcelas só fazem sentido pra crédito — trocar de forma de pagamento
+  // limpa os três, senão sobraria algo selecionado pra uma forma que não
+  // usa mais aquilo.
   const setPaymentMethod = (method) => {
     setPaymentMethodRaw(method);
     setReceivedAmountInput("");
     setFiadoCustomer(null);
+    setInstallments(1);
   };
+
+  // Total da venda já com a taxa da maquininha embutida quando for crédito
+  // (parcelado ou não) — é esse valor que vai pro servidor e pro recibo.
+  const saleTotal = useMemo(
+    () => (paymentMethod === "credit_card" ? applyCreditCardFee(cartTotal, installments, installmentFeeRate) : cartTotal),
+    [paymentMethod, cartTotal, installments, installmentFeeRate],
+  );
+  const cardFeeAmount = useMemo(() => Math.round((saleTotal - cartTotal) * 100) / 100, [saleTotal, cartTotal]);
 
   const changeAmount = useMemo(() => {
     if (paymentMethod !== "cash" || receivedAmountInput === "") return null;
@@ -109,15 +125,21 @@ export function useSale(sessionId, { cart, cartTotal, discountAmount, clearCart,
         discountAmount,
         ...(splitMode
           ? { payments: splitPayments.map((p) => ({ method: p.method, amount: Number(p.amount) })) }
-          : { paymentMethod, pdvCustomerId: paymentMethod === "fiado" ? fiadoCustomer.id : undefined }),
+          : {
+              paymentMethod,
+              pdvCustomerId: paymentMethod === "fiado" ? fiadoCustomer.id : undefined,
+              installments: paymentMethod === "credit_card" ? installments : undefined,
+            }),
       });
       const orderTag = orderNumber ? `Pedido #${orderNumber} — ` : "";
       setSaleSuccess(
         paymentMethod === "fiado"
           ? `${orderTag}Venda fiado registrada — ${formatBRL(cartTotal)} (${fiadoCustomer.name})`
-          : changeAmount !== null
-            ? `${orderTag}Venda registrada — ${formatBRL(cartTotal)} (troco: ${formatBRL(changeAmount)})`
-            : `${orderTag}Venda registrada — ${formatBRL(cartTotal)}`,
+          : paymentMethod === "credit_card" && installments > 1
+            ? `${orderTag}Venda registrada — ${formatBRL(saleTotal)} (${installments}x, taxa: ${formatBRL(cardFeeAmount)})`
+            : changeAmount !== null
+              ? `${orderTag}Venda registrada — ${formatBRL(saleTotal)} (troco: ${formatBRL(changeAmount)})`
+              : `${orderTag}Venda registrada — ${formatBRL(saleTotal)}`,
       );
       setTimeout(() => setSaleSuccess(""), 3000);
       if (paymentMethod === "fiado") onFiadoSale?.();
@@ -162,7 +184,8 @@ export function useSale(sessionId, { cart, cartTotal, discountAmount, clearCart,
   };
 
   return {
-    paymentMethod, setPaymentMethod, submitting, saleError, saleSuccess,
+    paymentMethod, setPaymentMethod, installments, setInstallments, saleTotal, cardFeeAmount,
+    submitting, saleError, saleSuccess,
     sessionSales, cancellingId, cancelError, confirmingSale,
     receivedAmountInput, setReceivedAmountInput, changeAmount, insufficientCash,
     splitMode, toggleSplitMode, splitPayments, updateSplitLine, addSplitLine,

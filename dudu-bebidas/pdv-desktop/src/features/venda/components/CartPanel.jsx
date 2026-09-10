@@ -1,11 +1,15 @@
 import { formatBRL } from "../../../shared/utils/format";
 import { PAYMENT_METHODS, SPLIT_PAYMENT_METHODS } from "../../../shared/constants";
+import { DEFAULT_INSTALLMENT_FEE_RATE, MAX_INSTALLMENTS_PDV, applyCreditCardFee } from "../utils/creditFee";
 import FiadoCustomerPicker from "./FiadoCustomerPicker";
+
+const INSTALLMENT_OPTIONS = Array.from({ length: MAX_INSTALLMENTS_PDV }, (_, i) => i + 1);
 
 export default function CartPanel({
   cart, updateQuantity, removeFromCart,
-  paymentMethod, setPaymentMethod, discountMode, setDiscountMode, discountInput, setDiscountInput,
-  subtotal, discountAmount, cartTotal, submitting, onFinalize,
+  paymentMethod, setPaymentMethod, installments, setInstallments, discountMode, setDiscountMode, discountInput, setDiscountInput,
+  subtotal, discountAmount, cartTotal, saleTotal, submitting, onFinalize,
+  installmentFeeRate = DEFAULT_INSTALLMENT_FEE_RATE,
   receivedAmountInput, setReceivedAmountInput, changeAmount, insufficientCash,
   splitMode, toggleSplitMode, splitPayments, updateSplitLine, addSplitLine,
   removeSplitLine, splitRemaining, splitValid,
@@ -26,7 +30,15 @@ export default function CartPanel({
               </div>
               <div className="pdv-cart-item-qty">
                 <button title="Diminuir quantidade" onClick={() => updateQuantity(item.id, item.quantity - 1)}>−</button>
-                <span>{item.quantity}</span>
+                <input
+                  type="number"
+                  className="pdv-cart-item-qty-input"
+                  min="1"
+                  max={item.stock}
+                  value={item.quantity}
+                  onChange={(e) => updateQuantity(item.id, Number(e.target.value))}
+                  title="Digite a quantidade"
+                />
                 <button title="Aumentar quantidade" onClick={() => updateQuantity(item.id, item.quantity + 1)}>+</button>
               </div>
               <button className="adm-btn-delete" title="Remover item" onClick={() => removeFromCart(item.id)}>🗑️</button>
@@ -69,6 +81,32 @@ export default function CartPanel({
                   {changeAmount < 0 ? "Falta" : "Troco"}: {formatBRL(Math.abs(changeAmount))}
                 </span>
               )}
+            </div>
+          )}
+
+          {paymentMethod === "credit_card" && (
+            <div className="pdv-installments">
+              <label htmlFor="pdv-installments-select" className="pdv-installments-label">
+                Em quantas vezes?
+              </label>
+              <select
+                id="pdv-installments-select"
+                className="pdv-installments-select"
+                value={installments}
+                onChange={(e) => setInstallments(Number(e.target.value))}
+              >
+                {INSTALLMENT_OPTIONS.map((n) => {
+                  const optTotal = applyCreditCardFee(cartTotal, n, installmentFeeRate);
+                  const perInstallment = optTotal / n;
+                  const ratePct = ((installmentFeeRate[n] ?? 0) * 100).toFixed(2).replace(".", ",");
+                  return (
+                    <option key={n} value={n}>
+                      {n}x {n === 1 ? "à vista" : `de ${formatBRL(perInstallment)}`}
+                      {" "}— total {formatBRL(optTotal)} (taxa {ratePct}%)
+                    </option>
+                  );
+                })}
+              </select>
             </div>
           )}
 
@@ -168,9 +206,15 @@ export default function CartPanel({
             <span>−{formatBRL(discountAmount)}</span>
           </div>
         )}
+        {paymentMethod === "credit_card" && saleTotal > cartTotal && (
+          <div className="pdv-cart-subtotal-row">
+            <span>Taxa da maquininha</span>
+            <span>+{formatBRL(saleTotal - cartTotal)}</span>
+          </div>
+        )}
         <div className="pdv-cart-total">
           <span>Total</span>
-          <strong>{formatBRL(cartTotal)}</strong>
+          <strong>{formatBRL(saleTotal)}</strong>
         </div>
       </div>
 
