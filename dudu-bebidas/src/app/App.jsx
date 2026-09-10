@@ -22,23 +22,24 @@ import Cart          from "../features/cart/components/Cart";
 import AgeGate from "../shared/components/AgeGate/AgeGate";
 import { hasAcceptedAgeGate } from "../shared/components/AgeGate/ageGateStorage";
 import Login         from "../features/auth/login";
-import Checkout      from "../features/checkout/Checkout";
 import Scrolltotop   from "../shared/components/Scrolltotop";
 import About         from "../features/catalog/components/About/About";
-import Confirm       from "../features/confirm/Confirm";
 import LastOrderBanner from "../shared/components/LastOrderBanner/LastOrderBanner";
-// Carregado sob demanda: só quem realmente navega pra /admin baixa esse
-// código (painel inteiro + serviços + CSS). Antes era import estático, e
-// todo visitante do site — inclusive quem nunca abre o admin — baixava
-// esse pedaço junto no carregamento inicial.
-const Admin = lazy(() => import("../admin/app/Admin"));
-import PrivacyPolicy from "../features/legal/privacy-policy/PrivacyPolicy";
-import TermsOfService from "../features/legal/terms-service/TermsService";
 import { StoreStatusProvider } from "../shared/context/StoreStatusContext";
 
-// Tela leve enquanto o chunk do painel admin baixa (só acontece na
-// primeira vez que alguém acessa /admin — depois fica em cache do navegador).
-function AdminLoadingFallback() {
+// Carregado sob demanda: cada um só baixa quando o visitante realmente
+// navega pra essa rota. Antes eram imports estáticos — todo mundo que só
+// vinha ver o catálogo baixava checkout/confirmação/páginas legais/admin
+// junto no carregamento inicial, mesmo sem nunca usar.
+const Admin = lazy(() => import("../admin/app/Admin"));
+const Checkout = lazy(() => import("../features/checkout/Checkout"));
+const Confirm = lazy(() => import("../features/confirm/Confirm"));
+const PrivacyPolicy = lazy(() => import("../features/legal/privacy-policy/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("../features/legal/terms-service/TermsService"));
+
+// Tela leve enquanto o chunk de uma rota lazy baixa (só acontece na
+// primeira vez que alguém acessa ela — depois fica em cache do navegador).
+function PageLoadingFallback() {
   return (
     <div
       style={{
@@ -235,14 +236,26 @@ export default function DuduBebidas() {
             </>
           }
         />
-        <Route path="/privacy-policy"  element={<PrivacyPolicy />} />
-        <Route path="/terms-service"   element={<TermsOfService />} />
-        <Route path="/checkout"        element={<Checkout user={user} clearCart={clearCart} />} />
-        <Route path="/confirmacao"     element={<Confirm user={user} />} />
+        <Route
+          path="/privacy-policy"
+          element={<Suspense fallback={<PageLoadingFallback />}><PrivacyPolicy /></Suspense>}
+        />
+        <Route
+          path="/terms-service"
+          element={<Suspense fallback={<PageLoadingFallback />}><TermsOfService /></Suspense>}
+        />
+        <Route
+          path="/checkout"
+          element={<Suspense fallback={<PageLoadingFallback />}><Checkout user={user} clearCart={clearCart} /></Suspense>}
+        />
+        <Route
+          path="/confirmacao"
+          element={<Suspense fallback={<PageLoadingFallback />}><Confirm user={user} /></Suspense>}
+        />
         <Route
           path="/admin"
           element={
-            <Suspense fallback={<AdminLoadingFallback />}>
+            <Suspense fallback={<PageLoadingFallback />}>
               <Admin user={user} isAdmin={isAdmin} />
             </Suspense>
           }
