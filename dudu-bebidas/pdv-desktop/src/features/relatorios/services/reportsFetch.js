@@ -28,7 +28,7 @@ export async function fetchOrdersForReports({ channel } = {}) {
   while (true) {
     let query = supabase
       .from("orders")
-      .select("id, total, discount_amount, payment_method, channel, created_at, address")
+      .select("id, total, discount_amount, card_fee_amount, payment_method, channel, created_at, address")
       .gte("created_at", cutoff)
       // Pedido rejeitado ou cancelado nunca virou venda de verdade — não
       // deve contar em faturamento, ticket médio, quebra por pagamento etc.

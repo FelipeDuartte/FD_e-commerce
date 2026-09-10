@@ -1,5 +1,14 @@
 // ── Aggregation helpers (pure, safe to unit-test) ─────────────────────────────
 
+// Taxa da maquininha (crédito parcelado) não é faturamento de produto — é só
+// repasse de custo. Todo cálculo de "quanto vendi"/"quanto o cliente gastou"
+// usa isso em vez de order.total puro. aggregatePaymentBreakdown é a exceção
+// de propósito (ali o que importa é quanto dinheiro entrou por forma, taxa
+// incluída — não é métrica de faturamento).
+function netRevenue(order) {
+  return (order.total ?? 0) - (order.card_fee_amount ?? 0);
+}
+
 /**
  * Aggregate flat order rows into a 12-month array.
  * Returns entries ordered oldest → newest, one per month.
@@ -23,7 +32,7 @@ function buildMonthlyBuckets(orders, numMonths = 12) {
     const d = new Date(order.created_at);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
     if (key in buckets) {
-      buckets[key].revenue += order.total ?? 0;
+      buckets[key].revenue += netRevenue(order);
       buckets[key].count += 1;
     }
   }
@@ -71,7 +80,7 @@ export function aggregateTopCustomers(orders, limit = 10) {
     if (!map[key]) {
       map[key] = { displayName, total: 0, count: 0 };
     }
-    map[key].total += order.total ?? 0;
+    map[key].total += netRevenue(order);
     map[key].count += 1;
   }
 
@@ -81,12 +90,19 @@ export function aggregateTopCustomers(orders, limit = 10) {
 }
 
 /**
- * Filters a list of orders to those created within the last `months` months.
+ * Filtra pedidos por período — { unit: "days", amount: N } é uma janela
+ * corrida (ex: "última semana" = hoje - 7 dias); { unit: "months", amount: N }
+ * corta no dia 1 do mês N meses atrás (comportamento original, alinhado ao
+ * calendário).
  */
-export function filterByPeriod(orders, months) {
+export function filterByPeriod(orders, period) {
   const cutoff = new Date();
-  cutoff.setMonth(cutoff.getMonth() - months);
-  cutoff.setDate(1);
+  if (period.unit === "days") {
+    cutoff.setDate(cutoff.getDate() - period.amount);
+  } else {
+    cutoff.setMonth(cutoff.getMonth() - period.amount);
+    cutoff.setDate(1);
+  }
   cutoff.setHours(0, 0, 0, 0);
   return orders.filter((o) => new Date(o.created_at) >= cutoff);
 }
@@ -95,7 +111,7 @@ export function filterByPeriod(orders, months) {
  * Summarises an array of orders into { totalRevenue, totalOrders, avgTicket }.
  */
 export function summariseOrders(orders) {
-  const totalRevenue = orders.reduce((s, o) => s + (o.total ?? 0), 0);
+  const totalRevenue = orders.reduce((s, o) => s + netRevenue(o), 0);
   const totalOrders = orders.length;
   const avgTicket = totalOrders > 0 ? totalRevenue / totalOrders : 0;
   return { totalRevenue, totalOrders, avgTicket };
@@ -143,8 +159,8 @@ export function aggregatePaymentBreakdown(orders, payments) {
 export function aggregateChannelSplit(orders) {
   const result = { online: 0, balcao: 0 };
   for (const order of orders) {
-    if (order.channel === "balcao") result.balcao += order.total ?? 0;
-    else result.online += order.total ?? 0;
+    if (order.channel === "balcao") result.balcao += netRevenue(order);
+    else result.online += netRevenue(order);
   }
   return result;
 }

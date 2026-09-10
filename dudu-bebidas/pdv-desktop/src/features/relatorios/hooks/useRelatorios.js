@@ -24,7 +24,7 @@ const STALE_MS = 5 * 60 * 1000; // 5 minutos de cache
  */
 export function useRelatorios() {
   const [channel, setChannel] = useState("balcao"); // "balcao" | "geral"
-  const [period, setPeriod] = useState(1); // months: 1 | 3 | 6 | 12
+  const [period, setPeriod] = useState({ unit: "months", amount: 1 });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [reportData, setReportData] = useState(null);
