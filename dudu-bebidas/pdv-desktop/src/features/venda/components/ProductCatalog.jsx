@@ -2,6 +2,21 @@ import { formatBRL } from "../../../shared/utils/format";
 import { getPdvPrice } from "../utils/pricing";
 
 export default function ProductCatalog({ search, setSearch, productsError, productsLoading, filteredProducts, addToCart }) {
+  // Leitor de código de barras funciona como teclado: digita o EAN e manda
+  // um Enter sozinho. Sem isso, escanear só filtrava o card — o operador
+  // ainda precisava clicar nele pra ir pro carrinho, um passo a mais por
+  // item que anula a vantagem de usar o leitor.
+  const handleSearchKeyDown = (e) => {
+    if (e.key !== "Enter") return;
+    const term = search.trim().toLowerCase();
+    if (!term) return;
+    const match = filteredProducts.find((p) => (p.ean ?? "").toLowerCase() === term);
+    if (match) {
+      addToCart(match);
+      setSearch("");
+    }
+  };
+
   return (
     <div className="pdv-catalog">
       <input
@@ -9,6 +24,7 @@ export default function ProductCatalog({ search, setSearch, productsError, produ
         placeholder="🔍 Buscar por nome ou código de barras..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
+        onKeyDown={handleSearchKeyDown}
         autoFocus
       />
 
