@@ -22,6 +22,18 @@ export default function Checkout({ user, clearCart }) {
   const isRetirada = location.state?.isRetirada ?? false;
   const bairroCarrinho = location.state?.bairro ?? "";
 
+  const storeStatus = useStoreStatus();
+  const closed = !storeStatus.open;
+
+  const hoursData = useStoreHoursData();
+  const enabledMethods = hoursData?.config?.payment_methods_enabled;
+  const isMethodEnabled = (value) => enabledMethods?.[value] !== false;
+  // store_config.credit_installment_fee_rate é a fonte de verdade agora
+  // (fallback pro valor fixo enquanto hoursData ainda não carregou) — o
+  // servidor recalcula tudo de novo por segurança, isso aqui é só pra
+  // mostrar o total certo antes de confirmar.
+  const installmentFeeRate = hoursData?.config?.credit_installment_fee_rate;
+
   const {
     errorRef, payment, setPayment, installments, setInstallments,
     baseTotal, cardFee, finalTotal, errorMsg, setErrorMsg,
@@ -29,14 +41,10 @@ export default function Checkout({ user, clearCart }) {
     handleAddressChange, handleCepChange, handleCepBlur, handlePhoneChange,
     handleUseLastAddress, handleConfirmOrder, handleMercadoPagoSubmit,
     isDisabled, phoneDigits, cepDigits, ctaLabel,
-  } = useCheckoutForm({ user, cartItems, cartTotal, DELIVERY, isRetirada, bairroCarrinho, clearCart, navigate });
-
-  const storeStatus = useStoreStatus();
-  const closed = !storeStatus.open;
-
-  const hoursData = useStoreHoursData();
-  const enabledMethods = hoursData?.config?.payment_methods_enabled;
-  const isMethodEnabled = (value) => enabledMethods?.[value] !== false;
+  } = useCheckoutForm({
+    user, cartItems, cartTotal, DELIVERY, isRetirada, bairroCarrinho, clearCart, navigate,
+    installmentFeeRate,
+  });
 
   const mpConfig = useMercadoPagoConfig();
   const mpExtraOnlineOption = mpConfig.enabled && isMethodEnabled("mercadopago_card")
@@ -229,6 +237,7 @@ export default function Checkout({ user, clearCart }) {
               baseTotal={baseTotal}
               extraOnlineOptions={mpExtraOnlineOption}
               enabledMethods={enabledMethods}
+              installmentFeeRate={installmentFeeRate}
             >
               <MercadoPagoCardBrick
                 publicKey={mpConfig.publicKey}

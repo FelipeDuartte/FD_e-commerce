@@ -3,6 +3,7 @@ import {
   onlinePaymentOptions,
   MAX_INSTALLMENTS,
   INSTALLMENT_OPTIONS,
+  DEFAULT_INSTALLMENT_FEE_RATE,
   applyCreditCardFee,
 } from "../checkoutConstants";
 
@@ -36,6 +37,7 @@ function PayOptionGrid({ options, payment, setPayment, setInstallments, isDisabl
 export default function PaymentMethodSection({
   payment, setPayment, installments, setInstallments, isDisabled, baseTotal,
   extraOnlineOptions = [], enabledMethods, children,
+  installmentFeeRate = DEFAULT_INSTALLMENT_FEE_RATE,
 }) {
   // enabledMethods vem do store_config (payment_methods_enabled) — método
   // ausente do objeto (loja nunca mexeu nisso, ou ainda carregando) conta
@@ -76,7 +78,7 @@ export default function PaymentMethodSection({
                 disabled={isDisabled}
               >
                 {INSTALLMENT_OPTIONS.map((n) => {
-                  const optTotal = applyCreditCardFee(baseTotal, "credit_card", n);
+                  const optTotal = applyCreditCardFee(baseTotal, "credit_card", n, installmentFeeRate);
                   const perInstallment = optTotal / n;
                   return (
                     <option key={n} value={n}>

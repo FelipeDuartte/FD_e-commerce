@@ -5,12 +5,15 @@ import {
   loadLastDeliveryAddress,
   saveLastDeliveryAddress,
 } from "../utils/checkoutAddressStorage";
-import { INITIAL_ADDRESS, INSTALLMENT_FEE_RATE, roundCents } from "../checkoutConstants";
+import { INITIAL_ADDRESS, DEFAULT_INSTALLMENT_FEE_RATE, roundCents } from "../checkoutConstants";
 
 // Concentra todo o estado e as regras do checkout: endereço/CEP, forma de
 // pagamento/parcelas, validação e o submit do pedido. O componente só
 // renderiza o que este hook expõe.
-export function useCheckoutForm({ user, cartItems, cartTotal, DELIVERY, isRetirada, bairroCarrinho, clearCart, navigate }) {
+export function useCheckoutForm({
+  user, cartItems, cartTotal, DELIVERY, isRetirada, bairroCarrinho, clearCart, navigate,
+  installmentFeeRate = DEFAULT_INSTALLMENT_FEE_RATE,
+}) {
   const errorRef = useRef(null);
   const isProcessingRef = useRef(false);
 
@@ -18,10 +21,12 @@ export function useCheckoutForm({ user, cartItems, cartTotal, DELIVERY, isRetira
   const [payment, setPayment] = useState("pix");
   const [installments, setInstallments] = useState(1);
 
-  // Total já com a taxa da maquininha embutida (só quando for crédito)
+  // Total já com a taxa da maquininha embutida (só quando for crédito) —
+  // installmentFeeRate vem de store_config (ver Checkout.jsx), com a
+  // tabela fixa de checkoutConstants.js só como fallback.
   const baseTotal = cartTotal + DELIVERY;
   const cardFee = payment === "credit_card"
-    ? roundCents(baseTotal * (INSTALLMENT_FEE_RATE[installments] ?? 0))
+    ? roundCents(baseTotal * (installmentFeeRate[installments] ?? 0))
     : 0;
   const finalTotal = baseTotal + cardFee;
   const [loading, setLoading] = useState(false);

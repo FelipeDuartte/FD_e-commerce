@@ -16,6 +16,10 @@
 // Pagamento dividido: manda "payments": [{ "method": "cash", "amount": 20 },
 // { "method": "credit_card", "amount": 30 }] em vez de "paymentMethod" —
 // precisa somar exatamente o total do pedido (fulfillOrder valida).
+//
+// paymentMethod "credit_card" (forma única, não dividida) aceita
+// "installments": 1 a 8 — cobra a taxa real da maquininha por fora do preço
+// de tabela (ver INSTALLMENT_FEE_RATE em orderFulfillment.ts).
 // ─────────────────────────────────────────────────────────────
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -49,7 +53,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Acesso restrito a administradores de loja." }, 403);
     }
 
-    const { cartItems, paymentMethod, cashSessionId, discountAmount, payments, pdvCustomerId } = await req.json();
+    const { cartItems, paymentMethod, cashSessionId, discountAmount, payments, pdvCustomerId, installments } = await req.json();
 
     if (!cashSessionId) {
       return jsonResponse({ error: "Nenhum caixa aberto informado." }, 400);
@@ -81,13 +85,16 @@ Deno.serve(async (req) => {
       userId: null, // venda de balcão não tem conta de cliente associada
       cartItems,
       paymentMethod,
-      installments: null,
+      installments: installments ?? null, // só usado quando paymentMethod === 'credit_card'
       address: {}, // orders.address é jsonb NOT NULL, sem uso pra venda presencial
       channel: "balcao",
       cashSessionId,
       soldBy: admin.userId,
       status: "delivered", // venda presencial já está completa no ato
-      applyCardFee: false, // taxa da maquininha física já embutida no preço, não recalcula aqui
+      // Crédito no balcão agora cobra a taxa real da maquininha (parcelada);
+      // pro resto das formas (dinheiro/pix/débito/fiado) o cálculo interno já
+      // zera a taxa sozinho, então passar true aqui não afeta elas.
+      applyCardFee: true,
       discountAmount, // clamp/validação real acontece dentro do fulfillOrder
       payments, // pagamento dividido (2+ formas) — validação real dentro do fulfillOrder
       pdvCustomerId, // fiado — obrigatório quando paymentMethod === 'fiado', validado dentro do fulfillOrder
