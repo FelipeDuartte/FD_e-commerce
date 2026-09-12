@@ -106,7 +106,10 @@ export default function Pdv({ theme, onToggleTheme }) {
     return (
       <div className="pdv-app-shell">
         <div className="pdv-topbar">
-          <span className="pdv-topbar-brand">🧾 PDV — Dudu Bebidas</span>
+          <span className="pdv-topbar-brand">
+            <img src="/fdigital-logo.png" alt="FDigital" className="pdv-topbar-logo" />
+            FDigital — Dudu Bebidas
+          </span>
           {themeToggleBtn}
         </div>
         <div className="pdv-loading-screen">
@@ -121,7 +124,10 @@ export default function Pdv({ theme, onToggleTheme }) {
     return (
       <div className="pdv-app-shell">
         <div className="pdv-topbar">
-          <span className="pdv-topbar-brand">🧾 PDV — Dudu Bebidas</span>
+          <span className="pdv-topbar-brand">
+            <img src="/fdigital-logo.png" alt="FDigital" className="pdv-topbar-logo" />
+            FDigital — Dudu Bebidas
+          </span>
           {themeToggleBtn}
         </div>
         <OpenSessionForm
@@ -138,7 +144,10 @@ export default function Pdv({ theme, onToggleTheme }) {
   return (
     <div className="pdv-app-shell">
       <div className="pdv-topbar">
-        <span className="pdv-topbar-brand">🧾 PDV — Dudu Bebidas</span>
+        <span className="pdv-topbar-brand">
+          <img src="/fdigital-logo.png" alt="FDigital" className="pdv-topbar-logo" />
+          FDigital — Dudu Bebidas
+        </span>
         <div className="pdv-topbar-status">
           <span>
             Caixa aberto às {new Date(cashSession.session.opened_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}

@@ -37,7 +37,10 @@ export default function Login({ theme, onToggleTheme }) {
         {theme === "light" ? "🌙" : "☀️"}
       </button>
       <form className="pdv-login-card" onSubmit={handleSubmit}>
-        <h1 className="adm-title">🧾 PDV</h1>
+        <h1 className="adm-title pdv-login-title">
+          <img src="/fdigital-logo.png" alt="FDigital" className="pdv-login-logo" />
+          FDigital
+        </h1>
         <p className="adm-subtitle">Entre com sua conta de administrador da loja.</p>
 
         {errorMsg && <div className="adm-modal-error">⚠️ {errorMsg}</div>}

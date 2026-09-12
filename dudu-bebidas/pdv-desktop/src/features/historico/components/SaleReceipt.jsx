@@ -19,10 +19,16 @@ function itemLines(sale) {
 export default function SaleReceipt({ sale }) {
   if (!sale) return null;
 
+  const showInstallments = sale.paymentMethod === "credit_card" && sale.installments > 1;
+
   return (
     <div className="pdv-print-receipt">
+      <img src="/logo.png" alt="Dudu Bebidas" className="pdv-receipt-logo" />
+
       <div className="pdv-receipt-header">
         <strong>Dudu Bebidas</strong>
+        <div>Edgard Torres, 650</div>
+        <div>(34) 3451-0200</div>
         {sale.orderNumber != null && <div>Pedido #{sale.orderNumber}</div>}
         <div>{new Date(sale.createdAt).toLocaleString("pt-BR")}</div>
       </div>
@@ -40,6 +46,7 @@ export default function SaleReceipt({ sale }) {
         <strong>{formatBRL(sale.total)}</strong>
       </div>
       <div>Pagamento: {methodLabel(sale.paymentMethod)}</div>
+      {showInstallments && <div>Parcelado em {sale.installments}x</div>}
     </div>
   );
 }
