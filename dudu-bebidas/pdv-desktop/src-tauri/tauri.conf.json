@@ -12,11 +12,12 @@
   "app": {
     "windows": [
       {
-        "title": "PDV — Dudu Bebidas",
+        "title": "FDigital — Dudu Bebidas",
         "width": 1280,
         "height": 800,
         "minWidth": 1024,
-        "minHeight": 700
+        "minHeight": 700,
+        "additionalBrowserArgs": "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --kiosk-printing"
       }
     ],
     "security": {

@@ -55,11 +55,30 @@
 }
 
 .pdv-topbar-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 18px;
   color: var(--c-accent);
   letter-spacing: 0.2px;
+}
+
+.pdv-topbar-logo {
+  height: 28px;
+  width: auto;
+}
+
+.pdv-login-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pdv-login-logo {
+  height: 40px;
+  width: auto;
 }
 
 .pdv-topbar-status {
@@ -1122,6 +1141,12 @@
    .pdv-print-receipt) de "80mm" pra "58mm". */
 .pdv-print-receipt {
   display: none;
+}
+
+.pdv-receipt-logo {
+  display: block;
+  width: 28mm;
+  margin: 0 auto 2mm;
 }
 
 .pdv-receipt-header {
