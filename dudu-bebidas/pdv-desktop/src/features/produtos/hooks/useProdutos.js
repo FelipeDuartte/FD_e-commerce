@@ -13,7 +13,12 @@ import { useProductImageSearch } from "./useProductImageSearch";
 // Concentra todo o estado/lógica da view "Produtos": listagem, filtros, o
 // modal de criar/editar (incluindo a busca/upload de imagem do produto) e
 // a exclusão (com confirmação em modal próprio).
-export function useProdutos() {
+// onProductsChanged: avisa quem chamou (Pdv.jsx) sempre que um produto é
+// criado/editado/desativado/excluído aqui — a tela de Venda tem sua PRÓPRIA
+// cópia da lista (useProductCatalog), carregada uma vez só, e sem isso ela
+// nunca saberia que algo mudou (ex: EAN cadastrado agora não aparecia na
+// busca da Venda até reiniciar o app).
+export function useProdutos(onProductsChanged) {
   const [products, setProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(false);
   const [productsError, setProductsError] = useState("");
@@ -77,6 +82,8 @@ export function useProdutos() {
       // tratamos como "aparece no site" (mesmo default de produto novo),
       // sem mexer em quem já foi salvo explicitamente como desmarcado.
       show_on_site: product.show_on_site ?? true,
+      pack_of_product_id: product.pack_of_product_id ?? "",
+      pack_units: product.pack_units ?? "",
     });
     setModalError("");
     setProductModal(product);
@@ -108,6 +115,7 @@ export function useProdutos() {
     try {
       await saveAdminProduct(row, isNew, previousStock);
       await fetchProducts();
+      onProductsChanged?.();
       setProductModal(null);
     } catch (error) {
       console.error(error);
@@ -123,6 +131,7 @@ export function useProdutos() {
     try {
       const updatedProduct = await toggleAdminProductActive(product);
       setProducts((prev) => prev.map((p) => (p.id === product.id ? updatedProduct : p)));
+      onProductsChanged?.();
     } catch (error) {
       console.error(error);
       setProductsError(error.message);
@@ -148,6 +157,7 @@ export function useProdutos() {
     try {
       await deleteAdminProduct(productToDelete);
       setProducts((prev) => prev.filter((p) => p.id !== productToDelete.id));
+      onProductsChanged?.();
       setProductToDelete(null);
     } catch (error) {
       console.error(error);
@@ -157,7 +167,7 @@ export function useProdutos() {
   };
 
   return {
-    products, productsLoading, productsError, productSearch, setProductSearch,
+    products, fetchProducts, productsLoading, productsError, productSearch, setProductSearch,
     productCategory, setProductCategory, productModal, setProductModal,
     modalForm, modalSaving, modalError, togglingId, filteredProducts,
     openNewProduct, openEditProduct, handleModalChange, handleModalSave,

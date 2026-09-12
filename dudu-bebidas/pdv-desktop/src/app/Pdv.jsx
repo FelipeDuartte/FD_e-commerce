@@ -65,16 +65,20 @@ export default function Pdv({ theme, onToggleTheme }) {
   const catalog = useProductCatalog();
   const cart = useCart();
   const installmentFeeRate = useStoreCreditFeeRate();
+  const produtos = useProdutos(() => catalog.reload());
+  // Vender um fardo mexe no estoque da BASE (outro produto) — sem isso,
+  // a aba Produtos ficava com número desatualizado até o operador trocar
+  // de aba e voltar, já que ela tem sua própria lista carregada uma vez,
+  // independente do catálogo de Venda.
   const sale = useSale(
     cashSession.session?.id,
     {
       cart: cart.cart, cartTotal: cart.cartTotal, discountAmount: cart.discountAmount,
       clearCart: cart.clearCart, resetDiscount: () => cart.setDiscountInput(""),
-      reloadProducts: catalog.reload,
+      reloadProducts: () => { catalog.reload(); produtos.fetchProducts(); },
     },
     { onFiadoSale: fiado.reload, installmentFeeRate },
   );
-  const produtos = useProdutos();
   const { categories: dbCategories } = useAdminCategories();
 
   // Só ativa os atalhos com o caixa aberto (é quando as abas de fato existem

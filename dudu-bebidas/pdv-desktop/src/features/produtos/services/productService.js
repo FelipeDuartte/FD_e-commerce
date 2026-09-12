@@ -17,6 +17,7 @@ export function buildProductPayload(form) {
   const oldPrice = form.old_price !== "" ? Number(form.old_price) : null;
   const price = Number(form.price);
   const stock = Number(form.stock);
+  const packOfProductId = optionalValue(form.pack_of_product_id);
 
   return {
     id: String(form.id).trim(),
@@ -33,6 +34,11 @@ export function buildProductPayload(form) {
     promotion: form.promotion,
     supplier: optionalValue(form.supplier),
     ean: optionalValue(form.ean),
+    // Fardo/caixa de outro produto — quando preenchido, o "stock" acima é
+    // só o último valor calculado (ver sync_pack_stock); quem manda de
+    // verdade é o estoque do produto base.
+    pack_of_product_id: packOfProductId,
+    pack_units: packOfProductId ? Number(form.pack_units) : null,
   };
 }
 
@@ -51,6 +57,15 @@ export function validateProductPayload(product) {
 
   if (product.promotion && product.old_price !== null && product.old_price <= product.price) {
     return "O preço antigo deve ser maior que o preço atual.";
+  }
+
+  if (product.pack_of_product_id) {
+    if (product.pack_of_product_id === product.id) {
+      return "Um produto não pode ser fardo de si mesmo.";
+    }
+    if (!Number.isInteger(product.pack_units) || product.pack_units < 2) {
+      return "Informe quantas unidades esse fardo tem (mínimo 2).";
+    }
   }
 
   return null;
@@ -105,6 +120,18 @@ export async function saveAdminProduct(product, isNew, previousStock = null) {
         console.error("[productService] Erro ao registrar movimentação de estoque:", movementError);
       }
     }
+  }
+
+  // Recalcula o estoque exibido nas duas direções: se este produto é um
+  // fardo, atualiza ele a partir da base recém-vinculada; se é uma base,
+  // atualiza qualquer fardo que dependa dela (ex: editou o estoque da base
+  // na mão). Sem isso o número só ficaria certo depois da próxima venda.
+  const { error: syncError } = await supabase.rpc("sync_pack_stock", {
+    p_store_id: product.store_id,
+    p_product_id: product.id,
+  });
+  if (syncError) {
+    console.error("[productService] Erro ao sincronizar estoque de fardo:", syncError);
   }
 }
 

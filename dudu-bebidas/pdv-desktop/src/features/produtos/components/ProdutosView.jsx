@@ -24,6 +24,7 @@ export default function ProdutosView({ produtos, categories }) {
           handleModalSave={handleModalSave}
           setProductModal={setProductModal}
           categories={categories}
+          products={products}
           imageStatus={productImageSearch.status}
           imageError={productImageSearch.error}
           imageProgress={productImageSearch.progress}

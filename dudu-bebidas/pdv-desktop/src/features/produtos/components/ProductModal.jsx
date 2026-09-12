@@ -11,6 +11,7 @@ export default function ProductModal({
   handleModalSave,
   setProductModal,
   categories = [],
+  products = [],
   imageStatus,
   imageError,
   imageProgress,
@@ -18,6 +19,13 @@ export default function ProductModal({
   onResetImage,
   onRequestDelete,
 }) {
+  const isPack = Boolean(modalForm.pack_of_product_id);
+  // Só produtos avulsos (não-fardo) podem virar base — evita fardo-de-fardo.
+  // Exclui o próprio produto em edição, pra não virar base de si mesmo.
+  const baseProductOptions = products.filter(
+    (p) => !p.pack_of_product_id && p.id !== modalForm.id,
+  );
+
   return (
     <>
       <div className="adm-modal-overlay" onClick={() => !modalSaving && setProductModal(null)} />
@@ -77,8 +85,10 @@ export default function ProductModal({
                 min="0"
                 value={modalForm.stock}
                 onChange={handleModalChange}
+                disabled={isPack}
                 required
               />
+              {isPack && <span className="adm-field-hint">Calculado a partir do produto avulso.</span>}
             </div>
           </div>
 
@@ -102,6 +112,42 @@ export default function ProductModal({
             <div className="adm-form-field">
               <label>EAN</label>
               <input name="ean" value={modalForm.ean ?? ""} onChange={handleModalChange} />
+            </div>
+          </div>
+
+          <div className="adm-pack-fields">
+            <p className="adm-pack-hint">
+              📦 <strong>Este produto é um fardo/caixa fechada de outro item?</strong> Selecione o produto
+              avulso abaixo — o estoque do fardo passa a ser calculado sozinho a partir do estoque dele,
+              em vez de ter um número próprio pra manter atualizado na mão.
+            </p>
+            <div className="adm-form-row">
+              <div className="adm-form-field">
+                <label>Produto avulso</label>
+                <select name="pack_of_product_id" value={modalForm.pack_of_product_id ?? ""} onChange={handleModalChange}>
+                  <option value="">— Não é fardo, produto avulso —</option>
+                  {baseProductOptions.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {isPack && (
+                <div className="adm-form-field">
+                  <label>Unidades por fardo</label>
+                  <input
+                    name="pack_units"
+                    type="number"
+                    min="2"
+                    autoComplete="off"
+                    value={modalForm.pack_units ?? ""}
+                    onChange={handleModalChange}
+                    placeholder="ex: 12"
+                    required
+                  />
+                </div>
+              )}
             </div>
           </div>
 

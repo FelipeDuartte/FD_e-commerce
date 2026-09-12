@@ -13,6 +13,8 @@ export const EMPTY_PRODUCT = {
   promotion: false,
   supplier: "",
   ean: "",
+  pack_of_product_id: "",
+  pack_units: "",
 };
 
 // Próximo ID sequencial (0001, 0002...) a partir do maior ID puramente
