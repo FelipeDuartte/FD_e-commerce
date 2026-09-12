@@ -235,12 +235,21 @@
   display: grid;
   grid-template-columns: 1fr 360px;
   gap: 20px;
-  align-items: start;
+  align-items: stretch;
+  height: 100%;
 }
 
 @media (max-width: 900px) {
   .pdv-layout {
     grid-template-columns: 1fr;
+    height: auto;
+  }
+  .pdv-cart {
+    height: auto;
+  }
+  .pdv-cart-items {
+    flex: none;
+    max-height: 320px;
   }
 }
 
@@ -248,12 +257,39 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-height: 0;
 }
 
+/* .adm-product-search já tem flex:1 (pra crescer na HORIZONTAL, ao lado
+   do filtro de categoria na aba Produtos) — dentro dessa coluna vertical
+   isso fazia o campo de busca esticar e brigar por altura com o grid de
+   produtos. Anula só aqui. */
+.pdv-catalog > .adm-product-search {
+  flex: none;
+}
+
+/* Sem isso, o catálogo (o lado que mais cresce, com o estoque inteiro da
+   loja) simplesmente estourava a altura do .pdv-layout — e como o
+   carrinho ao lado é height:100% desse mesmo layout, ele "esticava"
+   junto, empurrando o botão de finalizar pra fora da tela. Agora só o
+   grid de produtos rola, a busca fica sempre visível no topo. */
 .pdv-product-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 10px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+@media (max-width: 900px) {
+  .pdv-catalog {
+    min-height: auto;
+  }
+  .pdv-product-grid {
+    flex: none;
+    overflow-y: visible;
+  }
 }
 
 .pdv-product-card {
@@ -296,15 +332,21 @@
   border: 1px solid rgba(255, 215, 0, 0.15);
   background: color-mix(in srgb, var(--c-text) 3%, transparent);
   color: var(--c-text);
-  position: sticky;
-  top: 16px;
+  height: 100%;
+  min-height: 0;
 }
 
+/* flex:1 em vez de max-height fixo — a lista ocupa só o espaço que sobra
+   depois de pagamento/desconto/total/botão (que nunca podem ser
+   empurrados pra fora da tela), e rola sozinha quando tem muito item.
+   Em telas curtas isso encolhe a lista automaticamente, em vez de
+   estourar a altura da tela como um max-height fixo faria. */
 .pdv-cart-items {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 320px;
+  flex: 1;
+  min-height: 60px;
   overflow-y: auto;
 }
 
