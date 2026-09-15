@@ -114,6 +114,35 @@
   gap: 8px;
 }
 
+.pdv-update-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: rgba(255, 208, 0, 0.08);
+  border: 1px solid rgba(255, 208, 0, 0.3);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--c-text);
+}
+
+.pdv-update-btn {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--c-accent);
+  background: var(--c-accent);
+  color: #1a1300;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+}
+.pdv-update-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .pdv-body {
   flex: 1;
   display: flex;

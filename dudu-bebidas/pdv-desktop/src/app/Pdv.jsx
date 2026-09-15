@@ -8,6 +8,7 @@ import { useFiadoCustomers } from "../features/clientes/hooks/useFiadoCustomers"
 import { useProdutos } from "../features/produtos/hooks/useProdutos";
 import { useAdminCategories } from "../features/produtos/hooks/useAdminCategories";
 import { useContasAPagar } from "../features/contas-a-pagar/hooks/useContasAPagar";
+import { useAppUpdater } from "../shared/hooks/useAppUpdater";
 import OpenSessionForm from "../features/caixa/components/OpenSessionForm";
 import ProductCatalog from "../features/venda/components/ProductCatalog";
 import CartPanel from "../features/venda/components/CartPanel";
@@ -80,6 +81,14 @@ export default function Pdv({ theme, onToggleTheme }) {
     { onFiadoSale: fiado.reload, installmentFeeRate },
   );
   const { categories: dbCategories } = useAdminCategories();
+  const updater = useAppUpdater();
+
+  // Verifica uma vez ao abrir o app, com ou sem caixa aberto — só avisa,
+  // nunca instala sozinho (ver useAppUpdater).
+  useEffect(() => {
+    updater.checkForUpdate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Só ativa os atalhos com o caixa aberto (é quando as abas de fato existem
   // na tela) — antes disso o app mostra a tela de abrir caixa, sem nav rail.
@@ -164,10 +173,24 @@ export default function Pdv({ theme, onToggleTheme }) {
         </div>
       </div>
 
-      {(sale.saleSuccess || sale.saleError) && (
+      {(sale.saleSuccess || sale.saleError || updater.updateAvailable || updater.error) && (
         <div className="pdv-banner-row">
           {sale.saleSuccess && <div className="adm-store-success">✅ {sale.saleSuccess}</div>}
           {sale.saleError && <div className="adm-modal-error">⚠️ {sale.saleError}</div>}
+          {updater.updateAvailable && (
+            <div className="pdv-update-banner">
+              <span>🔄 Nova versão disponível (v{updater.updateVersion})</span>
+              <button
+                type="button"
+                className="pdv-update-btn"
+                onClick={updater.installUpdate}
+                disabled={updater.installing}
+              >
+                {updater.installing ? "Instalando..." : "Atualizar agora"}
+              </button>
+            </div>
+          )}
+          {updater.error && <div className="adm-modal-error">⚠️ {updater.error}</div>}
         </div>
       )}
 
