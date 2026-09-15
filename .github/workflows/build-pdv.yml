@@ -8,6 +8,11 @@ on:
 
 jobs:
   build:
+    # GITHUB_TOKEN vem só com leitura por padrão — sem isso o tauri-action
+    # não consegue criar a Release (erro "Resource not accessible by
+    # integration" ao tentar publicar).
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
