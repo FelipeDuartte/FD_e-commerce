@@ -44,13 +44,21 @@ jobs:
           echo "VITE_SUPABASE_KEY=${{ secrets.PDV_VITE_SUPABASE_KEY }}" >> .env
           echo "VITE_STORE_SLUG=${{ secrets.PDV_VITE_STORE_SLUG }}" >> .env
 
+      # Publica automaticamente uma GitHub Release com os instaladores +
+      # o latest.json assinado (o PDV já instalado consulta esse arquivo
+      # sozinho — ver plugins.updater.endpoints em tauri.conf.json — e
+      # se avisa quando tem versão nova, sem precisar reinstalar na mão).
+      # Os dois SOs da matrix publicam na MESMA release (mesma tag),
+      # suportado nativamente pelo tauri-action.
       - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           projectPath: dudu-bebidas/pdv-desktop
-
-      - name: Sobe os instaladores gerados
-        uses: actions/upload-artifact@v4
-        with:
-          name: pdv-desktop-${{ matrix.label }}
-          path: dudu-bebidas/pdv-desktop/src-tauri/target/release/bundle/**
-          if-no-files-found: error
+          tagName: pdv-v__VERSION__
+          releaseName: "PDV Dudu Bebidas v__VERSION__"
+          releaseBody: "Atualização do PDV — instale manualmente aqui, ou deixe o app já instalado se atualizar sozinho."
+          releaseDraft: false
+          prerelease: false

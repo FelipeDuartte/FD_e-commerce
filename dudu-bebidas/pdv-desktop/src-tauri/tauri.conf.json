@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "PDV Dudu Bebidas",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "identifier": "com.dudubebidas.pdv",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -27,6 +27,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "createUpdaterArtifacts": true,
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -34,5 +35,13 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEVBODk0QjUxRTA4QzEzMjMKUldRakU0emdVVXVKNnVMTXZ1RElpZmVUanRoaXBUK09UUjE5Qlc2QUVNTURWOHE0azJ2c1d0MVIK",
+      "endpoints": [
+        "https://github.com/FelipeDuartte/FD_e-commerce/releases/latest/download/latest.json"
+      ]
+    }
   }
 }
