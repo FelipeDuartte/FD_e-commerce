@@ -89,7 +89,6 @@ export default function BillModal({
               <input
                 type="number"
                 min="1"
-                max="92"
                 value={repeatMonths}
                 onChange={(e) => setRepeatMonths(Number(e.target.value) || 1)}
               />
