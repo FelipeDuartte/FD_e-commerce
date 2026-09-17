@@ -67,3 +67,47 @@ jobs:
           releaseBody: "Atualização do PDV — instale manualmente aqui, ou deixe o app já instalado se atualizar sozinho."
           releaseDraft: false
           prerelease: false
+
+  # O repositório é privado — GitHub bloqueia download anônimo de asset
+  # de Release em repo privado, então o PDV já instalado nunca conseguia
+  # enxergar o latest.json (era por isso que o auto-update não avisava
+  # nada). Esse job espelha só os arquivos JÁ COMPILADOS (nunca o código)
+  # pra um bucket público do Supabase Storage, de onde o updater
+  # realmente consegue baixar sem login.
+  mirror-to-storage:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Descobre a versão publicada
+        id: version
+        run: |
+          VERSION=$(grep -m1 '"version"' dudu-bebidas/pdv-desktop/src-tauri/tauri.conf.json | sed -E 's/.*"version": *"([^"]+)".*/\1/')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Baixa os arquivos da Release recém-publicada
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release download "pdv-v${{ steps.version.outputs.version }}" --dir ./release-assets --repo ${{ github.repository }}
+
+      - name: Reescreve as URLs do latest.json pro Storage público
+        run: |
+          STORAGE_BASE="${{ secrets.PDV_VITE_SUPABASE_URL }}/storage/v1/object/public/pdv-releases"
+          jq --arg base "$STORAGE_BASE" '
+            .platforms |= with_entries(.value.url |= ($base + "/" + (. | split("/") | last)))
+          ' ./release-assets/latest.json > ./release-assets/latest.json.tmp
+          mv ./release-assets/latest.json.tmp ./release-assets/latest.json
+
+      - name: Sobe os arquivos pro bucket público (pdv-releases)
+        run: |
+          BASE_URL="${{ secrets.PDV_VITE_SUPABASE_URL }}/storage/v1/object/pdv-releases"
+          for file in ./release-assets/*; do
+            name=$(basename "$file")
+            echo "Subindo $name..."
+            curl -sf -X POST "$BASE_URL/$name" \
+              -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+              -H "x-upsert: true" \
+              -H "Content-Type: application/octet-stream" \
+              --data-binary "@$file"
+          done
