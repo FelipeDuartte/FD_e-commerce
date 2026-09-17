@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getVersion } from "@tauri-apps/api/app";
 import { supabase } from "../shared/supabase/Supabaseclient";
 
 export default function Login({ theme, onToggleTheme }) {
@@ -6,6 +7,13 @@ export default function Login({ theme, onToggleTheme }) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  // Só pra conferir rapidinho qual versão está instalada (ex: depois de
+  // uma atualização) sem precisar abrir nada do Windows/Mac.
+  const [appVersion, setAppVersion] = useState("");
+
+  useEffect(() => {
+    getVersion().then(setAppVersion).catch(() => {});
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -69,6 +77,8 @@ export default function Login({ theme, onToggleTheme }) {
         <button type="submit" className="adm-btn-new-product" disabled={loading}>
           {loading ? "Entrando..." : "Entrar"}
         </button>
+
+        {appVersion && <p className="pdv-login-version">v{appVersion}</p>}
       </form>
     </div>
   );
