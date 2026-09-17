@@ -135,9 +135,11 @@ export default function HistorySalesList({ currentSessionId, sessionSales, cance
                     {new Date(sale.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                   </span>
                 </div>
-                <span className="pdv-sale-items" title={sale.itemsLabel}>
-                  {sale.itemsLabel || `${sale.itemCount} item(ns)`}
-                </span>
+                <div className="pdv-sale-items">
+                  {sale.items?.length
+                    ? sale.items.map((line, i) => <div key={i}>{line}</div>)
+                    : `${sale.itemCount} item(ns)`}
+                </div>
                 <span>{formatSalePaymentLabel(sale)}</span>
                 <strong>{formatBRL(sale.total)}</strong>
                 <div className="pdv-sale-actions">
