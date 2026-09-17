@@ -50,6 +50,10 @@ function mapSaleRow(o) {
     createdAt: o.created_at,
     cashSessionId: o.cash_session_id,
     itemCount: items.reduce((sum, it) => sum + it.quantity, 0),
+    // Array (uma linha por item) — usado no Histórico e na notinha impressa
+    // pra mostrar cada produto na própria linha, em vez de um texto corrido
+    // cortado. itemsLabel continua existindo por compatibilidade (tooltip).
+    items: items.map((it) => (it.quantity > 1 ? `${it.name} x${it.quantity}` : it.name)),
     itemsLabel: items
       .map((it) => (it.quantity > 1 ? `${it.name} x${it.quantity}` : it.name))
       .join(", "),

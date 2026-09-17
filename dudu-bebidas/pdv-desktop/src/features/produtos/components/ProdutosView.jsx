@@ -1,6 +1,7 @@
 import { formatBRL } from "../../../shared/utils/format";
 import ProductModal from "./ProductModal";
 import DeleteProductModal from "./DeleteProductModal";
+import RegisterPurchaseModal from "./RegisterPurchaseModal";
 
 export default function ProdutosView({ produtos, categories }) {
   const {
@@ -10,6 +11,7 @@ export default function ProdutosView({ produtos, categories }) {
     handleModalChange, handleModalSave, togglingId, openNewProduct,
     openEditProduct, handleToggleActive, productImageSearch,
     productToDelete, deleting, deleteError, requestDelete, dismissDelete, confirmDelete,
+    productToPurchase, requestPurchase, dismissPurchase, confirmPurchase,
   } = produtos;
 
   return (
@@ -44,6 +46,14 @@ export default function ProdutosView({ produtos, categories }) {
           deleteError={deleteError}
           onConfirm={confirmDelete}
           onDismiss={dismissDelete}
+        />
+      )}
+
+      {productToPurchase && (
+        <RegisterPurchaseModal
+          product={productToPurchase}
+          onConfirm={confirmPurchase}
+          onDismiss={dismissPurchase}
         />
       )}
 
@@ -92,7 +102,7 @@ export default function ProdutosView({ produtos, categories }) {
           <table className="adm-product-table">
             <thead>
               <tr>
-                {["ID", "Nome", "Categoria", "Preço", "Estoque", "Status", "Ações"].map((h) => (
+                {["ID", "Nome", "Categoria", "Preço", "Custo", "Margem", "Estoque", "Status", "Ações"].map((h) => (
                   <th key={h}>{h}</th>
                 ))}
               </tr>
@@ -106,6 +116,18 @@ export default function ProdutosView({ produtos, categories }) {
                     <span className="adm-cat-badge">{p.category}</span>
                   </td>
                   <td>{formatBRL(p.price)}</td>
+                  <td>{p.cost_price ? formatBRL(p.cost_price) : "—"}</td>
+                  <td>
+                    {p.cost_price ? (
+                      <span>
+                        {formatBRL(p.price - p.cost_price)}
+                        {" "}
+                        ({(((p.price - p.cost_price) / p.price) * 100).toFixed(0)}%)
+                      </span>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
                   <td>
                     <span className={`adm-stock-badge ${p.stock === 0 ? "zero" : p.stock < 10 ? "low" : "ok"}`}>
                       {p.stock}
@@ -119,6 +141,9 @@ export default function ProdutosView({ produtos, categories }) {
                   <td className="adm-td-actions">
                     <button className="adm-btn-edit" onClick={() => openEditProduct(p)}>
                       ✏️ Editar
+                    </button>
+                    <button className="adm-btn-edit" onClick={() => requestPurchase(p)}>
+                      📦 Comprar
                     </button>
                     <button
                       className={`adm-btn-toggle ${p.is_active ? "deactivate" : "activate"}`}

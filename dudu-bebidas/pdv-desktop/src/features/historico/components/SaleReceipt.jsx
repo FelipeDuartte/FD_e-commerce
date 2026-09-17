@@ -4,8 +4,8 @@ import { formatSalePaymentLabel } from "../../../shared/constants";
 // Uma linha por item em vez do texto corrido — cabe melhor na largura
 // estreita da bobina térmica (ver .pdv-print-receipt em Pdv.css).
 function itemLines(sale) {
-  if (!sale.itemsLabel) return [`${sale.itemCount} item(ns)`];
-  return sale.itemsLabel.split(", ");
+  if (!sale.items?.length) return [`${sale.itemCount} item(ns)`];
+  return sale.items;
 }
 
 // Só existe pra virar a única coisa visível na tela quando window.print()

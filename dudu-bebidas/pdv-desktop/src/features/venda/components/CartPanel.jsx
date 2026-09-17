@@ -5,6 +5,22 @@ import FiadoCustomerPicker from "./FiadoCustomerPicker";
 
 const INSTALLMENT_OPTIONS = Array.from({ length: MAX_INSTALLMENTS_PDV }, (_, i) => i + 1);
 
+// Sistema antigo do cliente navegava a forma de pagamento com as
+// setinhas do teclado — reproduz isso aqui: ↑↓←→ move o foco entre os
+// botões (2 colunas, mesmo layout do CSS), Enter/Espaço já seleciona
+// sozinho (comportamento nativo de <button>, não precisa de código extra).
+const PAYMENT_GRID_COLUMNS = 2;
+
+function handlePaymentGridKeyDown(e, index, total) {
+  const deltas = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: PAYMENT_GRID_COLUMNS, ArrowUp: -PAYMENT_GRID_COLUMNS };
+  const delta = deltas[e.key];
+  if (delta === undefined) return;
+  e.preventDefault();
+  const next = (index + delta + total) % total;
+  const buttons = e.currentTarget.parentElement.querySelectorAll(".pdv-payment-btn");
+  buttons[next]?.focus();
+}
+
 export default function CartPanel({
   cart, updateQuantity, removeFromCart,
   paymentMethod, setPaymentMethod, installments, setInstallments, discountMode, setDiscountMode, discountInput, setDiscountInput,
@@ -54,11 +70,12 @@ export default function CartPanel({
       {!splitMode ? (
         <>
           <div className="pdv-payment-methods">
-            {PAYMENT_METHODS.map((m) => (
+            {PAYMENT_METHODS.map((m, i) => (
               <button
                 key={m.value}
                 className={`pdv-payment-btn ${paymentMethod === m.value ? "active" : ""}`}
                 onClick={() => setPaymentMethod(m.value)}
+                onKeyDown={(e) => handlePaymentGridKeyDown(e, i, PAYMENT_METHODS.length)}
               >
                 {m.icon} {m.label}
               </button>
