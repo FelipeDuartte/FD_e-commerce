@@ -41,6 +41,10 @@ function mapSaleRow(o) {
     total: o.total,
     discountAmount: o.discount_amount,
     paymentMethod: o.payment_method,
+    // Detalhamento real de quando payment_method === "misto" (pagamento
+    // dividido) — sem isso, o histórico só mostrava "misto" sem dizer
+    // quais formas de verdade compuseram a venda.
+    payments: (o.order_payments ?? []).map((p) => ({ method: p.method, amount: p.amount })),
     installments: o.installments,
     cancelled: o.status === "cancelled",
     createdAt: o.created_at,
@@ -55,7 +59,7 @@ function mapSaleRow(o) {
 async function queryPdvSales({ sessionId, sinceDays, onlyCancelled, limit } = {}) {
   let query = supabase
     .from("orders")
-    .select("id, order_number, total, discount_amount, payment_method, installments, status, created_at, cash_session_id, order_items(name, quantity)")
+    .select("id, order_number, total, discount_amount, payment_method, installments, status, created_at, cash_session_id, order_items(name, quantity), order_payments(method, amount)")
     .eq("channel", "balcao")
     .order("created_at", { ascending: false });
 

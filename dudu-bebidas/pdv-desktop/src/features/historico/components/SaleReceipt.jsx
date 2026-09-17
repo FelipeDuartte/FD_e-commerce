@@ -1,10 +1,5 @@
 import { formatBRL } from "../../../shared/utils/format";
-import { PAYMENT_METHODS } from "../../../shared/constants";
-
-function methodLabel(method) {
-  const known = PAYMENT_METHODS.find((m) => m.value === method);
-  return known ? `${known.icon} ${known.label}` : method;
-}
+import { formatSalePaymentLabel } from "../../../shared/constants";
 
 // Uma linha por item em vez do texto corrido — cabe melhor na largura
 // estreita da bobina térmica (ver .pdv-print-receipt em Pdv.css).
@@ -45,7 +40,14 @@ export default function SaleReceipt({ sale }) {
         <span>Total</span>
         <strong>{formatBRL(sale.total)}</strong>
       </div>
-      <div>Pagamento: {methodLabel(sale.paymentMethod)}</div>
+      <div>Pagamento: {formatSalePaymentLabel(sale)}</div>
+      {sale.paymentMethod === "misto" && sale.payments?.length > 0 && (
+        <div className="pdv-receipt-split">
+          {sale.payments.map((p, i) => (
+            <div key={i}>{formatSalePaymentLabel({ paymentMethod: p.method })}: {formatBRL(p.amount)}</div>
+          ))}
+        </div>
+      )}
       {showInstallments && <div>Parcelado em {sale.installments}x</div>}
     </div>
   );

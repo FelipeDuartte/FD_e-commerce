@@ -1236,6 +1236,12 @@
   margin: 4px 0;
 }
 
+.pdv-receipt-split {
+  margin-left: 6px;
+  font-size: 10px;
+  opacity: 0.85;
+}
+
 @media print {
   @page {
     size: 80mm auto;
