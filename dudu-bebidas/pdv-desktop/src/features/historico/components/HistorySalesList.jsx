@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { formatBRL } from "../../../shared/utils/format";
-import { PAYMENT_METHODS } from "../../../shared/constants";
+import { formatSalePaymentLabel, formatPaymentMethodLabel } from "../../../shared/constants";
 import { listRecentSales, listCancelledSales, listFullHistorySales } from "../../../shared/services/salesService";
 import SaleReceipt from "./SaleReceipt";
 
@@ -11,18 +11,22 @@ const FILTERS = [
   { key: "completo", label: "Completo", hint: "Histórico geral — últimas 150 vendas" },
 ];
 
-function methodLabel(method) {
-  const known = PAYMENT_METHODS.find((m) => m.value === method);
-  return known ? `${known.icon} ${known.label}` : method;
-}
-
+// Explode venda dividida ("misto") nas formas reais que a compuseram —
+// senão o resumo por forma de pagamento juntava tudo num balde "misto"
+// sem dizer quanto foi de cada forma de verdade.
 function summarize(sales) {
   const active = sales.filter((s) => !s.cancelled);
   const cancelledCount = sales.length - active.length;
   const total = active.reduce((sum, s) => sum + s.total, 0);
   const byMethod = {};
   for (const s of active) {
-    byMethod[s.paymentMethod] = (byMethod[s.paymentMethod] ?? 0) + s.total;
+    if (s.paymentMethod === "misto" && s.payments?.length) {
+      for (const p of s.payments) {
+        byMethod[p.method] = (byMethod[p.method] ?? 0) + p.amount;
+      }
+    } else {
+      byMethod[s.paymentMethod] = (byMethod[s.paymentMethod] ?? 0) + s.total;
+    }
   }
   return { activeCount: active.length, cancelledCount, total, byMethod };
 }
@@ -100,7 +104,7 @@ export default function HistorySalesList({ currentSessionId, sessionSales, cance
             <div className="pdv-history-summary-methods">
               {Object.entries(summary.byMethod).map(([method, amount]) => (
                 <span key={method} className="pdv-history-summary-method">
-                  <span>{methodLabel(method)}</span>
+                  <span>{formatPaymentMethodLabel(method)}</span>
                   <strong>{formatBRL(amount)}</strong>
                 </span>
               ))}
@@ -134,7 +138,7 @@ export default function HistorySalesList({ currentSessionId, sessionSales, cance
                 <span className="pdv-sale-items" title={sale.itemsLabel}>
                   {sale.itemsLabel || `${sale.itemCount} item(ns)`}
                 </span>
-                <span>{methodLabel(sale.paymentMethod)}</span>
+                <span>{formatSalePaymentLabel(sale)}</span>
                 <strong>{formatBRL(sale.total)}</strong>
                 <div className="pdv-sale-actions">
                   <button
