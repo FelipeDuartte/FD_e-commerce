@@ -76,6 +76,13 @@
   gap: 10px;
 }
 
+.pdv-login-version {
+  margin: 0;
+  text-align: center;
+  font-size: 11px;
+  color: var(--c-text-muted);
+}
+
 .pdv-login-logo {
   height: 40px;
   width: auto;
