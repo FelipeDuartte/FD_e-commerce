@@ -135,6 +135,31 @@ export async function saveAdminProduct(product, isNew, previousStock = null) {
   }
 }
 
+// Reabastece estoque + registra o custo de compra num passo só (RPC faz
+// tudo atomicamente: soma no stock, atualiza cost_price, loga em
+// stock_movements e recalcula fardos dependentes). Retorna o custo
+// anterior junto do novo pra tela mostrar a comparação.
+export async function registerProductPurchase(product, quantity, totalPaid) {
+  const qty = Number(quantity);
+  const total = Number(totalPaid);
+  const unitCost = total / qty;
+
+  const { data, error } = await supabase.rpc("register_product_purchase", {
+    p_store_id: product.store_id,
+    p_product_id: product.id,
+    p_quantity: qty,
+    p_unit_cost: unitCost,
+  });
+
+  if (error) {
+    throw new AdminServiceError("Não foi possível registrar a compra.", error);
+  }
+  if (!data?.success) {
+    throw new AdminServiceError(data?.error || "Não foi possível registrar a compra.");
+  }
+  return { previousCost: data.previous_cost, newCost: data.new_cost, unitCost };
+}
+
 export async function toggleAdminProductActive(product) {
   const nextActive = !product.is_active;
   const { error } = await supabase

@@ -4,6 +4,7 @@ import {
   buildProductPayload,
   deleteAdminProduct,
   listAdminProducts,
+  registerProductPurchase,
   saveAdminProduct,
   toggleAdminProductActive,
   validateProductPayload,
@@ -32,6 +33,7 @@ export function useProdutos(onProductsChanged) {
   const [productToDelete, setProductToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+  const [productToPurchase, setProductToPurchase] = useState(null);
 
   const handleImageResolved = useCallback((url) => {
     setModalForm((prev) => ({ ...prev, image: url }));
@@ -166,6 +168,16 @@ export function useProdutos(onProductsChanged) {
     setDeleting(false);
   };
 
+  const requestPurchase = (product) => setProductToPurchase(product);
+  const dismissPurchase = () => setProductToPurchase(null);
+
+  const confirmPurchase = async (quantity, totalPaid) => {
+    const outcome = await registerProductPurchase(productToPurchase, quantity, totalPaid);
+    await fetchProducts();
+    onProductsChanged?.();
+    return outcome;
+  };
+
   return {
     products, fetchProducts, productsLoading, productsError, productSearch, setProductSearch,
     productCategory, setProductCategory, productModal, setProductModal,
@@ -173,5 +185,6 @@ export function useProdutos(onProductsChanged) {
     openNewProduct, openEditProduct, handleModalChange, handleModalSave,
     handleToggleActive, productImageSearch,
     productToDelete, deleting, deleteError, requestDelete, dismissDelete, confirmDelete,
+    productToPurchase, requestPurchase, dismissPurchase, confirmPurchase,
   };
 }
