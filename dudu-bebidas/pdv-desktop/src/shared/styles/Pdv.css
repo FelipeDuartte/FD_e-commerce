@@ -1337,13 +1337,24 @@
   color: var(--c-text);
 }
 
+/* Linha de resumo (1 texto corrido, cortado com "...") — usada em
+   Clientes (transações), onde a lista precisa ficar compacta. */
 .pdv-sale-items {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* Um item por linha (empilhado) — só o Histórico de vendas usa essa,
+   onde o objetivo é mostrar TUDO sem cortar (ver feedback do cliente). */
+.pdv-sale-items-list {
   display: flex;
   flex-direction: column;
   gap: 2px;
   min-width: 0;
 }
-.pdv-sale-items > div {
+.pdv-sale-items-list > div {
   overflow-wrap: break-word;
 }
 

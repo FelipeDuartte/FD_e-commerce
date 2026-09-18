@@ -135,7 +135,7 @@ export default function HistorySalesList({ currentSessionId, sessionSales, cance
                     {new Date(sale.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                   </span>
                 </div>
-                <div className="pdv-sale-items">
+                <div className="pdv-sale-items-list">
                   {sale.items?.length
                     ? sale.items.map((line, i) => <div key={i}>{line}</div>)
                     : `${sale.itemCount} item(ns)`}
