@@ -1028,9 +1028,9 @@ button:disabled {
   max-width: 200px;
 }
 .adm-td-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 6px;
 }
 
 /* Badges de categoria / estoque / status */
