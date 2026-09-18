@@ -2,6 +2,7 @@ import { formatBRL } from "../../../shared/utils/format";
 import ProductModal from "./ProductModal";
 import DeleteProductModal from "./DeleteProductModal";
 import RegisterPurchaseModal from "./RegisterPurchaseModal";
+import ProductActionsMenu from "./ProductActionsMenu";
 
 export default function ProdutosView({ produtos, categories }) {
   const {
@@ -139,22 +140,14 @@ export default function ProdutosView({ produtos, categories }) {
                     </span>
                   </td>
                   <td className="adm-td-actions">
-                    <button className="adm-btn-edit" onClick={() => openEditProduct(p)}>
-                      ✏️ Editar
-                    </button>
-                    <button className="adm-btn-edit" onClick={() => requestPurchase(p)}>
-                      📦 Comprar
-                    </button>
-                    <button
-                      className={`adm-btn-toggle ${p.is_active ? "deactivate" : "activate"}`}
-                      onClick={() => handleToggleActive(p)}
-                      disabled={togglingId === p.id}
-                    >
-                      {togglingId === p.id ? "..." : p.is_active ? "🚫 Desativar" : "✅ Ativar"}
-                    </button>
-                    <button className="adm-btn-delete" onClick={() => requestDelete(p)} title="Excluir produto">
-                      🗑️ Excluir
-                    </button>
+                    <ProductActionsMenu
+                      product={p}
+                      onEdit={openEditProduct}
+                      onPurchase={requestPurchase}
+                      onToggleActive={handleToggleActive}
+                      onDelete={requestDelete}
+                      toggling={togglingId === p.id}
+                    />
                   </td>
                 </tr>
               ))}
