@@ -70,8 +70,8 @@ export default function RelatoriosView() {
           <h1 className="adm-title">Relatórios</h1>
           <p className="adm-subtitle">
             {channel === "balcao"
-              ? "Só vendas feitas no balcão · não inclui pedidos rejeitados ou cancelados"
-              : "Site + balcão juntos · não inclui pedidos rejeitados ou cancelados"}
+              ? "Só vendas feitas no balcão · só conta pedidos já entregues/recebidos"
+              : "Site + balcão juntos · só conta pedidos já entregues/recebidos"}
           </p>
         </div>
         <div className="rpt-header-actions">

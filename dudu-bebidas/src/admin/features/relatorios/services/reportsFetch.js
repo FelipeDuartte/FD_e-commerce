@@ -32,12 +32,11 @@ export async function fetchOrdersForReports() {
       .from("orders")
       .select("id, total, card_fee_amount, created_at, address")
       .gte("created_at", cutoff)
-      // Pedido rejeitado ou cancelado nunca virou venda de verdade — não
-      // deve contar em faturamento, ticket médio, produto/cliente mais
-      // vendido, etc. Filtra aqui (não em summariseOrders) porque também
-      // corta os order_items buscados logo depois (fetchOrderItemsForReports
-      // só recebe os IDs que sobraram).
-      .not("status", "in", "(rejected,cancelled)")
+      // Só conta pedido já recebido (delivered) — em aberto ainda não virou
+      // dinheiro, e rejeitado/cancelado nunca vira. Filtra aqui (não em
+      // summariseOrders) porque também corta os order_items buscados logo
+      // depois (fetchOrderItemsForReports só recebe os IDs que sobraram).
+      .eq("status", "delivered")
       .order("created_at", { ascending: true })
       .range(from, from + REPORTS_PAGE_SIZE - 1);
 
