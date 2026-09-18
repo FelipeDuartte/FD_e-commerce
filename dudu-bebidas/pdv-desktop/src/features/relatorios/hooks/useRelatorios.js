@@ -3,6 +3,7 @@ import {
   fetchOrdersForReports,
   fetchOrderItemsForReports,
   fetchOrderPaymentsForReports,
+  fetchFiadoReceiptsForReports,
 } from "../services/reportsFetch";
 import {
   aggregateMonthly,
@@ -69,12 +70,13 @@ export function useRelatorios() {
         const mistoIds = orders
           .filter((o) => o.payment_method === "misto")
           .map((o) => o.id);
-        const [items, payments] = await Promise.all([
+        const [items, payments, receipts] = await Promise.all([
           fetchOrderItemsForReports(orderIds),
           fetchOrderPaymentsForReports(mistoIds),
+          fetchFiadoReceiptsForReports(),
         ]);
 
-        const raw = { orders, items, payments, fetchedAt: Date.now() };
+        const raw = { orders: [...orders, ...receipts], items, payments, fetchedAt: Date.now() };
         cache.current[channel] = raw;
         setReportData(aggregate(raw, period));
       } catch (err) {

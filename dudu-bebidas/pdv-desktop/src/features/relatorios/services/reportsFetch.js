@@ -30,9 +30,12 @@ export async function fetchOrdersForReports({ channel } = {}) {
       .from("orders")
       .select("id, total, discount_amount, card_fee_amount, payment_method, channel, created_at, address")
       .gte("created_at", cutoff)
-      // Pedido rejeitado ou cancelado nunca virou venda de verdade — não
-      // deve contar em faturamento, ticket médio, quebra por pagamento etc.
-      .not("status", "in", "(rejected,cancelled)")
+      // Só conta pedido já recebido (delivered) — em aberto ainda não virou
+      // dinheiro, e rejeitado/cancelado nunca vira.
+      .eq("status", "delivered")
+      // Fiado ainda não é dinheiro recebido — entra no relatório só quando o
+      // cliente paga (ver fetchFiadoReceiptsForReports).
+      .neq("payment_method", "fiado")
       .order("created_at", { ascending: true })
       .range(from, from + REPORTS_PAGE_SIZE - 1);
 
@@ -143,4 +146,47 @@ export async function fetchOrderPaymentsForReports(orderIds) {
   }
 
   return allPayments;
+}
+
+/**
+ * Pagamentos de fiado recebidos nos últimos 12 meses, já no formato de
+ * "linha de faturamento" (mesmo shape de um pedido, com isReceipt=true) —
+ * assim entram em faturamento, gráfico mensal e quebra por forma de
+ * pagamento pelo dia em que o dinheiro entrou, sem contar como pedido.
+ */
+export async function fetchFiadoReceiptsForReports() {
+  const cutoff = monthsAgo(12);
+  const receipts = [];
+  let from = 0;
+
+  while (true) {
+    const { data, error } = await supabase
+      .from("pdv_customer_payments")
+      .select("id, amount, payment_method, created_at")
+      .gte("created_at", cutoff)
+      .order("created_at", { ascending: true })
+      .range(from, from + REPORTS_PAGE_SIZE - 1);
+
+    if (error) {
+      throw new AdminServiceError("Não foi possível carregar os recebimentos de fiado.", error);
+    }
+
+    const rows = data ?? [];
+    for (const r of rows) {
+      receipts.push({
+        id: `fiado-pay-${r.id}`,
+        total: Number(r.amount),
+        card_fee_amount: 0,
+        payment_method: r.payment_method,
+        channel: "balcao",
+        created_at: r.created_at,
+        address: null,
+        isReceipt: true,
+      });
+    }
+    if (rows.length < REPORTS_PAGE_SIZE) break;
+    from += REPORTS_PAGE_SIZE;
+  }
+
+  return receipts;
 }

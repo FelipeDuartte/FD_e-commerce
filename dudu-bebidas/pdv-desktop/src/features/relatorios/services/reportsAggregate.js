@@ -33,7 +33,7 @@ function buildMonthlyBuckets(orders, numMonths = 12) {
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
     if (key in buckets) {
       buckets[key].revenue += netRevenue(order);
-      buckets[key].count += 1;
+      if (!order.isReceipt) buckets[key].count += 1;
     }
   }
 
@@ -112,8 +112,11 @@ export function filterByPeriod(orders, period) {
  */
 export function summariseOrders(orders) {
   const totalRevenue = orders.reduce((s, o) => s + netRevenue(o), 0);
-  const totalOrders = orders.length;
-  const avgTicket = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+  // Recebimento de fiado é dinheiro que entrou, não uma venda — fica fora
+  // da contagem de pedidos e do ticket médio.
+  const realOrders = orders.filter((o) => !o.isReceipt);
+  const totalOrders = realOrders.length;
+  const avgTicket = totalOrders > 0 ? realOrders.reduce((s, o) => s + netRevenue(o), 0) / totalOrders : 0;
   return { totalRevenue, totalOrders, avgTicket };
 }
 
@@ -123,8 +126,8 @@ export function summariseOrders(orders) {
  * payment_method; pedido misto é explodido pelas linhas de order_payments
  * (a parte em dinheiro cai em "cash", a parte no cartão em "credit_card"
  * etc — mesma lógica de close_cash_session, só que por período em vez de
- * por sessão de caixa). Fiado entra no próprio bucket "fiado" — é venda de
- * verdade, só que ainda não recebida.
+ * por sessão de caixa). Venda fiado não entra aqui (ainda não foi recebida);
+ * o pagamento do cliente entra pela forma com que ele pagou.
  */
 export function aggregatePaymentBreakdown(orders, payments) {
   const paymentsByOrder = {};

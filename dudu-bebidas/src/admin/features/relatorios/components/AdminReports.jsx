@@ -83,7 +83,7 @@ export default function AdminReports({
         <div>
           <h1 className="adm-title">Relatórios</h1>
           <p className="adm-subtitle">
-            Visão consolidada do negócio · não inclui pedidos rejeitados ou cancelados
+            Visão consolidada do negócio · só conta pedidos já entregues/recebidos
           </p>
         </div>
         <div className="rpt-header-actions">
