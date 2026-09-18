@@ -3,6 +3,7 @@ import { getBillStatus, STATUS_LABEL, STATUS_ICON, daysUntilDue, remainingAmount
 import BillModal from "./BillModal";
 import MarkPaidModal from "./MarkPaidModal";
 import DeleteBillModal from "./DeleteBillModal";
+import ActionsMenu from "../../../shared/components/ActionsMenu";
 
 const STATUS_FILTERS = [
   { value: "todas", label: "Todas" },
@@ -215,26 +216,23 @@ export default function ContasAPagarView({ contasAPagar }) {
                       )}
                     </td>
                     <td className="adm-td-actions">
-                      {status !== "pago" && (
-                        <button className="adm-btn-toggle activate" onClick={() => requestMarkPaid(bill)}>
-                          💰 Baixar
+                      <ActionsMenu>
+                        {status !== "pago" && (
+                          <button onClick={() => requestMarkPaid(bill)}>💰 Baixar</button>
+                        )}
+                        {(status === "pago" || status === "parcial") && (
+                          <button
+                            onClick={() => handleUnmarkPaid(bill)}
+                            disabled={unmarkingId === bill.id}
+                          >
+                            {unmarkingId === bill.id ? "..." : "↩️ Desfazer"}
+                          </button>
+                        )}
+                        <button onClick={() => openEditBill(bill)}>✏️ Editar</button>
+                        <button className="pdv-actions-menu-danger" onClick={() => requestDelete(bill)}>
+                          🗑️ Excluir
                         </button>
-                      )}
-                      {(status === "pago" || status === "parcial") && (
-                        <button
-                          className="adm-btn-toggle deactivate"
-                          onClick={() => handleUnmarkPaid(bill)}
-                          disabled={unmarkingId === bill.id}
-                        >
-                          {unmarkingId === bill.id ? "..." : "↩️ Desfazer"}
-                        </button>
-                      )}
-                      <button className="adm-btn-edit" onClick={() => openEditBill(bill)}>
-                        ✏️ Editar
-                      </button>
-                      <button className="adm-btn-delete" onClick={() => requestDelete(bill)} title="Excluir conta">
-                        🗑️
-                      </button>
+                      </ActionsMenu>
                     </td>
                   </tr>
                 );

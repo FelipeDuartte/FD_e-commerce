@@ -2,7 +2,7 @@ import { formatBRL } from "../../../shared/utils/format";
 import ProductModal from "./ProductModal";
 import DeleteProductModal from "./DeleteProductModal";
 import RegisterPurchaseModal from "./RegisterPurchaseModal";
-import ProductActionsMenu from "./ProductActionsMenu";
+import ActionsMenu from "../../../shared/components/ActionsMenu";
 
 export default function ProdutosView({ produtos, categories }) {
   const {
@@ -140,14 +140,16 @@ export default function ProdutosView({ produtos, categories }) {
                     </span>
                   </td>
                   <td className="adm-td-actions">
-                    <ProductActionsMenu
-                      product={p}
-                      onEdit={openEditProduct}
-                      onPurchase={requestPurchase}
-                      onToggleActive={handleToggleActive}
-                      onDelete={requestDelete}
-                      toggling={togglingId === p.id}
-                    />
+                    <ActionsMenu>
+                      <button onClick={() => openEditProduct(p)}>✏️ Editar</button>
+                      <button onClick={() => requestPurchase(p)}>📦 Comprar</button>
+                      <button onClick={() => handleToggleActive(p)} disabled={togglingId === p.id}>
+                        {togglingId === p.id ? "..." : p.is_active ? "🚫 Desativar" : "✅ Ativar"}
+                      </button>
+                      <button className="pdv-actions-menu-danger" onClick={() => requestDelete(p)}>
+                        🗑️ Excluir
+                      </button>
+                    </ActionsMenu>
                   </td>
                 </tr>
               ))}
