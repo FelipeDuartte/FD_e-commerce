@@ -82,7 +82,7 @@ export default function Header({
       {/* BANNER DE LOJA FECHADA */}
       {/* Exibe mensagem se a loja estiver fechada */}
       {!storeStatus.open && (
-        <div className="site-closed-banner text-black text-center fw-bold bg-warning p-1">
+        <div className="site-closed-banner text-black text-center fw-bold bg-warning">
           {storeStatus.message}
         </div>
       )}
@@ -231,7 +231,11 @@ export default function Header({
 
         {/* BUSCA - MOBILE */}
         {/* Campo de busca visível apenas em telas pequenas, com auto-scroll para produtos */}
-        <div className="container-fluid d-lg-none mt-2 px-3">
+        <div
+          className={`mobile-search-row container-fluid d-lg-none px-3 ${
+            scrolled && !searchTerm ? "is-collapsed" : ""
+          }`}
+        >
           <div className="search-box w-100">
             <Search className="search-icon" size={20} />
             <input

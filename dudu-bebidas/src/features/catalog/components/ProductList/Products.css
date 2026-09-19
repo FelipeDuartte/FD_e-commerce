@@ -23,7 +23,8 @@
 .filter-container  { position: relative; margin-bottom: 3rem; }
 .filter-scroll-wrapper { position: relative; }
 
-/* Fades nas bordas */
+/* Fades + setas nas bordas: só aparecem do lado que ainda tem categoria
+   escondida (classes has-left / has-right, controladas por JS). */
 .filter-scroll-wrapper::before,
 .filter-scroll-wrapper::after {
   content: '';
@@ -32,9 +33,57 @@
   width: 48px;
   pointer-events: none;
   z-index: 2;
+  opacity: 0;
+  transition: opacity .2s ease;
 }
-.filter-scroll-wrapper::before { left: 0;  background: linear-gradient(to right, #fff 20%, transparent); }
-.filter-scroll-wrapper::after  { right: 0; background: linear-gradient(to left,  #fff 20%, transparent); }
+.filter-scroll-wrapper::before { left: 0;  background: linear-gradient(to right, #fff 30%, transparent); }
+.filter-scroll-wrapper::after  { right: 0; background: linear-gradient(to left,  #fff 30%, transparent); }
+.filter-scroll-wrapper.has-left::before  { opacity: 1; }
+.filter-scroll-wrapper.has-right::after  { opacity: 1; }
+
+.filter-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-58%);
+  z-index: 3;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0,0,0,.1);
+  background: #fff;
+  color: #000;
+  box-shadow: 0 3px 10px rgba(0,0,0,.18);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s ease, background .2s ease, border-color .2s ease;
+}
+.filter-arrow i { font-size: 14px; line-height: 1; }
+.filter-arrow:hover { background: #fffbea; border-color: #f5c518; }
+.filter-arrow-left  { left: 0; }
+.filter-arrow-right { right: 0; }
+.filter-scroll-wrapper.has-left  .filter-arrow-left,
+.filter-scroll-wrapper.has-right .filter-arrow-right {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Seta do lado direito pulsa de leve até a primeira rolagem — "tem mais
+   pra lá". Some sozinha quando o usuário começa a arrastar. */
+.filter-scroll-wrapper.has-right:not(.has-left) .filter-arrow-right {
+  animation: filter-nudge 1.6s ease-in-out 3;
+}
+@keyframes filter-nudge {
+  0%, 100% { transform: translateY(-58%) translateX(0); }
+  50%      { transform: translateY(-58%) translateX(4px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .filter-scroll-wrapper.has-right:not(.has-left) .filter-arrow-right { animation: none; }
+}
 
 /* Área de scroll */
 .overflow-x-auto {
@@ -165,7 +214,8 @@
   .filter-btn i { font-size: 13px; }
 
   .filter-scroll-wrapper::before,
-  .filter-scroll-wrapper::after { width: 28px; }
+  .filter-scroll-wrapper::after { width: 44px; }
+  .filter-arrow { width: 28px; height: 28px; }
 
   .overflow-x-auto { gap: 7px; padding: 8px 2px 12px; }
 

@@ -1,6 +1,6 @@
 import ProductCard from "../ProductCard/ProductCard";
 import "./Products.css";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useProductCategories } from "../../../../shared/hooks/useProductCategories";
 
 const PAGE_SIZE = 12;
@@ -22,9 +22,41 @@ export default function ProductList({
   const hasMore         = visibleCount < productsCount;
   const hasVisibleExcess = visibleCount > PAGE_SIZE;
 
-  const handleCategorySelect = (id) => {
+  const handleCategorySelect = (id, e) => {
     setSelectedCategory(id);
     setVisibleCount(PAGE_SIZE);
+    // Traz a categoria escolhida pro meio da barra — quem toca numa chip
+    // cortada na borda vê o que veio depois dela.
+    e?.currentTarget?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+  };
+
+  // Barra de categorias: só mostra fade/seta do lado onde ainda tem
+  // categoria escondida (antes era fade fixo nos dois lados, inclusive
+  // tampando o "Todos" no começo).
+  const filterScrollRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateScrollHints = useCallback(() => {
+    const el = filterScrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  }, []);
+
+  useEffect(() => {
+    updateScrollHints();
+    const el = filterScrollRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(updateScrollHints);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [updateScrollHints, CATEGORIES.length]);
+
+  const scrollFilters = (direction) => {
+    const el = filterScrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: direction * el.clientWidth * 0.7, behavior: "smooth" });
   };
 
   const handleLoadMore = () => setVisibleCount((prev) => prev + PAGE_SIZE);
@@ -52,12 +84,32 @@ export default function ProductList({
 
         {/* Filtros */}
         <div className="filter-container">
-          <div className="filter-scroll-wrapper">
-            <div className="overflow-x-auto">
+          <div
+            className={`filter-scroll-wrapper${canScrollLeft ? " has-left" : ""}${canScrollRight ? " has-right" : ""}`}
+          >
+            <button
+              type="button"
+              className="filter-arrow filter-arrow-left"
+              aria-label="Ver categorias anteriores"
+              tabIndex={canScrollLeft ? 0 : -1}
+              onClick={() => scrollFilters(-1)}
+            >
+              <i className="bi bi-chevron-left" />
+            </button>
+            <button
+              type="button"
+              className="filter-arrow filter-arrow-right"
+              aria-label="Ver mais categorias"
+              tabIndex={canScrollRight ? 0 : -1}
+              onClick={() => scrollFilters(1)}
+            >
+              <i className="bi bi-chevron-right" />
+            </button>
+            <div className="overflow-x-auto" ref={filterScrollRef} onScroll={updateScrollHints}>
               {CATEGORIES.map(({ id, icon, label }) => (
                 <button
                   key={id}
-                  onClick={() => handleCategorySelect(id)}
+                  onClick={(e) => handleCategorySelect(id, e)}
                   className={`filter-btn${selectedCategory === id ? " active" : ""}`}
                 >
                   <i className={`bi ${icon}`} />
