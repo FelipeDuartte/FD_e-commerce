@@ -1,13 +1,15 @@
-.banner-slide {
-  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-  min-height: 80px;
+/* Mobile-first: no celular a faixa é uma linha só (só o título). Subtítulo e
+   texto vão aparecendo lado a lado conforme a tela cresce, em vez de
+   empilhar 3 linhas e empurrar o conteúdo pra baixo. */
+.promo-strip-slide {
+  transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   position: relative;
   overflow: hidden;
 }
 
-.banner-slide::before {
+.promo-strip-slide::before {
   content: "";
   position: absolute;
   top: 0;
@@ -29,67 +31,75 @@
   }
 }
 
-.banner-slide .container {
-  padding-top: 0.5rem !important;
-  padding-bottom: 0.5rem !important;
+.promo-strip-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 14px;
+  text-align: center;
 }
 
-.banner-slide h4 {
-  font-size: 18px !important;
-  margin-bottom: 0.25rem !important;
-  letter-spacing: 0.5px !important;
-  font-weight: 700 !important;
+.promo-strip-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  line-height: 1.3;
+  /* mesmo se o título for longo, nunca quebra em 2 linhas no celular */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
-.banner-slide p:first-of-type {
-  font-size: 13px !important;
-  margin-bottom: 0.25rem !important;
+.promo-strip-sub,
+.promo-strip-text {
+  display: none;
+  font-size: 13px;
+  line-height: 1.3;
 }
 
-.banner-slide p:last-of-type {
-  font-size: 12px !important;
+.promo-strip-sub {
+  font-weight: 600;
+  opacity: 0.9;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .banner-slide {
-    min-height: 20px;
+/* Tablet: título + subtítulo na mesma linha */
+@media (min-width: 576px) {
+  .promo-strip-content {
+    padding: 8px 16px;
   }
 
-  .banner-slide h4 {
-    font-size: 16px !important;
+  .promo-strip-title {
+    font-size: 14px;
+    letter-spacing: 0.5px;
   }
 
-  .banner-slide p:first-of-type {
-    font-size: 12px !important;
-  }
-
-  .banner-slide p:last-of-type {
-    font-size: 11px !important;
+  .promo-strip-sub {
+    display: inline;
   }
 }
 
-@media (max-width: 576px) {
-  .banner-slide {
-    min-height: 45px;
+/* Desktop: as três informações numa linha só */
+@media (min-width: 992px) {
+  .promo-strip-content {
+    padding: 10px 24px;
   }
 
-  .banner-slide .container {
-    padding-top: 0.75rem !important;
-    padding-bottom: 0.75rem !important;
+  .promo-strip-title {
+    font-size: 15px;
   }
 
-  .banner-slide h4 {
-    font-size: 14px !important;
-    margin-bottom: 0.15rem !important;
+  .promo-strip-text {
+    display: inline;
   }
+}
 
-  .banner-slide p:first-of-type {
-    font-size: 11px !important;
-    margin-bottom: 0.15rem !important;
-  }
-
-  .banner-slide p:last-of-type {
-    font-size: 10px !important;
+@media (prefers-reduced-motion: reduce) {
+  .promo-strip-slide::before {
+    animation: none;
   }
 }
