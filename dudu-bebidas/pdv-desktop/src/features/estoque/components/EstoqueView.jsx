@@ -104,7 +104,7 @@ export default function EstoqueView() {
           <table className="adm-product-table">
             <thead>
               <tr>
-                {["Produto", "Movimento", "Origem", "Quando"].map((h) => (
+                {["ID", "Produto", "Movimento", "Origem", "Quando"].map((h) => (
                   <th key={h}>{h}</th>
                 ))}
               </tr>
@@ -112,6 +112,7 @@ export default function EstoqueView() {
             <tbody>
               {movements.map((m) => (
                 <tr key={m.id}>
+                  <td className="adm-td-id">{m.productId}</td>
                   <td className="adm-td-name">{m.productName}</td>
                   <td>
                     <span className={`adm-stock-badge ${m.quantity < 0 ? "zero" : "ok"}`}>

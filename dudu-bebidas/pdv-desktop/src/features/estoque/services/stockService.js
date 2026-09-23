@@ -14,7 +14,7 @@ export async function listStockMovements({ page = 0, reason = "todos", search = 
 
   let query = supabase
     .from("stock_movements")
-    .select("id, product_name, quantity, reason, created_at, orders(channel)", { count: "exact" })
+    .select("id, product_id, product_name, quantity, reason, created_at, orders(channel)", { count: "exact" })
     .order("created_at", { ascending: false });
 
   if (reason !== "todos") query = query.eq("reason", reason);
@@ -34,6 +34,7 @@ export async function listStockMovements({ page = 0, reason = "todos", search = 
     }
     return {
       id: m.id,
+      productId: m.product_id,
       productName: m.product_name,
       quantity: m.quantity,
       reason: m.reason,
