@@ -5,6 +5,7 @@ const REASON_ICON = {
   venda: "🛒",
   cancelamento: "↩️",
   ajuste_manual: "✏️",
+  compra: "📦",
 };
 
 const REASON_FILTERS = [
@@ -12,6 +13,7 @@ const REASON_FILTERS = [
   { value: "venda", label: "Vendas" },
   { value: "cancelamento", label: "Cancelamentos" },
   { value: "ajuste_manual", label: "Ajustes manuais" },
+  { value: "compra", label: "Compras" },
 ];
 
 export default function EstoqueView() {

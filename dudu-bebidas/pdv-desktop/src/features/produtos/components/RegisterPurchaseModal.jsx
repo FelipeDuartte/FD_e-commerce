@@ -46,7 +46,7 @@ export default function RegisterPurchaseModal({ product, onConfirm, onDismiss })
   return (
     <>
       <div className="adm-modal-overlay" onClick={() => !saving && onDismiss()} />
-      <div className="adm-modal" role="dialog" aria-modal="true">
+      <div className="adm-modal pdv-purchase-modal" role="dialog" aria-modal="true">
         <h2 className="adm-store-section-title">📦 Registrar compra</h2>
         <p className="adm-store-section-desc">
           <strong>{product.name}</strong>

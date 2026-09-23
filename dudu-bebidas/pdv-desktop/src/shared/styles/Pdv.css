@@ -1880,6 +1880,28 @@
   margin-top: 4px;
 }
 
+/* .adm-store-section-title/-desc e .adm-store-form-actions não têm CSS
+   próprio em lugar nenhum (só texto puro, sem margem) — outros modais que
+   os usam ficam ok porque têm poucos campos, mas aqui embolava tudo.
+   Escopado só nesse modal pra não afetar os outros 14 lugares que usam
+   essas mesmas classes. */
+.pdv-purchase-modal .adm-store-section-title {
+  margin-bottom: 6px;
+}
+.pdv-purchase-modal .adm-store-section-desc {
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: var(--c-text-muted);
+}
+.pdv-purchase-modal .adm-store-form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+.pdv-purchase-modal .adm-store-form-actions button {
+  flex: 1;
+}
+
 .pdv-purchase-result {
   display: flex;
   flex-direction: column;

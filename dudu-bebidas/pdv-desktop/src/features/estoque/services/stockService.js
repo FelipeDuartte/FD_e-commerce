@@ -6,7 +6,13 @@ const REASON_LABEL = {
   venda: "Venda",
   cancelamento: "Cancelamento",
   ajuste_manual: "Ajuste manual",
+  compra: "Compra",
 };
+
+// Só venda/cancelamento têm um pedido ligado (orders) pra saber se foi
+// PDV ou Online — ajuste manual e compra não têm order_id, então "Online"
+// apareceria errado pra elas se caíssem nesse cálculo.
+const SALE_REASONS = new Set(["venda", "cancelamento"]);
 
 export async function listStockMovements({ page = 0, reason = "todos", search = "" } = {}) {
   const from = page * PAGE_SIZE;
@@ -29,7 +35,7 @@ export async function listStockMovements({ page = 0, reason = "todos", search = 
 
   const movements = (data ?? []).map((m) => {
     let origin = REASON_LABEL[m.reason] ?? m.reason;
-    if (m.reason !== "ajuste_manual") {
+    if (SALE_REASONS.has(m.reason)) {
       origin = m.orders?.channel === "balcao" ? "PDV" : "Online";
     }
     return {
