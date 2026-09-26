@@ -36,6 +36,7 @@ const Checkout = lazy(() => import("../features/checkout/Checkout"));
 const Confirm = lazy(() => import("../features/confirm/Confirm"));
 const PrivacyPolicy = lazy(() => import("../features/legal/privacy-policy/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("../features/legal/terms-service/TermsService"));
+const EntregadorApp = lazy(() => import("../features/entregador/EntregadorApp"));
 
 // Tela leve enquanto o chunk de uma rota lazy baixa (só acontece na
 // primeira vez que alguém acessa ela — depois fica em cache do navegador).
@@ -251,6 +252,10 @@ export default function DuduBebidas() {
         <Route
           path="/confirmacao"
           element={<Suspense fallback={<PageLoadingFallback />}><Confirm user={user} /></Suspense>}
+        />
+        <Route
+          path="/entregador"
+          element={<Suspense fallback={<PageLoadingFallback />}><EntregadorApp /></Suspense>}
         />
         <Route
           path="/admin"

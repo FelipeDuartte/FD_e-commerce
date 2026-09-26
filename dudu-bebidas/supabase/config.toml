@@ -10,5 +10,8 @@ verify_jwt = true
 [functions.pdv-sale]
 verify_jwt = true
 
+[functions.create-courier]
+verify_jwt = true
+
 [functions.mercadopago-webhook]
 verify_jwt = false

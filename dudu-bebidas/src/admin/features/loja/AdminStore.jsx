@@ -4,6 +4,7 @@ import CategoriesSection from "./categorias/components/CategoriesSection";
 import DeliveryZonesSection from "./bairros/components/DeliveryZonesSection";
 import StoreHoursSection from "./horarios/components/StoreHoursSection";
 import TeamSection from "./equipe/components/TeamSection";
+import EntregadoresSection from "./entregadores/components/EntregadoresSection";
 import PaymentMethodsToggleSection from "./pagamentos/components/PaymentMethodsToggleSection";
 import PixConfigSection from "./pagamentos/components/PixConfigSection";
 import { STORE_TABS } from "./constants";
@@ -31,6 +32,7 @@ export default function AdminStore() {
       {storeTab === "bairros"    && <DeliveryZonesSection />}
       {storeTab === "horarios"   && <StoreHoursSection />}
       {storeTab === "equipe"     && <TeamSection />}
+      {storeTab === "entregadores" && <EntregadoresSection />}
       {storeTab === "pagamentos" && (
         <>
           <PaymentMethodsToggleSection />

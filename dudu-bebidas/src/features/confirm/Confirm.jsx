@@ -37,6 +37,8 @@ export default function Confirmacao() {
     paymentStatus,
     customerClaimedPaidAt,
     setCustomerClaimedPaidAt,
+    courierName,
+    courierPhone,
     showRejectedModal,
     showCancelledModal,
   } = useOrderStatusPolling(orderId);
@@ -234,7 +236,13 @@ export default function Confirmacao() {
         )}
 
         {!isRetirada && !isPixPending && !isMercadoPagoPending && !isMercadoPagoRejected && (
-          <DeliveryTracker status={status} statusLoading={statusLoading} animating={animating} />
+          <DeliveryTracker
+            status={status}
+            statusLoading={statusLoading}
+            animating={animating}
+            courierName={courierName}
+            courierPhone={courierPhone}
+          />
         )}
 
         {isRetirada && !isPixPending && !isMercadoPagoPending && !isMercadoPagoRejected && <PickupCard />}

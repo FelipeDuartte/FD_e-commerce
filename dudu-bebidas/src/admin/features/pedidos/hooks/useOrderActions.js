@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { getNext } from "../orderStatus";
-import { rejectAdminOrder, updateAdminOrderStatus } from "../services/adminOrderService";
+import { rejectAdminOrder, updateAdminOrderStatus, assignCourierToOrder } from "../services/adminOrderService";
 import { markOrderPaid } from "../../loja/pagamentos/services/paymentConfigService";
 
 // Ações de mutação sobre um pedido: avançar status, definir status, marcar
@@ -64,6 +64,25 @@ export function useOrderActions({ setOrders, updateOrderStatusLocally, setOrders
     setUpdating(null);
   }, [setOrders, setOrdersError]);
 
+  const assignCourier = useCallback(async (orderId, courier) => {
+    setUpdating(orderId);
+    setOrdersError("");
+    try {
+      await assignCourierToOrder(orderId, courier);
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === orderId
+            ? { ...o, courier_id: courier.id, courier_name: courier.name, courier_phone: courier.phone }
+            : o,
+        ),
+      );
+    } catch (error) {
+      console.error(error);
+      setOrdersError(error.message);
+    }
+    setUpdating(null);
+  }, [setOrders, setOrdersError]);
+
   const confirmReject = useCallback(async () => {
     if (!rejectModal) return;
     setRejecting(true);
@@ -95,6 +114,6 @@ export function useOrderActions({ setOrders, updateOrderStatusLocally, setOrders
 
   return {
     updating, rejectModal, setRejectModal, rejecting, rejectError,
-    advanceStatus, setStatus, markPaid, confirmReject, closeRejectModal,
+    advanceStatus, setStatus, markPaid, assignCourier, confirmReject, closeRejectModal,
   };
 }

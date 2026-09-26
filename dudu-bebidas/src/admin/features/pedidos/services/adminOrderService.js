@@ -16,6 +16,9 @@ const ORDER_SELECT = `
   status,
   created_at,
   channel,
+  courier_id,
+  courier_name,
+  courier_phone,
   order_items ( id, name, price, quantity )
 `;
 
@@ -100,6 +103,21 @@ export async function updateAdminOrderStatus(orderId, status) {
 
   if (error) {
     throw new AdminServiceError("Não foi possível atualizar o pedido.", error);
+  }
+}
+
+export async function assignCourierToOrder(orderId, courier) {
+  const { error } = await supabase
+    .from("orders")
+    .update({
+      courier_id: courier.id,
+      courier_name: courier.name,
+      courier_phone: courier.phone,
+    })
+    .eq("id", orderId);
+
+  if (error) {
+    throw new AdminServiceError("Não foi possível atribuir o entregador.", error);
   }
 }
 

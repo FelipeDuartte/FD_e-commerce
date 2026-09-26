@@ -13,6 +13,8 @@ export function useOrderStatusPolling(orderId) {
   const [animating, setAnimating] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [customerClaimedPaidAt, setCustomerClaimedPaidAt] = useState(null);
+  const [courierName, setCourierName] = useState(null);
+  const [courierPhone, setCourierPhone] = useState(null);
   const [showRejectedModal, setShowRejectedModal] = useState(false);
   const [showCancelledModal, setShowCancelledModal] = useState(false);
 
@@ -67,6 +69,8 @@ export function useOrderStatusPolling(orderId) {
 
       setPaymentStatus(data.payment_status ?? null);
       setCustomerClaimedPaidAt(data.customer_claimed_paid_at ?? null);
+      setCourierName(data.courier_name ?? null);
+      setCourierPhone(data.courier_phone ?? null);
 
       const changed = lastStatus !== null && lastStatus !== data.status;
       lastStatus = data.status;
@@ -94,6 +98,8 @@ export function useOrderStatusPolling(orderId) {
     paymentStatus,
     customerClaimedPaidAt,
     setCustomerClaimedPaidAt,
+    courierName,
+    courierPhone,
     showRejectedModal,
     showCancelledModal,
   };

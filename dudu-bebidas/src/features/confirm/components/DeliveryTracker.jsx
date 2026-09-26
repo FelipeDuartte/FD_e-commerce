@@ -1,6 +1,14 @@
 import { STATUS_STEP, STEPS } from "../confirmConstants";
 
-export default function DeliveryTracker({ status, statusLoading, animating }) {
+// wa.me exige só dígitos com DDI — telefone salvo no cadastro do
+// entregador pode vir com parênteses/traço/espaço.
+function waLink(phone) {
+  const digits = String(phone).replace(/\D/g, "");
+  const withCountryCode = digits.startsWith("55") ? digits : `55${digits}`;
+  return `https://wa.me/${withCountryCode}`;
+}
+
+export default function DeliveryTracker({ status, statusLoading, animating, courierName, courierPhone }) {
   const currentStep = STATUS_STEP[status] ?? 0;
 
   return (
@@ -60,6 +68,17 @@ export default function DeliveryTracker({ status, statusLoading, animating }) {
             <span className="cf-status-msg-icon">{STEPS[currentStep].icon}</span>
             <span className="cf-status-msg-text">{STEPS[currentStep].activeDesc}</span>
           </div>
+
+          {courierName && (
+            <div className="cf-courier-info">
+              <span>🛵 Seu entregador: <strong>{courierName}</strong></span>
+              {courierPhone && (
+                <a href={waLink(courierPhone)} target="_blank" rel="noreferrer">
+                  Chamar no WhatsApp
+                </a>
+              )}
+            </div>
+          )}
         </>
       )}
     </div>

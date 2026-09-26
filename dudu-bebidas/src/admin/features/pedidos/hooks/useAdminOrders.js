@@ -1,8 +1,9 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useOrdersList } from "./useOrdersList";
 import { useTodayMetrics } from "./useTodayMetrics";
 import { useOrdersRealtime } from "./useOrdersRealtime";
 import { useOrderActions } from "./useOrderActions";
+import { listActiveCouriers } from "../../loja/entregadores/services/entregadoresService";
 
 // Compõe fetch/paginação (useOrdersList), métricas do dia (useTodayMetrics),
 // realtime (useOrdersRealtime) e ações de mutação (useOrderActions) na
@@ -15,6 +16,12 @@ export function useAdminOrders(isAdmin) {
     fetchOrders, updateOrderLocally, updateOrderStatusLocally, handleLoadMore,
   } = useOrdersList(isAdmin);
   const { metrics, refetch: refetchMetrics } = useTodayMetrics(isAdmin);
+
+  const [couriers, setCouriers] = useState([]);
+  useEffect(() => {
+    if (!isAdmin) return;
+    listActiveCouriers().then(setCouriers).catch((e) => console.error("[useAdminOrders] couriers:", e));
+  }, [isAdmin]);
 
   const handleRefetch = useCallback(() => {
     fetchOrders(0, true);
@@ -36,14 +43,14 @@ export function useAdminOrders(isAdmin) {
 
   const {
     updating, rejectModal, setRejectModal, rejecting, rejectError,
-    advanceStatus, setStatus, markPaid, confirmReject, closeRejectModal,
+    advanceStatus, setStatus, markPaid, assignCourier, confirmReject, closeRejectModal,
   } = useOrderActions({ setOrders, updateOrderStatusLocally, setOrdersError });
 
   return {
     orders, loading, loadingMore, hasMore, page, totalCount, ordersError, updating,
-    filterStatus, setFilterStatus, expandedId, setExpandedId, metrics,
+    filterStatus, setFilterStatus, expandedId, setExpandedId, metrics, couriers,
     rejectModal, setRejectModal, rejecting, rejectError,
-    advanceStatus, setStatus, markPaid, confirmReject, closeRejectModal, handleLoadMore,
+    advanceStatus, setStatus, markPaid, assignCourier, confirmReject, closeRejectModal, handleLoadMore,
     counts,
   };
 }

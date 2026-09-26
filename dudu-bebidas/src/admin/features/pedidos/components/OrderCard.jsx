@@ -27,6 +27,8 @@ export default function OrderCard({
   onAdvance,
   onSetStatus,
   onMarkPaid,
+  couriers,
+  onAssignCourier,
 }) {
   const pickup = isPickup(order);
   const cfg = getConfig(order);
@@ -34,6 +36,10 @@ export default function OrderCard({
   const statuses = getStatuses(order);
   const statusMap = getStatusMap(order);
   const isPending = order.status === "pending";
+  // Atribuir entregador só faz sentido pra pedido de entrega já aceito
+  // (a partir de "preparing") e ainda não rejeitado/cancelado.
+  const canAssignCourier =
+    !pickup && !isPending && !["rejected", "cancelled"].includes(order.status);
   const { pixAwaitingPayment, mercadopagoNotPaid, paymentBlocksAcceptance } = usePaymentGating(order);
   const payment = PAYMENT_LABEL[order.payment_method] ?? {
     icon: "💳",
@@ -206,6 +212,28 @@ export default function OrderCard({
               <p>📞 {order.address?.phone}</p>
             </div>
           </div>
+
+          {canAssignCourier && (
+            <div className="adm-detail-section">
+              <div className="adm-detail-label">🛵 Entregador</div>
+              <select
+                className="adm-courier-select"
+                value={order.courier_id ?? ""}
+                onChange={(e) => {
+                  const courier = couriers?.find((c) => c.id === e.target.value);
+                  if (courier) onAssignCourier(courier);
+                }}
+                disabled={isUpdating}
+              >
+                <option value="" disabled>
+                  {order.courier_name ? order.courier_name : "Selecionar entregador..."}
+                </option>
+                {couriers?.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div className="adm-detail-section">
             <div className="adm-detail-label">

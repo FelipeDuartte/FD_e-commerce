@@ -284,6 +284,27 @@
 .cf-status-msg-icon { font-size: 22px; flex-shrink: 0; }
 .cf-status-msg-text { font-size: 14px; font-weight: 500; color: #bbb; line-height: 1.5; }
 
+.cf-courier-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 14px;
+  color: #ddd;
+}
+.cf-courier-info a {
+  color: #50c878;
+  font-weight: 600;
+  text-decoration: none;
+}
+.cf-courier-info a:hover { text-decoration: underline; }
+
 /* ─── BARRA DE PROGRESSO ─────────────────────────────────────────── */
 .cf-progress-track {
   width: 100%; height: 4px;
