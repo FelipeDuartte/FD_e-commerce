@@ -53,6 +53,25 @@ export async function createCourier({ name, phone, email, password }) {
   return data.courier;
 }
 
+// Mapa geral do admin — posição de todo entregador que já compartilhou
+// localização ao menos uma vez. RLS (courier_locations_admin_read) já
+// garante que só vem entregador da própria loja.
+export async function listCourierLocations() {
+  const { data, error } = await supabase
+    .from("courier_locations")
+    .select("lat, lng, updated_at, couriers(name)");
+
+  if (error) {
+    throw new AdminServiceError("Não foi possível carregar a localização dos entregadores.", error);
+  }
+  return (data ?? []).map((row) => ({
+    lat: row.lat,
+    lng: row.lng,
+    updatedAt: row.updated_at,
+    name: row.couriers?.name ?? "Entregador",
+  }));
+}
+
 export async function setCourierActive(courierId, isActive) {
   const { error } = await supabase
     .from("couriers")

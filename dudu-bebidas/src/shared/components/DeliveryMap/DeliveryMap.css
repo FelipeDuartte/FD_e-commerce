@@ -1,0 +1,39 @@
+.delivery-map {
+  width: 100%;
+  border-radius: 14px;
+  overflow: hidden;
+  z-index: 0; /* Leaflet usa z-index alto internamente — sem isso o mapa
+                pode ficar por cima de modais/menus da página. */
+}
+
+.delivery-map-missing-token {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  color: #999;
+  font-size: 13px;
+  text-align: center;
+  padding: 16px;
+}
+
+.delivery-map-icon {
+  background: none;
+  border: none;
+}
+
+.delivery-map-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  font-size: 20px;
+  background: #1a1a1a;
+  border: 2px solid #ffd700;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}

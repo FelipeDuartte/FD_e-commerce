@@ -15,6 +15,11 @@ export function useOrderStatusPolling(orderId) {
   const [customerClaimedPaidAt, setCustomerClaimedPaidAt] = useState(null);
   const [courierName, setCourierName] = useState(null);
   const [courierPhone, setCourierPhone] = useState(null);
+  const [courierLat, setCourierLat] = useState(null);
+  const [courierLng, setCourierLng] = useState(null);
+  const [deliveryLat, setDeliveryLat] = useState(null);
+  const [deliveryLng, setDeliveryLng] = useState(null);
+  const [courierLocationUpdatedAt, setCourierLocationUpdatedAt] = useState(null);
   const [showRejectedModal, setShowRejectedModal] = useState(false);
   const [showCancelledModal, setShowCancelledModal] = useState(false);
 
@@ -71,6 +76,11 @@ export function useOrderStatusPolling(orderId) {
       setCustomerClaimedPaidAt(data.customer_claimed_paid_at ?? null);
       setCourierName(data.courier_name ?? null);
       setCourierPhone(data.courier_phone ?? null);
+      setCourierLat(data.courier_lat ?? null);
+      setCourierLng(data.courier_lng ?? null);
+      setDeliveryLat(data.delivery_lat ?? null);
+      setDeliveryLng(data.delivery_lng ?? null);
+      setCourierLocationUpdatedAt(data.courier_location_updated_at ?? null);
 
       const changed = lastStatus !== null && lastStatus !== data.status;
       lastStatus = data.status;
@@ -100,6 +110,11 @@ export function useOrderStatusPolling(orderId) {
     setCustomerClaimedPaidAt,
     courierName,
     courierPhone,
+    courierLat,
+    courierLng,
+    deliveryLat,
+    deliveryLng,
+    courierLocationUpdatedAt,
     showRejectedModal,
     showCancelledModal,
   };

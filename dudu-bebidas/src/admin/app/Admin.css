@@ -992,6 +992,10 @@ button:disabled {
   cursor: pointer;
 }
 
+.adm-courier-map-wrap {
+  margin-bottom: 24px;
+}
+
 .adm-courier-select {
   background: color-mix(in srgb, var(--c-text) 7%, transparent);
   border: 1px solid color-mix(in srgb, var(--c-text) 10%, transparent);

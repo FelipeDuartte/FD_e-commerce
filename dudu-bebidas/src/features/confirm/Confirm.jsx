@@ -39,6 +39,11 @@ export default function Confirmacao() {
     setCustomerClaimedPaidAt,
     courierName,
     courierPhone,
+    courierLat,
+    courierLng,
+    deliveryLat,
+    deliveryLng,
+    courierLocationUpdatedAt,
     showRejectedModal,
     showCancelledModal,
   } = useOrderStatusPolling(orderId);
@@ -242,6 +247,11 @@ export default function Confirmacao() {
             animating={animating}
             courierName={courierName}
             courierPhone={courierPhone}
+            courierLat={courierLat}
+            courierLng={courierLng}
+            deliveryLat={deliveryLat}
+            deliveryLng={deliveryLng}
+            courierLocationUpdatedAt={courierLocationUpdatedAt}
           />
         )}
 

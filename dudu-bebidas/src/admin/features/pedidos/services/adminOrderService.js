@@ -1,6 +1,7 @@
 import { supabase } from "../../../../shared/supabase/Supabaseclient";
 import { PAGE_SIZE, isPhantomMercadoPagoOrder } from "../orderStatus";
 import { AdminServiceError } from "../../../shared/services/AdminServiceError";
+import { geocodeAddress, formatAddressText } from "../../../../shared/utils/geo";
 
 const ORDER_SELECT = `
   id,
@@ -106,13 +107,20 @@ export async function updateAdminOrderStatus(orderId, status) {
   }
 }
 
-export async function assignCourierToOrder(orderId, courier) {
+export async function assignCourierToOrder(orderId, courier, address) {
+  // Geocodifica o destino UMA vez, aqui — nunca de novo depois (fica
+  // salvo em orders.delivery_lat/lng). Se falhar (endereço ruim, Mapbox
+  // fora do ar), a atribuição continua normalmente, só sem pino de mapa
+  // pra esse pedido — geocodificação nunca deve travar o essencial.
+  const location = await geocodeAddress(formatAddressText(address));
+
   const { error } = await supabase
     .from("orders")
     .update({
       courier_id: courier.id,
       courier_name: courier.name,
       courier_phone: courier.phone,
+      ...(location ? { delivery_lat: location.lat, delivery_lng: location.lng } : {}),
     })
     .eq("id", orderId);
 

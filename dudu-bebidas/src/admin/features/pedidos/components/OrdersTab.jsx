@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { PAGE_SIZE } from "../orderStatus";
 import { formatBRL } from "../../../shared/utils/adminFormat";
 import { useVariableVirtualList } from "../useVariableVirtualList";
 import OrderCard from "./OrderCard";
+import CourierMapOverview from "./CourierMapOverview";
 
 const STAT_FILTERS = [
   { key: "all", icon: null, countKey: "all", label: "Total" },
@@ -21,6 +23,8 @@ export default function OrdersTab({
   const { containerRef, totalHeight, offsets, start, end, measureRef } =
     useVariableVirtualList(orders.length, 90, 3);
 
+  const [showMap, setShowMap] = useState(false);
+
   return (
     <>
       <div className="adm-title-row">
@@ -30,11 +34,18 @@ export default function OrdersTab({
             {orders.length} pedido(s) · tempo real
           </p>
         </div>
-        <div className="adm-realtime-dot" aria-label="Tempo real">
-          <span className="adm-dot-pulse" />
-          <span>Ao vivo</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <button className="adm-load-more" onClick={() => setShowMap((v) => !v)}>
+            {showMap ? "Ocultar mapa" : "🗺️ Ver no mapa"}
+          </button>
+          <div className="adm-realtime-dot" aria-label="Tempo real">
+            <span className="adm-dot-pulse" />
+            <span>Ao vivo</span>
+          </div>
         </div>
       </div>
+
+      {showMap && <CourierMapOverview />}
 
       <div className="adm-today-metrics">
         {[
@@ -107,7 +118,7 @@ export default function OrdersTab({
                       onSetStatus={(s) => setStatus(order.id, s)}
                       onMarkPaid={() => markPaid(order.id)}
                       couriers={couriers}
-                      onAssignCourier={(courier) => assignCourier(order.id, courier)}
+                      onAssignCourier={(courier) => assignCourier(order.id, courier, order.address)}
                     />
                   </div>
                 );

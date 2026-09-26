@@ -64,11 +64,11 @@ export function useOrderActions({ setOrders, updateOrderStatusLocally, setOrders
     setUpdating(null);
   }, [setOrders, setOrdersError]);
 
-  const assignCourier = useCallback(async (orderId, courier) => {
+  const assignCourier = useCallback(async (orderId, courier, address) => {
     setUpdating(orderId);
     setOrdersError("");
     try {
-      await assignCourierToOrder(orderId, courier);
+      await assignCourierToOrder(orderId, courier, address);
       setOrders((prev) =>
         prev.map((o) =>
           o.id === orderId

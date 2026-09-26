@@ -305,6 +305,87 @@
 }
 .cf-courier-info a:hover { text-decoration: underline; }
 
+.cf-delivery-map-wrap {
+  margin-top: 12px;
+}
+
+.cf-map-teaser {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(255, 208, 0, 0.08);
+  border: 1px solid rgba(255, 208, 0, 0.3);
+  animation: cf-fade-up 0.4s ease both;
+}
+.cf-map-teaser-icon {
+  font-size: 24px;
+  line-height: 1;
+  flex-shrink: 0;
+  animation: cf-teaser-pulse 1.6s ease-in-out infinite;
+}
+.cf-map-teaser p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #ddd;
+}
+.cf-map-teaser p strong {
+  color: var(--c-accent);
+  font-size: 14.5px;
+}
+@keyframes cf-teaser-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.18); }
+}
+
+.cf-map-stale {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(255, 140, 0, 0.06);
+  border: 1px solid rgba(255, 140, 0, 0.25);
+}
+.cf-map-stale-icon {
+  font-size: 20px;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+.cf-map-stale p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #ddd;
+}
+
+.cf-map-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+}
+.cf-map-loading p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--c-text-dim, #999);
+  text-align: center;
+}
+
+.cf-eta {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #999;
+  text-align: center;
+}
+
 /* ─── BARRA DE PROGRESSO ─────────────────────────────────────────── */
 .cf-progress-track {
   width: 100%; height: 4px;
