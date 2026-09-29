@@ -8,8 +8,12 @@ import { estimateEtaMinutes } from "../../../shared/utils/geo";
 // por um aviso — em vez de deixar um pino parado parecendo "ao vivo".
 const STALE_THRESHOLD_MS = 3 * 60 * 1000;
 
-// wa.me exige só dígitos com DDI — telefone salvo no cadastro do
-// entregador pode vir com parênteses/traço/espaço.
+// Número oficial da loja — o mesmo que recebe o alerta de "novo pedido".
+// O botão de WhatsApp da entrega fala com a loja, não com o celular
+// pessoal do entregador.
+const STORE_WHATSAPP_NUMBER = "553199575029";
+
+// wa.me exige só dígitos com DDI.
 function waLink(phone) {
   const digits = String(phone).replace(/\D/g, "");
   const withCountryCode = digits.startsWith("55") ? digits : `55${digits}`;
@@ -21,7 +25,6 @@ export default function DeliveryTracker({
   statusLoading,
   animating,
   courierName,
-  courierPhone,
   courierLat,
   courierLng,
   deliveryLat,
@@ -113,11 +116,9 @@ export default function DeliveryTracker({
           {courierName && (
             <div className="cf-courier-info">
               <span>🛵 Seu entregador: <strong>{courierName}</strong></span>
-              {courierPhone && (
-                <a href={waLink(courierPhone)} target="_blank" rel="noreferrer">
-                  Chamar no WhatsApp
-                </a>
-              )}
+              <a href={waLink(STORE_WHATSAPP_NUMBER)} target="_blank" rel="noreferrer">
+                Falar com a loja
+              </a>
             </div>
           )}
 

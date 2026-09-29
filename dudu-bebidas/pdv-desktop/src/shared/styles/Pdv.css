@@ -1278,9 +1278,24 @@
     padding: 3mm;
     color: #000;
     background: #fff;
+    /* Courier New fino + peso normal saía muito claro na térmica — dono
+       reclamou que a notinha vinha "apagada". Negrito em tudo (não só no
+       total) + fonte um pouco maior resolve, sem mudar o layout. */
     font-family: "Courier New", monospace;
-    font-size: 11px;
-    line-height: 1.4;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.5;
+  }
+
+  .pdv-receipt-header strong {
+    font-size: 15px;
+  }
+
+  .pdv-receipt-total {
+    font-size: 14px;
+  }
+  .pdv-receipt-total strong {
+    font-size: 16px;
   }
 }
 

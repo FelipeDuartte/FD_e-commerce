@@ -246,7 +246,6 @@ export default function Confirmacao() {
             statusLoading={statusLoading}
             animating={animating}
             courierName={courierName}
-            courierPhone={courierPhone}
             courierLat={courierLat}
             courierLng={courierLng}
             deliveryLat={deliveryLat}

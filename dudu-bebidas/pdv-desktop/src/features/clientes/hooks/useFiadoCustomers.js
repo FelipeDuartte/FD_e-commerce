@@ -8,6 +8,7 @@ import {
   registerFiadoPayment,
   createPdvCustomerCharge,
 } from "../services/fiadoService";
+import { useFiadoBalancesRealtime } from "./useFiadoRealtime";
 
 // Compartilhado entre o seletor de cliente na venda (CartPanel) e o
 // diretório de clientes (ClientesView) — um único carregamento pros dois.
@@ -33,6 +34,10 @@ export function useFiadoCustomers(sessionId) {
     }, 0);
     return () => clearTimeout(timer);
   }, [load]);
+
+  // Recarrega quando fiado é mexido em qualquer terminal — venda,
+  // pagamento recebido ou lançamento manual, não só ações deste terminal.
+  useFiadoBalancesRealtime(load);
 
   const createCustomer = async ({ name, phone, email, address }) => {
     const customer = await createPdvCustomer({ name, phone, email, address });

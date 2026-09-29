@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { listFiadoOrders, listCustomerPayments, listCustomerCharges } from "../services/fiadoService";
+import { useCustomerDetailRealtime } from "./useFiadoRealtime";
 
 // Pedidos fiado + lançamentos livres (pedido em aberto manual) + pagamentos
 // do cliente selecionado, e a lista unificada de transações (compra/cobrança
@@ -45,6 +46,10 @@ export function useCustomerDetail(customerId, selectedCustomer) {
   }, [customerId, loadDetail]);
 
   const reload = useCallback(() => loadDetail(customerId), [customerId, loadDetail]);
+
+  // Recarrega quando outro terminal registra pagamento/cobrança/venda
+  // fiado pra ESTE cliente, enquanto a tela dele está aberta.
+  useCustomerDetailRealtime(customerId, reload);
 
   const paidDebitIds = useMemo(() => {
     const totalPaid = selectedCustomer?.totalPaid ?? 0;

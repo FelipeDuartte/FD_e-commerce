@@ -6,6 +6,7 @@ import {
   listSessionSales,
 } from "../../../shared/services/salesService";
 import { applyCreditCardFee, DEFAULT_INSTALLMENT_FEE_RATE } from "../utils/creditFee";
+import { useSaleRealtime } from "./useSaleRealtime";
 
 // Forma de pagamento (única ou dividida), troco, cliente fiado, submissão
 // da venda e cancelamento. Recebe o carrinho (de useCart) como dados —
@@ -48,6 +49,13 @@ export function useSale(
     }, 0);
     return () => clearTimeout(timer);
   }, [sessionId, loadSessionSales]);
+
+  // Recarrega quando QUALQUER terminal (inclusive outro computador) vende
+  // ou cancela algo nesse mesmo caixa — não só quando este terminal age.
+  const handleRealtimeChange = useCallback(() => {
+    loadSessionSales(sessionId);
+  }, [sessionId, loadSessionSales]);
+  useSaleRealtime(sessionId, handleRealtimeChange);
 
   // Troco só faz sentido pra dinheiro, cliente só faz sentido pra fiado,
   // parcelas só fazem sentido pra crédito — trocar de forma de pagamento
