@@ -1,4 +1,4 @@
-import { supabase } from "../../../shared/supabase/Supabaseclient";
+import { supabase, getCurrentStoreId } from "../../../shared/supabase/Supabaseclient";
 import { PAGE_SIZE } from "../../../shared/constants";
 import { AdminServiceError } from "../../../shared/services/AdminServiceError";
 
@@ -54,4 +54,23 @@ export async function listStockMovements({ page = 0, reason = "todos", search = 
     count: count ?? 0,
     hasMore: movements.length === PAGE_SIZE,
   };
+}
+
+// Desfaz uma compra registrada errada (produto errado, quantidade errada
+// etc.) — só funciona pra compra MAIS RECENTE de um produto, validado no
+// próprio banco (ver migration 0034). Devolve estoque e custo pro estado
+// de antes dessa compra específica.
+export async function undoProductPurchase(movementId) {
+  const { data, error } = await supabase.rpc("undo_last_product_purchase", {
+    p_store_id: getCurrentStoreId(),
+    p_movement_id: movementId,
+  });
+
+  if (error) {
+    throw new AdminServiceError("Não foi possível desfazer a compra.", error);
+  }
+  if (!data?.success) {
+    throw new AdminServiceError(data?.error || "Não foi possível desfazer a compra.");
+  }
+  return data;
 }

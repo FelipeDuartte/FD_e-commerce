@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { listStockMovements } from "../services/stockService";
+import { listStockMovements, undoProductPurchase } from "../services/stockService";
+import UndoPurchaseModal from "./UndoPurchaseModal";
 
 const REASON_ICON = {
   venda: "🛒",
@@ -26,6 +27,9 @@ export default function EstoqueView() {
   const [error, setError] = useState("");
   const [reasonFilter, setReasonFilter] = useState("todos");
   const [search, setSearch] = useState("");
+  const [movementToUndo, setMovementToUndo] = useState(null);
+  const [undoing, setUndoing] = useState(false);
+  const [undoError, setUndoError] = useState("");
 
   const fetchPage = useCallback(async (nextPage, append, filters) => {
     if (append) setLoadingMore(true);
@@ -61,8 +65,39 @@ export default function EstoqueView() {
     fetchPage(nextPage, true, { reason: reasonFilter, search });
   };
 
+  const dismissUndo = () => {
+    if (undoing) return;
+    setMovementToUndo(null);
+    setUndoError("");
+  };
+
+  const confirmUndo = async () => {
+    if (!movementToUndo) return;
+    setUndoing(true);
+    setUndoError("");
+    try {
+      await undoProductPurchase(movementToUndo.id);
+      setMovementToUndo(null);
+      setPage(0);
+      await fetchPage(0, false, { reason: reasonFilter, search });
+    } catch (e) {
+      setUndoError(e.message);
+    }
+    setUndoing(false);
+  };
+
   return (
     <>
+      {movementToUndo && (
+        <UndoPurchaseModal
+          movement={movementToUndo}
+          undoing={undoing}
+          undoError={undoError}
+          onConfirm={confirmUndo}
+          onDismiss={dismissUndo}
+        />
+      )}
+
       <div className="adm-title-row">
         <div>
           <h1 className="adm-title">Movimentação de Estoque</h1>
@@ -106,7 +141,7 @@ export default function EstoqueView() {
           <table className="adm-product-table">
             <thead>
               <tr>
-                {["ID", "Produto", "Movimento", "Origem", "Quando"].map((h) => (
+                {["ID", "Produto", "Movimento", "Origem", "Quando", "Ações"].map((h) => (
                   <th key={h}>{h}</th>
                 ))}
               </tr>
@@ -131,6 +166,17 @@ export default function EstoqueView() {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
+                  </td>
+                  <td className="adm-td-actions">
+                    {m.reason === "compra" && (
+                      <button
+                        className="adm-btn-delete"
+                        title="Desfazer essa compra"
+                        onClick={() => setMovementToUndo(m)}
+                      >
+                        ↩️ Desfazer
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
