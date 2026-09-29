@@ -32,6 +32,10 @@ export async function fetchOrdersForReports() {
       .from("orders")
       .select("id, total, card_fee_amount, created_at, address")
       .gte("created_at", cutoff)
+      // Só site — venda de balcão (PDV) tem histórico e relatório próprios,
+      // misturar aqui inflava o faturamento sem o dono perceber. Mesmo
+      // filtro já usado na lista de Pedidos (listAdminOrders).
+      .eq("channel", "online")
       // Só conta pedido já recebido (delivered) — em aberto ainda não virou
       // dinheiro, e rejeitado/cancelado nunca vira. Filtra aqui (não em
       // summariseOrders) porque também corta os order_items buscados logo
