@@ -5,8 +5,10 @@ import ProductCatalog from "../../venda/components/ProductCatalog";
 import { formatBRL } from "../../../shared/utils/format";
 
 // Pedido fiado com produtos de verdade (catálogo + carrinho, igual a aba
-// Venda) — pro dono que vende vários itens diferentes fiado e quer o
-// estoque baixando certinho, sem digitar "2 cervejas + 1 refri" na mão.
+// Venda) — pro dono que vende vários itens diferentes fiado sem digitar
+// "2 cervejas + 1 refri" na mão. Estoque não baixa na criação, só quando o
+// pagamento cobrir esse pedido (deferStockUntilPaid, ver salesService.js).
+
 export default function NewFiadoOrderModal({ customer, onConfirm, onDismiss }) {
   const catalog = useProductCatalog();
   const cart = useCart();
@@ -34,7 +36,8 @@ export default function NewFiadoOrderModal({ customer, onConfirm, onDismiss }) {
       <div className="adm-modal pdv-fiado-order-modal" role="dialog" aria-modal="true">
         <h2 className="adm-store-section-title">Novo pedido — {customer.name}</h2>
         <p className="adm-store-section-desc">
-          Escolha os produtos vendidos — entra como fiado na conta do cliente, com baixa de estoque.
+          Escolha os produtos vendidos — entra como fiado na conta do cliente. O estoque só baixa quando
+          o cliente pagar essa conta.
         </p>
 
         {error && <div className="adm-modal-error">⚠️ {error}</div>}
