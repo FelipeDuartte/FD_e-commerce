@@ -289,6 +289,12 @@ export async function fulfillOrder(
       ...(paymentStatus !== undefined ? { payment_status: paymentStatus } : {}),
       ...(paymentProvider !== null ? { payment_provider: paymentProvider } : {}),
       ...(pdvCustomerId !== null ? { pdv_customer_id: pdvCustomerId } : {}),
+      // Marca que o estoque ainda não foi baixado pra esse pedido — tanto
+      // faz o motivo (cartão MP aguardando aprovação, ou pedido fiado com
+      // baixa adiada pro pagamento): quem settar `skipStockDecrement` é
+      // responsável por baixar o estoque depois e zerar essa flag (ver
+      // confirm_mercadopago_payment e settle_fiado_stock).
+      stock_pending: skipStockDecrement,
     })
     .select("id, order_number")
     .single();

@@ -71,13 +71,15 @@ export default function Pdv({ theme, onToggleTheme }) {
   // Vender um fardo mexe no estoque da BASE (outro produto) — sem isso,
   // a aba Produtos ficava com número desatualizado até o operador trocar
   // de aba e voltar, já que ela tem sua própria lista carregada uma vez,
-  // independente do catálogo de Venda.
+  // independente do catálogo de Venda. Também usado pelo pedido fiado com
+  // produtos criado direto na aba Clientes (mesmo efeito colateral no estoque).
+  const reloadProducts = () => { catalog.reload(); produtos.fetchProducts(); };
   const sale = useSale(
     cashSession.session?.id,
     {
       cart: cart.cart, cartTotal: cart.cartTotal, discountAmount: cart.discountAmount,
       clearCart: cart.clearCart, resetDiscount: () => cart.setDiscountInput(""),
-      reloadProducts: () => { catalog.reload(); produtos.fetchProducts(); },
+      reloadProducts,
     },
     { onFiadoSale: fiado.reload, installmentFeeRate },
   );
@@ -279,7 +281,6 @@ export default function Pdv({ theme, onToggleTheme }) {
               customersLoading={fiado.loading}
               customersError={fiado.error}
               payDebt={fiado.payDebt}
-              addCharge={fiado.addCharge}
               createCustomer={fiado.createCustomer}
               updateCustomer={fiado.updateCustomer}
               setCustomerActive={fiado.setCustomerActive}
@@ -288,6 +289,7 @@ export default function Pdv({ theme, onToggleTheme }) {
               cancellingId={sale.cancellingId}
               onCancelSale={sale.handleCancelSale}
               onRemoveItem={sale.handleRemoveItem}
+              reloadProducts={reloadProducts}
             />
           )}
 

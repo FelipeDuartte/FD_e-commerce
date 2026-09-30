@@ -75,12 +75,38 @@ export default function CustomerTransactionList({
             // sentido travar a correção de um item só porque o caixa daquele
             // dia já fechou.
             const canRemoveItems = !t.cancelled && !paid;
+            // Pedido fiado tem lista de itens de altura variável (1 a vários
+            // produtos) — por isso usa um cartão empilhado (cabeçalho numa
+            // linha + itens embaixo, largura cheia) em vez do grid de colunas
+            // fixas das outras transações, que espremia os nomes e quebrava
+            // o layout em telas mais estreitas.
             return (
-              <div key={t.key} className={`pdv-clientes-tx-row ${t.cancelled ? "pdv-sale-cancelled" : ""}`}>
-                <span className="pdv-sale-time">{formatDateTime(t.createdAt)}</span>
-                <span className="pdv-clientes-tx-badge pdv-clientes-tx-badge-purchase">
-                  🛒{t.orderNumber ? ` #${t.orderNumber}` : ""}
-                </span>
+              <div key={t.key} className={`pdv-clientes-tx-card ${t.cancelled ? "pdv-sale-cancelled" : ""}`}>
+                <div className="pdv-clientes-tx-card-head">
+                  <span className="pdv-sale-time">{formatDateTime(t.createdAt)}</span>
+                  <span className="pdv-clientes-tx-badge pdv-clientes-tx-badge-purchase">
+                    🛒{t.orderNumber ? ` #${t.orderNumber}` : ""}
+                  </span>
+                  <div className="pdv-clientes-tx-card-head-right">
+                    <strong>{formatBRL(t.total)}</strong>
+                    {t.cancelled ? (
+                      <span className="pdv-sale-cancelled-label">Cancelada</span>
+                    ) : paid ? (
+                      <span className="pdv-fiado-order-paid-label">Pago</span>
+                    ) : canCancel ? (
+                      <button
+                        className="adm-btn-delete"
+                        title="Cancelar venda"
+                        onClick={() => onCancelSale(t)}
+                        disabled={cancellingId === t.orderId}
+                      >
+                        {cancellingId === t.orderId ? "..." : "🗑️"}
+                      </button>
+                    ) : (
+                      <span className="pdv-sale-locked-label" title="Só é possível cancelar vendas do caixa aberto agora">—</span>
+                    )}
+                  </div>
+                </div>
                 <div className="pdv-sale-items-list">
                   {t.orderItems?.length
                     ? t.orderItems.map((item) => (
@@ -99,25 +125,6 @@ export default function CustomerTransactionList({
                         </div>
                       ))
                     : t.itemsLabel}
-                </div>
-                <strong>{formatBRL(t.total)}</strong>
-                <div className="pdv-clientes-tx-actions">
-                  {t.cancelled ? (
-                    <span className="pdv-sale-cancelled-label">Cancelada</span>
-                  ) : paid ? (
-                    <span className="pdv-fiado-order-paid-label">Pago</span>
-                  ) : canCancel ? (
-                    <button
-                      className="adm-btn-delete"
-                      title="Cancelar venda"
-                      onClick={() => onCancelSale(t)}
-                      disabled={cancellingId === t.orderId}
-                    >
-                      {cancellingId === t.orderId ? "..." : "🗑️"}
-                    </button>
-                  ) : (
-                    <span className="pdv-sale-locked-label" title="Só é possível cancelar vendas do caixa aberto agora">—</span>
-                  )}
                 </div>
               </div>
             );

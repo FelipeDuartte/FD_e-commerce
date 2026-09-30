@@ -1,9 +1,12 @@
 import { supabase, getCurrentStoreId } from "../supabase/Supabaseclient";
 import { AdminServiceError } from "./AdminServiceError";
 
-export async function createPdvSale({ cartItems, paymentMethod, cashSessionId, discountAmount, payments, pdvCustomerId, installments }) {
+export async function createPdvSale({
+  cartItems, paymentMethod, cashSessionId, discountAmount, payments, pdvCustomerId, installments,
+  deferStockUntilPaid,
+}) {
   const { data, error } = await supabase.functions.invoke("pdv-sale", {
-    body: { cartItems, paymentMethod, cashSessionId, discountAmount, payments, pdvCustomerId, installments },
+    body: { cartItems, paymentMethod, cashSessionId, discountAmount, payments, pdvCustomerId, installments, deferStockUntilPaid },
   });
 
   if (error) {

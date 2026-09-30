@@ -6,7 +6,6 @@ import {
   setPdvCustomerActive,
   deletePdvCustomer,
   registerFiadoPayment,
-  createPdvCustomerCharge,
 } from "../services/fiadoService";
 import { useFiadoBalancesRealtime } from "./useFiadoRealtime";
 
@@ -67,14 +66,8 @@ export function useFiadoCustomers(sessionId) {
     load();
   };
 
-  // Lançamento livre de dívida (sem carrinho) — ver NewChargeModal.
-  const addCharge = async ({ customerId, amount, description }) => {
-    await createPdvCustomerCharge({ customerId, amount, description, cashSessionId: sessionId });
-    load();
-  };
-
   return {
     customers, loading, error, reload: load,
-    createCustomer, updateCustomer, setCustomerActive, deleteCustomer, payDebt, addCharge,
+    createCustomer, updateCustomer, setCustomerActive, deleteCustomer, payDebt,
   };
 }

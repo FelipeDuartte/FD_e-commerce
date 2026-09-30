@@ -20,6 +20,11 @@
 // paymentMethod "credit_card" (forma única, não dividida) aceita
 // "installments": 1 a 8 — cobra a taxa real da maquininha por fora do preço
 // de tabela (ver INSTALLMENT_FEE_RATE em orderFulfillment.ts).
+//
+// "deferStockUntilPaid": true (só pedido fiado criado com produtos na aba
+// Clientes) — não baixa estoque na hora, só quando o pagamento do cliente
+// cobrir esse pedido (ver settle_fiado_stock). Omitido/false em todo o
+// resto: venda de balcão baixa estoque no ato, como sempre.
 // ─────────────────────────────────────────────────────────────
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -53,7 +58,10 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Acesso restrito a administradores de loja." }, 403);
     }
 
-    const { cartItems, paymentMethod, cashSessionId, discountAmount, payments, pdvCustomerId, installments } = await req.json();
+    const {
+      cartItems, paymentMethod, cashSessionId, discountAmount, payments, pdvCustomerId, installments,
+      deferStockUntilPaid,
+    } = await req.json();
 
     if (!cashSessionId) {
       return jsonResponse({ error: "Nenhum caixa aberto informado." }, 400);
@@ -98,6 +106,10 @@ Deno.serve(async (req) => {
       discountAmount, // clamp/validação real acontece dentro do fulfillOrder
       payments, // pagamento dividido (2+ formas) — validação real dentro do fulfillOrder
       pdvCustomerId, // fiado — obrigatório quando paymentMethod === 'fiado', validado dentro do fulfillOrder
+      // Pedido fiado criado com produtos direto na aba Clientes: não baixa
+      // estoque na hora, só quando o pagamento cobrir esse pedido (ver
+      // settle_fiado_stock). Nunca usado pela venda normal do balcão.
+      skipStockDecrement: !!deferStockUntilPaid,
     });
 
     return jsonResponse({ orderId, orderNumber }, 200);

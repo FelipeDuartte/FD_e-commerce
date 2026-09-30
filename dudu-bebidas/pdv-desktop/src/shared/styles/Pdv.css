@@ -1011,6 +1011,36 @@
   gap: 6px;
 }
 
+/* Cartão da compra fiado (cabeçalho + itens empilhados abaixo, largura
+   cheia) — não usa o grid de colunas fixas do .pdv-clientes-tx-row porque
+   a lista de itens tem altura variável (1 a vários produtos) e espremia
+   nas colunas estreitas, quebrando o layout. */
+.pdv-clientes-tx-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 215, 0, 0.1);
+  background: color-mix(in srgb, var(--c-text) 2%, transparent);
+  font-size: 13px;
+  color: var(--c-text);
+}
+
+.pdv-clientes-tx-card-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pdv-clientes-tx-card-head-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
 @media (max-width: 700px) {
   .pdv-clientes-tx-row {
     grid-template-columns: 1fr 1fr;
@@ -1373,11 +1403,13 @@
   overflow-wrap: break-word;
 }
 
-/* Linha de item com botão de remover (só pedidos fiado, caixa ainda
-   aberto) — o botão só aparece nessa condição, ver canRemoveItems. */
+/* Linha de item com botão de remover (só pedidos fiado ainda não pagos,
+   ver canRemoveItems). align-items: flex-start (não center) de propósito
+   — se o nome do produto for longo e quebrar em 2 linhas, o ✕ fica colado
+   no topo da linha em vez de flutuar no meio do texto quebrado. */
 .pdv-sale-item-line {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 6px;
 }
@@ -2026,4 +2058,50 @@
 }
 .pdv-bill-date-filter-clear:hover {
   color: var(--c-accent);
+}
+
+/* ── Novo pedido fiado com produtos (Clientes) — reaproveita catálogo e
+   carrinho da aba Venda, só que dentro do modal, então precisa de largura
+   própria (bem maior que o .adm-modal padrão de 420px) e altura fixa pro
+   catálogo/carrinho rolarem por conta própria em vez de estourar o modal. */
+.pdv-fiado-order-modal {
+  max-width: 1040px;
+  width: 95%;
+  max-height: 90vh;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.pdv-fiado-order-modal .adm-store-section-desc {
+  margin-bottom: 16px;
+}
+
+.pdv-fiado-order-body {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  align-items: stretch;
+  gap: 16px;
+  height: 460px;
+  min-height: 0;
+}
+
+@media (max-width: 800px) {
+  .pdv-fiado-order-body {
+    grid-template-columns: 1fr;
+    height: auto;
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+}
+
+.pdv-fiado-order-modal .adm-store-form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  flex-shrink: 0;
+}
+.pdv-fiado-order-modal .adm-store-form-actions button {
+  flex: 1;
 }

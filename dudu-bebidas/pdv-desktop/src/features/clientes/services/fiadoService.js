@@ -115,6 +115,26 @@ export async function registerFiadoPayment({ customerId, amount, paymentMethod, 
   if (error) {
     throw new AdminServiceError("Não foi possível registrar o pagamento.", error);
   }
+
+  // Pedidos fiado criados com baixa de estoque adiada (ver
+  // NewFiadoOrderModal) só baixam estoque de verdade quando o pagamento
+  // cobre esse pedido específico — roda a cada pagamento pra pegar
+  // qualquer pedido que acabou de "quitar" na ordem FIFO.
+  await settleFiadoStock(customerId);
+}
+
+// Baixa o estoque dos pedidos fiado que acabaram de ficar cobertos pelo
+// total pago até agora (FIFO, mesmo cálculo do selo "Pago" no front) — não
+// falha a operação principal (pagamento/pedido) se der erro, só loga; o
+// pior caso é o estoque ficar pendente até a próxima chamada reprocessar.
+export async function settleFiadoStock(customerId) {
+  const { data, error } = await supabase.rpc("settle_fiado_stock", {
+    p_store_id: getCurrentStoreId(),
+    p_customer_id: customerId,
+  });
+  if (error || !data?.success) {
+    console.error("[fiadoService] Não foi possível acertar o estoque fiado:", error ?? data?.error);
+  }
 }
 
 export async function listCustomerPayments(customerId) {
@@ -135,26 +155,9 @@ export async function listCustomerPayments(customerId) {
   }));
 }
 
-// Lançamento livre de dívida (sem carrinho/estoque) — direto da aba
-// Clientes, pra quando o operador só quer registrar "cliente ficou devendo
-// X" sem passar pela venda. cashSessionId opcional, mesmo padrão de
-// registerFiadoPayment.
-export async function createPdvCustomerCharge({ customerId, amount, description, cashSessionId }) {
-  const userId = await getCurrentUserId();
-  const { error } = await supabase.from("pdv_customer_charges").insert({
-    store_id: getCurrentStoreId(),
-    customer_id: customerId,
-    amount,
-    description: String(description).trim(),
-    cash_session_id: cashSessionId ?? null,
-    created_by: userId,
-  });
-
-  if (error) {
-    throw new AdminServiceError("Não foi possível lançar o pedido em aberto.", error);
-  }
-}
-
+// Não dá mais pra criar lançamento livre (substituído pelo pedido com
+// produtos de verdade, ver NewFiadoOrderModal) — listCustomerCharges
+// continua existindo só pra mostrar lançamentos antigos já registrados.
 export async function listCustomerCharges(customerId) {
   const { data, error } = await supabase
     .from("pdv_customer_charges")

@@ -1,17 +1,19 @@
 import { useState } from "react";
 import { useCustomerDetail } from "../hooks/useCustomerDetail";
+import { createPdvSale } from "../../../shared/services/salesService";
+import { settleFiadoStock } from "../services/fiadoService";
 import CustomerListPanel from "./CustomerListPanel";
 import CustomerEditForm from "./CustomerEditForm";
 import CustomerDetailHeader from "./CustomerDetailHeader";
 import CustomerTransactionList from "./CustomerTransactionList";
 import PayDebtModal from "./PayDebtModal";
-import NewChargeModal from "./NewChargeModal";
+import NewFiadoOrderModal from "./NewFiadoOrderModal";
 import DeleteCustomerModal from "./DeleteCustomerModal";
 
 export default function ClientesView({
-  customers, customersLoading, customersError, payDebt, addCharge, createCustomer,
+  customers, customersLoading, customersError, payDebt, createCustomer,
   updateCustomer, setCustomerActive, deleteCustomer,
-  currentSessionId, cancellingId, onCancelSale, onRemoveItem,
+  currentSessionId, cancellingId, onCancelSale, onRemoveItem, reloadProducts,
 }) {
   const [selectedId, setSelectedId] = useState(null);
   const [creatingCustomer, setCreatingCustomer] = useState(false);
@@ -20,8 +22,7 @@ export default function ClientesView({
   const [payModalOpen, setPayModalOpen] = useState(false);
   const [payError, setPayError] = useState("");
 
-  const [chargeModalOpen, setChargeModalOpen] = useState(false);
-  const [chargeError, setChargeError] = useState("");
+  const [newOrderModalOpen, setNewOrderModalOpen] = useState(false);
 
   const [togglingActive, setTogglingActive] = useState(false);
   const [statusError, setStatusError] = useState("");
@@ -62,16 +63,23 @@ export default function ClientesView({
     }
   };
 
-  const handleAddCharge = async ({ amount, description }) => {
-    setChargeError("");
-    try {
-      await addCharge({ customerId: selected.id, amount, description });
-      detail.reload();
-      setChargeModalOpen(false);
-    } catch (e) {
-      setChargeError(e.message);
-      throw e;
-    }
+  const handleNewOrder = async ({ cartItems, discountAmount }) => {
+    await createPdvSale({
+      cartItems,
+      cashSessionId: currentSessionId,
+      paymentMethod: "fiado",
+      pdvCustomerId: selected.id,
+      discountAmount,
+      // Não baixa estoque na hora — só quando o pagamento cobrir esse
+      // pedido (ver settle_fiado_stock). Chama aqui também (não só depois
+      // de um pagamento) pro caso do cliente já ter crédito suficiente
+      // sobrando pra cobrir esse pedido novo na mesma hora.
+      deferStockUntilPaid: true,
+    });
+    await settleFiadoStock(selected.id);
+    detail.reload();
+    reloadProducts();
+    setNewOrderModalOpen(false);
   };
 
   const handleToggleActive = async () => {
@@ -132,12 +140,11 @@ export default function ClientesView({
               ordersCount={detail.orders.filter((o) => !o.cancelled).length}
               onEdit={() => setEditing(true)}
               onPay={() => setPayModalOpen(true)}
-              onNewCharge={() => setChargeModalOpen(true)}
+              onNewOrder={() => setNewOrderModalOpen(true)}
               onToggleActive={handleToggleActive}
               togglingActive={togglingActive}
               onRequestDelete={() => setDeleteModalOpen(true)}
               payError={payError}
-              chargeError={chargeError}
               statusError={statusError}
             />
 
@@ -160,8 +167,8 @@ export default function ClientesView({
         <PayDebtModal customer={selected} onConfirm={handlePay} onDismiss={() => setPayModalOpen(false)} />
       )}
 
-      {chargeModalOpen && selected && (
-        <NewChargeModal customer={selected} onConfirm={handleAddCharge} onDismiss={() => setChargeModalOpen(false)} />
+      {newOrderModalOpen && selected && (
+        <NewFiadoOrderModal customer={selected} onConfirm={handleNewOrder} onDismiss={() => setNewOrderModalOpen(false)} />
       )}
 
       {deleteModalOpen && selected && (

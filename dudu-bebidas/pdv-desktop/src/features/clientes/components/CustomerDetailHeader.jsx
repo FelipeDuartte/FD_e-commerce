@@ -1,8 +1,8 @@
 import { formatBRL, formatLastOrder, formatPhone } from "../../../shared/utils/format";
 
 export default function CustomerDetailHeader({
-  customer, ordersLoading, ordersCount, onEdit, onPay, onNewCharge,
-  onToggleActive, togglingActive, onRequestDelete, payError, chargeError, statusError,
+  customer, ordersLoading, ordersCount, onEdit, onPay, onNewOrder,
+  onToggleActive, togglingActive, onRequestDelete, payError, statusError,
 }) {
   return (
     <>
@@ -22,8 +22,8 @@ export default function CustomerDetailHeader({
               💰 Receber pagamento
             </button>
           )}
-          <button className="pdv-clientes-secondary-btn" onClick={onNewCharge}>
-            📝 Novo pedido em aberto
+          <button className="pdv-clientes-secondary-btn" onClick={onNewOrder}>
+            🛒 Novo pedido (produtos)
           </button>
         </div>
       </div>
@@ -39,7 +39,6 @@ export default function CustomerDetailHeader({
       </div>
 
       {payError && <div className="adm-modal-error">⚠️ {payError}</div>}
-      {chargeError && <div className="adm-modal-error">⚠️ {chargeError}</div>}
       {statusError && <div className="adm-modal-error">⚠️ {statusError}</div>}
 
       <div className="pdv-clientes-stats">
