@@ -176,7 +176,7 @@ export async function listCustomerCharges(customerId) {
 export async function listFiadoOrders(customerId) {
   const { data, error } = await supabase
     .from("orders")
-    .select("id, order_number, total, status, created_at, cash_session_id, order_items(name, quantity)")
+    .select("id, order_number, total, status, created_at, cash_session_id, order_items(id, name, quantity)")
     .eq("pdv_customer_id", customerId)
     .eq("payment_method", "fiado")
     .order("created_at", { ascending: false });
@@ -184,15 +184,21 @@ export async function listFiadoOrders(customerId) {
   if (error) {
     throw new AdminServiceError("Não foi possível carregar as vendas fiado do cliente.", error);
   }
-  return (data ?? []).map((o) => ({
-    orderId: o.id,
-    orderNumber: o.order_number,
-    total: o.total,
-    cancelled: o.status === "cancelled",
-    createdAt: o.created_at,
-    cashSessionId: o.cash_session_id,
-    itemsLabel: (o.order_items ?? [])
-      .map((it) => (it.quantity > 1 ? `${it.name} x${it.quantity}` : it.name))
-      .join(", "),
-  }));
+  return (data ?? []).map((o) => {
+    const items = o.order_items ?? [];
+    return {
+      orderId: o.id,
+      orderNumber: o.order_number,
+      total: o.total,
+      cancelled: o.status === "cancelled",
+      createdAt: o.created_at,
+      cashSessionId: o.cash_session_id,
+      itemsLabel: items
+        .map((it) => (it.quantity > 1 ? `${it.name} x${it.quantity}` : it.name))
+        .join(", "),
+      // Item a item com id — usado pra mostrar cada produto inteiro (sem
+      // cortar) e remover um item específico (ver removeSaleItem).
+      orderItems: items.map((it) => ({ id: it.id, name: it.name, quantity: it.quantity })),
+    };
+  });
 }

@@ -977,7 +977,7 @@
 .pdv-clientes-tx-row {
   display: grid;
   grid-template-columns: 90px 100px 1fr 90px auto;
-  align-items: center;
+  align-items: start;
   gap: 10px;
   padding: 10px 14px;
   border-radius: 8px;
@@ -1371,6 +1371,30 @@
 }
 .pdv-sale-items-list > div {
   overflow-wrap: break-word;
+}
+
+/* Linha de item com botão de remover (só pedidos fiado, caixa ainda
+   aberto) — o botão só aparece nessa condição, ver canRemoveItems. */
+.pdv-sale-item-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.pdv-sale-item-remove-btn {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: #ff6b6b;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+  opacity: 0.6;
+}
+.pdv-sale-item-remove-btn:hover {
+  opacity: 1;
 }
 
 .pdv-sale-cancelled {

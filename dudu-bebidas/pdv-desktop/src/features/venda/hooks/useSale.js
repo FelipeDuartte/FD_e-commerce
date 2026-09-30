@@ -3,6 +3,7 @@ import { formatBRL } from "../../../shared/utils/format";
 import {
   createPdvSale,
   cancelPdvSale,
+  removeSaleItem,
   listSessionSales,
 } from "../../../shared/services/salesService";
 import { applyCreditCardFee, DEFAULT_INSTALLMENT_FEE_RATE } from "../utils/creditFee";
@@ -29,6 +30,9 @@ export function useSale(
   const [cancellingId, setCancellingId] = useState(null);
   const [cancelError, setCancelError] = useState("");
   const [confirmingSale, setConfirmingSale] = useState(null);
+  const [itemToRemove, setItemToRemove] = useState(null);
+  const [removingItem, setRemovingItem] = useState(false);
+  const [removeItemError, setRemoveItemError] = useState("");
 
   const loadSessionSales = useCallback(async (id) => {
     if (!id) {
@@ -175,6 +179,32 @@ export function useSale(
 
   const dismissCancelSale = () => setConfirmingSale(null);
 
+  // Remover um item específico de um pedido fiado ("Em Aberto") — pra não
+  // precisar cancelar o pedido inteiro e lançar tudo de novo quando só um
+  // item foi registrado errado (ver migration 0035, remove_pdv_sale_item).
+  const handleRemoveItem = (sale, item) => {
+    setRemoveItemError("");
+    setItemToRemove({ sale, item });
+  };
+
+  const dismissRemoveItem = () => setItemToRemove(null);
+
+  const confirmRemoveItem = async () => {
+    if (!itemToRemove) return;
+    const { sale, item } = itemToRemove;
+    setRemovingItem(true);
+    setRemoveItemError("");
+    try {
+      await removeSaleItem(sale.orderId, item.id);
+      reloadProducts();
+      loadSessionSales(sessionId);
+      setItemToRemove(null);
+    } catch (e) {
+      setRemoveItemError(e.message);
+    }
+    setRemovingItem(false);
+  };
+
   const confirmCancelSale = async () => {
     const sale = confirmingSale;
     if (!sale) return;
@@ -200,5 +230,7 @@ export function useSale(
     removeSplitLine, splitTotal, splitRemaining, splitValid,
     fiadoCustomer, setFiadoCustomer, missingFiadoCustomer,
     handleFinalizeSale, handleCancelSale, confirmCancelSale, dismissCancelSale,
+    itemToRemove, removingItem, removeItemError,
+    handleRemoveItem, confirmRemoveItem, dismissRemoveItem,
   };
 }

@@ -20,7 +20,7 @@ function formatDateTime(iso) {
 
 export default function CustomerTransactionList({
   ordersLoading, filteredTransactions, txFilter, setTxFilter,
-  paidDebitIds, currentSessionId, cancellingId, onCancelSale,
+  paidDebitIds, currentSessionId, cancellingId, onCancelSale, onRemoveItem,
 }) {
   return (
     <div>
@@ -69,13 +69,37 @@ export default function CustomerTransactionList({
             }
             const paid = !t.cancelled && paidDebitIds.has(t.orderId);
             const canCancel = !t.cancelled && t.cashSessionId === currentSessionId;
+            // Diferente do cancelamento do pedido inteiro (só no caixa aberto
+            // agora), remover um item avulso vale pra qualquer pedido fiado
+            // ainda não pago — a dívida fica em aberto por dias, não faz
+            // sentido travar a correção de um item só porque o caixa daquele
+            // dia já fechou.
+            const canRemoveItems = !t.cancelled && !paid;
             return (
               <div key={t.key} className={`pdv-clientes-tx-row ${t.cancelled ? "pdv-sale-cancelled" : ""}`}>
                 <span className="pdv-sale-time">{formatDateTime(t.createdAt)}</span>
                 <span className="pdv-clientes-tx-badge pdv-clientes-tx-badge-purchase">
                   🛒{t.orderNumber ? ` #${t.orderNumber}` : ""}
                 </span>
-                <span className="pdv-sale-items" title={t.itemsLabel}>{t.itemsLabel}</span>
+                <div className="pdv-sale-items-list">
+                  {t.orderItems?.length
+                    ? t.orderItems.map((item) => (
+                        <div key={item.id} className="pdv-sale-item-line">
+                          <span>{item.quantity > 1 ? `${item.name} x${item.quantity}` : item.name}</span>
+                          {canRemoveItems && (
+                            <button
+                              type="button"
+                              className="pdv-sale-item-remove-btn"
+                              title="Remover só esse item"
+                              onClick={() => onRemoveItem(t, item)}
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </div>
+                      ))
+                    : t.itemsLabel}
+                </div>
                 <strong>{formatBRL(t.total)}</strong>
                 <div className="pdv-clientes-tx-actions">
                   {t.cancelled ? (

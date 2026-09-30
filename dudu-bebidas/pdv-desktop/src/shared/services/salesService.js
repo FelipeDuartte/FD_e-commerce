@@ -57,13 +57,16 @@ function mapSaleRow(o) {
     itemsLabel: items
       .map((it) => (it.quantity > 1 ? `${it.name} x${it.quantity}` : it.name))
       .join(", "),
+    // Item a item com id — usado só pra remover um item específico de um
+    // pedido fiado (ver removeSaleItem), o resto da tela usa "items" acima.
+    orderItems: items.map((it) => ({ id: it.id, name: it.name, quantity: it.quantity })),
   };
 }
 
 async function queryPdvSales({ sessionId, sinceDays, onlyCancelled, limit } = {}) {
   let query = supabase
     .from("orders")
-    .select("id, order_number, total, discount_amount, payment_method, installments, status, created_at, cash_session_id, order_items(name, quantity), order_payments(method, amount)")
+    .select("id, order_number, total, discount_amount, payment_method, installments, status, created_at, cash_session_id, order_items(id, name, quantity), order_payments(method, amount)")
     .eq("channel", "balcao")
     .order("created_at", { ascending: false });
 
@@ -112,6 +115,24 @@ export async function cancelPdvSale(orderId) {
   }
   if (!data?.success) {
     throw new AdminServiceError(data?.error || "Não foi possível cancelar a venda.");
+  }
+  return data;
+}
+
+// Remove um item de um pedido fiado ("Em Aberto") sem cancelar o pedido
+// inteiro — ver migration 0035 pras regras (só fiado, só caixa ainda aberto).
+export async function removeSaleItem(orderId, orderItemId) {
+  const { data, error } = await supabase.rpc("remove_pdv_sale_item", {
+    p_order_id: orderId,
+    p_order_item_id: orderItemId,
+    p_store_id: getCurrentStoreId(),
+  });
+
+  if (error) {
+    throw new AdminServiceError("Não foi possível remover o item.", error);
+  }
+  if (!data?.success) {
+    throw new AdminServiceError(data?.error || "Não foi possível remover o item.");
   }
   return data;
 }

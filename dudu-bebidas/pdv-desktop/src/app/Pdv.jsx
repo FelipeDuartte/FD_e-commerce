@@ -16,6 +16,7 @@ import HistorySalesList from "../features/historico/components/HistorySalesList"
 import ClientesView from "../features/clientes/components/ClientesView";
 import CloseSessionModal from "../features/caixa/components/CloseSessionModal";
 import CancelSaleModal from "../shared/components/CancelSaleModal";
+import RemoveSaleItemModal from "../shared/components/RemoveSaleItemModal";
 
 // Abas menos usadas no dia a dia (Venda/Histórico/Clientes ficam eager,
 // são as de uso constante) — carregadas sob demanda só quando o operador
@@ -286,6 +287,7 @@ export default function Pdv({ theme, onToggleTheme }) {
               currentSessionId={cashSession.session.id}
               cancellingId={sale.cancellingId}
               onCancelSale={sale.handleCancelSale}
+              onRemoveItem={sale.handleRemoveItem}
             />
           )}
 
@@ -321,6 +323,16 @@ export default function Pdv({ theme, onToggleTheme }) {
           cancelling={sale.cancellingId === sale.confirmingSale.orderId}
           onConfirm={sale.confirmCancelSale}
           onDismiss={sale.dismissCancelSale}
+        />
+      )}
+
+      {sale.itemToRemove && (
+        <RemoveSaleItemModal
+          item={sale.itemToRemove.item}
+          removing={sale.removingItem}
+          removeError={sale.removeItemError}
+          onConfirm={sale.confirmRemoveItem}
+          onDismiss={sale.dismissRemoveItem}
         />
       )}
     </div>

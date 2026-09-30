@@ -11,7 +11,7 @@ import DeleteCustomerModal from "./DeleteCustomerModal";
 export default function ClientesView({
   customers, customersLoading, customersError, payDebt, addCharge, createCustomer,
   updateCustomer, setCustomerActive, deleteCustomer,
-  currentSessionId, cancellingId, onCancelSale,
+  currentSessionId, cancellingId, onCancelSale, onRemoveItem,
 }) {
   const [selectedId, setSelectedId] = useState(null);
   const [creatingCustomer, setCreatingCustomer] = useState(false);
@@ -150,6 +150,7 @@ export default function ClientesView({
               currentSessionId={currentSessionId}
               cancellingId={cancellingId}
               onCancelSale={onCancelSale}
+              onRemoveItem={onRemoveItem}
             />
           </>
         )}
