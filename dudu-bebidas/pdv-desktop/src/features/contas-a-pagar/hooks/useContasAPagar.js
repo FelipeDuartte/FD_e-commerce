@@ -10,6 +10,7 @@ import {
   validateBillPayload,
 } from "../services/accountsPayableService";
 import { getBillStatus } from "../billStatus";
+import { useAccountsPayableRealtime } from "./useAccountsPayableRealtime";
 
 export const EMPTY_BILL = {
   description: "",
@@ -63,6 +64,9 @@ export function useContasAPagar() {
   useEffect(() => {
     fetchBills();
   }, [fetchBills]);
+
+  // Recarrega quando OUTRO terminal cria, edita, paga ou exclui uma conta.
+  useAccountsPayableRealtime(fetchBills);
 
   const filteredBills = bills.filter((b) => {
     const matchStatus = statusFilter === "todas" || getBillStatus(b) === statusFilter;

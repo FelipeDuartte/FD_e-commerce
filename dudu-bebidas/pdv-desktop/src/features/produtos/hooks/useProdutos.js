@@ -10,6 +10,7 @@ import {
   validateProductPayload,
 } from "../services/productService";
 import { useProductImageSearch } from "./useProductImageSearch";
+import { useProductsRealtime } from "../../../shared/hooks/useProductsRealtime";
 
 // Concentra todo o estado/lógica da view "Produtos": listagem, filtros, o
 // modal de criar/editar (incluindo a busca/upload de imagem do produto) e
@@ -63,6 +64,10 @@ export function useProdutos(onProductsChanged) {
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
+
+  // Recarrega quando OUTRO terminal mexe em algum produto — mesmo motivo
+  // do useProductCatalog (Venda), só que pra essa lista.
+  useProductsRealtime(fetchProducts);
 
   const filteredProducts = products.filter((p) => {
     const matchSearch = p.name.toLowerCase().includes(productSearch.toLowerCase());

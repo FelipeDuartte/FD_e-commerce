@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { listAdminProducts } from "../../produtos/services/productService";
+import { useProductsRealtime } from "../../../shared/hooks/useProductsRealtime";
 
 // Catálogo de produtos pra venda — carrega a lista e filtra por busca
 // (nome/id/EAN), só produtos ativos e com estoque. Independente de
@@ -28,6 +29,11 @@ export function useProductCatalog() {
     }, 0);
     return () => clearTimeout(timer);
   }, [loadProducts]);
+
+  // Recarrega quando OUTRO terminal vende/cadastra/muda estoque de um
+  // produto — sem isso o catálogo da Venda ficava com preço/estoque
+  // desatualizado até esse mesmo terminal vender algo ou reiniciar o app.
+  useProductsRealtime(loadProducts);
 
   const filteredProducts = useMemo(() => {
     const term = search.trim().toLowerCase();

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { listStockMovements, undoProductPurchase } from "../services/stockService";
+import { useStockMovementsRealtime } from "../hooks/useStockMovementsRealtime";
 import UndoPurchaseModal from "./UndoPurchaseModal";
 
 const REASON_ICON = {
@@ -64,6 +65,15 @@ export default function EstoqueView() {
     setPage(nextPage);
     fetchPage(nextPage, true, { reason: reasonFilter, search });
   };
+
+  // Recarrega quando OUTRO terminal gera uma movimentação (venda, compra,
+  // cancelamento, ajuste) — volta pra página 0 com os filtros atuais, mesmo
+  // padrão já usado depois de "Desfazer compra" (confirmUndo).
+  const handleRealtimeChange = useCallback(() => {
+    setPage(0);
+    fetchPage(0, false, { reason: reasonFilter, search });
+  }, [fetchPage, reasonFilter, search]);
+  useStockMovementsRealtime(handleRealtimeChange);
 
   const dismissUndo = () => {
     if (undoing) return;

@@ -4,6 +4,7 @@ import {
   openCashSession,
   closeCashSession,
 } from "../services/cashSessionService";
+import { useCashSessionRealtime } from "./useCashSessionRealtime";
 
 export function useCashSession() {
   const [session, setSession] = useState(null);
@@ -35,6 +36,10 @@ export function useCashSession() {
     }, 0);
     return () => clearTimeout(timer);
   }, [loadSession]);
+
+  // Outro terminal fechou ou abriu o caixa — reflete aqui sem precisar
+  // reiniciar o app (ver useCashSessionRealtime).
+  useCashSessionRealtime(loadSession);
 
   const handleOpenSession = async () => {
     const amount = Number(openingAmountInput);
