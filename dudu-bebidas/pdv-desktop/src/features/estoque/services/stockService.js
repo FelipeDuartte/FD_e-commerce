@@ -7,6 +7,7 @@ const REASON_LABEL = {
   cancelamento: "Cancelamento",
   ajuste_manual: "Ajuste manual",
   compra: "Compra",
+  bonificacao: "Bonificação",
 };
 
 // Só venda/cancelamento têm um pedido ligado (orders) pra saber se foi
@@ -20,7 +21,7 @@ export async function listStockMovements({ page = 0, reason = "todos", search = 
 
   let query = supabase
     .from("stock_movements")
-    .select("id, product_id, product_name, quantity, reason, created_at, orders(channel)", { count: "exact" })
+    .select("id, product_id, product_name, quantity, reason, bonus_value, created_at, orders(channel)", { count: "exact" })
     .order("created_at", { ascending: false });
 
   if (reason !== "todos") query = query.eq("reason", reason);
@@ -44,6 +45,7 @@ export async function listStockMovements({ page = 0, reason = "todos", search = 
       productName: m.product_name,
       quantity: m.quantity,
       reason: m.reason,
+      bonusValue: m.bonus_value != null ? Number(m.bonus_value) : null,
       origin,
       createdAt: m.created_at,
     };
@@ -56,10 +58,10 @@ export async function listStockMovements({ page = 0, reason = "todos", search = 
   };
 }
 
-// Desfaz uma compra registrada errada (produto errado, quantidade errada
-// etc.) — só funciona pra compra MAIS RECENTE de um produto, validado no
-// próprio banco (ver migration 0034). Devolve estoque e custo pro estado
-// de antes dessa compra específica.
+// Desfaz uma compra OU bonificação registrada errada (produto errado,
+// quantidade errada etc.) — só funciona pra entrada MAIS RECENTE de um
+// produto, validado no próprio banco (ver migrations 0034 e 0037). Devolve
+// estoque (e custo, só no caso de compra) pro estado de antes dela.
 export async function undoProductPurchase(movementId) {
   const { data, error } = await supabase.rpc("undo_last_product_purchase", {
     p_store_id: getCurrentStoreId(),

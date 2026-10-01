@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { supabase, getCurrentStoreId } from "../supabase/Supabaseclient";
 
 // products muda de estoque em QUALQUER venda/compra/cancelamento — de
@@ -6,11 +6,19 @@ import { supabase, getCurrentStoreId } from "../supabase/Supabaseclient";
 // atualizavam quando o PRÓPRIO terminal mexia em algo, ou reiniciando o
 // app inteiro. Mesmo padrão de useSaleRealtime/useFiadoRealtime, só que
 // escutando a tabela products inteira da loja.
+//
+// Usado em DOIS lugares ao mesmo tempo (catálogo da Venda e lista de
+// Produtos — os dois ficam montados o tempo todo, não só na aba ativa).
+// Canal com nome fixo por loja colidia entre as duas instâncias ("cannot
+// add postgres_changes callbacks... after subscribe()") — por isso o nome
+// do canal inclui um sufixo único por instância do hook.
 export function useProductsRealtime(onChange) {
+  const instanceId = useRef(Math.random().toString(36).slice(2));
+
   useEffect(() => {
     const storeId = getCurrentStoreId();
     const channel = supabase
-      .channel(`pdv-products-${storeId}`)
+      .channel(`pdv-products-${storeId}-${instanceId.current}`)
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "products", filter: `store_id=eq.${storeId}` },

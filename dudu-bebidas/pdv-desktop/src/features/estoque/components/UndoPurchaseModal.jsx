@@ -1,12 +1,14 @@
 export default function UndoPurchaseModal({ movement, undoing, undoError, onConfirm, onDismiss }) {
+  const isBonus = movement.reason === "bonificacao";
   return (
     <>
       <div className="adm-modal-overlay" onClick={() => !undoing && onDismiss()} />
       <div className="adm-modal" role="dialog" aria-modal="true">
-        <h2 className="adm-store-section-title">Desfazer compra</h2>
+        <h2 className="adm-store-section-title">{isBonus ? "Desfazer bonificação" : "Desfazer compra"}</h2>
         <p className="adm-store-section-desc">
-          Desfazer a compra de <strong>+{movement.quantity} {movement.productName}</strong>? O estoque volta a
-          diminuir essa quantidade e o custo do produto volta pro valor de antes dessa compra. Só funciona se
+          Desfazer {isBonus ? "a bonificação de" : "a compra de"}{" "}
+          <strong>+{movement.quantity} {movement.productName}</strong>? O estoque volta a diminuir essa
+          quantidade{isBonus ? "" : " e o custo do produto volta pro valor de antes dessa compra"}. Só funciona se
           nenhuma outra movimentação tiver acontecido com esse produto depois dela.
         </p>
 

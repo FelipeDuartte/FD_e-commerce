@@ -1956,6 +1956,9 @@
    os usam ficam ok porque têm poucos campos, mas aqui embolava tudo.
    Escopado só nesse modal pra não afetar os outros 14 lugares que usam
    essas mesmas classes. */
+.pdv-purchase-modal {
+  text-align: left;
+}
 .pdv-purchase-modal .adm-store-section-title {
   margin-bottom: 6px;
 }
@@ -1964,6 +1967,10 @@
   font-size: 14px;
   color: var(--c-text-muted);
 }
+.pdv-purchase-modal .adm-form-row,
+.pdv-purchase-modal .adm-form-field {
+  margin-bottom: 16px;
+}
 .pdv-purchase-modal .adm-store-form-actions {
   display: flex;
   gap: 10px;
@@ -1971,6 +1978,28 @@
 }
 .pdv-purchase-modal .adm-store-form-actions button {
   flex: 1;
+}
+
+/* Caixinha de bonificação — mesmo visual de destaque de .adm-promo-fields
+   (dourado suave), pra deixar claro que é um modo diferente dentro do
+   mesmo modal, não só mais um checkbox qualquer no meio do form. */
+.pdv-bonus-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  background: rgba(255, 208, 0, 0.06);
+  border: 1px solid rgba(255, 208, 0, 0.2);
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--c-text);
+}
+.pdv-bonus-toggle input {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
 }
 
 .pdv-purchase-result {
@@ -1992,6 +2021,11 @@
   color: #f87171;
 }
 .pdv-purchase-down strong {
+  color: #4ade80;
+}
+
+.pdv-bonus-value-hint {
+  font-size: 12px;
   color: #4ade80;
 }
 

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { formatBRL } from "../../../shared/utils/format";
 import { listStockMovements, undoProductPurchase } from "../services/stockService";
 import { useStockMovementsRealtime } from "../hooks/useStockMovementsRealtime";
 import UndoPurchaseModal from "./UndoPurchaseModal";
@@ -8,6 +9,7 @@ const REASON_ICON = {
   cancelamento: "↩️",
   ajuste_manual: "✏️",
   compra: "📦",
+  bonificacao: "🎁",
 };
 
 const REASON_FILTERS = [
@@ -16,6 +18,7 @@ const REASON_FILTERS = [
   { value: "cancelamento", label: "Cancelamentos" },
   { value: "ajuste_manual", label: "Ajustes manuais" },
   { value: "compra", label: "Compras" },
+  { value: "bonificacao", label: "Bonificações" },
 ];
 
 export default function EstoqueView() {
@@ -168,6 +171,9 @@ export default function EstoqueView() {
                   </td>
                   <td>
                     {REASON_ICON[m.reason] ?? ""} {m.origin}
+                    {m.reason === "bonificacao" && m.bonusValue != null && (
+                      <span className="pdv-bonus-value-hint"> · lucro {formatBRL(m.bonusValue)}</span>
+                    )}
                   </td>
                   <td>
                     {new Date(m.createdAt).toLocaleString("pt-BR", {
@@ -178,10 +184,10 @@ export default function EstoqueView() {
                     })}
                   </td>
                   <td className="adm-td-actions">
-                    {m.reason === "compra" && (
+                    {(m.reason === "compra" || m.reason === "bonificacao") && (
                       <button
                         className="adm-btn-delete"
-                        title="Desfazer essa compra"
+                        title={m.reason === "compra" ? "Desfazer essa compra" : "Desfazer essa bonificação"}
                         onClick={() => setMovementToUndo(m)}
                       >
                         ↩️ Desfazer

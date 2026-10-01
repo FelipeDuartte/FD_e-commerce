@@ -5,6 +5,7 @@ import {
   deleteAdminProduct,
   listAdminProducts,
   registerProductPurchase,
+  registerProductBonus,
   saveAdminProduct,
   toggleAdminProductActive,
   validateProductPayload,
@@ -183,6 +184,15 @@ export function useProdutos(onProductsChanged) {
     return outcome;
   };
 
+  // Bonificação do fornecedor (grátis) — mesmo modal de registrar compra,
+  // caminho diferente porque não tem valor pago e não mexe no custo.
+  const confirmBonus = async (quantity) => {
+    const outcome = await registerProductBonus(productToPurchase, quantity);
+    await fetchProducts();
+    onProductsChanged?.();
+    return outcome;
+  };
+
   return {
     products, fetchProducts, productsLoading, productsError, productSearch, setProductSearch,
     productCategory, setProductCategory, productModal, setProductModal,
@@ -190,6 +200,6 @@ export function useProdutos(onProductsChanged) {
     openNewProduct, openEditProduct, handleModalChange, handleModalSave,
     handleToggleActive, productImageSearch,
     productToDelete, deleting, deleteError, requestDelete, dismissDelete, confirmDelete,
-    productToPurchase, requestPurchase, dismissPurchase, confirmPurchase,
+    productToPurchase, requestPurchase, dismissPurchase, confirmPurchase, confirmBonus,
   };
 }

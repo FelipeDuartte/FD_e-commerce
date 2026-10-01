@@ -160,6 +160,27 @@ export async function registerProductPurchase(product, quantity, totalPaid) {
   return { previousCost: data.previous_cost, newCost: data.new_cost, unitCost };
 }
 
+// Entrada de bonificação (grátis) — não mexe em cost_price (ver migration
+// 0037), só soma estoque e guarda o valor estimado (quantidade × preço de
+// venda atual) pra mostrar quanto de lucro esse lote grátis representa.
+export async function registerProductBonus(product, quantity) {
+  const qty = Number(quantity);
+
+  const { data, error } = await supabase.rpc("register_product_bonus", {
+    p_store_id: product.store_id,
+    p_product_id: product.id,
+    p_quantity: qty,
+  });
+
+  if (error) {
+    throw new AdminServiceError("Não foi possível registrar a bonificação.", error);
+  }
+  if (!data?.success) {
+    throw new AdminServiceError(data?.error || "Não foi possível registrar a bonificação.");
+  }
+  return { bonusValue: data.bonus_value, salePrice: data.sale_price };
+}
+
 export async function toggleAdminProductActive(product) {
   const nextActive = !product.is_active;
   const { error } = await supabase

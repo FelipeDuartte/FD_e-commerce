@@ -12,7 +12,7 @@ export default function ProdutosView({ produtos, categories }) {
     handleModalChange, handleModalSave, togglingId, openNewProduct,
     openEditProduct, handleToggleActive, productImageSearch,
     productToDelete, deleting, deleteError, requestDelete, dismissDelete, confirmDelete,
-    productToPurchase, requestPurchase, dismissPurchase, confirmPurchase,
+    productToPurchase, requestPurchase, dismissPurchase, confirmPurchase, confirmBonus,
   } = produtos;
 
   return (
@@ -53,7 +53,8 @@ export default function ProdutosView({ produtos, categories }) {
       {productToPurchase && (
         <RegisterPurchaseModal
           product={productToPurchase}
-          onConfirm={confirmPurchase}
+          onConfirmPurchase={confirmPurchase}
+          onConfirmBonus={confirmBonus}
           onDismiss={dismissPurchase}
         />
       )}

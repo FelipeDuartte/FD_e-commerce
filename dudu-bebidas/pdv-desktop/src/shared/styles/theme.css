@@ -1064,6 +1064,13 @@ button:disabled {
   background: var(--c-surface);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
+/* Linha perto do fim da tabela/tela — abre pra cima em vez de pra baixo,
+   senão as últimas opções (ex: Excluir) ficavam cortadas fora da tela.
+   Decisão calculada em JS (ver ActionsMenu.jsx), isso só troca o lado. */
+.pdv-actions-menu-list-up {
+  top: auto;
+  bottom: calc(100% + 4px);
+}
 .pdv-actions-menu-list button {
   text-align: left;
   padding: 8px 10px;
