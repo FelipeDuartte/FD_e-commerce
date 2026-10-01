@@ -261,6 +261,11 @@ export default function Pdv({ theme, onToggleTheme }) {
                 fiadoCustomers={fiado.customers}
                 fiadoCustomersLoading={fiado.loading}
                 createFiadoCustomer={fiado.createCustomer}
+                isDelivery={sale.isDelivery}
+                setIsDelivery={sale.setIsDelivery}
+                deliveryAddress={sale.deliveryAddress}
+                setDeliveryAddressField={sale.setDeliveryAddressField}
+                missingDeliveryAddress={sale.missingDeliveryAddress}
               />
             </div>
           )}

@@ -139,6 +139,14 @@ export default function HistorySalesList({ currentSessionId, sessionSales, cance
                   {sale.items?.length
                     ? sale.items.map((line, i) => <div key={i}>{line}</div>)
                     : `${sale.itemCount} item(ns)`}
+                  {sale.deliveryAddress && (
+                    <div className="pdv-sale-delivery-address">
+                      🚚 {sale.deliveryAddress.street}, {sale.deliveryAddress.number}
+                      {sale.deliveryAddress.complement ? ` — ${sale.deliveryAddress.complement}` : ""}
+                      {sale.deliveryAddress.district ? ` · ${sale.deliveryAddress.district}` : ""}
+                      {sale.deliveryAddress.phone ? ` · 📞 ${sale.deliveryAddress.phone}` : ""}
+                    </div>
+                  )}
                 </div>
                 <span>{formatSalePaymentLabel(sale)}</span>
                 <strong>{formatBRL(sale.total)}</strong>

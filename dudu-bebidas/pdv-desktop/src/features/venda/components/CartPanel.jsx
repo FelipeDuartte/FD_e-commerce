@@ -30,6 +30,7 @@ export default function CartPanel({
   splitMode, toggleSplitMode, splitPayments, updateSplitLine, addSplitLine,
   removeSplitLine, splitRemaining, splitValid,
   fiadoCustomer, setFiadoCustomer, missingFiadoCustomer, fiadoCustomers, fiadoCustomersLoading, createFiadoCustomer,
+  isDelivery, setIsDelivery, deliveryAddress, setDeliveryAddressField, missingDeliveryAddress,
 }) {
   return (
     <div className="pdv-cart">
@@ -60,6 +61,70 @@ export default function CartPanel({
               <button className="adm-btn-delete" title="Remover item" onClick={() => removeFromCart(item.id)}>🗑️</button>
             </div>
           ))}
+        </div>
+      )}
+
+      <div className="pdv-delivery-toggle-row">
+        <button
+          type="button"
+          className={`pdv-delivery-toggle-btn ${!isDelivery ? "active" : ""}`}
+          onClick={() => setIsDelivery(false)}
+        >
+          🏪 Retirada
+        </button>
+        <button
+          type="button"
+          className={`pdv-delivery-toggle-btn ${isDelivery ? "active" : ""}`}
+          onClick={() => setIsDelivery(true)}
+        >
+          🚚 Entrega
+        </button>
+      </div>
+
+      {isDelivery && (
+        <div className="pdv-delivery-fields">
+          <div className="adm-form-row">
+            <div className="adm-form-field">
+              <label>Endereço</label>
+              <input
+                value={deliveryAddress.street}
+                onChange={(e) => setDeliveryAddressField("street", e.target.value)}
+                placeholder="Rua, avenida..."
+              />
+            </div>
+            <div className="adm-form-field">
+              <label>Número</label>
+              <input
+                value={deliveryAddress.number}
+                onChange={(e) => setDeliveryAddressField("number", e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="adm-form-row">
+            <div className="adm-form-field">
+              <label>Bairro</label>
+              <input
+                value={deliveryAddress.district}
+                onChange={(e) => setDeliveryAddressField("district", e.target.value)}
+              />
+            </div>
+            <div className="adm-form-field">
+              <label>Complemento</label>
+              <input
+                value={deliveryAddress.complement}
+                onChange={(e) => setDeliveryAddressField("complement", e.target.value)}
+                placeholder="Opcional"
+              />
+            </div>
+          </div>
+          <div className="adm-form-field">
+            <label>Telefone</label>
+            <input
+              value={deliveryAddress.phone}
+              onChange={(e) => setDeliveryAddressField("phone", e.target.value)}
+              placeholder="Opcional — pro entregador ligar se precisar"
+            />
+          </div>
         </div>
       )}
 
@@ -238,7 +303,11 @@ export default function CartPanel({
       <button
         className="adm-btn-new-product pdv-finalize-btn"
         onClick={onFinalize}
-        disabled={cart.length === 0 || submitting || (splitMode ? !splitValid : insufficientCash || missingFiadoCustomer)}
+        disabled={
+          cart.length === 0 || submitting ||
+          (splitMode ? !splitValid : insufficientCash || missingFiadoCustomer) ||
+          missingDeliveryAddress
+        }
       >
         {submitting ? "Registrando..." : "✅ Finalizar venda"}
       </button>

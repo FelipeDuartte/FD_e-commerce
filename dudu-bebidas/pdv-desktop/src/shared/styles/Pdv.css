@@ -371,6 +371,14 @@
   color: var(--c-text);
   height: 100%;
   min-height: 0;
+  /* Rede de segurança: o painel inteiro (não só a lista de itens) rola
+     quando a soma de tudo (itens + endereço de entrega + pagamento
+     dividido + resto) não cabe na altura da tela. Sem isso, o botão
+     "Finalizar venda" ficava empurrado pra fora da tela, sem rolagem que
+     alcançasse ele, numa venda de entrega com carrinho vazio/pequeno —
+     a lista de itens (único trecho com flex:1 abaixo) não tinha conteúdo
+     suficiente pra "absorver" o espaço extra dos campos de endereço. */
+  overflow-y: auto;
 }
 
 /* flex:1 em vez de max-height fixo — a lista ocupa só o espaço que sobra
@@ -1048,6 +1056,60 @@
   }
 }
 
+/* Retirada/Entrega — mesmo visual de .pdv-payment-btn (2 colunas, borda
+   dourada quando ativo), só que sempre só 2 opções fixas. */
+.pdv-delivery-toggle-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.pdv-delivery-toggle-btn {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.pdv-delivery-toggle-btn.active {
+  border-color: var(--c-accent);
+  background: rgba(255, 215, 0, 0.12);
+}
+
+.pdv-delivery-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  background: color-mix(in srgb, var(--c-text) 3%, transparent);
+}
+.pdv-delivery-fields .adm-form-row {
+  margin-bottom: 8px;
+}
+.pdv-delivery-fields .adm-form-field {
+  margin-bottom: 8px;
+}
+.pdv-delivery-fields .adm-form-field:last-child {
+  margin-bottom: 0;
+}
+.pdv-delivery-fields label {
+  font-size: 11px;
+}
+.pdv-delivery-fields input {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  background: color-mix(in srgb, var(--c-text) 3%, transparent);
+  color: var(--c-text);
+  font-size: 13px;
+  width: 100%;
+}
+
 .pdv-split-toggle {
   align-self: flex-start;
   padding: 4px 0;
@@ -1287,6 +1349,10 @@
   opacity: 0.85;
 }
 
+.pdv-receipt-delivery {
+  margin: 4px 0;
+}
+
 @media print {
   @page {
     size: 80mm auto;
@@ -1319,6 +1385,10 @@
 
   .pdv-receipt-header strong {
     font-size: 15px;
+  }
+
+  .pdv-receipt-delivery strong {
+    font-size: 14px;
   }
 
   .pdv-receipt-total {
@@ -1401,6 +1471,12 @@
 }
 .pdv-sale-items-list > div {
   overflow-wrap: break-word;
+}
+
+.pdv-sale-delivery-address {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--c-accent);
 }
 
 /* Linha de item com botão de remover (só pedidos fiado ainda não pagos,

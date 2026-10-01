@@ -25,6 +25,11 @@
 // Clientes) — não baixa estoque na hora, só quando o pagamento do cliente
 // cobrir esse pedido (ver settle_fiado_stock). Omitido/false em todo o
 // resto: venda de balcão baixa estoque no ato, como sempre.
+//
+// "address": { street, number, complement?, district, phone? } — só quando
+// a venda é "Entrega" em vez de retirada no balcão. Fica salvo no pedido
+// só pra aparecer no Histórico e na notinha impressa (não entra no
+// rastreamento de entrega do site — sem entregador, sem mapa).
 // ─────────────────────────────────────────────────────────────
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -60,7 +65,7 @@ Deno.serve(async (req) => {
 
     const {
       cartItems, paymentMethod, cashSessionId, discountAmount, payments, pdvCustomerId, installments,
-      deferStockUntilPaid,
+      deferStockUntilPaid, address,
     } = await req.json();
 
     if (!cashSessionId) {
@@ -94,7 +99,7 @@ Deno.serve(async (req) => {
       cartItems,
       paymentMethod,
       installments: installments ?? null, // só usado quando paymentMethod === 'credit_card'
-      address: {}, // orders.address é jsonb NOT NULL, sem uso pra venda presencial
+      address: address ?? {}, // {} = retirada no balcão; preenchido quando a venda é "Entrega"
       channel: "balcao",
       cashSessionId,
       soldBy: admin.userId,

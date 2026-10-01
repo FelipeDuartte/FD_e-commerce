@@ -9,6 +9,8 @@ import {
 import { applyCreditCardFee, DEFAULT_INSTALLMENT_FEE_RATE } from "../utils/creditFee";
 import { useSaleRealtime } from "./useSaleRealtime";
 
+const EMPTY_DELIVERY_ADDRESS = { street: "", number: "", complement: "", district: "", phone: "" };
+
 // Forma de pagamento (única ou dividida), troco, cliente fiado, submissão
 // da venda e cancelamento. Recebe o carrinho (de useCart) como dados —
 // não é dono dele, só lê pra montar o payload e as mensagens de sucesso.
@@ -33,6 +35,14 @@ export function useSale(
   const [itemToRemove, setItemToRemove] = useState(null);
   const [removingItem, setRemovingItem] = useState(false);
   const [removeItemError, setRemoveItemError] = useState("");
+
+  // Venda que precisa ir pro endereço do cliente em vez de ser retirada no
+  // balcão — guarda o endereço junto do pedido (orders.address, mesma
+  // coluna já usada pelo site) só pra aparecer no Histórico e na notinha
+  // impressa pro entregador. Não entra no sistema de rastreamento de
+  // entrega do site (sem atribuir entregador, sem mapa).
+  const [isDelivery, setIsDeliveryRaw] = useState(false);
+  const [deliveryAddress, setDeliveryAddressRaw] = useState(EMPTY_DELIVERY_ADDRESS);
 
   const loadSessionSales = useCallback(async (id) => {
     if (!id) {
@@ -72,6 +82,17 @@ export function useSale(
     setInstallments(1);
   };
 
+  // Desligar "Entrega" limpa o endereço — senão sobraria preenchido pra
+  // uma venda que virou retirada no balcão.
+  const setIsDelivery = (value) => {
+    setIsDeliveryRaw(value);
+    if (!value) setDeliveryAddressRaw(EMPTY_DELIVERY_ADDRESS);
+  };
+
+  const setDeliveryAddressField = (field, value) => {
+    setDeliveryAddressRaw((prev) => ({ ...prev, [field]: value }));
+  };
+
   // Total da venda já com a taxa da maquininha embutida quando for crédito
   // (parcelado ou não) — é esse valor que vai pro servidor e pro recibo.
   const saleTotal = useMemo(
@@ -89,6 +110,8 @@ export function useSale(
 
   const insufficientCash = paymentMethod === "cash" && changeAmount !== null && changeAmount < 0;
   const missingFiadoCustomer = paymentMethod === "fiado" && !fiadoCustomer;
+  const missingDeliveryAddress =
+    isDelivery && (!deliveryAddress.street.trim() || !deliveryAddress.number.trim() || !deliveryAddress.district.trim());
 
   // Pagamento dividido — ex: parte em dinheiro, parte no cartão. Ligar/desligar
   // reseta as linhas (senão sobraria um valor dividido pra uma venda que virou
@@ -128,6 +151,7 @@ export function useSale(
   const handleFinalizeSale = async () => {
     if (cart.length === 0 || !sessionId) return;
     if (splitMode ? !splitValid : insufficientCash || missingFiadoCustomer) return;
+    if (missingDeliveryAddress) return;
     setSubmitting(true);
     setSaleError("");
     try {
@@ -142,6 +166,17 @@ export function useSale(
               pdvCustomerId: paymentMethod === "fiado" ? fiadoCustomer.id : undefined,
               installments: paymentMethod === "credit_card" ? installments : undefined,
             }),
+        ...(isDelivery
+          ? {
+              address: {
+                street: deliveryAddress.street.trim(),
+                number: deliveryAddress.number.trim(),
+                complement: deliveryAddress.complement.trim() || null,
+                district: deliveryAddress.district.trim(),
+                phone: deliveryAddress.phone.trim() || null,
+              },
+            }
+          : {}),
       });
       const orderTag = orderNumber ? `Pedido #${orderNumber} — ` : "";
       setSaleSuccess(
@@ -160,6 +195,7 @@ export function useSale(
       resetDiscount();
       setSplitMode(false);
       setSplitPayments([]);
+      setIsDelivery(false);
       reloadProducts();
       loadSessionSales(sessionId);
     } catch (e) {
@@ -229,6 +265,7 @@ export function useSale(
     splitMode, toggleSplitMode, splitPayments, updateSplitLine, addSplitLine,
     removeSplitLine, splitTotal, splitRemaining, splitValid,
     fiadoCustomer, setFiadoCustomer, missingFiadoCustomer,
+    isDelivery, setIsDelivery, deliveryAddress, setDeliveryAddressField, missingDeliveryAddress,
     handleFinalizeSale, handleCancelSale, confirmCancelSale, dismissCancelSale,
     itemToRemove, removingItem, removeItemError,
     handleRemoveItem, confirmRemoveItem, dismissRemoveItem,

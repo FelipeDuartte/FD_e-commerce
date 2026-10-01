@@ -3,10 +3,10 @@ import { AdminServiceError } from "./AdminServiceError";
 
 export async function createPdvSale({
   cartItems, paymentMethod, cashSessionId, discountAmount, payments, pdvCustomerId, installments,
-  deferStockUntilPaid,
+  deferStockUntilPaid, address,
 }) {
   const { data, error } = await supabase.functions.invoke("pdv-sale", {
-    body: { cartItems, paymentMethod, cashSessionId, discountAmount, payments, pdvCustomerId, installments, deferStockUntilPaid },
+    body: { cartItems, paymentMethod, cashSessionId, discountAmount, payments, pdvCustomerId, installments, deferStockUntilPaid, address },
   });
 
   if (error) {
@@ -63,13 +63,16 @@ function mapSaleRow(o) {
     // Item a item com id — usado só pra remover um item específico de um
     // pedido fiado (ver removeSaleItem), o resto da tela usa "items" acima.
     orderItems: items.map((it) => ({ id: it.id, name: it.name, quantity: it.quantity })),
+    // Presente só quando a venda foi marcada como "Entrega" no carrinho —
+    // orders.address é sempre {} pra venda normal de balcão (retirada).
+    deliveryAddress: o.address?.street ? o.address : null,
   };
 }
 
 async function queryPdvSales({ sessionId, sinceDays, onlyCancelled, limit } = {}) {
   let query = supabase
     .from("orders")
-    .select("id, order_number, total, discount_amount, payment_method, installments, status, created_at, cash_session_id, order_items(id, name, quantity), order_payments(method, amount)")
+    .select("id, order_number, total, discount_amount, payment_method, installments, status, created_at, cash_session_id, address, order_items(id, name, quantity), order_payments(method, amount)")
     .eq("channel", "balcao")
     .order("created_at", { ascending: false });
 

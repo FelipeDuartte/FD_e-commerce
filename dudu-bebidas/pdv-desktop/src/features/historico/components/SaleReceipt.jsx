@@ -28,6 +28,21 @@ export default function SaleReceipt({ sale }) {
         <div>{new Date(sale.createdAt).toLocaleString("pt-BR")}</div>
       </div>
 
+      {sale.deliveryAddress && (
+        <>
+          <div className="pdv-receipt-divider" />
+          <div className="pdv-receipt-delivery">
+            <strong>🚚 ENTREGAR EM:</strong>
+            <div>
+              {sale.deliveryAddress.street}, {sale.deliveryAddress.number}
+            </div>
+            {sale.deliveryAddress.complement && <div>{sale.deliveryAddress.complement}</div>}
+            {sale.deliveryAddress.district && <div>{sale.deliveryAddress.district}</div>}
+            {sale.deliveryAddress.phone && <div>📞 {sale.deliveryAddress.phone}</div>}
+          </div>
+        </>
+      )}
+
       <div className="pdv-receipt-divider" />
 
       {itemLines(sale).map((line) => (
