@@ -6,7 +6,13 @@ import { useProductsRealtime } from "../../../shared/hooks/useProductsRealtime";
 // (nome/id/EAN), só produtos ativos e com estoque. Independente de
 // carrinho/pagamento; useSale chama `reload` depois de finalizar/cancelar
 // uma venda pra refletir o estoque atualizado.
-export function useProductCatalog() {
+//
+// includeOutOfStock: true mostra produto com 0 em estoque também — usado
+// só pelo pedido fiado com baixa adiada (NewFiadoOrderModal), onde o dono
+// pode estar vendendo algo que o fornecedor ainda vai entregar antes da
+// data combinada com o cliente. Mesmo raciocínio de ignoreStockLimit em
+// useCart.js.
+export function useProductCatalog({ includeOutOfStock = false } = {}) {
   const [products, setProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(true);
   const [productsError, setProductsError] = useState("");
@@ -38,7 +44,7 @@ export function useProductCatalog() {
   const filteredProducts = useMemo(() => {
     const term = search.trim().toLowerCase();
     return products
-      .filter((p) => p.is_active && p.stock > 0)
+      .filter((p) => p.is_active && (includeOutOfStock || p.stock > 0))
       .filter(
         (p) =>
           !term ||
@@ -46,7 +52,7 @@ export function useProductCatalog() {
           p.id.toLowerCase().includes(term) ||
           (p.ean ?? "").toLowerCase() === term
       );
-  }, [products, search]);
+  }, [products, search, includeOutOfStock]);
 
   return {
     products, productsLoading, productsError, search, setSearch,

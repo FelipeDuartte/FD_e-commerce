@@ -10,8 +10,11 @@ import { formatBRL } from "../../../shared/utils/format";
 // pagamento cobrir esse pedido (deferStockUntilPaid, ver salesService.js).
 
 export default function NewFiadoOrderModal({ customer, onConfirm, onDismiss }) {
-  const catalog = useProductCatalog();
-  const cart = useCart();
+  // Pedido pode ser pra entregar/retirar depois (dia que o fornecedor já
+  // vai ter reabastecido) — por isso libera vender mesmo sem estoque hoje,
+  // diferente da Venda normal (ver comentários em useCart/useProductCatalog).
+  const catalog = useProductCatalog({ includeOutOfStock: true });
+  const cart = useCart({ ignoreStockLimit: true });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -75,7 +78,6 @@ export default function NewFiadoOrderModal({ customer, onConfirm, onDismiss }) {
                         type="number"
                         className="pdv-cart-item-qty-input"
                         min="1"
-                        max={item.stock}
                         value={item.quantity}
                         onChange={(e) => cart.updateQuantity(item.id, Number(e.target.value))}
                       />
