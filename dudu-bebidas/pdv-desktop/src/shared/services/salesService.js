@@ -93,6 +93,20 @@ export async function listSessionSales(sessionId) {
   return queryPdvSales({ sessionId });
 }
 
+// Recebimentos de fiado feitos nesta sessão — contam no caixa do dia em
+// que o dinheiro entra, não no dia em que o pedido em aberto foi feito.
+export async function listSessionFiadoPayments(sessionId) {
+  const { data, error } = await supabase
+    .from("pdv_customer_payments")
+    .select("amount, payment_method")
+    .eq("cash_session_id", sessionId);
+
+  if (error) {
+    throw new AdminServiceError("Não foi possível carregar os recebimentos de fiado.", error);
+  }
+  return (data ?? []).map((p) => ({ amount: Number(p.amount), method: p.payment_method }));
+}
+
 // Últimos 7 dias, qualquer status — visão geral do que andou vendendo.
 export async function listRecentSales() {
   return queryPdvSales({ sinceDays: 7 });

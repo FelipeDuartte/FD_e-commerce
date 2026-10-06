@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useCustomerDetail } from "../hooks/useCustomerDetail";
 import { createPdvSale } from "../../../shared/services/salesService";
-import { settleFiadoStock } from "../services/fiadoService";
+import { settleFiadoStock, updateFiadoPayment, deleteFiadoPayment } from "../services/fiadoService";
+import EditPaymentModal from "./EditPaymentModal";
+import DeletePaymentModal from "./DeletePaymentModal";
 import CustomerListPanel from "./CustomerListPanel";
 import CustomerEditForm from "./CustomerEditForm";
 import CustomerDetailHeader from "./CustomerDetailHeader";
@@ -13,7 +15,7 @@ import DeleteCustomerModal from "./DeleteCustomerModal";
 export default function ClientesView({
   customers, customersLoading, customersError, payDebt, createCustomer,
   updateCustomer, setCustomerActive, deleteCustomer,
-  currentSessionId, cancellingId, onCancelSale, onRemoveItem, reloadProducts,
+  currentSessionId, cancellingId, onCancelSale, onRemoveItem, reloadProducts, reloadCustomers,
 }) {
   const [selectedId, setSelectedId] = useState(null);
   const [creatingCustomer, setCreatingCustomer] = useState(false);
@@ -23,6 +25,11 @@ export default function ClientesView({
   const [payError, setPayError] = useState("");
 
   const [newOrderModalOpen, setNewOrderModalOpen] = useState(false);
+
+  const [editingPayment, setEditingPayment] = useState(null);
+  const [paymentToDelete, setPaymentToDelete] = useState(null);
+  const [deletingPayment, setDeletingPayment] = useState(false);
+  const [deletePaymentError, setDeletePaymentError] = useState("");
 
   const [togglingActive, setTogglingActive] = useState(false);
   const [statusError, setStatusError] = useState("");
@@ -80,6 +87,31 @@ export default function ClientesView({
     detail.reload();
     reloadProducts();
     setNewOrderModalOpen(false);
+  };
+
+  const refreshAfterPaymentChange = () => {
+    reloadCustomers();
+    detail.reload();
+    reloadProducts();
+  };
+
+  const handleEditPayment = async ({ amount, paymentMethod }) => {
+    await updateFiadoPayment({ paymentId: editingPayment.id, amount, paymentMethod });
+    setEditingPayment(null);
+    refreshAfterPaymentChange();
+  };
+
+  const handleDeletePayment = async () => {
+    setDeletingPayment(true);
+    setDeletePaymentError("");
+    try {
+      await deleteFiadoPayment(paymentToDelete.id);
+      setPaymentToDelete(null);
+      refreshAfterPaymentChange();
+    } catch (e) {
+      setDeletePaymentError(e.message);
+    }
+    setDeletingPayment(false);
   };
 
   const handleToggleActive = async () => {
@@ -158,6 +190,11 @@ export default function ClientesView({
               cancellingId={cancellingId}
               onCancelSale={onCancelSale}
               onRemoveItem={onRemoveItem}
+              onEditPayment={setEditingPayment}
+              onDeletePayment={(payment) => {
+                setDeletePaymentError("");
+                setPaymentToDelete(payment);
+              }}
             />
           </>
         )}
@@ -165,6 +202,24 @@ export default function ClientesView({
 
       {payModalOpen && selected && (
         <PayDebtModal customer={selected} onConfirm={handlePay} onDismiss={() => setPayModalOpen(false)} />
+      )}
+
+      {editingPayment && (
+        <EditPaymentModal
+          payment={editingPayment}
+          onConfirm={handleEditPayment}
+          onDismiss={() => setEditingPayment(null)}
+        />
+      )}
+
+      {paymentToDelete && (
+        <DeletePaymentModal
+          payment={paymentToDelete}
+          deleting={deletingPayment}
+          deleteError={deletePaymentError}
+          onConfirm={handleDeletePayment}
+          onDismiss={() => setPaymentToDelete(null)}
+        />
       )}
 
       {newOrderModalOpen && selected && (

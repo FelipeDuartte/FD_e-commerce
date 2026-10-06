@@ -26,7 +26,7 @@ export function useFiadoBalancesRealtime(onChange) {
       )
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "pdv_customer_payments", filter: `store_id=eq.${storeId}` },
+        { event: "*", schema: "public", table: "pdv_customer_payments", filter: `store_id=eq.${storeId}` },
         onChange,
       )
       .on(
@@ -34,7 +34,11 @@ export function useFiadoBalancesRealtime(onChange) {
         { event: "INSERT", schema: "public", table: "pdv_customer_charges", filter: `store_id=eq.${storeId}` },
         onChange,
       )
-      .subscribe();
+      .subscribe((status) => {
+        // Eventos que chegaram durante uma queda de conexão se perdem —
+        // recarregar toda vez que a inscrição é (re)confirmada cobre isso.
+        if (status === "SUBSCRIBED") onChange();
+      });
 
     return () => supabase.removeChannel(channel);
   }, [onChange]);
@@ -55,7 +59,7 @@ export function useCustomerDetailRealtime(customerId, onChange) {
       )
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "pdv_customer_payments", filter: `customer_id=eq.${customerId}` },
+        { event: "*", schema: "public", table: "pdv_customer_payments", filter: `customer_id=eq.${customerId}` },
         onChange,
       )
       .on(
@@ -63,7 +67,9 @@ export function useCustomerDetailRealtime(customerId, onChange) {
         { event: "INSERT", schema: "public", table: "pdv_customer_charges", filter: `customer_id=eq.${customerId}` },
         onChange,
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") onChange();
+      });
 
     return () => supabase.removeChannel(channel);
   }, [customerId, onChange]);

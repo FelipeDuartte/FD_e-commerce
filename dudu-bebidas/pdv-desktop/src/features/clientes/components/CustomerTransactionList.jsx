@@ -21,6 +21,7 @@ function formatDateTime(iso) {
 export default function CustomerTransactionList({
   ordersLoading, filteredTransactions, txFilter, setTxFilter,
   paidDebitIds, currentSessionId, cancellingId, onCancelSale, onRemoveItem,
+  onEditPayment, onDeletePayment,
 }) {
   return (
     <div>
@@ -51,7 +52,14 @@ export default function CustomerTransactionList({
                   <span className="pdv-clientes-tx-badge pdv-clientes-tx-badge-payment">💰 Pagamento</span>
                   <span className="pdv-sale-items">{methodLabel(t.method)}</span>
                   <strong className="pdv-clientes-tx-credit">+{formatBRL(t.amount)}</strong>
-                  <span />
+                  <div className="pdv-clientes-tx-actions">
+                    <button className="adm-btn-edit" title="Editar pagamento" onClick={() => onEditPayment(t)}>
+                      ✏️
+                    </button>
+                    <button className="adm-btn-delete" title="Apagar pagamento" onClick={() => onDeletePayment(t)}>
+                      🗑️
+                    </button>
+                  </div>
                 </div>
               );
             }

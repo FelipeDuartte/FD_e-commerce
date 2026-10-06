@@ -275,6 +275,7 @@ export default function Pdv({ theme, onToggleTheme }) {
               currentSessionId={cashSession.session.id}
               cancelError={sale.cancelError}
               sessionSales={sale.sessionSales}
+              sessionFiadoPayments={sale.sessionFiadoPayments}
               cancellingId={sale.cancellingId}
               onCancelSale={sale.handleCancelSale}
             />
@@ -295,6 +296,7 @@ export default function Pdv({ theme, onToggleTheme }) {
               onCancelSale={sale.handleCancelSale}
               onRemoveItem={sale.handleRemoveItem}
               reloadProducts={reloadProducts}
+              reloadCustomers={fiado.reload}
             />
           )}
 

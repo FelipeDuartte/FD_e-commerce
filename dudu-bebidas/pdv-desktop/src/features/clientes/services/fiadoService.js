@@ -137,6 +137,34 @@ export async function settleFiadoStock(customerId) {
   }
 }
 
+export async function updateFiadoPayment({ paymentId, amount, paymentMethod }) {
+  const { data, error } = await supabase.rpc("update_fiado_payment", {
+    p_store_id: getCurrentStoreId(),
+    p_payment_id: paymentId,
+    p_amount: amount,
+    p_payment_method: paymentMethod,
+  });
+  if (error) {
+    throw new AdminServiceError("Não foi possível editar o pagamento.", error);
+  }
+  if (!data?.success) {
+    throw new AdminServiceError(data?.error || "Não foi possível editar o pagamento.");
+  }
+}
+
+export async function deleteFiadoPayment(paymentId) {
+  const { data, error } = await supabase.rpc("delete_fiado_payment", {
+    p_store_id: getCurrentStoreId(),
+    p_payment_id: paymentId,
+  });
+  if (error) {
+    throw new AdminServiceError("Não foi possível apagar o pagamento.", error);
+  }
+  if (!data?.success) {
+    throw new AdminServiceError(data?.error || "Não foi possível apagar o pagamento.");
+  }
+}
+
 export async function listCustomerPayments(customerId) {
   const { data, error } = await supabase
     .from("pdv_customer_payments")

@@ -14,12 +14,19 @@ const FILTERS = [
 // Explode venda dividida ("misto") nas formas reais que a compuseram —
 // senão o resumo por forma de pagamento juntava tudo num balde "misto"
 // sem dizer quanto foi de cada forma de verdade.
-function summarize(sales) {
+//
+// Pedido em aberto (fiado) não entra como dinheiro: ele conta no caixa
+// do dia em que o pagamento é recebido (fiadoPayments), não no dia em
+// que o pedido foi registrado. Fica só como informação "a receber".
+function summarize(sales, fiadoPayments) {
   const active = sales.filter((s) => !s.cancelled);
   const cancelledCount = sales.length - active.length;
-  const total = active.reduce((sum, s) => sum + s.total, 0);
+  const paidSales = active.filter((s) => s.paymentMethod !== "fiado");
+  const openTotal = active
+    .filter((s) => s.paymentMethod === "fiado")
+    .reduce((sum, s) => sum + s.total, 0);
   const byMethod = {};
-  for (const s of active) {
+  for (const s of paidSales) {
     if (s.paymentMethod === "misto" && s.payments?.length) {
       for (const p of s.payments) {
         byMethod[p.method] = (byMethod[p.method] ?? 0) + p.amount;
@@ -28,10 +35,16 @@ function summarize(sales) {
       byMethod[s.paymentMethod] = (byMethod[s.paymentMethod] ?? 0) + s.total;
     }
   }
-  return { activeCount: active.length, cancelledCount, total, byMethod };
+  for (const p of fiadoPayments) {
+    byMethod[p.method] = (byMethod[p.method] ?? 0) + p.amount;
+  }
+  const total = Object.values(byMethod).reduce((sum, v) => sum + v, 0);
+  return { activeCount: active.length, cancelledCount, total, byMethod, openTotal };
 }
 
-export default function HistorySalesList({ currentSessionId, sessionSales, cancelError, cancellingId, onCancelSale }) {
+export default function HistorySalesList({
+  currentSessionId, sessionSales, sessionFiadoPayments = [], cancelError, cancellingId, onCancelSale,
+}) {
   const [filter, setFilter] = useState("atual");
   const [otherSales, setOtherSales] = useState([]);
   const [otherLoading, setOtherLoading] = useState(false);
@@ -66,7 +79,7 @@ export default function HistorySalesList({ currentSessionId, sessionSales, cance
   const sales = filter === "atual" ? sessionSales : otherSales;
   const loading = filter !== "atual" && otherLoading;
   const error = filter === "atual" ? cancelError : otherError;
-  const summary = summarize(sales);
+  const summary = summarize(sales, filter === "atual" ? sessionFiadoPayments : []);
   const activeFilter = FILTERS.find((f) => f.key === filter);
 
   return (
@@ -89,7 +102,7 @@ export default function HistorySalesList({ currentSessionId, sessionSales, cance
         ))}
       </div>
 
-      {sales.length > 0 && (
+      {(sales.length > 0 || sessionFiadoPayments.length > 0) && (
         <div className="pdv-history-summary">
           <div className="pdv-history-summary-main">
             <span className="pdv-history-summary-count">
@@ -108,6 +121,11 @@ export default function HistorySalesList({ currentSessionId, sessionSales, cance
                   <strong>{formatBRL(amount)}</strong>
                 </span>
               ))}
+            </div>
+          )}
+          {summary.openTotal > 0 && (
+            <div className="pdv-history-summary-open">
+              📝 Em aberto a receber: {formatBRL(summary.openTotal)}
             </div>
           )}
         </div>

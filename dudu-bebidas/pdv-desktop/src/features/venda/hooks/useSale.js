@@ -5,6 +5,7 @@ import {
   cancelPdvSale,
   removeSaleItem,
   listSessionSales,
+  listSessionFiadoPayments,
 } from "../../../shared/services/salesService";
 import { applyCreditCardFee, DEFAULT_INSTALLMENT_FEE_RATE } from "../utils/creditFee";
 import { useSaleRealtime } from "./useSaleRealtime";
@@ -29,6 +30,7 @@ export function useSale(
   const [saleError, setSaleError] = useState("");
   const [saleSuccess, setSaleSuccess] = useState("");
   const [sessionSales, setSessionSales] = useState([]);
+  const [sessionFiadoPayments, setSessionFiadoPayments] = useState([]);
   const [cancellingId, setCancellingId] = useState(null);
   const [cancelError, setCancelError] = useState("");
   const [confirmingSale, setConfirmingSale] = useState(null);
@@ -47,10 +49,13 @@ export function useSale(
   const loadSessionSales = useCallback(async (id) => {
     if (!id) {
       setSessionSales([]);
+      setSessionFiadoPayments([]);
       return;
     }
     try {
-      setSessionSales(await listSessionSales(id));
+      const [sales, payments] = await Promise.all([listSessionSales(id), listSessionFiadoPayments(id)]);
+      setSessionSales(sales);
+      setSessionFiadoPayments(payments);
     } catch (e) {
       setCancelError(e.message);
     }
@@ -260,7 +265,7 @@ export function useSale(
   return {
     paymentMethod, setPaymentMethod, installments, setInstallments, saleTotal, cardFeeAmount,
     submitting, saleError, saleSuccess,
-    sessionSales, cancellingId, cancelError, confirmingSale,
+    sessionSales, sessionFiadoPayments, cancellingId, cancelError, confirmingSale,
     receivedAmountInput, setReceivedAmountInput, changeAmount, insufficientCash,
     splitMode, toggleSplitMode, splitPayments, updateSplitLine, addSplitLine,
     removeSplitLine, splitTotal, splitRemaining, splitValid,

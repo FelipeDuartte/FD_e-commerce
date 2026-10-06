@@ -23,6 +23,11 @@ export function useSaleRealtime(sessionId, onChange) {
         { event: "UPDATE", schema: "public", table: "orders", filter: `cash_session_id=eq.${sessionId}` },
         onChange,
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "pdv_customer_payments", filter: `cash_session_id=eq.${sessionId}` },
+        onChange,
+      )
       .subscribe();
 
     return () => supabase.removeChannel(channel);

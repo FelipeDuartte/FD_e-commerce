@@ -295,6 +295,7 @@ export async function fulfillOrder(
       // responsável por baixar o estoque depois e zerar essa flag (ver
       // confirm_mercadopago_payment e settle_fiado_stock).
       stock_pending: skipStockDecrement,
+      stock_deferred: skipStockDecrement && effectivePaymentMethod === "fiado",
     })
     .select("id, order_number")
     .single();
