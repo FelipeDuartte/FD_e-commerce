@@ -161,7 +161,7 @@ export function useSale(
     setSaleError("");
     try {
       const { orderNumber } = await createPdvSale({
-        cartItems: cart.map((i) => ({ id: i.id, name: i.name, quantity: i.quantity })),
+        cartItems: cart.map((i) => ({ id: i.id, name: i.name, quantity: i.quantity, usePromoPrice: i.usePromoPrice })),
         cashSessionId: sessionId,
         discountAmount,
         ...(splitMode

@@ -22,6 +22,10 @@ interface CartItemInput {
   name?: string;
   quantity: number;
   price?: number;
+  // Balcão: operador escolheu aplicar o preço promocional nesse item (ver
+  // priceFor) — ignorado pra qualquer produto que não esteja de fato em
+  // promoção no banco.
+  usePromoPrice?: boolean;
 }
 
 export interface FulfillOrderParams {
@@ -191,18 +195,26 @@ export async function fulfillOrder(
     }
   }
 
-  // Promoção é exclusiva do site — venda de balcão (PDV) sempre cobra o
-  // preço de tabela (old_price), mesmo que o produto esteja em promoção
-  // online. Sem old_price (produto nunca esteve em promoção), cai no price
-  // normal, que nesse caso é o mesmo valor pros dois canais.
-  const priceFor = (product: { price: number; old_price: number | null; promotion: boolean }) =>
+  // Promoção é exclusiva do site — venda de balcão (PDV) cobra o preço de
+  // tabela (old_price) por padrão, mesmo com o produto em promoção online.
+  // Sem old_price (produto nunca esteve em promoção), cai no price normal,
+  // que nesse caso é o mesmo valor pros dois canais.
+  // Exceção: o operador pode escolher aplicar o preço promocional naquele
+  // item específico (botão "Aplicar promoção" no card da Venda) — manda
+  // usePromoPrice=true só pra esse item. Revalida aqui com os dados reais
+  // do banco (promotion/old_price), nunca confia cru no que o client
+  // mandou — um item marcado errado só cai de volta no preço de tabela.
+  const priceFor = (
+    product: { price: number; old_price: number | null; promotion: boolean },
+    usePromoPrice: boolean,
+  ) =>
     channel === "balcao" && product.promotion && product.old_price != null
-      ? product.old_price
+      ? (usePromoPrice ? product.price : product.old_price)
       : product.price;
 
   const calculatedProductsTotal = cartItems.reduce((sum, item) => {
     const product = products.find((p) => p.id === String(item.id));
-    return sum + (product ? priceFor(product) : 0) * item.quantity;
+    return sum + (product ? priceFor(product, !!item.usePromoPrice) : 0) * item.quantity;
   }, 0);
   let normalizedDeliveryFee = Math.max(0, Number(deliveryFee) || 0);
 
@@ -327,7 +339,7 @@ export async function fulfillOrder(
     name: item.name,
     price: (() => {
       const product = products.find((p) => p.id === String(item.id));
-      return product ? priceFor(product) : item.price;
+      return product ? priceFor(product, !!item.usePromoPrice) : item.price;
     })(),
     quantity: item.quantity,
   }));

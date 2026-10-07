@@ -18,7 +18,13 @@ export function useCart({ ignoreStockLimit = false } = {}) {
   const [discountMode, setDiscountMode] = useState("amount");
   const [discountInput, setDiscountInput] = useState("");
 
-  const addToCart = (product) => {
+  // usePromoPrice: true cobra o preço promocional do site (product.price)
+  // em vez do preço de tabela que o balcão cobra por padrão (getPdvPrice —
+  // ver pricing.js). É escolha do operador, clicando no botão "Aplicar
+  // promoção" do card — nunca aplica sozinho. Se o item já estiver no
+  // carrinho, só aumenta a quantidade no preço que já tinha (clicar de
+  // novo não troca o preço de uma linha existente).
+  const addToCart = (product, { usePromoPrice = false } = {}) => {
     if (!ignoreStockLimit && product.stock <= 0) return;
     setCart((prev) => {
       const existing = prev.find((i) => i.id === product.id);
@@ -28,9 +34,17 @@ export function useCart({ ignoreStockLimit = false } = {}) {
           i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i
         );
       }
+      const promoApplied = usePromoPrice && product.promotion && product.old_price != null;
+      const price = promoApplied ? product.price : getPdvPrice(product);
+      // usePromoPrice guardado no item (não só usado pra calcular o preço
+      // aqui) — precisa ir junto até o servidor, que recalcula o preço
+      // sozinho e por padrão sempre cobra old_price no balcão (ver
+      // priceFor em orderFulfillment.ts). Sem mandar essa marcação, a
+      // venda fechava no preço de tabela mesmo depois do operador escolher
+      // o promocional aqui.
       return [
         ...prev,
-        { id: product.id, name: product.name, price: getPdvPrice(product), quantity: 1, stock: product.stock },
+        { id: product.id, name: product.name, price, quantity: 1, stock: product.stock, usePromoPrice: promoApplied },
       ];
     });
   };

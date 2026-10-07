@@ -332,21 +332,59 @@
 .pdv-product-card {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  padding: 12px;
   border-radius: 10px;
   border: 1px solid rgba(255, 215, 0, 0.15);
   background: color-mix(in srgb, var(--c-text) 3%, transparent);
   color: var(--c-text);
-  cursor: pointer;
-  text-align: left;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  /* Sem overflow aqui de propósito — item direto do CSS Grid
+     (.pdv-product-grid) com overflow diferente de visible colapsa a
+     altura pra 0 nesse layout (bug conhecido de Grid+Flex). Os cantos são
+     arredondados nos botões filhos em vez de cortados aqui. */
 }
 
-.pdv-product-card:hover {
-  border-color: rgba(255, 215, 0, 0.5);
+.pdv-product-card-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 12px;
+  border: none;
+  border-radius: 10px 10px 0 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: background 0.15s ease;
+}
+
+/* Sem botão de promoção embaixo, o principal é o único filho — arredonda
+   os 4 cantos pra acompanhar certinho a borda do card. */
+.pdv-product-card-main:last-child {
+  border-radius: 10px;
+}
+
+.pdv-product-card-main:hover {
   background: rgba(255, 215, 0, 0.06);
+}
+
+/* Botão separado — clicar aqui cobra o preço promocional do site em vez
+   do preço de tabela que o card principal cobra por padrão. */
+.pdv-product-promo-btn {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 0 0 10px 10px;
+  border-top: 1px solid rgba(255, 215, 0, 0.15);
+  background: rgba(255, 215, 0, 0.1);
+  color: var(--c-accent);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+}
+
+.pdv-product-promo-btn:hover {
+  background: rgba(255, 215, 0, 0.2);
 }
 
 .pdv-product-name {

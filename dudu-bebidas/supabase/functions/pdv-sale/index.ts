@@ -8,7 +8,7 @@
 // via _shared/orderFulfillment.ts (mesmo caminho do checkout online).
 //
 // Body esperado:
-//   { "cartItems": [{ "id": "...", "quantity": 2 }], "paymentMethod": "cash",
+//   { "cartItems": [{ "id": "...", "quantity": 2, "usePromoPrice": false }], "paymentMethod": "cash",
 //     "cashSessionId": "uuid-do-caixa-aberto", "discountAmount": 5.00 }
 // discountAmount é opcional, em R$, sobre o subtotal — desconto que o
 // atendente decide dar (o site não tem isso hoje).

@@ -39,15 +39,34 @@ export default function ProductCatalog({ search, setSearch, productsError, produ
         <div className="adm-empty"><p>Nenhum produto encontrado.</p></div>
       ) : (
         <div className="pdv-product-grid">
-          {filteredProducts.map((p) => (
-            <button key={p.id} className="pdv-product-card" onClick={() => addToCart(p)} tabIndex={-1}>
-              <span className="pdv-product-name">{p.name}</span>
-              <span className="pdv-product-price">{formatBRL(getPdvPrice(p))}</span>
-              <span className={`adm-stock-badge ${p.stock < 10 ? "low" : "ok"}`}>
-                {p.stock} em estoque
-              </span>
-            </button>
-          ))}
+          {filteredProducts.map((p) => {
+            const isPromo = p.promotion && p.old_price != null;
+            return (
+              <div key={p.id} className="pdv-product-card">
+                <button type="button" className="pdv-product-card-main" onClick={() => addToCart(p)} tabIndex={-1}>
+                  <span className="pdv-product-name">{p.name}</span>
+                  <span className="pdv-product-price">{formatBRL(getPdvPrice(p))}</span>
+                  <span className={`adm-stock-badge ${p.stock < 10 ? "low" : "ok"}`}>
+                    {p.stock} em estoque
+                  </span>
+                </button>
+                {/* Promoção é só do site por padrão (balcão cobra preço de
+                    tabela) — esse botão deixa o operador aplicar o preço
+                    promocional quando quiser, sem fazer isso sozinho. */}
+                {isPromo && (
+                  <button
+                    type="button"
+                    className="pdv-product-promo-btn"
+                    onClick={() => addToCart(p, { usePromoPrice: true })}
+                    title={`Vender no preço promocional do site: ${formatBRL(p.price)}`}
+                    tabIndex={-1}
+                  >
+                    🏷️ Aplicar promoção · {formatBRL(p.price)}
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
