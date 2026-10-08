@@ -34,3 +34,11 @@ dist/
 .DS_Store
 **/.DS_Store
 .DS_Store
+
+# Repositório vai ficar público — nunca versionar chave privada/credencial
+# local, mesmo que apareça num lugar não previsto acima.
+*.pem
+*.key
+.supabase/
+*.pfx
+*.p12
