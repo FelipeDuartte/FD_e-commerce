@@ -13,6 +13,8 @@ export default function ProdutosView({ produtos, categories }) {
     openEditProduct, handleToggleActive, productImageSearch,
     productToDelete, deleting, deleteError, requestDelete, dismissDelete, confirmDelete,
     productToPurchase, requestPurchase, dismissPurchase, confirmPurchase, confirmBonus,
+    similarProducts, duplicateWarning, confirmSaveDuplicate, dismissDuplicateWarning,
+    handleNameBlur, applyProductName,
   } = produtos;
 
   return (
@@ -30,9 +32,18 @@ export default function ProdutosView({ produtos, categories }) {
           products={products}
           imageStatus={productImageSearch.status}
           imageError={productImageSearch.error}
-          imageProgress={productImageSearch.progress}
-          onUploadImage={productImageSearch.uploadImage}
-          onResetImage={productImageSearch.resetToManual}
+          onRemoveImage={productImageSearch.removeImage}
+          onSearchAgainImage={productImageSearch.searchAgain}
+          imageCandidates={productImageSearch.candidates}
+          selectedImageCandidate={productImageSearch.selectedCandidate}
+          onSelectImageCandidate={productImageSearch.selectCandidate}
+          similarProducts={similarProducts}
+          duplicateWarning={duplicateWarning}
+          onConfirmDuplicate={confirmSaveDuplicate}
+          onDismissDuplicate={dismissDuplicateWarning}
+          onNameBlur={handleNameBlur}
+          onApplyName={applyProductName}
+          onOpenProduct={openEditProduct}
           onRequestDelete={(product) => {
             setProductModal(null);
             requestDelete(product);

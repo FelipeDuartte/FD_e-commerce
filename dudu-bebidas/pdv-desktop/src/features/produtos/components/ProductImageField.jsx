@@ -1,45 +1,26 @@
-import { useRef, useState } from "react";
 import { imgProduto } from "../utils/Cloudnary";
+import { catalogFilenameToName } from "../utils/productNameMatch";
 
-const ACCEPTED_TYPES = "image/png,image/jpeg,image/webp";
-
-export default function ProductImageField({ modalForm, imageStatus, imageError, imageProgress, onUploadImage, onResetImage }) {
-  const fileInputRef = useRef(null);
-  const [dragOver, setDragOver] = useState(false);
-
+// Imagem vem só do catálogo mestre — não existe upload manual.
+export default function ProductImageField({
+  modalForm, imageStatus, imageError, onRemoveImage, onSearchAgain,
+  candidates = [], onSelectCandidate,
+}) {
   const previewUrl = modalForm.image ? imgProduto(modalForm.image) : null;
   const isSearching = imageStatus === "searching";
-  const isUploading = imageStatus === "uploading";
   const isFound = imageStatus === "found";
   const isNotFound = imageStatus === "not_found";
-  const isManual = imageStatus === "manual";
-
-  const openFilePicker = () => fileInputRef.current?.click();
-
-  const handleFileSelected = (file) => {
-    if (!file || isUploading) return;
-    onUploadImage(file);
-  };
-
-  const handleInputChange = (e) => {
-    handleFileSelected(e.target.files?.[0]);
-    e.target.value = ""; // permite selecionar o mesmo arquivo de novo
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setDragOver(false);
-    handleFileSelected(e.dataTransfer.files?.[0]);
-  };
+  const isSaved = imageStatus === "saved";
+  const canSearchAgain = (isSaved || isNotFound) && (modalForm.name ?? "").trim().length >= 3;
 
   return (
     <div className="adm-image-field">
-      <input ref={fileInputRef} type="file" accept={ACCEPTED_TYPES} onChange={handleInputChange} hidden />
-
       {isSearching && <div className="adm-image-status adm-image-status-searching">🔍 Procurando imagem...</div>}
-      {isFound && <div className="adm-image-status adm-image-status-found">✅ Imagem encontrada automaticamente</div>}
-      {isNotFound && !isUploading && (
-        <div className="adm-image-status adm-image-status-not-found">❌ Nenhuma imagem encontrada no catálogo</div>
+      {isFound && <div className="adm-image-status adm-image-status-found">✅ Imagem encontrada no catálogo</div>}
+      {isNotFound && !previewUrl && candidates.length === 0 && (
+        <div className="adm-image-status adm-image-status-not-found">
+          ❌ Nenhuma imagem no catálogo — confira se o nome está escrito certo
+        </div>
       )}
       {imageError && <div className="adm-image-status adm-image-status-error">⚠️ {imageError}</div>}
 
@@ -47,42 +28,51 @@ export default function ProductImageField({ modalForm, imageStatus, imageError, 
         <div className="adm-image-preview-wrap">
           <img src={previewUrl} alt="Preview do produto" className="adm-image-preview" />
           <div className="adm-image-preview-actions">
-            <button type="button" className="adm-image-change-btn" onClick={openFilePicker} disabled={isUploading}>
-              🔁 Trocar imagem
-            </button>
-            <button type="button" className="adm-image-remove-btn" onClick={onResetImage} disabled={isUploading}>
+            {canSearchAgain && (
+              <button type="button" className="adm-image-change-btn" onClick={onSearchAgain}>
+                🔍 Buscar no catálogo
+              </button>
+            )}
+            <button type="button" className="adm-image-remove-btn" onClick={onRemoveImage} disabled={isSearching}>
               🗑️ Remover
             </button>
           </div>
         </div>
       ) : (
-        <div
-          className={`adm-image-dropzone ${dragOver ? "adm-image-dropzone-active" : ""}`}
-          onClick={!isUploading ? openFilePicker : undefined}
-          onDragOver={(e) => {
-            e.preventDefault();
-            setDragOver(true);
-          }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={handleDrop}
-        >
-          {isUploading ? (
-            <span>Enviando imagem...</span>
-          ) : isSearching ? (
-            <span>Aguardando busca automática...</span>
+        <div className="adm-image-empty">
+          {isSearching ? (
+            <span>Aguardando busca no catálogo...</span>
+          ) : canSearchAgain ? (
+            <button type="button" className="adm-image-change-btn" onClick={onSearchAgain}>
+              🔍 Buscar no catálogo
+            </button>
           ) : (
-            <span>📤 Arraste uma imagem aqui ou clique para selecionar</span>
+            <span>A imagem aparece sozinha quando o nome do produto bate com o catálogo.</span>
           )}
         </div>
       )}
 
-      {isUploading && (
-        <div className="adm-image-progress-track">
-          <div className="adm-image-progress-fill" style={{ width: `${imageProgress}%` }} />
+      {isFound && candidates.length > 1 && (
+        <div className="adm-image-candidates">
+          <span className="adm-image-candidates-label">Não é essa? Outras do catálogo:</span>
+          <div className="adm-image-candidates-list">
+            {candidates.map((c) => (
+              <button
+                key={c.url}
+                type="button"
+                className={`adm-image-candidate ${c.url === modalForm.image ? "adm-image-candidate-active" : ""}`}
+                onClick={() => onSelectCandidate(c.url)}
+                title={catalogFilenameToName(c.filename)}
+              >
+                <img src={imgProduto(c.url)} alt="" />
+                <span>{catalogFilenameToName(c.filename)}</span>
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
-      {isManual && !isUploading && previewUrl && <p className="adm-image-hint">Imagem definida manualmente.</p>}
+      {isSaved && previewUrl && <p className="adm-image-hint">Imagem já salva neste produto.</p>}
     </div>
   );
 }

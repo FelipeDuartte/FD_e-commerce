@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { EMPTY_PRODUCT, generateProductId } from "../utils/productConstants";
 import {
   buildProductPayload,
@@ -12,6 +12,7 @@ import {
 } from "../services/productService";
 import { useProductImageSearch } from "./useProductImageSearch";
 import { useProductsRealtime } from "../../../shared/hooks/useProductsRealtime";
+import { findSimilarProducts, normalizeProductName } from "../utils/productNameMatch";
 
 // Concentra todo o estado/lógica da view "Produtos": listagem, filtros, o
 // modal de criar/editar (incluindo a busca/upload de imagem do produto) e
@@ -36,6 +37,10 @@ export function useProdutos(onProductsChanged) {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
   const [productToPurchase, setProductToPurchase] = useState(null);
+  // Produto praticamente igual a um já cadastrado → em vez de salvar direto,
+  // pergunta se é outro produto mesmo (cadastro duplicado era o problema
+  // mais comum: "para tudo" e "paratudo" viravam dois produtos).
+  const [duplicateWarning, setDuplicateWarning] = useState(null);
 
   const handleImageResolved = useCallback((url) => {
     setModalForm((prev) => ({ ...prev, image: url }));
@@ -76,9 +81,16 @@ export function useProdutos(onProductsChanged) {
     return matchSearch && matchCategory;
   });
 
+  const editingId = productModal && productModal !== "new" ? productModal.id : null;
+  const similarProducts = useMemo(
+    () => (productModal ? findSimilarProducts(modalForm.name, modalForm.ean, products, { excludeId: editingId }) : []),
+    [productModal, modalForm.name, modalForm.ean, products, editingId],
+  );
+
   const openNewProduct = () => {
     setModalForm({ ...EMPTY_PRODUCT, id: generateProductId(products) });
     setModalError("");
+    setDuplicateWarning(null);
     setProductModal("new");
   };
 
@@ -94,18 +106,28 @@ export function useProdutos(onProductsChanged) {
       pack_units: product.pack_units ?? "",
     });
     setModalError("");
+    setDuplicateWarning(null);
     setProductModal(product);
   };
 
   const handleModalChange = ({ target: { name, value, type, checked } }) => {
+    if (name === "name" || name === "ean") setDuplicateWarning(null);
     setModalForm((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
   };
 
-  const handleModalSave = async (e) => {
-    e.preventDefault();
+  const handleNameBlur = () => {
+    setModalForm((prev) => ({ ...prev, name: normalizeProductName(prev.name) }));
+  };
+
+  const applyProductName = (name) => {
+    setDuplicateWarning(null);
+    setModalForm((prev) => ({ ...prev, name }));
+  };
+
+  const persistProduct = async ({ ignoreDuplicates = false } = {}) => {
     setModalSaving(true);
     setModalError("");
 
@@ -119,12 +141,26 @@ export function useProdutos(onProductsChanged) {
     }
 
     const isNew = productModal === "new";
+    // Na edição só pergunta se o nome/EAN mudou — senão um par de
+    // duplicados antigo ficaria pedindo confirmação a cada edição.
+    const identityChanged =
+      isNew ||
+      normalizeProductName(productModal.name) !== row.name ||
+      String(productModal.ean ?? "") !== String(row.ean ?? "");
+    const nearDuplicates = similarProducts.filter((s) => s.nearDuplicate);
+    if (!ignoreDuplicates && identityChanged && nearDuplicates.length > 0) {
+      setDuplicateWarning(nearDuplicates);
+      setModalSaving(false);
+      return;
+    }
+
     const previousStock = isNew ? null : productModal.stock;
     try {
       await saveAdminProduct(row, isNew, previousStock);
       await fetchProducts();
       onProductsChanged?.();
       setProductModal(null);
+      setDuplicateWarning(null);
     } catch (error) {
       console.error(error);
       setModalError(error.message);
@@ -132,6 +168,14 @@ export function useProdutos(onProductsChanged) {
 
     setModalSaving(false);
   };
+
+  const handleModalSave = (e) => {
+    e.preventDefault();
+    persistProduct();
+  };
+
+  const confirmSaveDuplicate = () => persistProduct({ ignoreDuplicates: true });
+  const dismissDuplicateWarning = () => setDuplicateWarning(null);
 
   const handleToggleActive = async (product) => {
     setTogglingId(product.id);
@@ -199,6 +243,8 @@ export function useProdutos(onProductsChanged) {
     modalForm, modalSaving, modalError, togglingId, filteredProducts,
     openNewProduct, openEditProduct, handleModalChange, handleModalSave,
     handleToggleActive, productImageSearch,
+    similarProducts, duplicateWarning, confirmSaveDuplicate, dismissDuplicateWarning,
+    handleNameBlur, applyProductName,
     productToDelete, deleting, deleteError, requestDelete, dismissDelete, confirmDelete,
     productToPurchase, requestPurchase, dismissPurchase, confirmPurchase, confirmBonus,
   };

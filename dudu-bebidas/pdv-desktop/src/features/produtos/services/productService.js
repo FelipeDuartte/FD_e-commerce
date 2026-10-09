@@ -1,5 +1,6 @@
 import { supabase, getCurrentStoreId } from "../../../shared/supabase/Supabaseclient";
 import { calcDiscount } from "../utils/productConstants";
+import { normalizeProductName } from "../utils/productNameMatch";
 import { AdminServiceError } from "../../../shared/services/AdminServiceError";
 
 async function getCurrentUserId() {
@@ -22,7 +23,7 @@ export function buildProductPayload(form) {
   return {
     id: String(form.id).trim(),
     store_id: getCurrentStoreId(), // multi-loja: obrigatório
-    name: String(form.name).trim(),
+    name: normalizeProductName(form.name),
     category: form.category,
     price,
     old_price: form.promotion ? oldPrice : null,

@@ -1,6 +1,6 @@
 import { calcDiscount } from "../utils/productConstants";
 import ProductImageField from "./ProductImageField";
-import NameRulesTip from "./NameRulesTip";
+import { catalogFilenameToName, isSameNameIgnoringCase } from "../utils/productNameMatch";
 
 export default function ProductModal({
   productModal,
@@ -14,10 +14,19 @@ export default function ProductModal({
   products = [],
   imageStatus,
   imageError,
-  imageProgress,
-  onUploadImage,
-  onResetImage,
+  onRemoveImage,
+  onSearchAgainImage,
   onRequestDelete,
+  imageCandidates = [],
+  selectedImageCandidate,
+  onSelectImageCandidate,
+  similarProducts = [],
+  duplicateWarning,
+  onConfirmDuplicate,
+  onDismissDuplicate,
+  onNameBlur,
+  onApplyName,
+  onOpenProduct,
 }) {
   const isPack = Boolean(modalForm.pack_of_product_id);
   // Só produtos avulsos (não-fardo) podem virar base — evita fardo-de-fardo.
@@ -26,12 +35,13 @@ export default function ProductModal({
     (p) => !p.pack_of_product_id && p.id !== modalForm.id,
   );
 
+  const catalogName = selectedImageCandidate ? catalogFilenameToName(selectedImageCandidate.filename) : "";
+  const showCatalogName = catalogName && !isSameNameIgnoringCase(modalForm.name, catalogName);
+
   return (
     <>
       <div className="adm-modal-overlay" onClick={() => !modalSaving && setProductModal(null)} />
       <div className="adm-modal adm-modal-product" role="dialog" aria-modal="true">
-        <NameRulesTip />
-
         <div className="adm-modal-icon">{productModal === "new" ? "➕" : "✏️"}</div>
         <h3 className="adm-modal-title">{productModal === "new" ? "Novo Produto" : "Editar Produto"}</h3>
 
@@ -59,9 +69,39 @@ export default function ProductModal({
               name="name"
               value={modalForm.name}
               onChange={handleModalChange}
+              onBlur={onNameBlur}
               placeholder="Nome do produto"
+              autoComplete="off"
               required
             />
+
+            {showCatalogName && (
+              <div className="adm-name-suggestion">
+                <span>
+                  📖 No catálogo de imagens está como <strong>{catalogName}</strong>
+                </span>
+                <button type="button" onClick={() => onApplyName(catalogName)}>
+                  Usar esse nome
+                </button>
+              </div>
+            )}
+
+            {similarProducts.length > 0 && (
+              <div className="adm-similar-products">
+                <span className="adm-similar-products-title">⚠️ Já existe produto parecido cadastrado:</span>
+                {similarProducts.map(({ product, nearDuplicate, sameEan }) => (
+                  <div key={product.id} className={`adm-similar-product ${nearDuplicate ? "adm-similar-product-dup" : ""}`}>
+                    <span>
+                      <strong>{product.name}</strong> · {product.stock} em estoque
+                      {sameEan ? " · mesmo EAN" : nearDuplicate ? " · mesmo produto?" : ""}
+                    </span>
+                    <button type="button" onClick={() => onOpenProduct(product)} disabled={modalSaving}>
+                      Abrir esse
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="adm-form-row">
@@ -98,9 +138,10 @@ export default function ProductModal({
               modalForm={modalForm}
               imageStatus={imageStatus}
               imageError={imageError}
-              imageProgress={imageProgress}
-              onUploadImage={onUploadImage}
-              onResetImage={onResetImage}
+              onRemoveImage={onRemoveImage}
+              onSearchAgain={onSearchAgainImage}
+              candidates={imageCandidates}
+              onSelectCandidate={onSelectImageCandidate}
             />
           </div>
 
@@ -222,6 +263,26 @@ export default function ProductModal({
 
           {modalError && <div className="adm-modal-error">⚠️ {modalError}</div>}
 
+          {duplicateWarning && (
+            <div className="adm-duplicate-confirm" role="alert">
+              <p>
+                ⚠️ <strong>{duplicateWarning.map((d) => d.product.name).join(", ")}</strong> já está cadastrado
+                {duplicateWarning.length > 1 ? "s" : ""}. É outro produto mesmo?
+              </p>
+              <div className="adm-duplicate-confirm-actions">
+                <button type="button" className="adm-modal-btn-back" onClick={() => onOpenProduct(duplicateWarning[0].product)} disabled={modalSaving}>
+                  Abrir o existente
+                </button>
+                <button type="button" className="adm-modal-btn-back" onClick={onDismissDuplicate} disabled={modalSaving}>
+                  Corrigir o nome
+                </button>
+                <button type="button" className="adm-modal-btn-save" onClick={onConfirmDuplicate} disabled={modalSaving}>
+                  É outro, salvar
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="adm-modal-actions">
             {productModal !== "new" && (
               <button
@@ -241,7 +302,7 @@ export default function ProductModal({
             >
               Cancelar
             </button>
-            <button type="submit" className="adm-modal-btn-save" disabled={modalSaving}>
+            <button type="submit" className="adm-modal-btn-save" disabled={modalSaving || Boolean(duplicateWarning)}>
               {modalSaving ? "Salvando..." : "Salvar"}
             </button>
           </div>

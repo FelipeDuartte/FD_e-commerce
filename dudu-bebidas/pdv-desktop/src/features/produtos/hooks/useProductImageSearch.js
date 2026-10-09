@@ -1,20 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { findMasterImage, uploadProductImage } from "../services/adminImageService";
+import { findMasterImage } from "../services/adminImageService";
 
 const DEBOUNCE_MS = 500;
 
-// Estados possíveis do fluxo de imagem:
+// Estados possíveis do fluxo de imagem (só catálogo — não existe upload):
 // "idle"       → nada digitado ainda / nome muito curto
 // "searching"  → buscando no catálogo mestre
-// "found"      → encontrou automaticamente
-// "not_found"  → não encontrou, aguardando upload manual
-// "uploading"  → enviando imagem selecionada pelo usuário
-// "manual"     → usuário já enviou/trocou a imagem manualmente
+// "found"      → encontrou no catálogo
+// "not_found"  → nada parecido no catálogo (ou o operador removeu a imagem)
+// "saved"      → produto já existente, com a imagem que estava salva
 
 /**
- * Hook responsável por buscar automaticamente (com debounce) uma imagem
- * no catálogo mestre do Cloudinary conforme o nome do produto muda, e
- * por expor o fluxo de upload manual quando nada é encontrado.
+ * Busca automaticamente (com debounce) imagens no catálogo mestre do
+ * Cloudinary conforme o nome do produto muda.
  *
  * @param {string} productName - nome atual do produto (form.name)
  * @param {string} currentImage - URL atual em form.image (produto existente)
@@ -24,22 +22,54 @@ const DEBOUNCE_MS = 500;
  *   da busca de um produto para o próximo quando o modal é reaberto.
  */
 export function useProductImageSearch(productName, currentImage, onImageResolved, resetKey) {
-  const [status, setStatus] = useState(currentImage ? "manual" : "idle");
+  const [status, setStatus] = useState(currentImage ? "saved" : "idle");
   const [error, setError] = useState("");
-  const [progress, setProgress] = useState(0);
+  // Até 3 imagens parecidas do catálogo — a melhor já vem aplicada, as
+  // outras ficam como "Não é essa?" pro operador trocar com um clique.
+  const [candidates, setCandidates] = useState([]);
+  const [selectedUrl, setSelectedUrl] = useState("");
 
   const lastSearchedName = useRef(null);
   const debounceRef = useRef(null);
-  const progressTimerRef = useRef(null);
 
   // Sempre que o modal é (re)aberto para um produto diferente, reinicia
   // o estado do fluxo de imagem com base no que já existe salvo.
   useEffect(() => {
-    setStatus(currentImage ? "manual" : "idle");
+    setStatus(currentImage ? "saved" : "idle");
     setError("");
+    setCandidates([]);
+    setSelectedUrl("");
     lastSearchedName.current = currentImage ? productName : null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetKey]);
+
+  const runSearch = useCallback(
+    async (name) => {
+      lastSearchedName.current = name;
+      setStatus("searching");
+      setError("");
+
+      try {
+        const result = await findMasterImage(name);
+        setCandidates(result.candidates ?? []);
+        if (result.found) {
+          setStatus("found");
+          setSelectedUrl(result.url);
+          onImageResolved(result.url);
+        } else {
+          setStatus("not_found");
+          setSelectedUrl("");
+          onImageResolved("");
+        }
+      } catch (err) {
+        console.error(err);
+        setStatus("not_found");
+        setCandidates([]);
+        setError("Não foi possível buscar no catálogo. Tente de novo em instantes.");
+      }
+    },
+    [onImageResolved],
+  );
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -47,77 +77,45 @@ export function useProductImageSearch(productName, currentImage, onImageResolved
     const trimmed = (productName ?? "").trim();
 
     if (trimmed.length < 3) {
-      setStatus("idle");
+      setStatus((prev) => (prev === "saved" ? prev : "idle"));
+      setCandidates([]);
       return;
     }
 
     if (trimmed === lastSearchedName.current) return;
 
-    debounceRef.current = setTimeout(async () => {
-      lastSearchedName.current = trimmed;
-      setStatus("searching");
-      setError("");
-
-      try {
-        const result = await findMasterImage(trimmed);
-        if (result.found) {
-          setStatus("found");
-          onImageResolved(result.url);
-        } else {
-          setStatus("not_found");
-          onImageResolved("");
-        }
-      } catch (err) {
-        console.error(err);
-        setStatus("not_found");
-        setError("Não foi possível buscar automaticamente. Envie a imagem manualmente.");
-      }
-    }, DEBOUNCE_MS);
+    debounceRef.current = setTimeout(() => runSearch(trimmed), DEBOUNCE_MS);
 
     return () => clearTimeout(debounceRef.current);
-  }, [productName, onImageResolved]);
+  }, [productName, runSearch]);
 
-  const uploadImage = useCallback(
-    async (file) => {
-      setStatus("uploading");
+  // Produto antigo (imagem salva antes) ou depois de remover — busca de
+  // novo no catálogo sem precisar mexer no nome.
+  const searchAgain = useCallback(() => {
+    const trimmed = (productName ?? "").trim();
+    if (trimmed.length >= 3) runSearch(trimmed);
+  }, [productName, runSearch]);
+
+  const removeImage = useCallback(() => {
+    setStatus("not_found");
+    setError("");
+    setSelectedUrl("");
+    onImageResolved("");
+  }, [onImageResolved]);
+
+  const selectCandidate = useCallback(
+    (url) => {
+      setStatus("found");
       setError("");
-      setProgress(0);
-
-      // supabase.functions.invoke não expõe progresso real de upload;
-      // simulamos um avanço suave para dar feedback visual ao usuário.
-      progressTimerRef.current = setInterval(() => {
-        setProgress((prev) => (prev < 90 ? prev + 10 : prev));
-      }, 150);
-
-      try {
-        const url = await uploadProductImage(file);
-        setProgress(100);
-        setStatus("manual");
-        onImageResolved(url);
-      } catch (err) {
-        console.error(err);
-        setStatus("not_found");
-        setError(err.message || "Não foi possível enviar a imagem.");
-      } finally {
-        clearInterval(progressTimerRef.current);
-        setTimeout(() => setProgress(0), 400);
-      }
+      setSelectedUrl(url);
+      onImageResolved(url);
     },
     [onImageResolved],
   );
 
-  const resetToManual = useCallback(() => {
-    setStatus("not_found");
-    setError("");
-    onImageResolved("");
-  }, [onImageResolved]);
+  const selectedCandidate = candidates.find((c) => c.url === selectedUrl) ?? null;
 
-  useEffect(() => {
-    return () => {
-      clearTimeout(debounceRef.current);
-      clearInterval(progressTimerRef.current);
-    };
-  }, []);
+  useEffect(() => () => clearTimeout(debounceRef.current), []);
 
-  return { status, error, progress, uploadImage, resetToManual };
+  return { status, error, removeImage, searchAgain, candidates, selectedCandidate, selectCandidate };
 }

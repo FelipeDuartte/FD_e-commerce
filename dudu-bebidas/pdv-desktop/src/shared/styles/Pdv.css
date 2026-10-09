@@ -1621,50 +1621,6 @@
   color: #ff6b6b;
 }
 
-.pdv-name-rules {
-  background: color-mix(in srgb, var(--c-text) 4%, transparent);
-  border: 1px solid var(--c-border);
-  border-radius: 10px;
-  padding: 14px 16px;
-  margin-bottom: 16px;
-}
-
-.pdv-name-rules-title {
-  color: var(--c-accent);
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-
-.pdv-name-rules-desc {
-  font-size: 13px;
-  color: var(--c-text-muted);
-  margin-bottom: 10px;
-}
-
-.pdv-name-rules-group {
-  margin-bottom: 10px;
-  font-size: 13px;
-}
-
-.pdv-name-rules-group strong {
-  display: block;
-  margin-bottom: 4px;
-}
-
-.pdv-name-rules-examples {
-  background: color-mix(in srgb, var(--c-text) 3%, transparent);
-  border: 1px solid var(--c-border);
-  border-radius: 6px;
-  padding: 8px 10px;
-  color: var(--c-text-dim);
-}
-
-.pdv-name-rules-hint {
-  font-size: 13px;
-  color: var(--c-text-muted);
-  margin: 0;
-}
-
 /* ─── RELATÓRIOS (portado de src/admin/features/relatorios/) ────────────────── */
 
 .rpt-root {

@@ -1,26 +1,22 @@
 // ─────────────────────────────────────────────────────────────
 // Edge Function: find-master-image
 //
-// Recebe o nome de um produto, normaliza para slug e procura uma
-// imagem correspondente dentro do catálogo mestre do Cloudinary
-// (Fdtech/master/bebidas/**), usando a Search API oficial.
-//
-// Busca em duas camadas (ver _shared/cloudinary.ts):
-//   1) match exato do nome inteiro (rápido, cobre a maioria dos casos)
-//   2) se não achar, busca por palavra-chave e escolhe o candidato com
-//      mais sobreposição de palavras — tolera nome com detalhe a mais
-//      ("Heineken Long Neck 330ml Garrafa") ou a menos ("Heineken") em
-//      relação ao arquivo cadastrado no catálogo.
+// Recebe o nome de um produto e procura imagens correspondentes no
+// catálogo mestre do Cloudinary (Fdtech/master/bebidas/**). A lista do
+// catálogo é carregada e ranqueada aqui (ver _shared/cloudinary.ts),
+// tolerando espaço a mais/a menos ("para tudo" ~ "paratudo") e erro de
+// digitação ("heiniken" ~ "heineken").
 //
 // Body esperado:
 //   { "productName": "Heineken Long Neck" }
 //
 // Respostas:
-//   { "found": true,  "url": "https://...", "matchType": "exact" | "fuzzy" }
-//   { "found": false }
+//   { "found": true, "url": "https://...", "matchType": "exact" | "fuzzy",
+//     "candidates": [{ "url", "filename", "matchType" }, ...] }  (até 3)
+//   { "found": false, "candidates": [] }
 // ─────────────────────────────────────────────────────────────
 
-import { getCloudinaryConfig, searchByFilenameFuzzy } from "../_shared/cloudinary.ts";
+import { getCloudinaryConfig, findCatalogMatches } from "../_shared/cloudinary.ts";
 import { requireStoreAdmin } from "../_shared/authGuard.ts";
 
 const corsHeaders = {
@@ -31,8 +27,7 @@ const corsHeaders = {
 const MASTER_FOLDER = "Fdtech/master/bebidas";
 
 // Palavras que não ajudam a identificar QUAL produto é (tamanho, unidade,
-// embalagem genérica) — excluídas só da busca ampla/ranqueamento da camada 2,
-// pra não distrair o match por coisas que várias bebidas diferentes têm em
+// embalagem genérica) — excluídas do ranqueamento, pra não distrair o match por coisas que várias bebidas diferentes têm em
 // comum (ex: "long-neck", "600ml" aparecem em dezenas de produtos).
 const NOISE_WORDS = new Set([
   "ml", "l", "lt", "litro", "litros", "kg", "g", "un", "unid", "unidade",
@@ -92,7 +87,7 @@ Deno.serve(async (req) => {
     const slug = normalizeSlug(productName);
 
     if (!slug) {
-      return new Response(JSON.stringify({ found: false }), {
+      return new Response(JSON.stringify({ found: false, candidates: [] }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -100,19 +95,18 @@ Deno.serve(async (req) => {
 
     const config = getCloudinaryConfig();
     const keywordTokens = extractKeywordTokens(slug);
-    const result = await searchByFilenameFuzzy(config, MASTER_FOLDER, slug, keywordTokens, NOISE_WORDS);
+    const matches = await findCatalogMatches(config, MASTER_FOLDER, slug, keywordTokens, NOISE_WORDS);
+    const candidates = matches.map((m) => ({ url: m.secure_url, filename: m.filename, matchType: m.matchType }));
+    const best = matches[0];
 
-    if (result) {
-      return new Response(
-        JSON.stringify({ found: true, url: result.secure_url, matchType: result.matchType }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
-
-    return new Response(JSON.stringify({ found: false }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify(
+        best
+          ? { found: true, url: best.secure_url, matchType: best.matchType, candidates }
+          : { found: false, candidates: [] },
+      ),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   } catch (err) {
     console.error("Erro em find-master-image:", err);
     return new Response(JSON.stringify({ error: "Erro ao buscar imagem no catálogo." }), {
