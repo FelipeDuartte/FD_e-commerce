@@ -33,6 +33,7 @@ export default function SaleReceipt({ sale }) {
           <div className="pdv-receipt-divider" />
           <div className="pdv-receipt-delivery">
             <strong>🚚 ENTREGAR EM:</strong>
+            {sale.deliveryAddress.name && <div>{sale.deliveryAddress.name}</div>}
             <div>
               {sale.deliveryAddress.street}, {sale.deliveryAddress.number}
             </div>

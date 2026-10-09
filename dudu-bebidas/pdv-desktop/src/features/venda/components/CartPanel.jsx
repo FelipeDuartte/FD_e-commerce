@@ -83,6 +83,13 @@ export default function CartPanel({
 
       {isDelivery && (
         <div className="pdv-delivery-fields">
+          <div className="adm-form-field">
+            <label>Nome</label>
+            <input
+              value={deliveryAddress.name}
+              onChange={(e) => setDeliveryAddressField("name", e.target.value)}
+            />
+          </div>
           <div className="adm-form-row">
             <div className="adm-form-field">
               <label>Endereço</label>
@@ -106,6 +113,7 @@ export default function CartPanel({
               <input
                 value={deliveryAddress.district}
                 onChange={(e) => setDeliveryAddressField("district", e.target.value)}
+                placeholder="Opcional — qualquer bairro"
               />
             </div>
             <div className="adm-form-field">

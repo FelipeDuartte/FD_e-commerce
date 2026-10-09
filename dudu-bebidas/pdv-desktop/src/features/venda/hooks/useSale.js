@@ -10,7 +10,7 @@ import {
 import { applyCreditCardFee, DEFAULT_INSTALLMENT_FEE_RATE } from "../utils/creditFee";
 import { useSaleRealtime } from "./useSaleRealtime";
 
-const EMPTY_DELIVERY_ADDRESS = { street: "", number: "", complement: "", district: "", phone: "" };
+const EMPTY_DELIVERY_ADDRESS = { name: "", street: "", number: "", complement: "", district: "", phone: "" };
 
 // Forma de pagamento (única ou dividida), troco, cliente fiado, submissão
 // da venda e cancelamento. Recebe o carrinho (de useCart) como dados —
@@ -115,8 +115,11 @@ export function useSale(
 
   const insufficientCash = paymentMethod === "cash" && changeAmount !== null && changeAmount < 0;
   const missingFiadoCustomer = paymentMethod === "fiado" && !fiadoCustomer;
+  // Bairro é livre e opcional aqui — a limitação de bairros atendidos é
+  // só do site (área de entrega online). No balcão o dono decide na hora
+  // se entrega ou não, então só rua e número são obrigatórios.
   const missingDeliveryAddress =
-    isDelivery && (!deliveryAddress.street.trim() || !deliveryAddress.number.trim() || !deliveryAddress.district.trim());
+    isDelivery && (!deliveryAddress.street.trim() || !deliveryAddress.number.trim());
 
   // Pagamento dividido — ex: parte em dinheiro, parte no cartão. Ligar/desligar
   // reseta as linhas (senão sobraria um valor dividido pra uma venda que virou
@@ -174,10 +177,11 @@ export function useSale(
         ...(isDelivery
           ? {
               address: {
+                name: deliveryAddress.name.trim() || null,
                 street: deliveryAddress.street.trim(),
                 number: deliveryAddress.number.trim(),
                 complement: deliveryAddress.complement.trim() || null,
-                district: deliveryAddress.district.trim(),
+                district: deliveryAddress.district.trim() || null,
                 phone: deliveryAddress.phone.trim() || null,
               },
             }

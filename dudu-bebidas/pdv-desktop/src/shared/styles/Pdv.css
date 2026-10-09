@@ -1409,6 +1409,12 @@
     top: 0;
     left: 0;
     width: 80mm;
+    /* padding soma à largura em box-sizing padrão (content-box) — sem
+       border-box a notinha ficava com 86mm (80 + 3mm de cada lado), 6mm
+       maior que o papel de 80mm do @page, e a ponta direita (ex: o valor
+       do Total, que é a única linha que vai de ponta a ponta) saía
+       cortada na impressão. */
+    box-sizing: border-box;
     padding: 3mm;
     color: #000;
     background: #fff;
