@@ -1,4 +1,9 @@
 import { useEffect } from "react";
+
+// Uma venda dispara vários eventos seguidos (INSERT do pedido, UPDATEs,
+// pagamento) — sem agrupar, cada um rebaixava todas as vendas do caixa,
+// que no fim do dia já são dezenas.
+const COALESCE_MS = 300;
 import { supabase } from "../../../shared/supabase/Supabaseclient";
 
 // cash_sessions é único por loja (não por computador) — vários terminais
@@ -11,25 +16,33 @@ export function useSaleRealtime(sessionId, onChange) {
   useEffect(() => {
     if (!sessionId) return;
 
+    let timer = null;
+    const scheduleChange = () => {
+      if (!timer) timer = setTimeout(() => { timer = null; onChange(); }, COALESCE_MS);
+    };
+
     const channel = supabase
       .channel(`pdv-session-sales-${sessionId}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "orders", filter: `cash_session_id=eq.${sessionId}` },
-        onChange,
+        scheduleChange,
       )
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "orders", filter: `cash_session_id=eq.${sessionId}` },
-        onChange,
+        scheduleChange,
       )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "pdv_customer_payments", filter: `cash_session_id=eq.${sessionId}` },
-        onChange,
+        scheduleChange,
       )
       .subscribe();
 
-    return () => supabase.removeChannel(channel);
+    return () => {
+      clearTimeout(timer);
+      supabase.removeChannel(channel);
+    };
   }, [sessionId, onChange]);
 }

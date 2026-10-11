@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { EMPTY_PRODUCT, generateProductId } from "../utils/productConstants";
 import {
   buildProductPayload,
   deleteAdminProduct,
-  listAdminProducts,
   registerProductPurchase,
   registerProductBonus,
   saveAdminProduct,
@@ -11,7 +10,7 @@ import {
   validateProductPayload,
 } from "../services/productService";
 import { useProductImageSearch } from "./useProductImageSearch";
-import { useProductsRealtime } from "../../../shared/hooks/useProductsRealtime";
+import { useLiveProducts } from "../../../shared/hooks/useLiveProducts";
 import { findSimilarProducts, normalizeProductName } from "../utils/productNameMatch";
 
 // Concentra todo o estado/lógica da view "Produtos": listagem, filtros, o
@@ -23,9 +22,11 @@ import { findSimilarProducts, normalizeProductName } from "../utils/productNameM
 // nunca saberia que algo mudou (ex: EAN cadastrado agora não aparecia na
 // busca da Venda até reiniciar o app).
 export function useProdutos(onProductsChanged) {
-  const [products, setProducts] = useState([]);
-  const [productsLoading, setProductsLoading] = useState(false);
-  const [productsError, setProductsError] = useState("");
+  const {
+    products, setProducts, loading: productsLoading, error: loadError, reload: fetchProducts,
+  } = useLiveProducts();
+  const [actionError, setActionError] = useState("");
+  const productsError = actionError || loadError;
   const [productSearch, setProductSearch] = useState("");
   const [productCategory, setProductCategory] = useState("todos");
   const [productModal, setProductModal] = useState(null);
@@ -54,26 +55,6 @@ export function useProdutos(onProductsChanged) {
     handleImageResolved,
     productModalKey,
   );
-
-  const fetchProducts = useCallback(async () => {
-    setProductsLoading(true);
-    setProductsError("");
-    try {
-      setProducts(await listAdminProducts());
-    } catch (error) {
-      console.error(error);
-      setProductsError(error.message);
-    }
-    setProductsLoading(false);
-  }, []);
-
-  useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
-
-  // Recarrega quando OUTRO terminal mexe em algum produto — mesmo motivo
-  // do useProductCatalog (Venda), só que pra essa lista.
-  useProductsRealtime(fetchProducts);
 
   const filteredProducts = products.filter((p) => {
     const matchSearch = p.name.toLowerCase().includes(productSearch.toLowerCase());
@@ -179,14 +160,14 @@ export function useProdutos(onProductsChanged) {
 
   const handleToggleActive = async (product) => {
     setTogglingId(product.id);
-    setProductsError("");
+    setActionError("");
     try {
       const updatedProduct = await toggleAdminProductActive(product);
       setProducts((prev) => prev.map((p) => (p.id === product.id ? updatedProduct : p)));
       onProductsChanged?.();
     } catch (error) {
       console.error(error);
-      setProductsError(error.message);
+      setActionError(error.message);
     }
     setTogglingId(null);
   };

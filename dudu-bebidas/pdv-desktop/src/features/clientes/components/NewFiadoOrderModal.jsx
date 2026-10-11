@@ -52,6 +52,7 @@ export default function NewFiadoOrderModal({ customer, onConfirm, onDismiss }) {
             productsError={catalog.productsError}
             productsLoading={catalog.productsLoading}
             filteredProducts={catalog.filteredProducts}
+            findByEan={catalog.findByEan}
             addToCart={cart.addToCart}
           />
 

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { getPdvPrice } from "../utils/pricing";
 
 // Itens do carrinho + desconto. Não sabe nada sobre forma de pagamento ou
@@ -24,7 +24,10 @@ export function useCart({ ignoreStockLimit = false } = {}) {
   // promoção" do card — nunca aplica sozinho. Se o item já estiver no
   // carrinho, só aumenta a quantidade no preço que já tinha (clicar de
   // novo não troca o preço de uma linha existente).
-  const addToCart = (product, { usePromoPrice = false } = {}) => {
+  // useCallback: a grade de produtos (ProductCatalog, com React.memo) só
+  // redesenha quando addToCart muda — função nova a cada render fazia os
+  // ~370 cards redesenharem a cada tecla digitada no carrinho.
+  const addToCart = useCallback((product, { usePromoPrice = false } = {}) => {
     if (!ignoreStockLimit && product.stock <= 0) return;
     setCart((prev) => {
       const existing = prev.find((i) => i.id === product.id);
@@ -47,9 +50,9 @@ export function useCart({ ignoreStockLimit = false } = {}) {
         { id: product.id, name: product.name, price, quantity: 1, stock: product.stock, usePromoPrice: promoApplied },
       ];
     });
-  };
+  }, [ignoreStockLimit]);
 
-  const updateQuantity = (id, quantity) => {
+  const updateQuantity = useCallback((id, quantity) => {
     setCart((prev) =>
       prev.map((i) =>
         i.id === id
@@ -57,10 +60,10 @@ export function useCart({ ignoreStockLimit = false } = {}) {
           : i
       )
     );
-  };
+  }, [ignoreStockLimit]);
 
-  const removeFromCart = (id) => setCart((prev) => prev.filter((i) => i.id !== id));
-  const clearCart = () => setCart([]);
+  const removeFromCart = useCallback((id) => setCart((prev) => prev.filter((i) => i.id !== id)), []);
+  const clearCart = useCallback(() => setCart([]), []);
 
   const subtotal = useMemo(
     () => cart.reduce((sum, i) => sum + i.price * i.quantity, 0),
