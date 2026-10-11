@@ -4,6 +4,7 @@ import { imgProduto } from "../../../../shared/utils/Cloudnary";
 import { formatBRL } from "../../../../shared/utils/format";
 import "./ProductCard.css";
 import { useStoreStatus } from "../../../../shared/context/useStoreStatus";
+import BiIcon from "../../../../shared/components/BiIcon/BiIcon";
 
 const RESET_TIME = 2000;
 
@@ -81,20 +82,20 @@ function ProductCard({ produto, addToCart }) {
 
             {hasPromo && !isOutOfStock && (
               <span className="badge-promo">
-                <i className="bi bi-lightning-charge-fill me-1" />
+                <BiIcon name="lightning-charge-fill" className="me-1" />
                 OFERTA
               </span>
             )}
 
             {isOutOfStock ? (
               <span className="badge-estoque esgotado">
-                <i className="bi bi-x-circle-fill me-1" />
+                <BiIcon name="x-circle-fill" className="me-1" />
                 Esgotado
               </span>
             ) : (
               isLowStock && (
                 <span className="badge-estoque baixo">
-                  <i className="bi bi-exclamation-circle-fill me-1" />
+                  <BiIcon name="exclamation-circle-fill" className="me-1" />
                   Últimas unidades
                 </span>
               )

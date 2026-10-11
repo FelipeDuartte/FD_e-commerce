@@ -1,3 +1,5 @@
+import BiIcon from "../../../shared/components/BiIcon/BiIcon";
+
 // Modal genérico pra desfechos finais (rejeitado / cancelado pelo cliente) —
 // mesma estrutura nos dois casos, só muda ícone/título/texto.
 export default function OrderOutcomeModal({ icon, title, children, onClose }) {
@@ -15,7 +17,7 @@ export default function OrderOutcomeModal({ icon, title, children, onClose }) {
             rel="noreferrer"
             className="cf-modal-btn-whatsapp"
           >
-            Falar com atendente <i className="bi bi-whatsapp" aria-hidden="true" />
+            Falar com atendente <BiIcon name="whatsapp" />
           </a>
           <button className="cf-modal-btn-confirm" onClick={onClose}>
             Voltar para a loja

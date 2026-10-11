@@ -14,16 +14,19 @@ export function normalizeProduct(product) {
     imagem: product.image,
     estoque: product.stock,
     promocao: product.promotion,
-    fornecedor: product.supplier,
-    ean: product.ean,
     isActive: product.is_active,
   };
 }
 
+// Só o que a vitrine mostra. Nunca "*": a tabela tem custo (cost_price) e
+// fornecedor, que não podem ir pro navegador do cliente.
+const SITE_PRODUCT_COLUMNS =
+  "id, name, category, price, old_price, discount, image, stock, promotion, is_active";
+
 export async function listActiveProducts() {
   const { data, error } = await supabase
     .from("products")
-    .select("*")
+    .select(SITE_PRODUCT_COLUMNS)
     .eq("is_active", true)
     .eq("show_on_site", true)
     .order("name");

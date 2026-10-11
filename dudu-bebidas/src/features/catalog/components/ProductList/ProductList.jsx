@@ -2,6 +2,7 @@ import ProductCard from "../ProductCard/ProductCard";
 import "./Products.css";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useProductCategories } from "../../../../shared/hooks/useProductCategories";
+import BiIcon from "../../../../shared/components/BiIcon/BiIcon";
 
 const PAGE_SIZE = 12;
 
@@ -94,7 +95,7 @@ export default function ProductList({
               tabIndex={canScrollLeft ? 0 : -1}
               onClick={() => scrollFilters(-1)}
             >
-              <i className="bi bi-chevron-left" />
+              <BiIcon name="chevron-left" />
             </button>
             <button
               type="button"
@@ -103,7 +104,7 @@ export default function ProductList({
               tabIndex={canScrollRight ? 0 : -1}
               onClick={() => scrollFilters(1)}
             >
-              <i className="bi bi-chevron-right" />
+              <BiIcon name="chevron-right" />
             </button>
             <div className="overflow-x-auto" ref={filterScrollRef} onScroll={updateScrollHints}>
               {CATEGORIES.map(({ id, icon, label }) => (
@@ -112,7 +113,7 @@ export default function ProductList({
                   onClick={(e) => handleCategorySelect(id, e)}
                   className={`filter-btn${selectedCategory === id ? " active" : ""}`}
                 >
-                  <i className={`bi ${icon}`} />
+                  <BiIcon name={icon} />
                   {label}
                 </button>
               ))}
@@ -129,7 +130,7 @@ export default function ProductList({
           ) : (
             <div className="col-12 text-center py-5">
               <div className="p-5">
-                <i className="bi bi-search empty-state-icon" />
+                <BiIcon name="search" className="empty-state-icon" />
                 <h4 className="mt-4 mb-2">Nenhum produto encontrado</h4>
                 <p className="text-muted">Tente buscar por outro termo ou categoria</p>
               </div>
@@ -142,7 +143,7 @@ export default function ProductList({
           <div className="produtos-controle-btns">
             {hasMore && (
               <button onClick={handleLoadMore} className="btn-ver-mais">
-                <i className="bi bi-plus-circle me-2" />
+                <BiIcon name="plus-circle" className="me-2" />
                 Ver Mais Produtos
                 <span className="ms-2 badge">
                   +{Math.min(PAGE_SIZE, productsCount - visibleCount)} de {productsCount - visibleCount} restantes
@@ -151,7 +152,7 @@ export default function ProductList({
             )}
             {hasVisibleExcess && (
               <button onClick={handleShowLess} className="btn-ver-menos">
-                <i className="bi bi-dash-circle me-2" />
+                <BiIcon name="dash-circle" className="me-2" />
                 Ver Menos Produtos
               </button>
             )}
@@ -162,7 +163,7 @@ export default function ProductList({
         {hasProducts && !hasMore && visibleCount > PAGE_SIZE && (
           <div className="text-center mt-5 pt-3">
             <p className="text-muted">
-              <i className="bi bi-check-circle-fill me-2 text-success" />
+              <BiIcon name="check-circle-fill" className="me-2 text-success" />
               Você já visualizou todos os {productsCount} produtos
             </p>
           </div>

@@ -15,6 +15,7 @@ import PickupCard from "./components/PickupCard";
 import OrderItemsCard from "./components/OrderItemsCard";
 import DeliveryAddressCard from "./components/DeliveryAddressCard";
 import PaymentMethodCard from "./components/PaymentMethodCard";
+import BiIcon from "../../shared/components/BiIcon/BiIcon";
 
 // ══════════════════════════════════════════════════════
 //  COMPONENTE PRINCIPAL
@@ -287,7 +288,7 @@ export default function Confirmacao() {
                   </p>
                   <a href="https://wa.me/553183077990" target="_blank" className="text-bold text-decoration-none fs-6 text-white">
                     <div className="border border-secondary rounded bg-success p-2">
-                      <span>Falar com atendente <i className="bi bi-whatsapp"></i></span>
+                      <span>Falar com atendente <BiIcon name="whatsapp" /></span>
                     </div>
                   </a>
                 </div>

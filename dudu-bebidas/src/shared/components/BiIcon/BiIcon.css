@@ -1,0 +1,12 @@
+/* Substitui a base da fonte do Bootstrap Icons: o SVG ocupa 1em, herda a
+   cor do texto e fica alinhado como o glifo da fonte ficava. */
+.bi {
+  font-style: normal;
+}
+.bi > svg {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  fill: currentColor;
+}

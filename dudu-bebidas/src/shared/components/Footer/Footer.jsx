@@ -1,4 +1,5 @@
 import "./Footer.css";
+import BiIcon from "../BiIcon/BiIcon";
 export default function Footer() {
   return (
     <footer id="contato" className="footer-custom text-white">
@@ -14,13 +15,13 @@ export default function Footer() {
             </p>
             <div className="d-flex gap-3">
               <a href="#" className="footer-social-link">
-                <i className="bi bi-envelope"></i>
+                <BiIcon name="envelope" />
               </a>
               <a href="https://www.instagram.com/dudu_bebidas_vn_/" target="_blank" className="footer-social-link">
-                <i className="bi bi-instagram"></i>
+                <BiIcon name="instagram" />
               </a>
               <a href="https://wa.me/553183077990" target="_blank" className="footer-social-link">
-                <i className="bi bi-whatsapp"></i>
+                <BiIcon name="whatsapp" />
               </a>
             </div>
           </div>
@@ -30,19 +31,19 @@ export default function Footer() {
             <ul>
               <li>
                 <a href="#hero" className="footer-link">
-                  <i className="bi bi-chevron-right"></i>
+                  <BiIcon name="chevron-right" />
                   Início
                 </a>
               </li>
               <li>
                 <a href="#produtos" className="footer-link">
-                  <i className="bi bi-chevron-right"></i>
+                  <BiIcon name="chevron-right" />
                   Produtos
                 </a>
               </li>
               <li>
                 <a href="#about" className="footer-link">
-                  <i className="bi bi-chevron-right"></i>
+                  <BiIcon name="chevron-right" />
                   Sobre Nós
                 </a>
               </li>
@@ -53,21 +54,21 @@ export default function Footer() {
           <div className="col-md-4">
             <h6 className="footer-section-title">Entre em Contato</h6>
             <div className="footer-contact-item">
-              <i className="bi bi-whatsapp"></i>
+              <BiIcon name="whatsapp" />
               <div className="contact-content">
                 <div className="contact-label">WhatsApp</div>
                 <div className="contact-info">+55 (31) 8307-7990</div>
               </div>
             </div>
             <div className="footer-contact-item">
-              <i className="bi bi-envelope"></i>
+              <BiIcon name="envelope" />
               <div className="contact-content">
                 <div className="contact-label">Email</div>
                 <div className="contact-info">vendavovavirtual@yaoo.com.br</div>
               </div>
             </div>
             <div className="footer-contact-item">
-              <i className="bi bi-geo-alt"></i>
+              <BiIcon name="geo-alt" />
               <div className="contact-content">
                 <div className="contact-label">Localização</div>
                 <div className="contact-info">Minas Gerais, MG</div>

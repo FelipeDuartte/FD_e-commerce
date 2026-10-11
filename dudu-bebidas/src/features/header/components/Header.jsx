@@ -6,6 +6,7 @@ import { ShoppingCart, User, Search, LogOut } from "lucide-react"; // Ícones vi
 import "./Header.css"; // Estilos específicos do Header
 import { useStoreStatus } from "../../../shared/context/useStoreStatus"; // Hook para status da loja (aberta/fechada)
 import { useProductCategories } from "../../../shared/hooks/useProductCategories"; // Hook para obter categorias de produtos
+import BiIcon from "../../../shared/components/BiIcon/BiIcon";
 
 // ─────────────────────────────────────────────────────────
 // COMPONENTE HEADER
@@ -218,10 +219,7 @@ export default function Header({
                   onClick={() => handleCategoryClick(category.categoryId)}
                   className="category-item"
                 >
-                  <i
-                    className={`bi ${category.icon}`}
-                    style={{ fontSize: 18 }}
-                  />
+                  <BiIcon name={category.icon} style={{ fontSize: 18 }} />
                   <span>{category.name}</span>
                 </button>
               ))}
@@ -274,7 +272,7 @@ export default function Header({
               className="d-block text-white text-decoration-none py-2 px-3 rounded mb-1"
               onClick={() => setMenuOpen(false)}
             >
-              <i className="bi bi-house-door-fill me-2"></i>Início
+              <BiIcon name="house-door-fill" className="me-2" />Início
             </a>
             {/* Bebidas - Vai para seção de produtos */}
             <a
@@ -282,7 +280,7 @@ export default function Header({
               className="d-block text-white text-decoration-none py-2 px-3 rounded mb-1"
               onClick={() => setMenuOpen(false)}
             >
-              <i className="bi bi-grid-fill me-2"></i>Bebidas
+              <BiIcon name="grid-fill" className="me-2" />Bebidas
             </a>
 
             {/* CATEGORIAS NO MENU MOBILE */}
@@ -297,7 +295,7 @@ export default function Header({
                 className="d-flex align-items-center gap-2 text-white text-decoration-none py-2 px-3 rounded mb-1 w-100 text-start border-0 bg-transparent"
                 style={{ fontSize: "14px" }}
               >
-                <i className={`bi ${category.icon}`} style={{ fontSize: 16 }} />
+                <BiIcon name={category.icon} style={{ fontSize: 16 }} />
                 {category.name}
               </button>
             ))}
@@ -309,7 +307,7 @@ export default function Header({
               className="d-block text-white text-decoration-none py-2 px-3 rounded mb-1"
               onClick={() => setMenuOpen(false)}
             >
-              <i className="bi bi-envelope-fill me-2"></i>Contato
+              <BiIcon name="envelope-fill" className="me-2" />Contato
             </a>
 
             {/* DIVISOR */}
