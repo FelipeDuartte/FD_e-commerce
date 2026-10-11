@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────
-// Helper compartilhado: recalcula preços reais no banco, insere
-// orders + order_items e baixa estoque via RPC process_order.
+// Helper compartilhado: recalcula preços reais no banco e grava
+// pedido + itens + baixa de estoque numa transação (create_order_atomic).
 // Usado tanto por create-order (checkout online/convidado) quanto
 // por pdv-sale (venda de balcão, admin autenticado) — a lógica
 // financeira/estoque é a mesma nos dois casos, só muda quem pode
@@ -280,10 +280,23 @@ export async function fulfillOrder(
     }
   }
 
-  const { data: order, error: orderError } = await supabase
-    .from("orders")
-    .insert({
-      store_id: storeId,
+  const orderItems = cartItems.map((item) => {
+    const product = products.find((p) => p.id === String(item.id));
+    return {
+      product_id: String(item.id),
+      name: item.name,
+      price: product ? priceFor(product, !!item.usePromoPrice) : item.price,
+      quantity: item.quantity,
+    };
+  });
+
+  // Pedido, pagamentos divididos, itens e baixa de estoque numa transação só
+  // (create_order_atomic, migration 0040): se o estoque não der — ex: outro
+  // terminal vendeu a última unidade no mesmo segundo — nada fica gravado.
+  // Antes eram chamadas separadas e o pedido ficava pra trás mesmo com erro.
+  const { data: created, error: createError } = await supabase.rpc("create_order_atomic", {
+    p_store_id: storeId,
+    p_order: {
       user_id: userId,
       total: calculatedTotal,
       discount_amount: normalizedDiscount,
@@ -295,12 +308,10 @@ export async function fulfillOrder(
       channel,
       cash_session_id: cashSessionId,
       sold_by: soldBy,
-      // Omite as duas chaves quando o caller não informa (ex: pdv-sale) —
-      // assim o DEFAULT 'pago'/null da coluna no banco continua valendo,
-      // em vez de mandar undefined explicitamente.
-      ...(paymentStatus !== undefined ? { payment_status: paymentStatus } : {}),
-      ...(paymentProvider !== null ? { payment_provider: paymentProvider } : {}),
-      ...(pdvCustomerId !== null ? { pdv_customer_id: pdvCustomerId } : {}),
+      // Sem valor = DEFAULT do banco ('pago' / null).
+      payment_status: paymentStatus ?? null,
+      payment_provider: paymentProvider,
+      pdv_customer_id: pdvCustomerId,
       // Marca que o estoque ainda não foi baixado pra esse pedido — tanto
       // faz o motivo (cartão MP aguardando aprovação, ou pedido fiado com
       // baixa adiada pro pagamento): quem settar `skipStockDecrement` é
@@ -308,72 +319,24 @@ export async function fulfillOrder(
       // confirm_mercadopago_payment e settle_fiado_stock).
       stock_pending: skipStockDecrement,
       stock_deferred: skipStockDecrement && effectivePaymentMethod === "fiado",
-    })
-    .select("id, order_number")
-    .single();
+    },
+    p_items: orderItems,
+    p_payments: isSplitPayment
+      ? payments!.map((p) => ({ method: p.method, amount: roundCents(p.amount) }))
+      : [],
+    p_decrement_stock: !skipStockDecrement,
+  });
 
-  if (orderError) {
-    console.error("[orderFulfillment] Erro ao criar pedido:", orderError);
+  if (createError || !created?.order_id) {
+    const message = createError?.message ?? "";
+    // Erro de estoque/produto vindo do process_order — mensagem já é pra
+    // mostrar ao operador/cliente ("Estoque insuficiente para ...").
+    if (message.includes("ORDER_ERRORS:")) {
+      throw new FulfillmentError(message.slice(message.indexOf("ORDER_ERRORS:") + 13).trim());
+    }
+    console.error("[orderFulfillment] Erro ao criar pedido:", createError);
     throw new FulfillmentError("Não foi possível criar o pedido.", 500);
   }
 
-  if (isSplitPayment) {
-    const { error: paymentsError } = await supabase.from("order_payments").insert(
-      payments!.map((p) => ({
-        order_id: order.id,
-        store_id: storeId,
-        method: p.method,
-        amount: roundCents(p.amount),
-      })),
-    );
-    if (paymentsError) {
-      console.error("[orderFulfillment] Erro ao salvar pagamento dividido:", paymentsError);
-      throw new FulfillmentError("Erro ao salvar o detalhamento do pagamento.", 500);
-    }
-  }
-
-  // store_id dos itens é preenchido automaticamente por trigger no banco
-  const orderItems = cartItems.map((item) => ({
-    order_id: order.id,
-    product_id: String(item.id),
-    name: item.name,
-    price: (() => {
-      const product = products.find((p) => p.id === String(item.id));
-      return product ? priceFor(product, !!item.usePromoPrice) : item.price;
-    })(),
-    quantity: item.quantity,
-  }));
-
-  const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
-
-  if (itemsError) {
-    console.error("[orderFulfillment] Erro ao salvar itens:", itemsError);
-    throw new FulfillmentError("Erro ao salvar itens do pedido.", 500);
-  }
-
-  if (skipStockDecrement) {
-    return { orderId: order.id, orderNumber: order.order_number, total: calculatedTotal };
-  }
-
-  const rpcItems = cartItems.map((item) => ({
-    product_id: String(item.id),
-    quantity: item.quantity,
-  }));
-
-  const { data: rpcResult, error: rpcError } = await supabase.rpc("process_order", {
-    p_store_id: storeId,
-    p_order_id: order.id,
-    p_items: rpcItems,
-  });
-
-  if (rpcError) {
-    console.error("[orderFulfillment] Erro na RPC:", rpcError);
-    throw new FulfillmentError("Erro ao atualizar estoque.", 500);
-  }
-
-  if (!rpcResult?.success) {
-    throw new FulfillmentError(rpcResult?.error ?? "Erro ao processar estoque.");
-  }
-
-  return { orderId: order.id, orderNumber: order.order_number, total: calculatedTotal };
+  return { orderId: created.order_id, orderNumber: created.order_number, total: calculatedTotal };
 }

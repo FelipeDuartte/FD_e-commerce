@@ -35,10 +35,7 @@ function createFakeSupabase(responses = {}) {
     pdv_customers: { data: null, error: null },
     products: { data: [], error: null },
     store_config: { data: null, error: null },
-    orders: { data: { id: "order-1", order_number: 1 }, error: null },
-    order_payments: { error: null },
-    order_items: { error: null },
-    rpc: { data: { success: true }, error: null },
+    rpc: { data: { order_id: "order-1", order_number: 1 }, error: null },
   };
   const merged = { ...defaults, ...responses };
 
@@ -91,7 +88,7 @@ describe("fulfillOrder", () => {
       applyCardFee: true,
     }));
 
-    const insertedOrder = fake.inserted.orders[0];
+    const insertedOrder = fake.rpcCalls[0].params.p_order;
     expect(insertedOrder.installments).toBe(1);
     expect(insertedOrder.card_fee_amount).toBeCloseTo(3.26, 2);
     expect(result.total).toBeCloseTo(103.26, 2);
@@ -109,7 +106,7 @@ describe("fulfillOrder", () => {
       applyCardFee: true,
     }));
 
-    const insertedOrder = fake.inserted.orders[0];
+    const insertedOrder = fake.rpcCalls[0].params.p_order;
     expect(insertedOrder.installments).toBe(4);
     expect(insertedOrder.card_fee_amount).toBeCloseTo(7.36, 2);
     expect(result.total).toBeCloseTo(107.36, 2);
@@ -127,7 +124,7 @@ describe("fulfillOrder", () => {
         channel: "balcao",
         applyCardFee: true,
       }));
-      expect(fake.inserted.orders[0].installments).toBe(1);
+      expect(fake.rpcCalls[0].params.p_order.installments).toBe(1);
     }
   });
 
@@ -152,7 +149,7 @@ describe("fulfillOrder", () => {
       products: { data: [product({ price: 50 })], error: null },
     });
     const result = await fulfillOrder(fake, baseParams({ discountAmount: 999 }));
-    const insertedOrder = fake.inserted.orders[0];
+    const insertedOrder = fake.rpcCalls[0].params.p_order;
     expect(insertedOrder.discount_amount).toBe(50);
     expect(result.total).toBe(0);
   });
@@ -175,5 +172,74 @@ describe("fulfillOrder", () => {
     await expect(
       fulfillOrder(fake, baseParams({ cartItems: [] })),
     ).rejects.toThrow("Carrinho vazio.");
+  });
+  it("pedido inteiro vai numa chamada só (create_order_atomic), sem gravar nada direto nas tabelas", async () => {
+    const fake = createFakeSupabase({
+      products: { data: [product({ price: 10 })], error: null },
+    });
+    const result = await fulfillOrder(fake, baseParams({
+      cartItems: [{ id: "p1", name: "Produto 1", quantity: 3 }],
+    }));
+
+    expect(fake.rpcCalls).toHaveLength(1);
+    const call = fake.rpcCalls[0];
+    expect(call.name).toBe("create_order_atomic");
+    expect(call.params.p_store_id).toBe("store-1");
+    expect(call.params.p_items).toEqual([{ product_id: "p1", name: "Produto 1", price: 10, quantity: 3 }]);
+    expect(call.params.p_payments).toEqual([]);
+    expect(call.params.p_decrement_stock).toBe(true);
+    expect(call.params.p_order.total).toBe(30);
+    expect(fake.inserted).toEqual({});
+    expect(result).toEqual({ orderId: "order-1", orderNumber: 1, total: 30 });
+  });
+
+  it("pagamento dividido vai junto na mesma chamada, como 'misto'", async () => {
+    const fake = createFakeSupabase({
+      products: { data: [product({ price: 100 })], error: null },
+    });
+    await fulfillOrder(fake, baseParams({
+      channel: "balcao",
+      paymentMethod: undefined,
+      payments: [{ method: "cash", amount: 60 }, { method: "pix", amount: 40 }],
+    }));
+
+    const call = fake.rpcCalls[0];
+    expect(call.params.p_order.payment_method).toBe("misto");
+    expect(call.params.p_payments).toEqual([{ method: "cash", amount: 60 }, { method: "pix", amount: 40 }]);
+  });
+
+  it("pedido com baixa adiada (cartão MP / fiado) não baixa estoque na criação", async () => {
+    const fake = createFakeSupabase({
+      products: { data: [product()], error: null },
+    });
+    await fulfillOrder(fake, baseParams({ skipStockDecrement: true }));
+
+    const call = fake.rpcCalls[0];
+    expect(call.params.p_decrement_stock).toBe(false);
+    expect(call.params.p_order.stock_pending).toBe(true);
+  });
+
+  it("estoque insuficiente vira erro 400 com a mensagem limpa pro operador", async () => {
+    const fake = createFakeSupabase({
+      products: { data: [product()], error: null },
+      rpc: {
+        data: null,
+        error: { message: 'ORDER_ERRORS: Estoque insuficiente para "Produto 1" (disponível: 0)' },
+      },
+    });
+    const promise = fulfillOrder(fake, baseParams());
+    await expect(promise).rejects.toThrow('Estoque insuficiente para "Produto 1" (disponível: 0)');
+    await expect(promise).rejects.toMatchObject({ status: 400 });
+  });
+
+  it("erro inesperado do banco vira erro 500 genérico", async () => {
+    const fake = createFakeSupabase({
+      products: { data: [product()], error: null },
+      rpc: { data: null, error: { message: "connection reset" } },
+    });
+    await expect(fulfillOrder(fake, baseParams())).rejects.toMatchObject({
+      status: 500,
+      message: "Não foi possível criar o pedido.",
+    });
   });
 });
