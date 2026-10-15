@@ -42,3 +42,6 @@ dist/
 .supabase/
 *.pfx
 *.p12
+
+# Migrations ficam só locais (repositório público)
+supabase/migrations/
