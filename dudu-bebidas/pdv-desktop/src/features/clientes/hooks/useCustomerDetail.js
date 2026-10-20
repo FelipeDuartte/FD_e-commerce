@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { listFiadoOrders, listCustomerPayments, listCustomerCharges } from "../services/fiadoService";
+import {
+  listFiadoOrders, listCustomerPayments, listCustomerCharges, listProductCredits, listProductCreditMoves,
+} from "../services/fiadoService";
 import { useCustomerDetailRealtime } from "./useFiadoRealtime";
 
 // Pedidos fiado + lançamentos livres (pedido em aberto manual) + pagamentos
@@ -14,6 +16,8 @@ export function useCustomerDetail(customerId, selectedCustomer) {
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [payments, setPayments] = useState([]);
   const [charges, setCharges] = useState([]);
+  const [productCredits, setProductCredits] = useState([]);
+  const [creditMoves, setCreditMoves] = useState([]);
   const [txFilter, setTxFilter] = useState("todas");
 
   const loadDetail = useCallback(async (id) => {
@@ -21,18 +25,27 @@ export function useCustomerDetail(customerId, selectedCustomer) {
       setOrders([]);
       setPayments([]);
       setCharges([]);
+      setProductCredits([]);
+      setCreditMoves([]);
       return;
     }
     setOrdersLoading(true);
     try {
-      const [o, p, c] = await Promise.all([listFiadoOrders(id), listCustomerPayments(id), listCustomerCharges(id)]);
+      const [o, p, c, pc, cm] = await Promise.all([
+        listFiadoOrders(id), listCustomerPayments(id), listCustomerCharges(id),
+        listProductCredits(id), listProductCreditMoves(id),
+      ]);
       setOrders(o);
       setPayments(p);
       setCharges(c);
+      setProductCredits(pc);
+      setCreditMoves(cm);
     } catch {
       setOrders([]);
       setPayments([]);
       setCharges([]);
+      setProductCredits([]);
+      setCreditMoves([]);
     }
     setOrdersLoading(false);
   }, []);
@@ -72,18 +85,21 @@ export function useCustomerDetail(customerId, selectedCustomer) {
     const compras = orders.map((o) => ({ type: "compra", key: `o-${o.orderId}`, ...o }));
     const cobrancas = charges.map((c) => ({ type: "cobranca", key: `c-${c.id}`, ...c }));
     const pagamentos = payments.map((p) => ({ type: "pagamento", key: `p-${p.id}`, ...p }));
-    return [...compras, ...cobrancas, ...pagamentos].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  }, [orders, charges, payments]);
+    const creditos = creditMoves.map((m) => ({ type: "credito", key: `cr-${m.id}`, ...m }));
+    return [...compras, ...cobrancas, ...pagamentos, ...creditos]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }, [orders, charges, payments, creditMoves]);
 
   const filteredTransactions = useMemo(() => {
     if (txFilter === "compras") return transactions.filter((t) => (t.type === "compra" || t.type === "cobranca") && !t.cancelled);
     if (txFilter === "pagamentos") return transactions.filter((t) => t.type === "pagamento");
-    if (txFilter === "canceladas") return transactions.filter((t) => t.type === "compra" && t.cancelled);
+    if (txFilter === "creditos") return transactions.filter((t) => t.type === "credito");
+    if (txFilter === "canceladas") return transactions.filter((t) => t.type === "compra" && t.cancelled && !t.fullyReturned);
     return transactions;
   }, [transactions, txFilter]);
 
   return {
     orders, ordersLoading, txFilter, setTxFilter, reload,
-    paidDebitIds, transactions, filteredTransactions,
+    paidDebitIds, transactions, filteredTransactions, productCredits,
   };
 }

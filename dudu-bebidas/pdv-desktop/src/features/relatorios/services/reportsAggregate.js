@@ -5,7 +5,7 @@
 // usa isso em vez de order.total puro. aggregatePaymentBreakdown é a exceção
 // de propósito (ali o que importa é quanto dinheiro entrou por forma, taxa
 // incluída — não é métrica de faturamento).
-function netRevenue(order) {
+export function netRevenue(order) {
   return (order.total ?? 0) - (order.card_fee_amount ?? 0);
 }
 
@@ -95,7 +95,7 @@ export function aggregateTopCustomers(orders, limit = 10) {
  * corta no dia 1 do mês N meses atrás (comportamento original, alinhado ao
  * calendário).
  */
-export function filterByPeriod(orders, period) {
+export function periodCutoff(period) {
   const cutoff = new Date();
   if (period.unit === "days") {
     cutoff.setDate(cutoff.getDate() - period.amount);
@@ -104,6 +104,11 @@ export function filterByPeriod(orders, period) {
     cutoff.setDate(1);
   }
   cutoff.setHours(0, 0, 0, 0);
+  return cutoff;
+}
+
+export function filterByPeriod(orders, period) {
+  const cutoff = periodCutoff(period);
   return orders.filter((o) => new Date(o.created_at) >= cutoff);
 }
 

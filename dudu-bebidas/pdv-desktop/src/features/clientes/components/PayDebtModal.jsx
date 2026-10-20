@@ -18,6 +18,12 @@ export default function PayDebtModal({ customer, onConfirm, onDismiss }) {
       setError("Informe um valor válido.");
       return;
     }
+    // Não existe mais crédito em dinheiro (crédito agora é de produto) —
+    // o banco também recusa, isso só avisa antes.
+    if (amount > customer.balance + 0.004) {
+      setError(`O valor não pode passar da dívida (${formatBRL(customer.balance)}).`);
+      return;
+    }
     setSaving(true);
     setError("");
     try {
@@ -42,6 +48,7 @@ export default function PayDebtModal({ customer, onConfirm, onDismiss }) {
           <input
             type="number"
             min="0"
+            max={customer.balance.toFixed(2)}
             step="0.01"
             value={amountInput}
             onChange={(e) => setAmountInput(e.target.value)}

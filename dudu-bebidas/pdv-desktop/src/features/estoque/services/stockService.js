@@ -8,6 +8,8 @@ const REASON_LABEL = {
   ajuste_manual: "Ajuste manual",
   compra: "Compra",
   bonificacao: "Bonificação",
+  devolucao: "Devolução de cliente",
+  retirada_credito: "Retirada de crédito",
 };
 
 // Só venda/cancelamento têm um pedido ligado (orders) pra saber se foi

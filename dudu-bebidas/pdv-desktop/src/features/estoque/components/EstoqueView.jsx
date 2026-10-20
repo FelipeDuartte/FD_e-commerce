@@ -10,6 +10,8 @@ const REASON_ICON = {
   ajuste_manual: "✏️",
   compra: "📦",
   bonificacao: "🎁",
+  devolucao: "🔙",
+  retirada_credito: "🎟️",
 };
 
 const REASON_FILTERS = [
@@ -19,6 +21,8 @@ const REASON_FILTERS = [
   { value: "ajuste_manual", label: "Ajustes manuais" },
   { value: "compra", label: "Compras" },
   { value: "bonificacao", label: "Bonificações" },
+  { value: "devolucao", label: "Devoluções" },
+  { value: "retirada_credito", label: "Retiradas de crédito" },
 ];
 
 export default function EstoqueView() {

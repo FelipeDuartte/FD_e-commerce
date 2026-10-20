@@ -27,14 +27,14 @@ export default function CustomerListPanel({
 
   const counts = useMemo(() => ({
     debito: customers.filter((c) => c.balance > 0.004).length,
-    credito: customers.filter((c) => c.balance < -0.004).length,
+    credito: customers.filter((c) => c.productCreditUnits > 0).length,
     inativos: customers.filter(isInactive).length,
   }), [customers, isInactive]);
 
   const filtered = useMemo(() => {
     let list = customers;
     if (filter === "debito") list = list.filter((c) => c.balance > 0.004);
-    else if (filter === "credito") list = list.filter((c) => c.balance < -0.004);
+    else if (filter === "credito") list = list.filter((c) => c.productCreditUnits > 0);
     else if (filter === "inativos") list = list.filter(isInactive);
 
     const term = search.trim().toLowerCase();
@@ -100,6 +100,11 @@ export default function CustomerListPanel({
                 <span>
                   {c.name}{c.phone ? ` · ${formatPhone(c.phone)}` : ""}
                   {c.isActive === false && <span className="pdv-clientes-inactive-badge">Desativado</span>}
+                  {c.productCreditUnits > 0 && (
+                    <span className="pdv-clientes-credit-badge" title="Unidades de produto em crédito">
+                      🎁 {c.productCreditUnits}
+                    </span>
+                  )}
                 </span>
                 <span className="pdv-clientes-row-meta">
                   {formatLastOrder(c.lastOrderAt)} · consumo total {formatBRL(c.totalFiado)}

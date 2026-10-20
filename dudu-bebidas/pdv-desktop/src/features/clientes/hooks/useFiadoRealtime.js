@@ -34,6 +34,11 @@ export function useFiadoBalancesRealtime(onChange) {
         { event: "INSERT", schema: "public", table: "pdv_customer_charges", filter: `store_id=eq.${storeId}` },
         onChange,
       )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "pdv_customer_product_credits", filter: `store_id=eq.${storeId}` },
+        onChange,
+      )
       .subscribe((status) => {
         // Eventos que chegaram durante uma queda de conexão se perdem —
         // recarregar toda vez que a inscrição é (re)confirmada cobre isso.
@@ -65,6 +70,11 @@ export function useCustomerDetailRealtime(customerId, onChange) {
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "pdv_customer_charges", filter: `customer_id=eq.${customerId}` },
+        onChange,
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "pdv_customer_product_credits", filter: `customer_id=eq.${customerId}` },
         onChange,
       )
       .subscribe((status) => {

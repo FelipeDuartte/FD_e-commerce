@@ -6,6 +6,7 @@ import {
   setPdvCustomerActive,
   deletePdvCustomer,
   registerFiadoPayment,
+  listProductCreditTotals,
 } from "../services/fiadoService";
 import { useFiadoBalancesRealtime } from "./useFiadoRealtime";
 
@@ -19,7 +20,8 @@ export function useFiadoCustomers(sessionId) {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      setCustomers(await listPdvCustomerBalances());
+      const [balances, creditTotals] = await Promise.all([listPdvCustomerBalances(), listProductCreditTotals()]);
+      setCustomers(balances.map((c) => ({ ...c, productCreditUnits: creditTotals.get(c.id) ?? 0 })));
       setError("");
     } catch (e) {
       setError(e.message);

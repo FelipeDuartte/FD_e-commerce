@@ -36,6 +36,12 @@ function daysAgoISO(days) {
   return d.toISOString();
 }
 
+// Item com quantidade 0 = devolvido por inteiro (ver return_fiado_item).
+function itemLabel(it) {
+  if (it.quantity === 0) return `${it.name} (devolvido)`;
+  return it.quantity > 1 ? `${it.name} x${it.quantity}` : it.name;
+}
+
 function mapSaleRow(o) {
   const items = o.order_items ?? [];
   return {
@@ -56,13 +62,8 @@ function mapSaleRow(o) {
     // Array (uma linha por item) — usado no Histórico e na notinha impressa
     // pra mostrar cada produto na própria linha, em vez de um texto corrido
     // cortado. itemsLabel continua existindo por compatibilidade (tooltip).
-    items: items.map((it) => (it.quantity > 1 ? `${it.name} x${it.quantity}` : it.name)),
-    itemsLabel: items
-      .map((it) => (it.quantity > 1 ? `${it.name} x${it.quantity}` : it.name))
-      .join(", "),
-    // Item a item com id — usado só pra remover um item específico de um
-    // pedido fiado (ver removeSaleItem), o resto da tela usa "items" acima.
-    orderItems: items.map((it) => ({ id: it.id, name: it.name, quantity: it.quantity })),
+    items: items.map(itemLabel),
+    itemsLabel: items.map(itemLabel).join(", "),
     // Presente só quando a venda foi marcada como "Entrega" no carrinho —
     // orders.address é sempre {} pra venda normal de balcão (retirada).
     deliveryAddress: o.address?.street ? o.address : null,
@@ -139,20 +140,3 @@ export async function cancelPdvSale(orderId) {
   return data;
 }
 
-// Remove um item de um pedido fiado ("Em Aberto") sem cancelar o pedido
-// inteiro — ver migration 0035 pras regras (só fiado, só caixa ainda aberto).
-export async function removeSaleItem(orderId, orderItemId) {
-  const { data, error } = await supabase.rpc("remove_pdv_sale_item", {
-    p_order_id: orderId,
-    p_order_item_id: orderItemId,
-    p_store_id: getCurrentStoreId(),
-  });
-
-  if (error) {
-    throw new AdminServiceError("Não foi possível remover o item.", error);
-  }
-  if (!data?.success) {
-    throw new AdminServiceError(data?.error || "Não foi possível remover o item.");
-  }
-  return data;
-}

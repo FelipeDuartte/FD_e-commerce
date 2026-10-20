@@ -5,6 +5,7 @@ const TX_FILTERS = [
   { key: "todas", label: "Todas" },
   { key: "compras", label: "Compras" },
   { key: "pagamentos", label: "Pagamentos" },
+  { key: "creditos", label: "Créditos" },
   { key: "canceladas", label: "Canceladas" },
 ];
 
@@ -20,12 +21,13 @@ function formatDateTime(iso) {
 
 export default function CustomerTransactionList({
   ordersLoading, filteredTransactions, txFilter, setTxFilter,
-  paidDebitIds, currentSessionId, cancellingId, onCancelSale, onRemoveItem,
+  paidDebitIds, cancellingId, onCancelSale, onReturnItem, cancelError,
   onEditPayment, onDeletePayment,
 }) {
   return (
     <div>
       <h3 className="adm-store-section-title pdv-fiado-orders-title">Transações</h3>
+      {cancelError && <div className="adm-modal-error">⚠️ {cancelError}</div>}
       <div className="pdv-clientes-filters pdv-clientes-tx-filters">
         {TX_FILTERS.map((f) => (
           <button
@@ -63,6 +65,22 @@ export default function CustomerTransactionList({
                 </div>
               );
             }
+            if (t.type === "credito") {
+              const isReturn = t.reason === "devolucao";
+              return (
+                <div key={t.key} className="pdv-clientes-tx-row">
+                  <span className="pdv-sale-time">{formatDateTime(t.createdAt)}</span>
+                  <span className="pdv-clientes-tx-badge pdv-clientes-tx-badge-credit">
+                    {isReturn ? "↩️ Devolução" : "🎁 Retirada"}
+                  </span>
+                  <span className="pdv-sale-items" title={t.productName}>{t.productName}</span>
+                  <strong className={isReturn ? "pdv-clientes-tx-credit" : ""}>
+                    {isReturn ? "+" : "−"}{Math.abs(t.quantity)} un.
+                  </strong>
+                  <span />
+                </div>
+              );
+            }
             if (t.type === "cobranca") {
               const paid = paidDebitIds.has(t.id);
               return (
@@ -76,20 +94,20 @@ export default function CustomerTransactionList({
               );
             }
             const paid = !t.cancelled && paidDebitIds.has(t.orderId);
-            const canCancel = !t.cancelled && t.cashSessionId === currentSessionId;
-            // Diferente do cancelamento do pedido inteiro (só no caixa aberto
-            // agora), remover um item avulso vale pra qualquer pedido fiado
-            // ainda não pago — a dívida fica em aberto por dias, não faz
-            // sentido travar a correção de um item só porque o caixa daquele
-            // dia já fechou.
-            const canRemoveItems = !t.cancelled && !paid;
+            // Pedido em aberto cancela em qualquer dia enquanto não estiver
+            // pago (o dinheiro do fiado só entra no caixa quando é pago).
+            // Pago → só ↩️ Devolver, que vira crédito de produto.
+            const canCancel = !t.cancelled && !paid;
             // Pedido fiado tem lista de itens de altura variável (1 a vários
             // produtos) — por isso usa um cartão empilhado (cabeçalho numa
             // linha + itens embaixo, largura cheia) em vez do grid de colunas
             // fixas das outras transações, que espremia os nomes e quebrava
             // o layout em telas mais estreitas.
             return (
-              <div key={t.key} className={`pdv-clientes-tx-card ${t.cancelled ? "pdv-sale-cancelled" : ""}`}>
+              <div
+                key={t.key}
+                className={`pdv-clientes-tx-card ${t.cancelled && !t.fullyReturned ? "pdv-sale-cancelled" : ""} ${t.fullyReturned ? "pdv-sale-returned" : ""}`}
+              >
                 <div className="pdv-clientes-tx-card-head">
                   <span className="pdv-sale-time">{formatDateTime(t.createdAt)}</span>
                   <span className="pdv-clientes-tx-badge pdv-clientes-tx-badge-purchase">
@@ -97,37 +115,46 @@ export default function CustomerTransactionList({
                   </span>
                   <div className="pdv-clientes-tx-card-head-right">
                     <strong>{formatBRL(t.total)}</strong>
-                    {t.cancelled ? (
+                    {t.fullyReturned ? (
+                      <span className="pdv-sale-returned-label">Devolvido</span>
+                    ) : t.cancelled ? (
                       <span className="pdv-sale-cancelled-label">Cancelada</span>
                     ) : paid ? (
                       <span className="pdv-fiado-order-paid-label">Pago</span>
                     ) : canCancel ? (
                       <button
                         className="adm-btn-delete"
-                        title="Cancelar venda"
+                        title="Cancelar pedido inteiro (cliente desistiu / lançado errado)"
                         onClick={() => onCancelSale(t)}
                         disabled={cancellingId === t.orderId}
                       >
                         {cancellingId === t.orderId ? "..." : "🗑️"}
                       </button>
-                    ) : (
-                      <span className="pdv-sale-locked-label" title="Só é possível cancelar vendas do caixa aberto agora">—</span>
-                    )}
+                    ) : null}
                   </div>
                 </div>
                 <div className="pdv-sale-items-list">
                   {t.orderItems?.length
                     ? t.orderItems.map((item) => (
                         <div key={item.id} className="pdv-sale-item-line">
-                          <span>{item.quantity > 1 ? `${item.name} x${item.quantity}` : item.name}</span>
-                          {canRemoveItems && (
+                          <span>
+                            {item.quantity === 0 ? item.name : item.quantity > 1 ? `${item.name} x${item.quantity}` : item.name}
+                            {item.quantity === 0 ? (
+                              <span className="pdv-sale-item-returned"> · devolvido</span>
+                            ) : item.returnedQuantity + item.deductedQuantity > 0 && (
+                              <span className="pdv-sale-item-returned">
+                                {" "}· {item.returnedQuantity + item.deductedQuantity} devolvida(s)
+                              </span>
+                            )}
+                          </span>
+                          {!t.cancelled && item.quantity - item.returnedQuantity > 0 && (
                             <button
                               type="button"
-                              className="pdv-sale-item-remove-btn"
-                              title="Remover só esse item"
-                              onClick={() => onRemoveItem(t, item)}
+                              className="pdv-sale-item-return-btn"
+                              title="Devolver / remover item (inteiro ou parte)"
+                              onClick={() => onReturnItem(t, item)}
                             >
-                              ✕
+                              ↩️
                             </button>
                           )}
                         </div>

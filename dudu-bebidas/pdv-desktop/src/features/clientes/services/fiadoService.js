@@ -49,7 +49,7 @@ export async function createPdvCustomer({ name, phone, email, address }) {
   }
   return {
     id: data.id, name: data.name, phone: data.phone, email: data.email, address: data.address,
-    isActive: true, balance: 0, totalPaid: 0, totalFiado: 0, lastOrderAt: null,
+    isActive: true, balance: 0, totalPaid: 0, totalFiado: 0, lastOrderAt: null, productCreditUnits: 0,
   };
 }
 
@@ -113,6 +113,9 @@ export async function registerFiadoPayment({ customerId, amount, paymentMethod, 
   });
 
   if (error) {
+    // P0001 = mensagem do próprio banco (ex: "valor maior que a dívida") —
+    // já é pra mostrar ao operador como está.
+    if (error.code === "P0001") throw new AdminServiceError(error.message, error);
     throw new AdminServiceError("Não foi possível registrar o pagamento.", error);
   }
 
@@ -207,7 +210,7 @@ export async function listCustomerCharges(customerId) {
 export async function listFiadoOrders(customerId) {
   const { data, error } = await supabase
     .from("orders")
-    .select("id, order_number, total, status, created_at, cash_session_id, order_items(id, name, quantity)")
+    .select("id, order_number, total, status, created_at, cash_session_id, order_items(id, product_id, name, quantity, price, returned_quantity, deducted_quantity)")
     .eq("pdv_customer_id", customerId)
     .eq("payment_method", "fiado")
     .order("created_at", { ascending: false });
@@ -225,11 +228,98 @@ export async function listFiadoOrders(customerId) {
       createdAt: o.created_at,
       cashSessionId: o.cash_session_id,
       itemsLabel: items
-        .map((it) => (it.quantity > 1 ? `${it.name} x${it.quantity}` : it.name))
+        .map((it) => (it.quantity === 0 ? `${it.name} (devolvido)` : it.quantity > 1 ? `${it.name} x${it.quantity}` : it.name))
         .join(", "),
+      // Pedido em que tudo foi devolvido (abatido da dívida) — fica como
+      // "cancelled" no banco (fora do faturamento), mas aparece "Devolvido".
+      fullyReturned: o.status === "cancelled" && items.length > 0 && items.every((it) => it.quantity === 0),
       // Item a item com id — usado pra mostrar cada produto inteiro (sem
-      // cortar) e remover um item específico (ver removeSaleItem).
-      orderItems: items.map((it) => ({ id: it.id, name: it.name, quantity: it.quantity })),
+      // cortar) e devolver parte de um item (ver returnFiadoItem).
+      orderItems: items.map((it) => ({
+        id: it.id,
+        productId: it.product_id,
+        name: it.name,
+        quantity: it.quantity,
+        price: Number(it.price),
+        returnedQuantity: it.returned_quantity ?? 0,
+        deductedQuantity: it.deducted_quantity ?? 0,
+      })),
     };
   });
+}
+
+// ── Crédito de produto (ver migration 0043) ──────────────────────────────
+// Crédito é do PRODUTO, não dinheiro: cliente devolve 1 caixa já paga e
+// fica com direito a retirar 1 caixa depois, mesmo que o preço mude.
+
+async function callCreditRpc(name, params, fallbackMessage) {
+  const { data, error } = await supabase.rpc(name, { p_store_id: getCurrentStoreId(), ...params });
+  if (error) throw new AdminServiceError(fallbackMessage, error);
+  if (!data?.success) throw new AdminServiceError(data?.error || fallbackMessage);
+  return data;
+}
+
+// Devolve parte de um item de pedido em aberto. O banco decide: se o
+// cliente ainda deve esse valor, abate da dívida (mode "abatido"); se já
+// pagou, vira crédito do produto (mode "credito").
+export function returnFiadoItem({ orderId, orderItemId, quantity }) {
+  return callCreditRpc(
+    "return_fiado_item",
+    { p_order_id: orderId, p_order_item_id: orderItemId, p_quantity: quantity },
+    "Não foi possível registrar a devolução.",
+  );
+}
+
+// Devolução de produto comprado fora do fiado (já pago) — sempre crédito.
+export function registerProductReturn({ customerId, productId, quantity }) {
+  return callCreditRpc(
+    "register_product_return",
+    { p_customer_id: customerId, p_product_id: productId, p_quantity: quantity },
+    "Não foi possível registrar a devolução.",
+  );
+}
+
+export function redeemProductCredit({ customerId, productId, quantity }) {
+  return callCreditRpc(
+    "redeem_product_credit",
+    { p_customer_id: customerId, p_product_id: productId, p_quantity: quantity },
+    "Não foi possível retirar o crédito.",
+  );
+}
+
+export async function listProductCredits(customerId) {
+  const { data, error } = await supabase
+    .from("pdv_customer_product_credit_balances")
+    .select("product_id, product_name, quantity")
+    .eq("customer_id", customerId)
+    .order("product_name");
+  if (error) throw new AdminServiceError("Não foi possível carregar os créditos do cliente.", error);
+  return (data ?? []).map((c) => ({ productId: c.product_id, productName: c.product_name, quantity: c.quantity }));
+}
+
+export async function listProductCreditMoves(customerId) {
+  const { data, error } = await supabase
+    .from("pdv_customer_product_credits")
+    .select("id, product_name, quantity, reason, created_at")
+    .eq("customer_id", customerId)
+    .order("created_at", { ascending: false });
+  if (error) throw new AdminServiceError("Não foi possível carregar o histórico de créditos.", error);
+  return (data ?? []).map((m) => ({
+    id: m.id,
+    productName: m.product_name,
+    quantity: m.quantity,
+    reason: m.reason,
+    createdAt: m.created_at,
+  }));
+}
+
+// Total de unidades em crédito por cliente — usado no filtro "Com crédito".
+export async function listProductCreditTotals() {
+  const { data, error } = await supabase
+    .from("pdv_customer_product_credit_balances")
+    .select("customer_id, quantity");
+  if (error) throw new AdminServiceError("Não foi possível carregar os créditos.", error);
+  const totals = new Map();
+  for (const c of data ?? []) totals.set(c.customer_id, (totals.get(c.customer_id) ?? 0) + c.quantity);
+  return totals;
 }

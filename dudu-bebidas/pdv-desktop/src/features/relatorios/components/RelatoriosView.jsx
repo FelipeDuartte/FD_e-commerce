@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
-import { formatBRL } from "../../../shared/utils/format";
 import { useRelatorios } from "../hooks/useRelatorios";
 import { listPdvCustomerBalances } from "../../clientes/services/fiadoService";
-import RevenueChart from "./RevenueChart";
-import PaymentBreakdownCard from "./PaymentBreakdownCard";
+import OverviewTab from "./tabs/OverviewTab";
+import ProductsTab from "./tabs/ProductsTab";
+import MarginsTab from "./tabs/MarginsTab";
+import StockTab from "./tabs/StockTab";
+import DeliveryTab from "./tabs/DeliveryTab";
+import CustomersTab from "./tabs/CustomersTab";
 
 const PERIODS = [
   { key: "7d", label: "Última semana", value: { unit: "days", amount: 7 } },
@@ -13,55 +16,65 @@ const PERIODS = [
   { key: "12m", label: "12 meses", value: { unit: "months", amount: 12 } },
 ];
 
+const TABS = [
+  { key: "geral", label: "📊 Visão geral" },
+  { key: "produtos", label: "🏅 Produtos" },
+  { key: "margens", label: "💹 Margens e resultado" },
+  { key: "estoque", label: "📦 Estoque" },
+  { key: "delivery", label: "🛵 Delivery" },
+  { key: "clientes", label: "👑 Clientes" },
+];
+
+const TAB_STORAGE_KEY = "pdv-relatorios-tab";
+
 const isSamePeriod = (a, b) => a?.unit === b?.unit && a?.amount === b?.amount;
 
-const RANK_MEDALS = ["🥇", "🥈", "🥉"];
-function rankMedal(index) {
-  return RANK_MEDALS[index] ?? index + 1;
+function readSavedTab() {
+  try {
+    const saved = localStorage.getItem(TAB_STORAGE_KEY);
+    return TABS.some((t) => t.key === saved) ? saved : "geral";
+  } catch {
+    return "geral";
+  }
 }
 
-// Saldo de fiado em aberto (soma do que todo cliente deve agora) — é uma
-// foto do momento, não do período selecionado, e só faz sentido no recorte
-// Balcão (fiado é 100% exclusivo do balcão).
-function useFiadoOutstanding(enabled) {
-  const [total, setTotal] = useState(null);
+// Fiado em aberto é uma foto de agora (não do período) — soma o que todo
+// cliente deve e quantos estão devendo.
+function useFiadoOutstanding() {
+  const [fiado, setFiado] = useState(null);
 
   useEffect(() => {
-    if (!enabled) return;
     let cancelled = false;
     listPdvCustomerBalances()
       .then((customers) => {
         if (cancelled) return;
-        const sum = customers.reduce((s, c) => (c.balance > 0 ? s + c.balance : s), 0);
-        setTotal(sum);
+        const debtors = customers.filter((c) => c.balance > 0.004);
+        setFiado({ total: debtors.reduce((s, c) => s + c.balance, 0), debtors: debtors.length });
       })
       .catch(() => {
-        if (!cancelled) setTotal(null);
+        if (!cancelled) setFiado(null);
       });
     return () => { cancelled = true; };
-  }, [enabled]);
+  }, []);
 
-  return total;
+  return fiado;
 }
 
 export default function RelatoriosView() {
-  const { reportData, loading, error, period, setPeriod, channel, setChannel, refresh } = useRelatorios();
-  const fiadoOutstanding = useFiadoOutstanding(channel === "balcao");
+  const { reportData, products, allLines, loading, error, period, setPeriod, channel, setChannel, refresh } = useRelatorios();
+  const fiado = useFiadoOutstanding();
+  const [tab, setTabRaw] = useState(readSavedTab);
 
-  const { summary, monthly, topProducts, topCustomers, paymentBreakdown, channelSplit } = reportData ?? {};
-  const topProduct = topProducts?.[0];
+  const setTab = (key) => {
+    setTabRaw(key);
+    try {
+      localStorage.setItem(TAB_STORAGE_KEY, key);
+    } catch {
+      // sem localStorage (modo privado): só não lembra a aba
+    }
+  };
 
-  const summaryCards = [
-    { icon: "💰", value: formatBRL(summary?.totalRevenue ?? 0), label: "Faturamento total" },
-    { icon: "🧾", value: summary?.totalOrders ?? 0, label: channel === "balcao" ? "Total de vendas" : "Total de pedidos" },
-    { icon: "🎯", value: formatBRL(summary?.avgTicket ?? 0), label: "Ticket médio" },
-    {
-      icon: "🏆",
-      value: topProduct?.name ?? "—",
-      label: "Produto mais vendido",
-      small: topProduct ? `${topProduct.quantity} unidades` : null,
-    },
-  ];
+  const usesFilters = tab !== "estoque";
 
   return (
     <div className="rpt-root">
@@ -69,9 +82,7 @@ export default function RelatoriosView() {
         <div>
           <h1 className="adm-title">Relatórios</h1>
           <p className="adm-subtitle">
-            {channel === "balcao"
-              ? "Só vendas feitas no balcão · só conta pedidos já entregues/recebidos"
-              : "Site + balcão juntos · só conta pedidos já entregues/recebidos"}
+            {channel === "balcao" ? "Só vendas do balcão" : "Site + balcão juntos"} · só pedidos já concluídos
           </p>
         </div>
         <div className="rpt-header-actions">
@@ -81,33 +92,51 @@ export default function RelatoriosView() {
         </div>
       </div>
 
-      <div className="pdv-clientes-filters">
-        <button
-          className={`pdv-clientes-filter-btn ${channel === "balcao" ? "active" : ""}`}
-          onClick={() => setChannel("balcao")}
-        >
-          🧾 Balcão
-        </button>
-        <button
-          className={`pdv-clientes-filter-btn ${channel === "geral" ? "active" : ""}`}
-          onClick={() => setChannel("geral")}
-        >
-          🌐 Site + Balcão
-        </button>
-      </div>
-
-      <div className="rpt-period-selector" role="group" aria-label="Período">
-        {PERIODS.map((p) => (
+      <nav className="rpt-tabs" role="tablist">
+        {TABS.map((t) => (
           <button
-            key={p.key}
-            className={`rpt-period-btn ${isSamePeriod(period, p.value) ? "rpt-period-btn-active" : ""}`}
-            onClick={() => setPeriod(p.value)}
-            aria-pressed={isSamePeriod(period, p.value)}
+            key={t.key}
+            role="tab"
+            aria-selected={tab === t.key}
+            className={`rpt-tab ${tab === t.key ? "active" : ""}`}
+            onClick={() => setTab(t.key)}
           >
-            {p.label}
+            {t.label}
           </button>
         ))}
-      </div>
+      </nav>
+
+      {usesFilters && (
+        <div className="rpt-filters">
+          <div className="pdv-clientes-filters">
+            <button
+              className={`pdv-clientes-filter-btn ${channel === "balcao" ? "active" : ""}`}
+              onClick={() => setChannel("balcao")}
+            >
+              🧾 Balcão
+            </button>
+            <button
+              className={`pdv-clientes-filter-btn ${channel === "geral" ? "active" : ""}`}
+              onClick={() => setChannel("geral")}
+            >
+              🌐 Site + Balcão
+            </button>
+          </div>
+
+          <div className="rpt-period-selector" role="group" aria-label="Período">
+            {PERIODS.map((p) => (
+              <button
+                key={p.key}
+                className={`rpt-period-btn ${isSamePeriod(period, p.value) ? "rpt-period-btn-active" : ""}`}
+                onClick={() => setPeriod(p.value)}
+                aria-pressed={isSamePeriod(period, p.value)}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="rpt-error">
@@ -117,123 +146,16 @@ export default function RelatoriosView() {
       )}
 
       {loading || !reportData ? (
-        <div className="adm-loading"><div className="adm-spinner" /><p>Carregando relatórios...</p></div>
+        !error && <div className="adm-loading"><div className="adm-spinner" /><p>Carregando relatórios...</p></div>
       ) : (
-        <>
-          <div className="rpt-summary-grid">
-            {summaryCards.map(({ icon, value, label, small }) => (
-              <div key={label} className="rpt-summary-card">
-                <span className="rpt-summary-icon">{icon}</span>
-                <div className="rpt-summary-content">
-                  <span className="rpt-summary-value">{value}</span>
-                  <span className="rpt-summary-label">{label}</span>
-                  {small && <span className="rpt-summary-small">{small}</span>}
-                </div>
-              </div>
-            ))}
-
-            {channel === "balcao" && fiadoOutstanding != null && (
-              <div className="rpt-summary-card">
-                <span className="rpt-summary-icon">📝</span>
-                <div className="rpt-summary-content">
-                  <span className="rpt-summary-value">{formatBRL(fiadoOutstanding)}</span>
-                  <span className="rpt-summary-label">Em aberto (hoje)</span>
-                </div>
-              </div>
-            )}
-
-            {channel === "geral" && channelSplit && (
-              <div className="rpt-summary-card">
-                <span className="rpt-summary-icon">🧮</span>
-                <div className="rpt-summary-content">
-                  <span className="rpt-summary-value">{formatBRL(channelSplit.balcao)}</span>
-                  <span className="rpt-summary-label">Balcão · site {formatBRL(channelSplit.online)}</span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="rpt-section">
-            <h2 className="rpt-section-title">📈 Faturamento mensal</h2>
-            {monthly?.every((m) => m.revenue === 0) ? (
-              <p className="rpt-no-data">Nenhuma venda no período selecionado.</p>
-            ) : (
-              <div className="rpt-chart-wrap">
-                <RevenueChart monthly={monthly} />
-                <div className="rpt-chart-legend">
-                  {monthly?.map((m) => (
-                    <div key={m.key} className="rpt-chart-legend-item">
-                      <span className="rpt-chart-legend-month">{m.label}</span>
-                      <span className="rpt-chart-legend-val">{formatBRL(m.revenue)}</span>
-                      <span className="rpt-chart-legend-count">
-                        {m.count} venda{m.count !== 1 ? "s" : ""}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="rpt-two-col">
-            <div className="rpt-section">
-              <h2 className="rpt-section-title">💳 Faturamento por forma de pagamento</h2>
-              <PaymentBreakdownCard breakdown={paymentBreakdown} />
-            </div>
-
-            <div className="rpt-section">
-              <h2 className="rpt-section-title">🏅 Produtos mais vendidos</h2>
-              {!topProducts?.length ? (
-                <p className="rpt-no-data">Sem dados no período.</p>
-              ) : (
-                <table className="rpt-table">
-                  <thead>
-                    <tr>
-                      <th>#</th><th>Produto</th><th>Qtd.</th><th>Faturado</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {topProducts.map((p, i) => (
-                      <tr key={p.name}>
-                        <td className="rpt-rank">{rankMedal(i)}</td>
-                        <td className="rpt-product-name">{p.name}</td>
-                        <td className="rpt-qty">{p.quantity}</td>
-                        <td className="rpt-revenue">{formatBRL(p.revenue)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </div>
-
-          {channel === "geral" && (
-            <div className="rpt-section">
-              <h2 className="rpt-section-title">👑 Clientes que mais compram</h2>
-              {!topCustomers?.length ? (
-                <p className="rpt-no-data">Sem dados no período.</p>
-              ) : (
-                <table className="rpt-table">
-                  <thead>
-                    <tr>
-                      <th>#</th><th>Cliente</th><th>Pedidos</th><th>Total gasto</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {topCustomers.map((c, i) => (
-                      <tr key={c.displayName}>
-                        <td className="rpt-rank">{rankMedal(i)}</td>
-                        <td className="rpt-customer-name">{c.displayName}</td>
-                        <td className="rpt-qty">{c.count}</td>
-                        <td className="rpt-revenue">{formatBRL(c.total)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          )}
-        </>
+        <div role="tabpanel">
+          {tab === "geral" && <OverviewTab data={reportData} channel={channel} />}
+          {tab === "produtos" && <ProductsTab data={reportData} />}
+          {tab === "margens" && <MarginsTab data={reportData} />}
+          {tab === "estoque" && <StockTab allLines={allLines} products={products} />}
+          {tab === "delivery" && <DeliveryTab data={reportData} channel={channel} />}
+          {tab === "clientes" && <CustomersTab data={reportData} fiado={fiado} />}
+        </div>
       )}
     </div>
   );

@@ -1,7 +1,14 @@
 import { useState } from "react";
 import { useCustomerDetail } from "../hooks/useCustomerDetail";
 import { createPdvSale } from "../../../shared/services/salesService";
-import { settleFiadoStock, updateFiadoPayment, deleteFiadoPayment } from "../services/fiadoService";
+import {
+  settleFiadoStock, updateFiadoPayment, deleteFiadoPayment,
+  returnFiadoItem, registerProductReturn, redeemProductCredit,
+} from "../services/fiadoService";
+import CustomerProductCredits from "./CustomerProductCredits";
+import ReturnItemModal from "./ReturnItemModal";
+import ProductReturnModal from "./ProductReturnModal";
+import RedeemCreditModal from "./RedeemCreditModal";
 import EditPaymentModal from "./EditPaymentModal";
 import DeletePaymentModal from "./DeletePaymentModal";
 import CustomerListPanel from "./CustomerListPanel";
@@ -15,7 +22,7 @@ import DeleteCustomerModal from "./DeleteCustomerModal";
 export default function ClientesView({
   customers, customersLoading, customersError, payDebt, createCustomer,
   updateCustomer, setCustomerActive, deleteCustomer,
-  currentSessionId, cancellingId, onCancelSale, onRemoveItem, reloadProducts, reloadCustomers,
+  currentSessionId, cancellingId, cancelError, onCancelSale, reloadProducts, reloadCustomers,
 }) {
   const [selectedId, setSelectedId] = useState(null);
   const [creatingCustomer, setCreatingCustomer] = useState(false);
@@ -30,6 +37,11 @@ export default function ClientesView({
   const [paymentToDelete, setPaymentToDelete] = useState(null);
   const [deletingPayment, setDeletingPayment] = useState(false);
   const [deletePaymentError, setDeletePaymentError] = useState("");
+
+  const [itemToReturn, setItemToReturn] = useState(null);
+  const [productReturnOpen, setProductReturnOpen] = useState(false);
+  const [creditToRedeem, setCreditToRedeem] = useState(null);
+  const [creditNotice, setCreditNotice] = useState("");
 
   const [togglingActive, setTogglingActive] = useState(false);
   const [statusError, setStatusError] = useState("");
@@ -93,6 +105,38 @@ export default function ClientesView({
     reloadCustomers();
     detail.reload();
     reloadProducts();
+  };
+
+  const showCreditNotice = (message) => {
+    setCreditNotice(message);
+    setTimeout(() => setCreditNotice(""), 4000);
+  };
+
+  const handleReturnItem = async (quantity) => {
+    const { order, item } = itemToReturn;
+    const result = await returnFiadoItem({ orderId: order.orderId, orderItemId: item.id, quantity });
+    setItemToReturn(null);
+    refreshAfterPaymentChange();
+    showCreditNotice(
+      result.mode === "abatido"
+        ? `↩️ ${quantity} un. de ${item.name} devolvida(s) — abatido da dívida.`
+        : `🎁 ${quantity} un. de ${item.name} viraram crédito do cliente.`,
+    );
+  };
+
+  const handleProductReturn = async ({ productId, quantity }) => {
+    await registerProductReturn({ customerId: selected.id, productId, quantity });
+    setProductReturnOpen(false);
+    refreshAfterPaymentChange();
+    showCreditNotice(`🎁 Devolução registrada — ${quantity} un. em crédito.`);
+  };
+
+  const handleRedeemCredit = async (quantity) => {
+    await redeemProductCredit({ customerId: selected.id, productId: creditToRedeem.productId, quantity });
+    const name = creditToRedeem.productName;
+    setCreditToRedeem(null);
+    refreshAfterPaymentChange();
+    showCreditNotice(`🎁 Cliente retirou ${quantity} un. de ${name}.`);
   };
 
   const handleEditPayment = async ({ amount, paymentMethod }) => {
@@ -180,16 +224,25 @@ export default function ClientesView({
               statusError={statusError}
             />
 
+            {creditNotice && <div className="adm-store-success">{creditNotice}</div>}
+
+            <CustomerProductCredits
+              credits={detail.productCredits}
+              loading={detail.ordersLoading}
+              onRedeem={setCreditToRedeem}
+              onRegisterReturn={() => setProductReturnOpen(true)}
+            />
+
             <CustomerTransactionList
               ordersLoading={detail.ordersLoading}
               filteredTransactions={detail.filteredTransactions}
               txFilter={detail.txFilter}
               setTxFilter={detail.setTxFilter}
               paidDebitIds={detail.paidDebitIds}
-              currentSessionId={currentSessionId}
               cancellingId={cancellingId}
+              cancelError={cancelError}
               onCancelSale={onCancelSale}
-              onRemoveItem={onRemoveItem}
+              onReturnItem={(order, item) => setItemToReturn({ order, item })}
               onEditPayment={setEditingPayment}
               onDeletePayment={(payment) => {
                 setDeletePaymentError("");
@@ -202,6 +255,31 @@ export default function ClientesView({
 
       {payModalOpen && selected && (
         <PayDebtModal customer={selected} onConfirm={handlePay} onDismiss={() => setPayModalOpen(false)} />
+      )}
+
+      {itemToReturn && selected && (
+        <ReturnItemModal
+          customer={selected}
+          item={itemToReturn.item}
+          onConfirm={handleReturnItem}
+          onDismiss={() => setItemToReturn(null)}
+        />
+      )}
+
+      {productReturnOpen && selected && (
+        <ProductReturnModal
+          customer={selected}
+          onConfirm={handleProductReturn}
+          onDismiss={() => setProductReturnOpen(false)}
+        />
+      )}
+
+      {creditToRedeem && (
+        <RedeemCreditModal
+          credit={creditToRedeem}
+          onConfirm={handleRedeemCredit}
+          onDismiss={() => setCreditToRedeem(null)}
+        />
       )}
 
       {editingPayment && (
