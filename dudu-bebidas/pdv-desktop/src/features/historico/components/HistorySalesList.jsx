@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
 import { SalesSummary, SalesRows, summarize } from "./SalesParts";
-import { listRecentSales, listCancelledSales, listFullHistorySales } from "../../../shared/services/salesService";
+import {
+  listRecentSales, listCancelledSales, listFullHistorySales, removeBalcaoSaleItem, changeSalePayment,
+} from "../../../shared/services/salesService";
 import SaleReceipt from "./SaleReceipt";
 import PastCashSessions from "./PastCashSessions";
+import RemoveHistoryItemModal from "./RemoveHistoryItemModal";
+import EditSalePaymentModal from "./EditSalePaymentModal";
 
 const FILTERS = [
   { key: "atual", label: "Caixa atual", hint: "Vendas da sessão de caixa aberta agora" },
@@ -14,7 +18,33 @@ const FILTERS = [
 
 export default function HistorySalesList({
   currentSessionId, sessionSales, sessionFiadoPayments = [], cancelError, cancellingId, onCancelSale,
+  installmentFeeRate, onSaleChanged,
 }) {
+  const [itemToRemove, setItemToRemove] = useState(null);
+  const [saleToEditPayment, setSaleToEditPayment] = useState(null);
+  const [notice, setNotice] = useState("");
+
+  const showNotice = (message) => {
+    setNotice(message);
+    setTimeout(() => setNotice(""), 4000);
+  };
+
+  const handleRemoveItem = async () => {
+    const { sale, item } = itemToRemove;
+    const result = await removeBalcaoSaleItem(sale.orderId, item.id);
+    setItemToRemove(null);
+    onSaleChanged?.();
+    showNotice(result.order_cancelled ? `Venda #${sale.orderNumber} cancelada (era o único item).` : `Item excluído da venda #${sale.orderNumber}.`);
+  };
+
+  const handleEditPayment = async ({ payments, installments }) => {
+    const sale = saleToEditPayment;
+    await changeSalePayment({ orderId: sale.orderId, payments, installments });
+    setSaleToEditPayment(null);
+    onSaleChanged?.();
+    showNotice(`Forma de pagamento da venda #${sale.orderNumber} alterada.`);
+  };
+
   const [filter, setFilter] = useState("atual");
   const [otherSales, setOtherSales] = useState([]);
   const [otherLoading, setOtherLoading] = useState(false);
@@ -81,6 +111,7 @@ export default function HistorySalesList({
           )}
 
           {error && <div className="adm-modal-error">⚠️ {error}</div>}
+          {notice && <div className="adm-store-success">✅ {notice}</div>}
 
           {loading ? (
             <div className="adm-loading"><div className="adm-spinner" /><p>Carregando...</p></div>
@@ -93,12 +124,33 @@ export default function HistorySalesList({
               cancellingId={cancellingId}
               onCancelSale={onCancelSale}
               onPrint={handlePrint}
+              canEdit={(sale) => sale.cashSessionId === currentSessionId}
+              onRemoveItem={(sale, item) => setItemToRemove({ sale, item })}
+              onEditPayment={setSaleToEditPayment}
             />
           )}
         </>
       )}
 
       <SaleReceipt sale={printingSale} />
+
+      {itemToRemove && (
+        <RemoveHistoryItemModal
+          sale={itemToRemove.sale}
+          item={itemToRemove.item}
+          onConfirm={handleRemoveItem}
+          onDismiss={() => setItemToRemove(null)}
+        />
+      )}
+
+      {saleToEditPayment && (
+        <EditSalePaymentModal
+          sale={saleToEditPayment}
+          installmentFeeRate={installmentFeeRate}
+          onConfirm={handleEditPayment}
+          onDismiss={() => setSaleToEditPayment(null)}
+        />
+      )}
     </div>
   );
 }

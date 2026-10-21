@@ -47,8 +47,9 @@ function mapSaleRow(o) {
   return {
     orderId: o.id,
     orderNumber: o.order_number,
-    total: o.total,
+    total: Number(o.total),
     discountAmount: o.discount_amount,
+    cardFeeAmount: Number(o.card_fee_amount ?? 0),
     paymentMethod: o.payment_method,
     // Detalhamento real de quando payment_method === "misto" (pagamento
     // dividido) — sem isso, o histórico só mostrava "misto" sem dizer
@@ -64,6 +65,8 @@ function mapSaleRow(o) {
     // cortado. itemsLabel continua existindo por compatibilidade (tooltip).
     items: items.map(itemLabel),
     itemsLabel: items.map(itemLabel).join(", "),
+    // Item a item com id — usado pra excluir um item da venda no Histórico.
+    orderItems: items.map((it) => ({ id: it.id, name: it.name, quantity: it.quantity, price: Number(it.price ?? 0) })),
     // Presente só quando a venda foi marcada como "Entrega" no carrinho —
     // orders.address é sempre {} pra venda normal de balcão (retirada).
     deliveryAddress: o.address?.street ? o.address : null,
@@ -73,7 +76,7 @@ function mapSaleRow(o) {
 async function queryPdvSales({ sessionId, sinceDays, onlyCancelled, limit } = {}) {
   let query = supabase
     .from("orders")
-    .select("id, order_number, total, discount_amount, payment_method, installments, status, created_at, cash_session_id, address, order_items(id, name, quantity), order_payments(method, amount)")
+    .select("id, order_number, total, discount_amount, payment_method, installments, status, created_at, cash_session_id, address, card_fee_amount, order_items(id, name, quantity, price), order_payments(method, amount)")
     .eq("channel", "balcao")
     .order("created_at", { ascending: false });
 
@@ -140,3 +143,30 @@ export async function cancelPdvSale(orderId) {
   return data;
 }
 
+
+async function callSaleRpc(name, params, fallbackMessage) {
+  const { data, error } = await supabase.rpc(name, { p_store_id: getCurrentStoreId(), ...params });
+  if (error) throw new AdminServiceError(fallbackMessage, error);
+  if (!data?.success) throw new AdminServiceError(data?.error || fallbackMessage);
+  return data;
+}
+
+// Exclui um item de uma venda paga do caixa aberto — estoque volta e o
+// total é recalculado no banco (ver migration 0046). Último item cancela a venda.
+export function removeBalcaoSaleItem(orderId, orderItemId) {
+  return callSaleRpc(
+    "remove_balcao_sale_item",
+    { p_order_id: orderId, p_order_item_id: orderItemId },
+    "Não foi possível excluir o item.",
+  );
+}
+
+// payments: [{ method }] pra uma forma só, ou [{ method, amount }, ...] (2+)
+// pra pagamento dividido. installments só vale pra crédito.
+export function changeSalePayment({ orderId, payments, installments }) {
+  return callSaleRpc(
+    "change_sale_payment",
+    { p_order_id: orderId, p_payments: payments, p_installments: installments ?? null },
+    "Não foi possível alterar a forma de pagamento.",
+  );
+}

@@ -2771,3 +2771,42 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* Histórico: editar forma de pagamento */
+.pdv-sale-payment {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.pdv-sale-payment-edit-btn {
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+  opacity: 0.6;
+}
+.pdv-sale-payment-edit-btn:hover {
+  opacity: 1;
+}
+
+/* Histórico: lixeira colada no nome do item (não empurrada pro canto),
+   discreta até passar o mouse na linha. */
+.pdv-sales-list .pdv-sale-item-line {
+  justify-content: flex-start;
+  align-items: center;
+  gap: 8px;
+}
+.pdv-sales-list .pdv-sale-item-line > span:first-child {
+  flex: initial;
+}
+.pdv-sales-list .pdv-sale-item-remove-btn {
+  font-size: 8px;
+  opacity: 0.25;
+  transition: opacity var(--t);
+}
+.pdv-sales-list .pdv-sale-item-line:hover .pdv-sale-item-remove-btn,
+.pdv-sales-list .pdv-sale-item-remove-btn:focus-visible {
+  opacity: 1;
+}

@@ -236,7 +236,10 @@ export function useSale(
     setConfirmingSale(null);
   };
 
+  const reloadSessionSales = useCallback(() => loadSessionSales(sessionId), [sessionId, loadSessionSales]);
+
   return {
+    reloadSessionSales,
     paymentMethod, setPaymentMethod, installments, setInstallments, saleTotal, cardFeeAmount,
     submitting, saleError, saleSuccess,
     sessionSales, sessionFiadoPayments, cancellingId, cancelError, confirmingSale,

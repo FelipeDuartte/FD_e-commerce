@@ -65,11 +65,17 @@ export function SalesSummary({ summary }) {
 
 // canCancel(sale) decide quem mostra o botão de cancelar — caixa já fechado
 // nunca mostra (o banco recusa cancelar venda de caixa fechado).
-export function SalesRows({ sales, canCancel, cancellingId, onCancelSale, onPrint }) {
+// canEdit(sale): mostra 🗑️ por item e ✏️ na forma de pagamento — só venda
+// paga do caixa aberto (fiado é mexido na aba Clientes).
+export function SalesRows({
+  sales, canCancel, cancellingId, onCancelSale, onPrint,
+  canEdit = () => false, onRemoveItem, onEditPayment,
+}) {
   return (
     <div className="pdv-sales-list">
       {sales.map((sale) => {
         const cancellable = !sale.cancelled && canCancel(sale);
+        const editable = !sale.cancelled && sale.paymentMethod !== "fiado" && canEdit(sale);
         return (
           <div
             key={sale.orderId}
@@ -83,9 +89,23 @@ export function SalesRows({ sales, canCancel, cancellingId, onCancelSale, onPrin
               </span>
             </div>
             <div className="pdv-sale-items-list">
-              {sale.items?.length
-                ? sale.items.map((line, i) => <div key={i}>{line}</div>)
-                : `${sale.itemCount} item(ns)`}
+              {editable && sale.orderItems?.length
+                ? sale.orderItems.map((item) => (
+                    <div key={item.id} className="pdv-sale-item-line">
+                      <span>{item.quantity > 1 ? `${item.name} x${item.quantity}` : item.name}</span>
+                      <button
+                        type="button"
+                        className="pdv-sale-item-remove-btn"
+                        title="Excluir esse item da venda"
+                        onClick={() => onRemoveItem(sale, item)}
+                      >
+                        ❌
+                      </button>
+                    </div>
+                  ))
+                : sale.items?.length
+                  ? sale.items.map((line, i) => <div key={i}>{line}</div>)
+                  : `${sale.itemCount} item(ns)`}
               {sale.deliveryAddress && (
                 <div className="pdv-sale-delivery-address">
                   🚚 {sale.deliveryAddress.name ? `${sale.deliveryAddress.name} — ` : ""}
@@ -96,7 +116,19 @@ export function SalesRows({ sales, canCancel, cancellingId, onCancelSale, onPrin
                 </div>
               )}
             </div>
-            <span>{formatSalePaymentLabel(sale)}</span>
+            <span className="pdv-sale-payment">
+              {formatSalePaymentLabel(sale)}
+              {editable && (
+                <button
+                  type="button"
+                  className="pdv-sale-payment-edit-btn"
+                  title="Editar forma de pagamento"
+                  onClick={() => onEditPayment(sale)}
+                >
+                  ✏️
+                </button>
+              )}
+            </span>
             <strong>{formatBRL(sale.total)}</strong>
             <div className="pdv-sale-actions">
               <button

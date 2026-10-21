@@ -273,6 +273,8 @@ export default function Pdv({ theme, onToggleTheme }) {
           {pdvView === "historico" && (
             <HistorySalesList
               currentSessionId={cashSession.session.id}
+              installmentFeeRate={installmentFeeRate}
+              onSaleChanged={() => { sale.reloadSessionSales(); reloadProducts(); }}
               cancelError={sale.cancelError}
               sessionSales={sale.sessionSales}
               sessionFiadoPayments={sale.sessionFiadoPayments}
