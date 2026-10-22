@@ -59,7 +59,7 @@ export function validateProductPayload(product) {
   }
 
   if (product.promotion && product.old_price !== null && product.old_price <= product.price) {
-    return "O preço antigo deve ser maior que o preço atual.";
+    return "O preço promocional do site precisa ser menor que o preço de venda.";
   }
 
   if (product.pdv_promo_price !== null && !(Number.isFinite(product.pdv_promo_price) && product.pdv_promo_price > 0)) {
