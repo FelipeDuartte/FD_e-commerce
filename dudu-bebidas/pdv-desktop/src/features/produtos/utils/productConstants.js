@@ -11,6 +11,8 @@ export const EMPTY_PRODUCT = {
   is_active: true,
   show_on_site: true,
   promotion: false,
+  pdv_promotion: false,
+  pdv_promo_price: "",
   supplier: "",
   ean: "",
   pack_of_product_id: "",

@@ -83,6 +83,8 @@ export function useProdutos(onProductsChanged) {
       // tratamos como "aparece no site" (mesmo default de produto novo),
       // sem mexer em quem já foi salvo explicitamente como desmarcado.
       show_on_site: product.show_on_site ?? true,
+      pdv_promotion: product.pdv_promo_price != null,
+      pdv_promo_price: product.pdv_promo_price ?? "",
       pack_of_product_id: product.pack_of_product_id ?? "",
       pack_units: product.pack_units ?? "",
     });

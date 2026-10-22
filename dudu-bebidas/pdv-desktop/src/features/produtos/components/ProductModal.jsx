@@ -35,6 +35,9 @@ export default function ProductModal({
     (p) => !p.pack_of_product_id && p.id !== modalForm.id,
   );
 
+  // Preço normal do balcão: com promoção no site ligada, o preço de tabela
+  // fica no "preço antigo" (mesma regra de getPdvPrice).
+  const pdvTablePrice = Number(modalForm.promotion && modalForm.old_price ? modalForm.old_price : modalForm.price) || 0;
   const catalogName = selectedImageCandidate ? catalogFilenameToName(selectedImageCandidate.filename) : "";
   const showCatalogName = catalogName && !isSameNameIgnoringCase(modalForm.name, catalogName);
 
@@ -208,15 +211,19 @@ export default function ProductModal({
             </label>
             <label className="adm-form-check">
               <input name="promotion" type="checkbox" checked={modalForm.promotion} onChange={handleModalChange} />
-              Em promoção (catálogo online)
+              Promoção no site
+            </label>
+            <label className="adm-form-check">
+              <input name="pdv_promotion" type="checkbox" checked={modalForm.pdv_promotion} onChange={handleModalChange} />
+              Promoção no PDV
             </label>
           </div>
 
           {modalForm.promotion && (
             <div className="adm-promo-fields">
               <p className="adm-promo-hint">
-                💡 <strong>Defina abaixo o novo preço promocional.</strong> Vale só pro site — no balcão o
-                preço cobrado é sempre o de tabela (preço antigo), a promoção não é aplicada no PDV.
+                💡 <strong>Promoção do site.</strong> Vale só pro catálogo online — não aparece no PDV. Pra
+                ter promoção no balcão também, marque "Promoção no PDV".
               </p>
               <div className="adm-form-row">
                 <div className="adm-form-field">
@@ -256,6 +263,42 @@ export default function ProductModal({
                       -{calcDiscount(modalForm.old_price, modalForm.price)}% OFF
                     </span>
                   )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {modalForm.pdv_promotion && (
+            <div className="adm-promo-fields">
+              <p className="adm-promo-hint">
+                🏷️ <strong>Promoção do PDV.</strong> Vale só pro balcão — não aparece no site. Na Venda, o card
+                ganha o botão "Aplicar promoção" e o operador escolhe quando usar.
+              </p>
+              <div className="adm-form-row">
+                <div className="adm-form-field">
+                  <label>Preço de tabela no PDV</label>
+                  <input value={pdvTablePrice ? `R$ ${pdvTablePrice.toFixed(2)}` : "—"} disabled />
+                </div>
+                <div className="adm-form-field">
+                  <label>Preço promocional no PDV (R$)</label>
+                  <input
+                    name="pdv_promo_price"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={modalForm.pdv_promo_price ?? ""}
+                    onChange={handleModalChange}
+                    placeholder="ex: 7.50"
+                    required
+                  />
+                </div>
+              </div>
+              {pdvTablePrice > 0 && Number(modalForm.pdv_promo_price) > 0 && (
+                <div className="adm-promo-preview">
+                  <span className="adm-preview-label">No balcão:</span>
+                  <span className="adm-preview-old">R$ {pdvTablePrice.toFixed(2)}</span>
+                  <span className="adm-preview-new">R$ {Number(modalForm.pdv_promo_price).toFixed(2)}</span>
+                  <span className="adm-preview-badge">-{calcDiscount(pdvTablePrice, Number(modalForm.pdv_promo_price))}% OFF</span>
                 </div>
               )}
             </div>

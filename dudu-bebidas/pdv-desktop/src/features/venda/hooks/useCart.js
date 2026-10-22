@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { getPdvPrice } from "../utils/pricing";
+import { getPdvPrice, getPdvPromoPrice } from "../utils/pricing";
 
 // Itens do carrinho + desconto. Não sabe nada sobre forma de pagamento ou
 // submissão da venda — só "o que está sendo vendido e por quanto".
@@ -18,8 +18,8 @@ export function useCart({ ignoreStockLimit = false } = {}) {
   const [discountMode, setDiscountMode] = useState("amount");
   const [discountInput, setDiscountInput] = useState("");
 
-  // usePromoPrice: true cobra o preço promocional do site (product.price)
-  // em vez do preço de tabela que o balcão cobra por padrão (getPdvPrice —
+  // usePromoPrice: true cobra a promoção do PDV (pdv_promo_price) em vez do
+  // preço de tabela que o balcão cobra por padrão (getPdvPrice —
   // ver pricing.js). É escolha do operador, clicando no botão "Aplicar
   // promoção" do card — nunca aplica sozinho. Se o item já estiver no
   // carrinho, só aumenta a quantidade no preço que já tinha (clicar de
@@ -37,8 +37,9 @@ export function useCart({ ignoreStockLimit = false } = {}) {
           i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i
         );
       }
-      const promoApplied = usePromoPrice && product.promotion && product.old_price != null;
-      const price = promoApplied ? product.price : getPdvPrice(product);
+      const promoPrice = getPdvPromoPrice(product);
+      const promoApplied = usePromoPrice && promoPrice != null;
+      const price = promoApplied ? promoPrice : getPdvPrice(product);
       // usePromoPrice guardado no item (não só usado pra calcular o preço
       // aqui) — precisa ir junto até o servidor, que recalcula o preço
       // sozinho e por padrão sempre cobra old_price no balcão (ver

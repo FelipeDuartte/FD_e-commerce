@@ -1,7 +1,11 @@
-// Promoção é exclusiva do site — o balcão sempre cobra o preço de tabela
-// (old_price), mesmo com o produto em promoção online. Espelha exatamente
-// o priceFor() de supabase/functions/_shared/orderFulfillment.ts (fonte da
-// verdade do valor cobrado); isso aqui é só pra exibir o mesmo valor no PDV.
+// Preço de tabela do balcão — a promoção do site não vale aqui (usa
+// old_price se o site estiver em promoção). Espelha o priceFor() de
+// supabase/functions/_shared/orderFulfillment.ts, que é quem cobra de fato.
 export function getPdvPrice(product) {
   return product.promotion && product.old_price != null ? product.old_price : product.price;
+}
+
+// Promoção própria do PDV (aplicada pelo operador no card da Venda).
+export function getPdvPromoPrice(product) {
+  return product.pdv_promo_price != null ? Number(product.pdv_promo_price) : null;
 }

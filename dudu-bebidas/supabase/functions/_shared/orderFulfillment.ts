@@ -176,7 +176,7 @@ export async function fulfillOrder(
 
   const { data: products, error: productsError } = await supabase
     .from("products")
-    .select("id, price, old_price, promotion, is_active, stock")
+    .select("id, price, old_price, promotion, pdv_promo_price, is_active, stock")
     .eq("store_id", storeId)
     .in("id", productIds);
 
@@ -195,22 +195,25 @@ export async function fulfillOrder(
     }
   }
 
-  // Promoção é exclusiva do site — venda de balcão (PDV) cobra o preço de
-  // tabela (old_price) por padrão, mesmo com o produto em promoção online.
-  // Sem old_price (produto nunca esteve em promoção), cai no price normal,
-  // que nesse caso é o mesmo valor pros dois canais.
-  // Exceção: o operador pode escolher aplicar o preço promocional naquele
-  // item específico (botão "Aplicar promoção" no card da Venda) — manda
-  // usePromoPrice=true só pra esse item. Revalida aqui com os dados reais
-  // do banco (promotion/old_price), nunca confia cru no que o client
-  // mandou — um item marcado errado só cai de volta no preço de tabela.
+  // Site e balcão têm promoções separadas:
+  //   - site: price (já promocional quando promotion=true);
+  //   - balcão: preço de tabela (old_price se o site estiver em promoção,
+  //     senão price), ou pdv_promo_price quando o operador aplica a
+  //     promoção do PDV naquele item (usePromoPrice=true). Revalida com o
+  //     banco — item marcado sem promoção no PDV cai no preço de tabela.
   const priceFor = (
-    product: { price: number; old_price: number | null; promotion: boolean },
+    product: { price: number; old_price: number | null; promotion: boolean; pdv_promo_price: number | null },
     usePromoPrice: boolean,
-  ) =>
-    channel === "balcao" && product.promotion && product.old_price != null
-      ? (usePromoPrice ? product.price : product.old_price)
-      : product.price;
+  ) => {
+    if (channel !== "balcao") return product.price;
+    const sitePromo = product.promotion && product.old_price != null;
+    if (usePromoPrice && product.pdv_promo_price != null) return Number(product.pdv_promo_price);
+    // PDV antigo (antes da promoção própria do PDV) aplicava a promoção do
+    // site por esse botão — mantém o valor que ele mostrou no carrinho até
+    // todos os caixas atualizarem.
+    if (usePromoPrice && sitePromo) return product.price;
+    return sitePromo ? product.old_price! : product.price;
+  };
 
   const calculatedProductsTotal = cartItems.reduce((sum, item) => {
     const product = products.find((p) => p.id === String(item.id));

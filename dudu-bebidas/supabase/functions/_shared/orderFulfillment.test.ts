@@ -71,7 +71,7 @@ function baseParams(overrides = {}) {
 }
 
 const product = (overrides = {}) => ({
-  id: "p1", price: 100, old_price: null, promotion: false, is_active: true, stock: 100,
+  id: "p1", price: 100, old_price: null, promotion: false, pdv_promo_price: null, is_active: true, stock: 100,
   ...overrides,
 });
 
@@ -241,5 +241,34 @@ describe("fulfillOrder", () => {
       status: 500,
       message: "Não foi possível criar o pedido.",
     });
+  });
+  it("balcão com promoção do PDV aplicada pelo operador cobra o preço do PDV", async () => {
+    const fake = createFakeSupabase({
+      products: { data: [product({ price: 100, pdv_promo_price: 85 })], error: null },
+    });
+    const result = await fulfillOrder(fake, baseParams({
+      channel: "balcao",
+      cartItems: [{ id: "p1", name: "Produto 1", quantity: 2, usePromoPrice: true }],
+    }));
+    expect(result.total).toBeCloseTo(170, 2);
+  });
+
+  it("balcão com promoção do PDV sem o operador aplicar cobra o preço de tabela", async () => {
+    const fake = createFakeSupabase({
+      products: { data: [product({ price: 100, pdv_promo_price: 85 })], error: null },
+    });
+    const result = await fulfillOrder(fake, baseParams({ channel: "balcao" }));
+    expect(result.total).toBeCloseTo(100, 2);
+  });
+
+  it("promoção do PDV não vale no site", async () => {
+    const fake = createFakeSupabase({
+      products: { data: [product({ price: 100, pdv_promo_price: 85 })], error: null },
+    });
+    const result = await fulfillOrder(fake, baseParams({
+      channel: "online",
+      cartItems: [{ id: "p1", name: "Produto 1", quantity: 1, usePromoPrice: true }],
+    }));
+    expect(result.total).toBeCloseTo(100, 2);
   });
 });

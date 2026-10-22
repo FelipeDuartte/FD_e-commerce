@@ -33,6 +33,8 @@ export function buildProductPayload(form) {
     is_active: form.is_active,
     show_on_site: form.show_on_site,
     promotion: form.promotion,
+    // Promoção só do balcão — independente da do site (ver migration 0047).
+    pdv_promo_price: form.pdv_promotion && form.pdv_promo_price !== "" ? Number(form.pdv_promo_price) : null,
     supplier: optionalValue(form.supplier),
     ean: optionalValue(form.ean),
     // Fardo/caixa de outro produto — quando preenchido, o "stock" acima é
@@ -58,6 +60,10 @@ export function validateProductPayload(product) {
 
   if (product.promotion && product.old_price !== null && product.old_price <= product.price) {
     return "O preço antigo deve ser maior que o preço atual.";
+  }
+
+  if (product.pdv_promo_price !== null && !(Number.isFinite(product.pdv_promo_price) && product.pdv_promo_price > 0)) {
+    return "Informe um preço promocional do PDV válido.";
   }
 
   if (product.pack_of_product_id) {

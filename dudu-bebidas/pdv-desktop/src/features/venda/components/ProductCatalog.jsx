@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { formatBRL } from "../../../shared/utils/format";
-import { getPdvPrice } from "../utils/pricing";
+import { getPdvPrice, getPdvPromoPrice } from "../utils/pricing";
 
 // Grade separada e memorizada: só redesenha quando a lista filtrada ou o
 // addToCart mudam. Digitar no carrinho (desconto, troco, entrega) ou na
@@ -9,7 +9,7 @@ const ProductGrid = memo(function ProductGrid({ products, addToCart }) {
   return (
     <div className="pdv-product-grid">
       {products.map((p) => {
-        const isPromo = p.promotion && p.old_price != null;
+        const promoPrice = getPdvPromoPrice(p);
         return (
           <div key={p.id} className="pdv-product-card">
             <button type="button" className="pdv-product-card-main" onClick={() => addToCart(p)} tabIndex={-1}>
@@ -19,18 +19,17 @@ const ProductGrid = memo(function ProductGrid({ products, addToCart }) {
                 {p.stock} em estoque
               </span>
             </button>
-            {/* Promoção é só do site por padrão (balcão cobra preço de
-                tabela) — esse botão deixa o operador aplicar o preço
-                promocional quando quiser, sem fazer isso sozinho. */}
-            {isPromo && (
+            {/* Promoção do PDV (cadastrada no produto) — o operador escolhe
+                aplicar em cada venda. A promoção do site não vale aqui. */}
+            {promoPrice != null && (
               <button
                 type="button"
                 className="pdv-product-promo-btn"
                 onClick={() => addToCart(p, { usePromoPrice: true })}
-                title={`Vender no preço promocional do site: ${formatBRL(p.price)}`}
+                title={`Vender no preço promocional do PDV: ${formatBRL(promoPrice)}`}
                 tabIndex={-1}
               >
-                🏷️ Aplicar promoção · {formatBRL(p.price)}
+                🏷️ Aplicar promoção · {formatBRL(promoPrice)}
               </button>
             )}
           </div>
