@@ -78,19 +78,28 @@ export function validateProductPayload(product) {
   return null;
 }
 
+// Custo e fornecedor ficam em product_costs (só admin da loja enxerga —
+// products é pública por causa da vitrine). Aqui eles voltam pro produto
+// como cost_price/supplier, então o resto do PDV não precisa saber disso.
+function withPrivateFields({ product_costs: costs, ...product }) {
+  const row = Array.isArray(costs) ? costs[0] : costs;
+  return { ...product, cost_price: row?.cost_price ?? null, supplier: row?.supplier ?? null };
+}
+
 export async function listAdminProducts() {
   const { data, error } = await supabase
     .from("products")
-    .select("*")
+    .select("*, product_costs(cost_price, supplier)")
     .order("name");
 
   if (error) {
     throw new AdminServiceError("Não foi possível carregar os produtos.", error);
   }
-  return data ?? [];
+  return (data ?? []).map(withPrivateFields);
 }
 
-export async function saveAdminProduct(product, isNew, previousStock = null) {
+export async function saveAdminProduct(payload, isNew, previousStock = null) {
+  const { supplier, ...product } = payload;
   const query = isNew
     ? supabase.from("products").insert(product)
     : supabase
@@ -103,6 +112,19 @@ export async function saveAdminProduct(product, isNew, previousStock = null) {
 
   if (error) {
     throw new AdminServiceError("Não foi possível salvar o produto.", error);
+  }
+
+  // Fornecedor: só a coluna supplier — o custo (cost_price) não é tocado.
+  if (!isNew || supplier != null) {
+    const { error: supplierError } = await supabase
+      .from("product_costs")
+      .upsert(
+        { store_id: product.store_id, product_id: product.id, supplier, updated_at: new Date().toISOString() },
+        { onConflict: "store_id,product_id" },
+      );
+    if (supplierError) {
+      throw new AdminServiceError("Produto salvo, mas não foi possível salvar o fornecedor.", supplierError);
+    }
   }
 
   // Ajuste manual de estoque (edição direta na aba Produtos) vira uma

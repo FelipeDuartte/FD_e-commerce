@@ -307,7 +307,7 @@ export default function Pdv({ theme, onToggleTheme }) {
               <ProdutosView produtos={produtos} categories={dbCategories} />
             )}
 
-            {pdvView === "estoque" && <EstoqueView />}
+            {pdvView === "estoque" && <EstoqueView onProductsChanged={reloadProducts} />}
 
             {pdvView === "relatorios" && <RelatoriosView />}
 

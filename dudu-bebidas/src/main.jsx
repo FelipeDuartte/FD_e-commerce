@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './app/App.jsx'
+import EnvBadge from './shared/components/EnvBadge.jsx'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import { BrowserRouter } from 'react-router-dom'
 import { resolveStore } from './shared/supabase/Supabaseclient'
@@ -39,6 +40,7 @@ async function bootstrap() {
     <StrictMode>
       <BrowserRouter>
         <App />
+        <EnvBadge />
       </BrowserRouter>
     </StrictMode>,
   )

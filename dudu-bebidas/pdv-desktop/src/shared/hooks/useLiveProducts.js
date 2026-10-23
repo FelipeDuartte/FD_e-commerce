@@ -58,8 +58,12 @@ export function useLiveProducts() {
     reload();
   }, [reload]);
 
+  // O realtime manda a linha de products, onde custo e fornecedor estão
+  // sempre vazios (eles vivem em product_costs) — sem tirar, apagaria o
+  // valor que veio do carregamento.
   const applyRows = useCallback((rows) => {
-    setProducts((prev) => mergeRows(prev, rows));
+    const publicRows = rows.map(({ cost_price, supplier, ...row }) => row);
+    setProducts((prev) => mergeRows(prev, publicRows));
   }, []);
 
   useProductsRealtime(applyRows, reload);

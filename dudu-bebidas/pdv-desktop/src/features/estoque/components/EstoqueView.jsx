@@ -25,7 +25,9 @@ const REASON_FILTERS = [
   { value: "retirada_credito", label: "Retiradas de crédito" },
 ];
 
-export default function EstoqueView() {
+// onProductsChanged: recarrega a lista de produtos (Venda/Produtos) — o
+// custo vive em product_costs e não chega pelo tempo real de products.
+export default function EstoqueView({ onProductsChanged }) {
   const [movements, setMovements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -94,6 +96,7 @@ export default function EstoqueView() {
     setUndoError("");
     try {
       await undoProductPurchase(movementToUndo.id);
+      onProductsChanged?.();
       setMovementToUndo(null);
       setPage(0);
       await fetchPage(0, false, { reason: reasonFilter, search });

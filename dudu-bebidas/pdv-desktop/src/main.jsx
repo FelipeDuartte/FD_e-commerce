@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./app/App";
+import EnvBadge from "./shared/components/EnvBadge";
 import { resolveStore } from "./shared/supabase/Supabaseclient";
 
 const rootElement = document.getElementById("root");
@@ -28,6 +29,7 @@ async function bootstrap() {
   ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
       <App />
+      <EnvBadge />
     </React.StrictMode>,
   );
 }
