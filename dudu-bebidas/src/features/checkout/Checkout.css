@@ -22,7 +22,7 @@
   right: -200px;
   width: 600px;
   height: 600px;
-  background: radial-gradient(circle, rgba(255, 208, 0, 0.07) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(var(--brand-rgb), 0.07) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -33,7 +33,7 @@
   left: -100px;
   width: 400px;
   height: 400px;
-  background: radial-gradient(circle, rgba(255, 208, 0, 0.04) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(var(--brand-rgb), 0.04) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -67,15 +67,15 @@
 }
 
 .co-back:hover {
-  border-color: #ffd000;
-  color: #ffd000;
+  border-color: var(--brand);
+  color: var(--brand);
 }
 
 .co-step-label {
   font-size: 11px;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: #ffd000;
+  color: var(--brand);
   font-weight: 600;
   margin-bottom: 4px;
 }
@@ -105,7 +105,7 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #ffd000;
+  background: var(--brand);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -160,7 +160,7 @@
   font-size: 10px;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: #ffd000;
+  color: var(--brand);
   font-weight: 700;
   margin-bottom: 20px;
 }
@@ -205,9 +205,9 @@
 }
 
 .co-field input:focus {
-  border-color: #ffd000;
+  border-color: var(--brand);
   background: #0d0d0d;
-  box-shadow: 0 0 0 3px rgba(255, 208, 0, 0.07);
+  box-shadow: 0 0 0 3px rgba(var(--brand-rgb), 0.07);
 }
 
 .co-field input::placeholder {
@@ -280,8 +280,8 @@
 .co-bairros-info {
   margin-top: 12px;
   padding: 10px 14px;
-  background: rgba(255, 208, 0, 0.05);
-  border: 1px solid rgba(255, 208, 0, 0.15);
+  background: rgba(var(--brand-rgb), 0.05);
+  border: 1px solid rgba(var(--brand-rgb), 0.15);
   border-radius: 10px;
   font-size: 12px;
   color: #888;
@@ -296,7 +296,7 @@
   margin-bottom: 16px;
   padding: 14px;
   background: #0a0a0a;
-  border: 1px solid rgba(255, 208, 0, 0.18);
+  border: 1px solid rgba(var(--brand-rgb), 0.18);
   border-radius: 10px;
 }
 
@@ -308,7 +308,7 @@
 }
 
 .co-last-location-copy strong {
-  color: #ffd000;
+  color: var(--brand);
   font-size: 12px;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -322,9 +322,9 @@
 
 .co-last-location-btn {
   flex-shrink: 0;
-  border: 1px solid #ffd000;
+  border: 1px solid var(--brand);
   border-radius: 8px;
-  background: #ffd000;
+  background: var(--brand);
   color: #000;
   font-size: 12px;
   font-weight: 700;
@@ -386,8 +386,8 @@
 }
 
 .co-pay-option input:checked + .co-pay-label {
-  border-color: #ffd000;
-  background: rgba(255, 208, 0, 0.05);
+  border-color: var(--brand);
+  background: rgba(var(--brand-rgb), 0.05);
 }
 
 .co-pay-icon {
@@ -402,7 +402,7 @@
 }
 
 .co-pay-option input:checked + .co-pay-label .co-pay-name {
-  color: #ffd000;
+  color: var(--brand);
 }
 
 .co-installments {
@@ -436,7 +436,7 @@
 
 .co-installments-select:focus {
   outline: none;
-  border-color: #ffd000;
+  border-color: var(--brand);
 }
 
 .co-installments-hint {
@@ -469,8 +469,8 @@
 .co-mp-fee-notice {
   margin-bottom: 12px;
   padding: 12px 14px;
-  background: rgba(255, 208, 0, 0.05);
-  border: 1px solid rgba(255, 208, 0, 0.15);
+  background: rgba(var(--brand-rgb), 0.05);
+  border: 1px solid rgba(var(--brand-rgb), 0.15);
   border-radius: 10px;
 }
 
@@ -616,7 +616,7 @@
   font-family: "Plus Jakarta Sans", sans-serif;
   font-size: 28px;
   font-weight: 800;
-  color: #ffd000;
+  color: var(--brand);
 }
 
 /* ─── CTA BUTTON ────────────────────────────────────── */
@@ -624,7 +624,7 @@
   margin-top: 24px;
   width: 100%;
   padding: 16px;
-  background: #ffd000;
+  background: var(--brand);
   color: #000;
   border: none;
   border-radius: 12px;
@@ -641,9 +641,9 @@
 }
 
 .co-cta:hover:not(:disabled) {
-  background: #ffe033;
+  background: var(--brand-light);
   transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(255, 208, 0, 0.2);
+  box-shadow: 0 8px 24px rgba(var(--brand-rgb), 0.2);
 }
 
 .co-cta:active {
@@ -673,8 +673,8 @@
   align-items: flex-start;
   gap: 14px;
   padding: 16px 18px;
-  background: rgba(255, 208, 0, 0.06);
-  border: 1px solid rgba(255, 208, 0, 0.2);
+  background: rgba(var(--brand-rgb), 0.06);
+  border: 1px solid rgba(var(--brand-rgb), 0.2);
   border-radius: 14px;
   margin-bottom: 24px;
 }
@@ -694,7 +694,7 @@
 .co-retirada-text strong {
   font-size: 14px;
   font-weight: 700;
-  color: #ffd000;
+  color: var(--brand);
 }
 
 .co-retirada-text span {

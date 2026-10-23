@@ -5,11 +5,11 @@ import { useLocation, useNavigate } from "react-router-dom";
 // ==== Styles ====
 import "./App.css";
 // ==== Supabase ====
-import { supabase, getCurrentStoreId } from "../shared/supabase/Supabaseclient";
+import { supabase, getCurrentStore, getCurrentStoreId } from "../shared/supabase/Supabaseclient";
 // ==== Data ====
 import { useProducts } from "../features/catalog/hooks/useProducts";
 import { useCart }     from "../features/cart/hooks/useCart";
-import banners  from "../features/catalog/data/banners";
+import { getBrand } from "../shared/brand/brand";
 import benefits from "../features/catalog/data/benefits";
 // ==== Components ====
 import Header        from "../features/header/components/Header";
@@ -57,8 +57,8 @@ function PageLoadingFallback() {
         style={{
           width: "44px",
           height: "44px",
-          border: "4px solid rgba(255, 215, 0, 0.15)",
-          borderTopColor: "#ffd700",
+          border: "4px solid rgba(var(--brand-rgb), 0.15)",
+          borderTopColor: "var(--brand)",
           borderRadius: "50%",
           animation: "admin-loading-spin 0.8s linear infinite",
         }}
@@ -74,7 +74,10 @@ export default function DuduBebidas() {
   const [cartOpen,   setCartOpen]   = useState(false);
   const [loginOpen,  setLoginOpen]  = useState(false);
   const [scrolled,   setScrolled]   = useState(false);
+  // Aceite de cookies/termos — em loja com +18 (stores.age_gate) vem junto
+  // da confirmação de idade; nas outras é só uma faixa no rodapé.
   const [ageGateAccepted, setAgeGateAccepted] = useState(() => hasAcceptedAgeGate());
+  const requireAge = Boolean(getCurrentStore()?.age_gate);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -158,12 +161,15 @@ export default function DuduBebidas() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Faixa do topo vem da marca da loja (pode não ter nenhuma)
+  const banners = getBrand().topBanners;
   useEffect(() => {
+    if (banners.length < 2) return undefined;
     const timer = setInterval(() => {
       setCurrentBanner((prev) => (prev + 1) % banners.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, []);
+  }, [banners.length]);
 
   // ==== Produtos filtrados ====
   const filteredProducts = useMemo(() => {
@@ -193,11 +199,11 @@ export default function DuduBebidas() {
           path="/"
           element={
             <>
-              <Banner
+              {banners.length > 0 && <Banner
                 banners={banners}
                 currentBanner={currentBanner}
                 setCurrentBanner={setCurrentBanner}
-              />
+              />}
               <Header
                 searchTerm={searchTerm}
                 setSearchTerm={setSearchTerm}
@@ -282,7 +288,7 @@ export default function DuduBebidas() {
       <LastOrderBanner />
 
       {!ageGateAccepted && !isLegalPage && (
-        <AgeGate onAccept={() => setAgeGateAccepted(true)} />
+        <AgeGate requireAge={requireAge} onAccept={() => setAgeGateAccepted(true)} />
       )}
     </div>
     </StoreStatusProvider>

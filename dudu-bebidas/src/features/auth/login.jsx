@@ -4,8 +4,10 @@ import LoginForm from "./LoginForm";
 import SignupForm from "./SignupForm";
 import GoogleAuthButton from "./GoogleAuthButton";
 import "./login.css";
+import { getBrand } from "../../shared/brand/brand";
 
 export default function Login({ isOpen, onClose }) {
+  const { logoText } = getBrand();
   const {
     isLogin, showPassword, setShowPassword, loading, forgotLoading,
     errorMsg, successMsg, formData,
@@ -26,8 +28,8 @@ export default function Login({ isOpen, onClose }) {
 
         <div className="login-header">
           <div className="login-logo">
-            <span className="logo-dudu">Dudu</span>
-            <span className="logo-bebidas">Bebidas</span>
+            <span className="logo-dudu">{logoText[0]}</span>
+            {logoText[1] && <span className="logo-bebidas">{logoText[1]}</span>}
           </div>
           <h2 className="login-title">
             {isLogin ? "Bem-vindo!" : "Crie sua conta"}

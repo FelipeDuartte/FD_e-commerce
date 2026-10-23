@@ -25,7 +25,7 @@ if (!STORE_SLUG) {
   );
 }
 
-let cachedStore = null; // { id, slug, name, type, whatsapp }
+let cachedStore = null; // { id, slug, name, type, whatsapp, instagram, pickup_address, ... }
 
 export const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
@@ -54,7 +54,7 @@ export async function resolveStore() {
 
   const { data, error } = await supabase
     .from("stores")
-    .select("id, slug, name, type, whatsapp")
+    .select("id, slug, name, type, whatsapp, instagram, pickup_address, pickup_address_detail, age_gate")
     .eq("slug", STORE_SLUG)
     .eq("is_active", true)
     .single();

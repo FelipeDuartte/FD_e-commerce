@@ -10,8 +10,8 @@
   --c-text:       #fff;
   --c-text-muted: #888;
   --c-text-dim:   #555;
-  --c-accent:     #ffd000;
-  --c-accent-2:   #ffe566;
+  --c-accent:     var(--brand);
+  --c-accent-2:   var(--brand-light);
   --c-green:      #50c878;
   --c-orange:     #ff8c00;
   --c-red:        #ef4444;
@@ -46,10 +46,10 @@
   content: "";
   position: fixed;
   pointer-events: none;
-  background: radial-gradient(circle, rgba(255,208,0,.08) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(var(--brand-rgb),.08) 0%, transparent 70%);
 }
 .cf-root::before { top: -200px; right: -200px; width: 600px; height: 600px; }
-.cf-root::after  { bottom: -100px; left: -100px; width: 400px; height: 400px; background: radial-gradient(circle, rgba(255,208,0,.04) 0%, transparent 70%); }
+.cf-root::after  { bottom: -100px; left: -100px; width: 400px; height: 400px; background: radial-gradient(circle, rgba(var(--brand-rgb),.04) 0%, transparent 70%); }
 
 /* ─── PARTÍCULAS ─────────────────────────────────────────────────── */
 .cf-particle {
@@ -62,7 +62,7 @@
 }
 .cf-p1 { width: 6px; height: 6px; top: 20%; left: 15%; animation-delay: 0s; }
 .cf-p2 { width: 4px; height: 4px; top: 35%; right: 20%; animation-delay: 1.5s; }
-.cf-p3 { width: 8px; height: 8px; top: 60%; left: 70%; animation-delay: 3s; background: rgba(255,208,0,.4); }
+.cf-p3 { width: 8px; height: 8px; top: 60%; left: 70%; animation-delay: 3s; background: rgba(var(--brand-rgb),.4); }
 
 @keyframes cf-float {
   0%   { opacity: 0; transform: translateY(0) scale(.5); }
@@ -108,11 +108,11 @@
   content: "";
   position: absolute;
   border-radius: 50%;
-  border: solid rgba(255,208,0,.2);
+  border: solid rgba(var(--brand-rgb),.2);
   animation: cf-ring-pulse 2s ease-in-out infinite;
 }
 .cf-check-ring::before { inset: -8px;  border-width: 2px; }
-.cf-check-ring::after  { inset: -16px; border-width: 1px; border-color: rgba(255,208,0,.08); animation-delay: 0.4s; }
+.cf-check-ring::after  { inset: -16px; border-width: 1px; border-color: rgba(var(--brand-rgb),.08); animation-delay: 0.4s; }
 
 @keyframes cf-ring-pulse {
   0%, 100% { transform: scale(1);    opacity: 1; }
@@ -127,7 +127,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 40px rgba(255,208,0,.35);
+  box-shadow: 0 0 40px rgba(var(--brand-rgb),.35);
   animation: cf-pop 0.5s cubic-bezier(.175,.885,.32,1.275) both;
 }
 
@@ -227,7 +227,7 @@
   top: -60px; left: 50%;
   transform: translateX(-50%);
   width: 300px; height: 120px;
-  background: radial-gradient(ellipse, rgba(255,208,0,.06) 0%, transparent 70%);
+  background: radial-gradient(ellipse, rgba(var(--brand-rgb),.06) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -259,10 +259,10 @@
 }
 
 /* Variantes por status — padrão compartilhado */
-.cf-status-pending    { background: rgba(255,208,0,.1);  color: var(--c-accent); border: 1px solid rgba(255,208,0,.25); }
+.cf-status-pending    { background: rgba(var(--brand-rgb),.1);  color: var(--c-accent); border: 1px solid rgba(var(--brand-rgb),.25); }
 .cf-status-preparing  { background: rgba(255,140,0,.1);  color: var(--c-orange); border: 1px solid rgba(255,140,0,.25); }
 .cf-status-on_the_way { background: rgba(80,200,120,.1); color: var(--c-green);  border: 1px solid rgba(80,200,120,.25); }
-.cf-status-delivered  { background: rgba(255,208,0,.15); color: var(--c-accent); border: 1px solid rgba(255,208,0,.3); }
+.cf-status-delivered  { background: rgba(var(--brand-rgb),.15); color: var(--c-accent); border: 1px solid rgba(var(--brand-rgb),.3); }
 
 /* Mensagem de status (mesmo padrão de cor) */
 .cf-status-msg {
@@ -276,10 +276,10 @@
   transition: all 0.5s ease;
   animation: cf-fade-up 0.4s ease both;
 }
-.cf-status-msg-pending    { background: rgba(255,208,0,.05);  border-color: rgba(255,208,0,.15);  }
+.cf-status-msg-pending    { background: rgba(var(--brand-rgb),.05);  border-color: rgba(var(--brand-rgb),.15);  }
 .cf-status-msg-preparing  { background: rgba(255,140,0,.05);  border-color: rgba(255,140,0,.15);  }
 .cf-status-msg-on_the_way { background: rgba(80,200,120,.05); border-color: rgba(80,200,120,.15); }
-.cf-status-msg-delivered  { background: rgba(255,208,0,.08);  border-color: rgba(255,208,0,.2);   }
+.cf-status-msg-delivered  { background: rgba(var(--brand-rgb),.08);  border-color: rgba(var(--brand-rgb),.2);   }
 
 .cf-status-msg-icon { font-size: 22px; flex-shrink: 0; }
 .cf-status-msg-text { font-size: 14px; font-weight: 500; color: #bbb; line-height: 1.5; }
@@ -316,8 +316,8 @@
   margin-top: 16px;
   padding: 16px;
   border-radius: 14px;
-  background: rgba(255, 208, 0, 0.08);
-  border: 1px solid rgba(255, 208, 0, 0.3);
+  background: rgba(var(--brand-rgb), 0.08);
+  border: 1px solid rgba(var(--brand-rgb), 0.3);
   animation: cf-fade-up 0.4s ease both;
 }
 .cf-map-teaser-icon {
@@ -400,7 +400,7 @@
   background: linear-gradient(90deg, var(--c-accent), var(--c-accent-2));
   border-radius: 99px;
   transition: width 0.8s cubic-bezier(.4,0,.2,1);
-  box-shadow: 0 0 8px rgba(255,208,0,.4);
+  box-shadow: 0 0 8px rgba(var(--brand-rgb),.4);
 }
 
 /* ─── STEPS ──────────────────────────────────────────────────────── */
@@ -419,8 +419,8 @@
   position: relative;
 }
 
-.cf-step-done    { background: rgba(255,208,0,.04);  border-color: rgba(255,208,0,.1); }
-.cf-step-active  { background: rgba(255,208,0,.08);  border-color: rgba(255,208,0,.3); box-shadow: 0 0 24px rgba(255,208,0,.08); }
+.cf-step-done    { background: rgba(var(--brand-rgb),.04);  border-color: rgba(var(--brand-rgb),.1); }
+.cf-step-active  { background: rgba(var(--brand-rgb),.08);  border-color: rgba(var(--brand-rgb),.3); box-shadow: 0 0 24px rgba(var(--brand-rgb),.08); }
 .cf-step-pending { background: transparent; border-color: #1a1a1a; opacity: .4; }
 
 @keyframes cf-step-pop {
@@ -447,8 +447,8 @@
   transition: all var(--t-slow) ease;
 }
 
-.cf-step-done    .cf-step-icon { background: var(--c-accent); color: #000; font-size: 18px; font-weight: 900; box-shadow: 0 4px 16px rgba(255,208,0,.3); }
-.cf-step-active  .cf-step-icon { background: rgba(255,208,0,.15); border: 2px solid var(--c-accent); box-shadow: 0 0 20px rgba(255,208,0,.2); }
+.cf-step-done    .cf-step-icon { background: var(--c-accent); color: #000; font-size: 18px; font-weight: 900; box-shadow: 0 4px 16px rgba(var(--brand-rgb),.3); }
+.cf-step-active  .cf-step-icon { background: rgba(var(--brand-rgb),.15); border: 2px solid var(--c-accent); box-shadow: 0 0 20px rgba(var(--brand-rgb),.2); }
 .cf-step-pending .cf-step-icon { background: #181818; border: 1px solid #252525; filter: grayscale(1); }
 
 /* Pulso do step ativo */
@@ -456,7 +456,7 @@
   position: absolute;
   width: 52px; height: 52px;
   border-radius: 50%;
-  border: 2px solid rgba(255,208,0,.4);
+  border: 2px solid rgba(var(--brand-rgb),.4);
   animation: cf-pulse-ring 1.8s ease-out infinite;
 }
 
@@ -488,8 +488,8 @@
 .cf-pickup-address {
   margin-top: 8px;
   padding: 12px 20px;
-  background: rgba(255,208,0,.1);
-  border: 1px solid rgba(255,208,0,.2);
+  background: rgba(var(--brand-rgb),.1);
+  border: 1px solid rgba(var(--brand-rgb),.2);
   border-radius: var(--r-md);
   text-align: center;
 }
@@ -605,8 +605,8 @@
   align-items: center;
   gap: 14px;
   padding: 16px 20px;
-  background: rgba(255,208,0,.05);
-  border: 1px solid rgba(255,208,0,.15);
+  background: rgba(var(--brand-rgb),.05);
+  border: 1px solid rgba(var(--brand-rgb),.15);
   border-radius: var(--r-md);
 }
 .cf-payment-icon  { font-size: 26px; }
@@ -638,7 +638,7 @@
   border: none;
   animation: cf-fade-up 0.5s ease 0.8s both;
 }
-.cf-btn-home:hover  { background: var(--c-accent-2); transform: translateY(-2px); box-shadow: 0 10px 28px rgba(255,208,0,.25); }
+.cf-btn-home:hover  { background: var(--c-accent-2); transform: translateY(-2px); box-shadow: 0 10px 28px rgba(var(--brand-rgb),.25); }
 .cf-btn-home:active { transform: translateY(0); }
 
 .cf-btn-cancel {
@@ -664,10 +664,10 @@
   transition: all var(--t);
   background: transparent;
   color: var(--c-accent);
-  border: 1px solid rgba(255,208,0,.35);
+  border: 1px solid rgba(var(--brand-rgb),.35);
 }
 .cf-btn-confirm-payment:hover:not(:disabled) {
-  background: rgba(255,208,0,.08);
+  background: rgba(var(--brand-rgb),.08);
   border-color: var(--c-accent);
   transform: translateY(-1px);
 }

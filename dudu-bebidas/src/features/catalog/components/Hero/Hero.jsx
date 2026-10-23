@@ -2,68 +2,15 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { ShoppingCart } from "lucide-react";
 import "./Hero.css";
 import { useProductCategories } from "../../../../shared/hooks/useProductCategories";
+import { getBrand } from "../../../../shared/brand/brand";
 
 // Configurações
 const AUTO_PLAY_DELAY = 5000;
 const MIN_SWIPE_DISTANCE = 50;
 const LARGE_SCREEN_WIDTH = 1080;
-// Imagens pequenas
-const banner_pequeno_cerveja = "https://res.cloudinary.com/dfcsficmg/image/upload/v1786649995/CervejaBanner-CAYjoOTV_1_yu45c7.webp"
-const banner_pequeno_vinho = "https://res.cloudinary.com/dfcsficmg/image/upload/v1786649996/vinhoBanner-DUfHVLwr_1_g3mhty.webp"
-const banner_pequeno_wisky = "https://res.cloudinary.com/dfcsficmg/image/upload/v1786649997/wiskyBanner-AhTFNrfB_1_kx6eal.webp"
-const banner_pequeno_gin = "https://res.cloudinary.com/dfcsficmg/image/upload/v1786649996/ginBanner-DM7yVTzI_1_tkthnx.webp"
-// Imagens grandes
-const banner_grande_gin = "https://res.cloudinary.com/dfcsficmg/image/upload/v1786649996/ginBanner-lg-CPtHbopB_1_obe6ug.webp"
-const banner_grande_wisky = "https://res.cloudinary.com/dfcsficmg/image/upload/v1786649998/wiskyBanner-lg-ButYwblz_1_vxgnfo.webp"
-const banner_grande_vinho = "https://res.cloudinary.com/dfcsficmg/image/upload/v1786649997/vinhoBanner-lg-aexSNgB6_1_glalbm.webp"
-const banner_grande_cerveja = "https://res.cloudinary.com/dfcsficmg/image/upload/v1786649996/cervejaBanner-lg-DrKCbcAy_1_mtznt0.webp"
-// Dados do banner
-const BANNERS = [
-  {
-    id: 1,
-    title: "Mega Promoção",
-    subtitle: "Cervejas Premium",
-    description: "Até 40% OFF em cervejas importadas",
-    badge: "OFERTA",
-    imageSmall: banner_pequeno_cerveja,
-    imageLarge: banner_grande_cerveja,
-    ctaText: "Ver Ofertas",
-    category: "cerveja",
-  },
-  {
-    id: 2,
-    title: "Novidades",
-    subtitle: "Vinhos Selecionados",
-    description: "Acabou de chegar - Importados direto da Europa",
-    badge: "NOVO",
-    imageSmall: banner_pequeno_vinho,
-    imageLarge: banner_grande_vinho,
-    ctaText: "Conferir Novidades",
-    category: "vinho",
-  },
-  {
-    id: 3,
-    title: "Super Desconto",
-    subtitle: "Whisky & Destilados",
-    description: "Descontos imperdíveis em destilados premium",
-    badge: "HOT",
-    imageSmall: banner_pequeno_wisky,
-    imageLarge: banner_grande_wisky,
-    ctaText: "Aproveitar Agora",
-    category: "destilado",
-  },
-  {
-    id: 4,
-    title: "Lançamento",
-    subtitle: "Gin Artesanal",
-    description: "Sabores exclusivos direto do produtor",
-    badge: "EXCLUSIVO",
-    imageSmall: banner_pequeno_gin,
-    imageLarge: banner_grande_gin,
-    ctaText: "Conhecer Produtos",
-    category: "destilado",
-  },
-];
+// Slides vêm da marca da loja (src/brands/<slug>/brand.js → heroSlides).
+// Slide sem imagem usa o degradê "bg"; loja sem slides não mostra o carrossel.
+const DEFAULT_SLIDE_BG = "linear-gradient(135deg, var(--brand-dark) 0%, #111 100%)";
 
 export default function Hero({ onCategorySelect }) {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -72,7 +19,8 @@ export default function Hero({ onCategorySelect }) {
   const [touchEnd, setTouchEnd] = useState(null);
 
   const carouselRef = useRef(null);
-  const totalSlides = BANNERS.length;
+  const [slides] = useState(() => getBrand().heroSlides);
+  const totalSlides = slides.length;
 
   // Os banners abaixo são conteúdo editorial (imagem/texto fixos por
   // categoria), então não dá pra buscá-los do banco. Mas usamos a lista
@@ -134,9 +82,12 @@ export default function Hero({ onCategorySelect }) {
 
   // Auto-play
   useEffect(() => {
+    if (totalSlides < 2) return undefined;
     const interval = setInterval(nextSlide, AUTO_PLAY_DELAY);
     return () => clearInterval(interval);
-  }, [nextSlide]);
+  }, [nextSlide, totalSlides]);
+
+  if (totalSlides === 0) return null;
 
   return (
     <section id="hero" className="hero-carousel">
@@ -147,16 +98,17 @@ export default function Hero({ onCategorySelect }) {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {BANNERS.map((banner, index) => {
-          const backgroundImage = isLargeScreen
-            ? banner.imageLarge
-            : banner.imageSmall;
+        {slides.map((banner, index) => {
+          const image = isLargeScreen
+            ? banner.imageLarge || banner.imageSmall
+            : banner.imageSmall || banner.imageLarge;
+          const backgroundImage = image ? `url(${image})` : banner.bg || DEFAULT_SLIDE_BG;
 
           return (
             <div
-              key={banner.id}
+              key={index}
               className={`carousel-slide ${index === currentSlide ? "active" : ""}`}
-              style={{ backgroundImage: `url(${backgroundImage})` }}
+              style={{ backgroundImage }}
             >
               <div className="carousel-overlay" />
 
@@ -165,7 +117,7 @@ export default function Hero({ onCategorySelect }) {
                   <div className="col-10 col-sm-9 col-md-8 col-lg-7 col-xl-6">
                     <div className="carousel-content">
                       {/* Badge */}
-                      <span className="banner-badge">{banner.badge}</span>
+                      {banner.badge && <span className="banner-badge">{banner.badge}</span>}
 
                       {/* Título */}
                       <h2 className="banner-title">
@@ -198,7 +150,7 @@ export default function Hero({ onCategorySelect }) {
 
       {/* Indicadores */}
       <div className="carousel-dots">
-        {BANNERS.map((_, index) => (
+        {slides.map((_, index) => (
           <button
             key={index}
             className={`dot ${index === currentSlide ? "active" : ""}`}

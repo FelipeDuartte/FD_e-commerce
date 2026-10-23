@@ -8,6 +8,7 @@ import {
 } from "../orderStatus";
 import { formatDate, formatBRL } from "../../../shared/utils/adminFormat";
 import { usePaymentGating } from "../hooks/usePaymentGating";
+import { pickupAddress } from "../../../../shared/utils/storeContact";
 
 const PAYMENT_STATUS_LABEL = {
   aguardando_pagamento: "⏳ Aguardando pagamento",
@@ -31,6 +32,7 @@ export default function OrderCard({
   onAssignCourier,
 }) {
   const pickup = isPickup(order);
+  const storeAddress = pickup ? pickupAddress() : null;
   const cfg = getConfig(order);
   const nextSt = getNext(order);
   const statuses = getStatuses(order);
@@ -196,7 +198,9 @@ export default function OrderCard({
               {pickup ? (
                 <>
                   <p>🏪 Retirada na loja</p>
-                  <p>📍 Rua Edgar Torres, 650 — Belo Horizonte/MG</p>
+                  {storeAddress && (
+                    <p>📍 {storeAddress.street}{storeAddress.detail ? ` — ${storeAddress.detail}` : ""}</p>
+                  )}
                 </>
               ) : (
                 <>

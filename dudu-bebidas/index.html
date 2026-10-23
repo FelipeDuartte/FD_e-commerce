@@ -19,22 +19,12 @@
       })();
     </script>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/webp" href="https://res.cloudinary.com/dfcsficmg/image/upload/v1786649996/logo_dudu-bebidas.webp"/>
-    <!--Meta domin-->
-    <meta name="facebook-domain-verification" content="vt199nerrrlazhj84z2bmox0qr51hp" />
-    
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!--google search-->
-    <meta name="google-site-verification" content="BBjKwQzg8a9hnnwv2Iz682E3B5YLfi-PsS8xcJosgcA" />
-    <!--description-->
-    <meta name="description" content="Delivery de bebidas em Belo Horizonte. Cervejas, vinhos, destilados e muito mais. Entrega rápida nos bairros Minas Caixas, Serra Verde, Venda Nova e Parque São Pedro." />
-    <!--palavra chave-->
-    <meta name="keywords" content="delivery bebidas BH, cerveja gelada Belo Horizonte, bebidas Venda Nova" />
-    <!--para compartilhamento do site-->
-    <meta property="og:title" content="Dudu Bebidas — Delivery de Bebidas em BH" />
-    <meta property="og:description" content="Peça suas bebidas favoritas com entrega rápida!" />
-    <meta property="og:url" content="https://dudubebidas.fdigitalbr.com.br/" />
-     <title>Dudu Bebidas — Delivery de Bebidas em BH</title>
+    <!--
+      Título, descrição, favicon, metas de compartilhamento/verificação e
+      as cores da loja são escritos aqui no build, a partir da marca da loja
+      (src/brands/<VITE_STORE_SLUG>/brand.js — ver vite.config.js).
+    -->
 
     <!--
       Loading inicial (pré-React): puro HTML/CSS, aparece instantaneamente,
@@ -59,8 +49,8 @@
       #initial-loader .spinner {
         width: 44px;
         height: 44px;
-        border: 4px solid rgba(255, 215, 0, 0.15);
-        border-top-color: #ffd700;
+        border: 4px solid rgba(var(--brand-rgb), 0.15);
+        border-top-color: var(--brand);
         border-radius: 50%;
         animation: initial-loader-spin 0.8s linear infinite;
       }

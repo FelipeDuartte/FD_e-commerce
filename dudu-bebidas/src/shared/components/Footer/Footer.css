@@ -2,8 +2,8 @@
    VARIABLES
 ===================== */
 :root {
-  --gold: #ffd700;
-  --gold-light: #ffed4e;
+  --gold: var(--brand);
+  --gold-light: var(--brand-light);
 
   --black-900: #0a0a0a;
   --black-800: #1a1a1a;
@@ -37,8 +37,8 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 20% 50%, rgba(255, 215, 0, 0.03), transparent 55%),
-    radial-gradient(circle at 80% 80%, rgba(255, 215, 0, 0.02), transparent 55%);
+    radial-gradient(circle at 20% 50%, rgba(var(--brand-rgb), 0.03), transparent 55%),
+    radial-gradient(circle at 80% 80%, rgba(var(--brand-rgb), 0.02), transparent 55%);
   pointer-events: none;
 }
 
@@ -92,8 +92,8 @@
   place-items: center;
 
   color: var(--gold);
-  background: rgba(255, 215, 0, 0.08);
-  border: 1px solid rgba(255, 215, 0, 0.12);
+  background: rgba(var(--brand-rgb), 0.08);
+  border: 1px solid rgba(var(--brand-rgb), 0.12);
   border-radius: var(--radius-md);
 
   transition: transform var(--transition), background var(--transition), color var(--transition);

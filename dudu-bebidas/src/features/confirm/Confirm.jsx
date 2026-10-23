@@ -16,11 +16,13 @@ import OrderItemsCard from "./components/OrderItemsCard";
 import DeliveryAddressCard from "./components/DeliveryAddressCard";
 import PaymentMethodCard from "./components/PaymentMethodCard";
 import BiIcon from "../../shared/components/BiIcon/BiIcon";
+import { whatsappLink } from "../../shared/utils/storeContact";
 
 // ══════════════════════════════════════════════════════
 //  COMPONENTE PRINCIPAL
 // ══════════════════════════════════════════════════════
 export default function Confirmacao() {
+  const storeWhatsapp = whatsappLink();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -286,11 +288,13 @@ export default function Confirmacao() {
                     ℹ️ Não é mais possível cancelar — {entityLabel} já está em
                     andamento.
                   </p>
-                  <a href="https://wa.me/553183077990" target="_blank" className="text-bold text-decoration-none fs-6 text-white">
-                    <div className="border border-secondary rounded bg-success p-2">
-                      <span>Falar com atendente <BiIcon name="whatsapp" /></span>
-                    </div>
-                  </a>
+                  {storeWhatsapp && (
+                    <a href={storeWhatsapp} target="_blank" rel="noreferrer" className="text-bold text-decoration-none fs-6 text-white">
+                      <div className="border border-secondary rounded bg-success p-2">
+                        <span>Falar com atendente <BiIcon name="whatsapp" /></span>
+                      </div>
+                    </a>
+                  )}
                 </div>
               )}
           </div>

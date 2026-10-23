@@ -1,9 +1,39 @@
 import { useEffect, useState } from "react";
 import { acceptAgeGate } from "./ageGateStorage";
+import { getCurrentStore } from "../../supabase/Supabaseclient";
 import "./AgeGate.css";
 
-export default function AgeGate({ onAccept }) {
+// requireAge (stores.age_gate): loja de bebidas → tela cheia "maior de 18?".
+// Sem isso → só a faixa de cookies/termos no rodapé, sem bloquear o site.
+// Nos dois casos o aceite registra cookies, termos e privacidade (LGPD).
+export default function AgeGate({ requireAge, onAccept }) {
+  const handleAccept = () => {
+    acceptAgeGate();
+    onAccept();
+  };
+
+  return requireAge
+    ? <AgeCheck onAccept={handleAccept} />
+    : <ConsentBanner onAccept={handleAccept} />;
+}
+
+function LegalLinks() {
+  return (
+    <>
+      <a href="/terms-service" target="_blank" rel="noreferrer">
+        Termos de Serviço
+      </a>{" "}
+      e nossa{" "}
+      <a href="/privacy-policy" target="_blank" rel="noreferrer">
+        Política de Privacidade
+      </a>
+    </>
+  );
+}
+
+function AgeCheck({ onAccept }) {
   const [rejected, setRejected] = useState(false);
+  const storeName = getCurrentStore()?.name || "esta loja";
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -13,11 +43,6 @@ export default function AgeGate({ onAccept }) {
       document.body.style.overflow = previousOverflow;
     };
   }, []);
-
-  const handleAccept = () => {
-    acceptAgeGate();
-    onAccept();
-  };
 
   return (
     <div className="age-gate" role="dialog" aria-modal="true" aria-labelledby="age-gate-title">
@@ -33,7 +58,7 @@ export default function AgeGate({ onAccept }) {
           <p className="age-gate__question">Sua idade é maior que 18 anos?</p>
 
           <div className="age-gate__actions">
-            <button className="age-gate__button age-gate__button--yes" type="button" onClick={handleAccept}>
+            <button className="age-gate__button age-gate__button--yes" type="button" onClick={onAccept}>
               Sim
             </button>
             <button className="age-gate__button age-gate__button--no" type="button" onClick={() => setRejected(true)}>
@@ -43,23 +68,28 @@ export default function AgeGate({ onAccept }) {
 
           {rejected && (
             <p className="age-gate__denied" role="alert">
-              Para acessar a Dudu Bebidas, é necessário confirmar que você é maior de 18 anos.
+              Para acessar a {storeName}, é necessário confirmar que você é maior de 18 anos.
             </p>
           )}
 
           <p className="age-gate__legal">
-            Ao clicar em <strong>Sim</strong>, você aceita o uso de cookies, nossos{" "}
-            <a href="/terms-service" target="_blank" rel="noreferrer">
-              Termos de Serviço
-            </a>{" "}
-            e nossa{" "}
-            <a href="/privacy-policy" target="_blank" rel="noreferrer">
-              Política de Privacidade
-            </a>
-            .
+            Ao clicar em <strong>Sim</strong>, você aceita o uso de cookies, nossos <LegalLinks />.
           </p>
         </section>
       </div>
+    </div>
+  );
+}
+
+function ConsentBanner({ onAccept }) {
+  return (
+    <div className="consent-banner" role="region" aria-label="Aviso de cookies">
+      <p className="consent-banner__text">
+        Usamos cookies para o site funcionar. Ao continuar, você aceita nossos <LegalLinks />.
+      </p>
+      <button className="consent-banner__button" type="button" onClick={onAccept}>
+        Aceitar
+      </button>
     </div>
   );
 }

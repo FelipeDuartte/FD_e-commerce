@@ -15,7 +15,7 @@
   position: absolute;
   bottom: -10px; left: 0;
   width: 60px; height: 3px;
-  background: #f5c518;
+  background: var(--brand);
   border-radius: 2px;
 }
 
@@ -63,7 +63,7 @@
   transition: opacity .2s ease, background .2s ease, border-color .2s ease;
 }
 .filter-arrow i { font-size: 14px; line-height: 1; }
-.filter-arrow:hover { background: #fffbea; border-color: #f5c518; }
+.filter-arrow:hover { background: #fffbea; border-color: var(--brand); }
 .filter-arrow-left  { left: 0; }
 .filter-arrow-right { right: 0; }
 .filter-scroll-wrapper.has-left  .filter-arrow-left,
@@ -96,11 +96,11 @@
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
-  scrollbar-color: #f5c518 transparent;
+  scrollbar-color: var(--brand) transparent;
 }
 .overflow-x-auto::-webkit-scrollbar        { height: 3px; }
 .overflow-x-auto::-webkit-scrollbar-track  { background: transparent; }
-.overflow-x-auto::-webkit-scrollbar-thumb  { background: linear-gradient(90deg, #f5c518, #ffd700); border-radius: 10px; }
+.overflow-x-auto::-webkit-scrollbar-thumb  { background: linear-gradient(90deg, var(--brand), var(--brand)); border-radius: 10px; }
 
 /* ─── BOTÃO DE FILTRO ────────────────────────────────────────────── */
 .filter-btn {
@@ -128,8 +128,8 @@
 .filter-btn:hover {
   color: #000;
   background: #fffbea;
-  border-color: #f5c518;
-  box-shadow: 0 4px 12px rgba(245,197,24,.2);
+  border-color: var(--brand);
+  box-shadow: 0 4px 12px rgba(var(--brand-rgb),.2);
   transform: translateY(-2px);
 }
 .filter-btn:hover i    { transform: scale(1.2); }
@@ -137,12 +137,12 @@
 
 .filter-btn.active {
   background: #000;
-  color: #f5c518;
+  color: var(--brand);
   border-color: #000;
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(0,0,0,.18), 0 0 0 3px rgba(245,197,24,.15);
+  box-shadow: 0 6px 18px rgba(0,0,0,.18), 0 0 0 3px rgba(var(--brand-rgb),.15);
 }
-.filter-btn.active i { color: #f5c518; }
+.filter-btn.active i { color: var(--brand); }
 
 /* ─── CONTROLES VER MAIS / VER MENOS ────────────────────────────── */
 .produtos-controle-btns {

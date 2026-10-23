@@ -59,7 +59,7 @@
 }
 
 .login-modal::-webkit-scrollbar-thumb {
-  background: #ffd700;
+  background: var(--brand);
   border-radius: 10px;
 }
 
@@ -92,7 +92,7 @@
 .login-header {
   padding: 36px 40px 28px;
   text-align: center;
-  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-light) 100%);
   border-radius: 24px 24px 0 0;
 }
 
@@ -170,9 +170,9 @@
 
 .form-input:focus {
   outline: none;
-  border-color: #ffd700;
+  border-color: var(--brand);
   background: #fff;
-  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.12);
+  box-shadow: 0 0 0 3px rgba(var(--brand-rgb), 0.12);
 }
 
 .form-input::placeholder {
@@ -253,7 +253,7 @@
 .login-submit-btn {
   width: 100%;
   padding: 14px;
-  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-light) 100%);
   color: #000;
   border: none;
   border-radius: 12px;
@@ -261,7 +261,7 @@
   font-weight: 800;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 14px rgba(255, 215, 0, 0.3);
+  box-shadow: 0 4px 14px rgba(var(--brand-rgb), 0.3);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 18px;
@@ -269,7 +269,7 @@
 
 .login-submit-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+  box-shadow: 0 6px 20px rgba(var(--brand-rgb), 0.4);
 }
 
 .login-submit-btn:disabled {
@@ -402,7 +402,7 @@
 }
 
 .footer-links a:hover {
-  color: #ffd700;
+  color: var(--brand);
 }
 .footer-links span {
   color: #d1d5db;

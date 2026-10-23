@@ -7,6 +7,7 @@ import "./Header.css"; // Estilos específicos do Header
 import { useStoreStatus } from "../../../shared/context/useStoreStatus"; // Hook para status da loja (aberta/fechada)
 import { useProductCategories } from "../../../shared/hooks/useProductCategories"; // Hook para obter categorias de produtos
 import BiIcon from "../../../shared/components/BiIcon/BiIcon";
+import { getBrand } from "../../../shared/brand/brand";
 
 // ─────────────────────────────────────────────────────────
 // COMPONENTE HEADER
@@ -27,8 +28,8 @@ export default function Header({
   onLogout, // Callback quando faz logout
   isAdmin, // Boolean indicando se o usuário é admin
 }) {
-  // logo loja
-  const logo_dudu = "https://res.cloudinary.com/dfcsficmg/image/upload/v1786649996/logo_dudu-bebidas.webp"
+  // Logo, nome e texto da busca vêm da marca da loja
+  const brand = getBrand();
 
   // ─────────────────────────────────────────────────────────
   // HOOKS
@@ -94,17 +95,19 @@ export default function Header({
           style={{ flexWrap: "nowrap" }}
         >
           {/* LOGO E MARCA */}
-          {/* Exibe logo + nome "Dudu Bebidas" */}
+          {/* Exibe logo + nome da loja */}
           <a
             href="#"
             className="navbar-brand logo d-flex align-items-center gap-2"
             style={{ flexShrink: 0 }}
           >
-            <div className="logo-image-wrapper">
-              <img src={logo_dudu} alt="Dudu Bebidas Logo" className="logo-image" />
-            </div>
+            {brand.logoUrl && (
+              <div className="logo-image-wrapper">
+                <img src={brand.logoUrl} alt={`${brand.name} Logo`} className="logo-image" />
+              </div>
+            )}
             <div className="brand-text">
-              Dudu <span>Bebidas</span>
+              {brand.logoText[0]} {brand.logoText[1] && <span>{brand.logoText[1]}</span>}
             </div>
           </a>
 
@@ -118,7 +121,7 @@ export default function Header({
               <Search className="search-icon" size={22} />
               <input
                 type="search"
-                placeholder="Buscar bebidas..."
+                placeholder={brand.searchPlaceholder}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="form-control border-0"
@@ -238,7 +241,7 @@ export default function Header({
             <Search className="search-icon" size={20} />
             <input
               type="search"
-              placeholder="Buscar bebidas..."
+              placeholder={brand.searchPlaceholder}
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -274,13 +277,13 @@ export default function Header({
             >
               <BiIcon name="house-door-fill" className="me-2" />Início
             </a>
-            {/* Bebidas - Vai para seção de produtos */}
+            {/* Vai para seção de produtos (rótulo da marca: "Bebidas", "Produtos"...) */}
             <a
               href="#produtos"
               className="d-block text-white text-decoration-none py-2 px-3 rounded mb-1"
               onClick={() => setMenuOpen(false)}
             >
-              <BiIcon name="grid-fill" className="me-2" />Bebidas
+              <BiIcon name="grid-fill" className="me-2" />{brand.productsLabel}
             </a>
 
             {/* CATEGORIAS NO MENU MOBILE */}

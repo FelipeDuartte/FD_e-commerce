@@ -33,7 +33,7 @@
   height: 32px;
   font-size: 20px;
   background: #1a1a1a;
-  border: 2px solid #ffd700;
+  border: 2px solid var(--brand);
   border-radius: 50%;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }

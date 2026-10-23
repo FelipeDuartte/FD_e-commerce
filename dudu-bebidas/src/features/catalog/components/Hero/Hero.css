@@ -2,16 +2,16 @@
    ROOT VARIABLES
 ===================== */
 :root {
-  --color-gold: #ffd700;
-  --color-gold-light: #ffed4e;
+  --color-gold: var(--brand);
+  --color-gold-light: var(--brand-light);
   --color-black: #000;
   --color-white: #fff;
 
   --transition-fast: 0.3s ease;
   --transition-slow: 1s ease-in-out;
 
-  --shadow-gold-sm: 0 4px 15px rgba(255, 215, 0, 0.4);
-  --shadow-gold-lg: 0 15px 40px rgba(255, 215, 0, 0.6);
+  --shadow-gold-sm: 0 4px 15px rgba(var(--brand-rgb), 0.4);
+  --shadow-gold-lg: 0 15px 40px rgba(var(--brand-rgb), 0.6);
   --shadow-text: 0 4px 20px rgba(0, 0, 0, 0.8);
 }
 
@@ -124,7 +124,7 @@
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 8px rgba(255, 215, 0, 0.5));
+  filter: drop-shadow(0 2px 8px rgba(var(--brand-rgb), 0.5));
 }
 
 /* =====================
@@ -159,7 +159,7 @@
   border-radius: 50px;
   text-decoration: none;
   cursor: pointer;
-  box-shadow: 0 8px 24px rgba(255, 215, 0, 0.4);
+  box-shadow: 0 8px 24px rgba(var(--brand-rgb), 0.4);
   transition: transform var(--transition-fast), box-shadow var(--transition-fast);
   animation: slideInUp 0.6s ease-out 0.3s both;
 }

@@ -38,7 +38,7 @@
   min-height: 430px;
   padding: clamp(2.25rem, 6vw, 5.75rem) clamp(1.25rem, 5vw, 5rem) 3.5rem;
   color: #fff;
-  background: #867204;
+  background: var(--brand-dark);
   border: 3px solid #fff;
   border-radius: 12px;
   box-shadow: 0 22px 70px rgba(0, 0, 0, 0.45);
@@ -81,12 +81,12 @@
 }
 
 .age-gate__button:focus-visible {
-  outline: 3px solid #ffd700;
+  outline: 3px solid var(--brand);
   outline-offset: 4px;
 }
 
 .age-gate__button--yes {
-  color: #ffd700;
+  color: var(--brand);
   background: #fff;
   border: 2px solid #fff;
 }
@@ -154,5 +154,57 @@
 
   .age-gate__button {
     min-height: 54px;
+  }
+}
+
+/* Faixa de cookies/termos — lojas sem confirmação de +18 */
+.consent-banner {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0.9rem 1.1rem;
+  color: #f2f2f2;
+  background: rgba(20, 20, 20, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.consent-banner__text {
+  flex: 1;
+  margin: 0;
+}
+
+.consent-banner__text a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.consent-banner__button {
+  flex-shrink: 0;
+  min-height: 40px;
+  padding: 0 1.4rem;
+  color: #111;
+  background: var(--c-accent, var(--brand));
+  border: 0;
+  border-radius: 999px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 560px) {
+  .consent-banner {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
   }
 }

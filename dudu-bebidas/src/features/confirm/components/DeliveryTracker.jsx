@@ -2,23 +2,13 @@ import { useEffect, useState } from "react";
 import { STATUS_STEP, STEPS } from "../confirmConstants";
 import DeliveryMap from "../../../shared/components/DeliveryMap/DeliveryMap";
 import { estimateEtaMinutes } from "../../../shared/utils/geo";
+import { whatsappLink } from "../../../shared/utils/storeContact";
 
 // Se o entregador parar de mandar atualização por mais que isso (app
 // fechado, sem sinal, ou pedido esquecido em "em entrega"), troca o mapa
 // por um aviso — em vez de deixar um pino parado parecendo "ao vivo".
 const STALE_THRESHOLD_MS = 3 * 60 * 1000;
 
-// Número oficial da loja — o mesmo que recebe o alerta de "novo pedido".
-// O botão de WhatsApp da entrega fala com a loja, não com o celular
-// pessoal do entregador.
-const STORE_WHATSAPP_NUMBER = "553199575029";
-
-// wa.me exige só dígitos com DDI.
-function waLink(phone) {
-  const digits = String(phone).replace(/\D/g, "");
-  const withCountryCode = digits.startsWith("55") ? digits : `55${digits}`;
-  return `https://wa.me/${withCountryCode}`;
-}
 
 export default function DeliveryTracker({
   status,
@@ -32,6 +22,7 @@ export default function DeliveryTracker({
   courierLocationUpdatedAt,
 }) {
   const currentStep = STATUS_STEP[status] ?? 0;
+  const storeWhatsapp = whatsappLink();
 
   // O timestamp da última localização não muda enquanto ela ficar
   // desatualizada (o poll continua devolvendo o mesmo valor) — sem esse
@@ -116,9 +107,12 @@ export default function DeliveryTracker({
           {courierName && (
             <div className="cf-courier-info">
               <span>🛵 Seu entregador: <strong>{courierName}</strong></span>
-              <a href={waLink(STORE_WHATSAPP_NUMBER)} target="_blank" rel="noreferrer">
-                Falar com a loja
-              </a>
+              {/* Fala com o atendimento da loja, não com o celular do entregador */}
+              {storeWhatsapp && (
+                <a href={storeWhatsapp} target="_blank" rel="noreferrer">
+                  Falar com a loja
+                </a>
+              )}
             </div>
           )}
 

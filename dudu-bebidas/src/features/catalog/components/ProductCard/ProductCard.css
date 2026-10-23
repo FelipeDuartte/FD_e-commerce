@@ -1,7 +1,7 @@
 /* ─── TOKENS ─────────────────────────────────────────────────────── */
 :root {
-  --pc-gold:        #ffd700;
-  --pc-gold-hover:  #ffae00;
+  --pc-gold:        var(--brand);
+  --pc-gold-hover:  var(--brand-deep);
   --pc-green:       #28a745;
   --pc-teal:        #20c997;
   --pc-red:         #ff4757;
@@ -132,7 +132,7 @@
 .preco-atual.preco-promo {
   color: var(--pc-gold-hover);
   font-size: 20px;
-  text-shadow: 0 0 12px rgba(255,215,0,.3);
+  text-shadow: 0 0 12px rgba(var(--brand-rgb),.3);
 }
 
 .preco-linha-antiga {
@@ -193,7 +193,7 @@
   background: var(--pc-gold);
   color: #000;
   border-color: #1a1a1a;
-  box-shadow: 0 6px 20px rgba(255,215,0,.35);
+  box-shadow: 0 6px 20px rgba(var(--brand-rgb),.35);
   transform: translateY(-2px);
 }
 

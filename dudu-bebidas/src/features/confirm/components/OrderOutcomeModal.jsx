@@ -1,8 +1,10 @@
 import BiIcon from "../../../shared/components/BiIcon/BiIcon";
+import { whatsappLink } from "../../../shared/utils/storeContact";
 
 // Modal genérico pra desfechos finais (rejeitado / cancelado pelo cliente) —
 // mesma estrutura nos dois casos, só muda ícone/título/texto.
 export default function OrderOutcomeModal({ icon, title, children, onClose }) {
+  const whatsapp = whatsappLink();
   return (
     <>
       <div className="cf-modal-overlay" />
@@ -11,14 +13,11 @@ export default function OrderOutcomeModal({ icon, title, children, onClose }) {
         <h3 className="cf-modal-title">{title}</h3>
         <p className="cf-modal-desc">{children}</p>
         <div className="cf-modal-actions">
-          <a
-            href="https://wa.me/553183077990"
-            target="_blank"
-            rel="noreferrer"
-            className="cf-modal-btn-whatsapp"
-          >
-            Falar com atendente <BiIcon name="whatsapp" />
-          </a>
+          {whatsapp && (
+            <a href={whatsapp} target="_blank" rel="noreferrer" className="cf-modal-btn-whatsapp">
+              Falar com atendente <BiIcon name="whatsapp" />
+            </a>
+          )}
           <button className="cf-modal-btn-confirm" onClick={onClose}>
             Voltar para a loja
           </button>

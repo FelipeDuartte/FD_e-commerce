@@ -18,7 +18,7 @@
   --c-text: #fff;
   --c-text-muted: #888;
   --c-text-dim: #555;
-  --c-accent: #ffd000;
+  --c-accent: var(--brand);
   --c-green: #50c878;
   --c-orange: #ff8c00;
   --c-red: #ef4444;
@@ -52,7 +52,7 @@
   --c-text: #1a1a1a;
   --c-text-muted: #6b6b68;
   --c-text-dim: #a3a39f;
-  --c-accent: #b8860b;
+  --c-accent: var(--brand-dark);
 }
 
 /* ─── ROOT & LAYOUT ──────────────────────────────────────────────── */
@@ -307,7 +307,7 @@ button:disabled {
 }
 .adm-stat-active {
   border-color: var(--c-accent) !important;
-  background: rgba(255, 208, 0, 0.05) !important;
+  background: rgba(var(--brand-rgb), 0.05) !important;
 }
 
 .adm-stat-icon {
@@ -452,8 +452,8 @@ button:disabled {
   align-items: center;
   gap: 3px;
   padding: 2px 7px;
-  background: rgba(255, 208, 0, 0.1);
-  border: 1px solid rgba(255, 208, 0, 0.3);
+  background: rgba(var(--brand-rgb), 0.1);
+  border: 1px solid rgba(var(--brand-rgb), 0.3);
   border-radius: 20px;
   font-size: 9px;
   font-weight: 800;
@@ -718,7 +718,7 @@ button:disabled {
   font-weight: 600;
 }
 .adm-pill-active {
-  background: rgba(255, 208, 0, 0.08);
+  background: rgba(var(--brand-rgb), 0.08);
   border-color: var(--pill-color) !important;
   color: var(--pill-color) !important;
 }
@@ -739,7 +739,7 @@ button:disabled {
 .adm-btn-advance:hover:not(:disabled) {
   background: var(--c-accent);
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(255, 208, 0, 0.2);
+  box-shadow: 0 6px 20px rgba(var(--brand-rgb), 0.2);
 }
 
 .adm-delivered-msg {
@@ -1054,7 +1054,7 @@ button:disabled {
 
 /* Badges de categoria / estoque / status */
 .adm-cat-badge {
-  background: rgba(255, 208, 0, 0.12);
+  background: rgba(var(--brand-rgb), 0.12);
   color: var(--c-accent);
   font-size: 11px;
   padding: 3px 8px;
@@ -1181,8 +1181,8 @@ button:disabled {
 .adm-promo-fields {
   margin-top: 4px;
   padding: 14px;
-  background: rgba(255, 208, 0, 0.06);
-  border: 1px solid rgba(255, 208, 0, 0.2);
+  background: rgba(var(--brand-rgb), 0.06);
+  border: 1px solid rgba(var(--brand-rgb), 0.2);
   border-radius: 10px;
   display: flex;
   flex-direction: column;
@@ -1224,7 +1224,7 @@ button:disabled {
   color: var(--c-accent);
 }
 .adm-preview-badge {
-  background: rgba(255, 208, 0, 0.15);
+  background: rgba(var(--brand-rgb), 0.15);
   color: var(--c-accent);
   font-size: 11px;
   font-weight: 700;

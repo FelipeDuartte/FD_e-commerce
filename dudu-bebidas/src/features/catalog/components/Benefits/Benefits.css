@@ -15,8 +15,8 @@
   right: 0;
   bottom: 0;
   background: 
-    radial-gradient(circle at 20% 50%, rgba(255, 215, 0, 0.02) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(255, 215, 0, 0.02) 0%, transparent 50%);
+    radial-gradient(circle at 20% 50%, rgba(var(--brand-rgb), 0.02) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(var(--brand-rgb), 0.02) 0%, transparent 50%);
   pointer-events: none;
 }
 
@@ -39,7 +39,7 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, #FFD700 0%, #FFA500 100%);
+  background: linear-gradient(90deg, var(--brand) 0%, var(--brand-deep) 100%);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.3s ease;
@@ -52,8 +52,8 @@
 .benefit-card:hover {
   transform: translateY(-4px);
   background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 215, 0, 0.3);
-  box-shadow: 0 8px 20px rgba(255, 215, 0, 0.15);
+  border-color: rgba(var(--brand-rgb), 0.3);
+  box-shadow: 0 8px 20px rgba(var(--brand-rgb), 0.15);
 }
 
 .benefit-icon {
@@ -63,15 +63,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-deep) 100%);
   border-radius: 12px;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(var(--brand-rgb), 0.3);
 }
 
 .benefit-card:hover .benefit-icon {
   transform: scale(1.1);
-  box-shadow: 0 6px 16px rgba(255, 215, 0, 0.4);
+  box-shadow: 0 6px 16px rgba(var(--brand-rgb), 0.4);
 }
 
 .benefit-icon svg {
@@ -92,7 +92,7 @@
 }
 
 .benefit-card:hover .benefit-title {
-  color: #ffd700;
+  color: var(--brand);
 }
 
 .benefit-text {

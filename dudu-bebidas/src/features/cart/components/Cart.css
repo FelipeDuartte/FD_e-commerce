@@ -46,7 +46,7 @@
   flex-shrink: 0;
   padding: 20px 20px;
   border-bottom: 2px solid #f3f4f6;
-  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-light) 100%);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -105,7 +105,7 @@
   background: #f1f1f1;
 }
 .cart-body::-webkit-scrollbar-thumb {
-  background: #ffd700;
+  background: var(--brand);
   border-radius: 10px;
 }
 
@@ -147,8 +147,8 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 .cart-item:hover {
-  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.15);
-  border-color: #ffd700;
+  box-shadow: 0 4px 12px rgba(var(--brand-rgb), 0.15);
+  border-color: var(--brand);
 }
 
 .cart-item-image {
@@ -230,7 +230,7 @@
   transition: all 0.2s;
 }
 .quantity-btn:hover {
-  background: #ffd700;
+  background: var(--brand);
   color: #000;
 }
 .quantity-value {
@@ -372,7 +372,7 @@
   border-color: #d1d5db;
 }
 .bairro-dropdown-header.open {
-  border-color: #ffd700;
+  border-color: var(--brand);
   background: #fff;
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
@@ -388,7 +388,7 @@
   color: #1f2937;
 }
 .bairro-dropdown-label svg {
-  color: #ffd700;
+  color: var(--brand);
   flex-shrink: 0;
 }
 
@@ -399,7 +399,7 @@
   left: 0;
   right: 0;
   background: #fff;
-  border: 2px solid #ffd700;
+  border: 2px solid var(--brand);
   border-bottom: none;
   border-top-left-radius: 12px;
   border-top-right-radius: 12px;
@@ -415,7 +415,7 @@
   width: 4px;
 }
 .bairro-dropdown-menu::-webkit-scrollbar-thumb {
-  background: #ffd700;
+  background: var(--brand);
   border-radius: 10px;
 }
 
@@ -477,7 +477,7 @@
   top: 0;
   bottom: 0;
   width: 3px;
-  background: #ffd700;
+  background: var(--brand);
 }
 .bairro-dropdown-item {
   position: relative;
@@ -566,7 +566,7 @@
 .checkout-btn {
   width: 100%;
   padding: 16px;
-  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-light) 100%);
   color: #000;
   border: none;
   border-radius: 12px;
@@ -574,12 +574,12 @@
   font-size: 15px;
   font-weight: 800;
   transition: all 0.3s;
-  box-shadow: 0 4px 14px rgba(255, 215, 0, 0.3);
+  box-shadow: 0 4px 14px rgba(var(--brand-rgb), 0.3);
   letter-spacing: 0.3px;
 }
 .checkout-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
+  box-shadow: 0 8px 20px rgba(var(--brand-rgb), 0.4);
 }
 .checkout-btn:disabled,
 .checkout-btn-disabled {

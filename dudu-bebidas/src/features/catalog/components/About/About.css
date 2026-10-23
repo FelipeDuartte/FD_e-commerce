@@ -16,7 +16,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(circle at 20% 50%, rgba(232, 160, 32, 0.08), transparent 60%);
+  background: radial-gradient(circle at 20% 50%, rgba(var(--brand-deep-rgb), 0.08), transparent 60%);
   pointer-events: none;
 }
 
@@ -27,7 +27,7 @@
   right: 0;
   width: 300px;
   height: 300px;
-  background: radial-gradient(circle, rgba(232, 160, 32, 0.05), transparent 70%);
+  background: radial-gradient(circle, rgba(var(--brand-deep-rgb), 0.05), transparent 70%);
   pointer-events: none;
 }
 
@@ -44,7 +44,7 @@
   font-weight: 800;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: #E8A020;
+  color: var(--brand-deep);
   margin-bottom: 10px;
 }
 
@@ -59,7 +59,7 @@
 .dudu-sobre .title-underline {
   width: 48px;
   height: 3px;
-  background: #E8A020;
+  background: var(--brand-deep);
   border-radius: 2px;
   margin: 14px 0 20px;
 }
@@ -74,7 +74,7 @@
 
 .dudu-sobre .stat-box {
   background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(232,160,32,0.2);
+  border: 1px solid rgba(var(--brand-deep-rgb),0.2);
   border-radius: 12px;
   padding: 22px 12px;
   text-align: center;
@@ -82,15 +82,15 @@
 }
 
 .dudu-sobre .stat-box:hover {
-  border-color: rgba(232,160,32,0.6);
-  background: rgba(232,160,32,0.06);
+  border-color: rgba(var(--brand-deep-rgb),0.6);
+  background: rgba(var(--brand-deep-rgb),0.06);
   transform: translateY(-4px);
 }
 
 .dudu-sobre .stat-num {
   font-family: 'Bebas Neue', cursive;
   font-size: 2.4rem;
-  color: #E8A020;
+  color: var(--brand-deep);
   line-height: 1;
 }
 
@@ -105,7 +105,7 @@
 
 .dudu-sobre .divider {
   border: none;
-  border-top: 1px solid rgba(232,160,32,0.1);
+  border-top: 1px solid rgba(var(--brand-deep-rgb),0.1);
   margin: 32px 0 24px;
 }
 
@@ -121,12 +121,12 @@
   align-items: center;
   gap: 7px;
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(232,160,32,0.3);
+  border: 1px solid rgba(var(--brand-deep-rgb),0.3);
   border-radius: 100px;
   padding: 8px 14px;
   font-size: 0.78rem;
   font-weight: 700;
-  color: rgba(245,200,66,0.85);
+  color: rgba(var(--brand-rgb),0.85);
   transition: background 0.2s, border-color 0.2s;
   white-space: nowrap;
   overflow: hidden;
@@ -135,8 +135,8 @@
 }
 
 .dudu-sobre .info-chip:hover {
-  background: rgba(232,160,32,0.1);
-  border-color: rgba(232,160,32,0.55);
+  background: rgba(var(--brand-deep-rgb),0.1);
+  border-color: rgba(var(--brand-deep-rgb),0.55);
 }
 
 /* Desktop: volta para linha única */

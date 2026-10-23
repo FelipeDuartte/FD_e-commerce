@@ -23,7 +23,7 @@
 }
 
 .lob-banner:hover {
-  border-color: #ffd000;
+  border-color: var(--brand);
 }
 
 .lob-icon {
@@ -46,7 +46,7 @@
 .lob-subtext {
   font-size: 11px;
   font-weight: 400;
-  color: #ffd000;
+  color: var(--brand);
 }
 
 .lob-close {

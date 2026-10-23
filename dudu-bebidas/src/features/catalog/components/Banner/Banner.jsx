@@ -5,7 +5,7 @@ export default function Banner({ banners, currentBanner }) {
     <div className="promo-strip position-relative overflow-hidden">
       {banners.map((banner, index) => (
         <div
-          key={banner.id}
+          key={index}
           className={`promo-strip-slide ${
             index === currentBanner
               ? ""
