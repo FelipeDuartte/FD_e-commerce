@@ -1381,6 +1381,27 @@
   margin: 4px 0;
 }
 
+.pdv-receipt-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* Itens em fonte menor pra nome + quantidade + valor caberem numa linha
+   (nome muito longo ainda quebra, mas o valor fica sempre à direita) */
+.pdv-receipt-item {
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.pdv-receipt-item-name {
+  overflow-wrap: anywhere;
+}
+
+.pdv-receipt-item-price {
+  white-space: nowrap;
+}
+
 .pdv-receipt-split {
   margin-left: 6px;
   font-size: 10px;
@@ -1415,7 +1436,10 @@
        do Total, que é a única linha que vai de ponta a ponta) saía
        cortada na impressão. */
     box-sizing: border-box;
-    padding: 3mm;
+    /* A impressora de 80mm só imprime ~72mm no meio do papel — com 3mm
+       de lado o texto ia até a borda e a 1ª/última letra saíam cortadas.
+       6mm de cada lado deixa tudo dentro da área que a cabeça alcança. */
+    padding: 3mm 6mm;
     color: #000;
     background: #fff;
     /* Courier New fino + peso normal saía muito claro na térmica — dono

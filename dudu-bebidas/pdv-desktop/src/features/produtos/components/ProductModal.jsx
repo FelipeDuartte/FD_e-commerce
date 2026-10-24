@@ -177,6 +177,7 @@ export default function ProductModal({
                 <div className="adm-form-field">
                   <label htmlFor="pm-category">Categoria</label>
                   <select id="pm-category" name="category" value={modalForm.category} onChange={handleModalChange}>
+                    {!modalForm.category && <option value="">Selecione…</option>}
                     {categories.map((c) => (
                       <option key={c} value={c}>{c}</option>
                     ))}

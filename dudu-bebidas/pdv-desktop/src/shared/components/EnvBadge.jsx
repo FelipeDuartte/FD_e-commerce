@@ -20,7 +20,7 @@ export default function EnvBadge() {
         pointerEvents: "none",
       }}
     >
-      🧪 AMBIENTE DE TESTE · {import.meta.env.VITE_STORE_SLUG}
+      🧪 AMBIENTE DE TESTE
     </div>
   );
 }

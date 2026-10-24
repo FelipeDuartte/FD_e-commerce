@@ -1,18 +1,20 @@
 import { useEffect, useRef, useState } from "react";
-import { supabase, getCurrentStoreId } from "../shared/supabase/Supabaseclient";
+import { supabase, loadStore } from "../shared/supabase/Supabaseclient";
 import { useTheme } from "../shared/hooks/useTheme";
 import Login from "./Login";
 import Pdv from "./Pdv";
 import "../shared/styles/theme.css";
 import "../shared/styles/Pdv.css";
 
-// Mesmo padrão de auth do App.jsx do site web: is_admin sozinho não basta
-// (auth.users é compartilhado entre todas as lojas no mesmo projeto
-// Supabase) — só entra quem for admin DESSA loja.
+// A loja vem do login: só entra quem é admin (is_admin) de uma loja ativa
+// (profiles.store_id) — e o PDV abre nessa loja. Um instalador e um canal
+// de atualização servem todas as lojas.
 export default function App() {
   const [user, setUser] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(null);
+  // null = verificando · "ok" = loja carregada · string = motivo de não entrar
+  const [access, setAccess] = useState(null);
   const lastCheckedUid = useRef(null);
+  const hadStore = useRef(false);
   // Chamado aqui (não dentro de Pdv.jsx) pra já aplicar o tema escolhido
   // mesmo antes do login — senão a tela de login sempre nasceria escura,
   // não importa o que o operador tinha escolhido da última vez.
@@ -21,6 +23,7 @@ export default function App() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      if (!session) setAccess("");
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => setUser(session?.user ?? null),
@@ -31,25 +34,42 @@ export default function App() {
   useEffect(() => {
     if (!user) {
       lastCheckedUid.current = null;
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setIsAdmin(false);
+      // Saiu depois de ter entrado numa loja: recarrega o app pra não sobrar
+      // nada da loja anterior em memória (listas, relatórios em cache...).
+      if (hadStore.current) window.location.reload();
+      // Sem sessão a tela de login já aparece (setAccess no getSession ou
+      // na recusa abaixo) — nada a mudar aqui, senão apagaria a mensagem.
       return;
     }
     if (user.id === lastCheckedUid.current) return;
     lastCheckedUid.current = user.id;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setAccess(null);
 
-    supabase
-      .from("profiles")
-      .select("is_admin, store_id")
-      .eq("id", user.id)
-      .single()
-      .then(({ data, error }) => {
-        const admin = !error && data?.is_admin === true && data?.store_id === getCurrentStoreId();
-        setIsAdmin(admin);
-      });
+    (async () => {
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("is_admin, store_id")
+        .eq("id", user.id)
+        .single();
+
+      if (error || !profile?.is_admin || !profile.store_id) {
+        await supabase.auth.signOut();
+        setAccess("Esta conta não é administradora de nenhuma loja.");
+        return;
+      }
+      try {
+        await loadStore(profile.store_id);
+        hadStore.current = true;
+        setAccess("ok");
+      } catch (e) {
+        await supabase.auth.signOut();
+        setAccess(e.message);
+      }
+    })();
   }, [user]);
 
-  if (isAdmin === null) {
+  if (access === null) {
     return (
       <div className="adm-loading" style={{ minHeight: "100vh" }}>
         <div className="adm-spinner" />
@@ -58,7 +78,9 @@ export default function App() {
     );
   }
 
-  if (!isAdmin) return <Login theme={theme.theme} onToggleTheme={theme.toggleTheme} />;
+  if (access !== "ok") {
+    return <Login theme={theme.theme} onToggleTheme={theme.toggleTheme} accessError={access} />;
+  }
 
   return <Pdv theme={theme.theme} onToggleTheme={theme.toggleTheme} />;
 }

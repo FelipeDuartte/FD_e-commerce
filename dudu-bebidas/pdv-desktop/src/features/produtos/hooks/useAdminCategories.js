@@ -1,16 +1,15 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../../shared/supabase/Supabaseclient";
-import { CATEGORIES as FALLBACK } from "../utils/productConstants";
 
 /**
- * Busca categorias ativas do banco para uso no PDV.
- * Se o banco falhar ou retornar vazio, usa o array estático
- * de productConstants.js como fallback (sem quebrar nada).
+ * Busca categorias ativas da loja no banco para uso no PDV.
+ * Sem lista reserva: antes havia as categorias de bebidas fixas aqui, e
+ * uma loja de outro nicho veria "cerveja", "vinho"...
  *
  * Retorna um array de strings: ["cerveja", "vinho", ...]
  */
 export function useAdminCategories() {
-  const [categories, setCategories] = useState(FALLBACK);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,12 +25,11 @@ export function useAdminCategories() {
 
         if (cancelled) return;
 
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
           setCategories(data.map((row) => row.name));
         }
-        // se retornar vazio ou erro, mantém FALLBACK silenciosamente
       } catch {
-        // mantém fallback
+        // sem categorias — o cadastro de produto pede pra escolher
       } finally {
         if (!cancelled) setLoading(false);
       }

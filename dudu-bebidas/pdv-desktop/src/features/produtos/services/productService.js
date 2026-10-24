@@ -50,6 +50,10 @@ export function validateProductPayload(product) {
     return "Preencha ID e nome do produto.";
   }
 
+  if (!product.category) {
+    return "Escolha a categoria do produto.";
+  }
+
   if (!Number.isFinite(product.price) || product.price < 0) {
     return "Informe um preço válido.";
   }

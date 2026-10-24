@@ -2,7 +2,8 @@
 // Edge Function: find-master-image
 //
 // Recebe o nome de um produto e procura imagens correspondentes no
-// catálogo mestre do Cloudinary (Fdtech/master/bebidas/**). A lista do
+// catálogo mestre do Cloudinary (fdigital/master/** — bebidas, varejo e o
+// que mais for criado lá; toda loja busca em tudo). A lista do
 // catálogo é carregada e ranqueada aqui (ver _shared/cloudinary.ts),
 // tolerando espaço a mais/a menos ("para tudo" ~ "paratudo") e erro de
 // digitação ("heiniken" ~ "heineken").
@@ -24,7 +25,12 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-store-id",
 };
 
-const MASTER_FOLDER = "Fdtech/master/bebidas";
+// Acervo de imagens COMPARTILHADO por todas as lojas, qualquer nicho:
+// fdigital/master/bebidas, fdigital/master/varejo... A busca entra em todas
+// as subpastas — uma loja de varejo também acha imagem de bebida (sem
+// precisar duplicar arquivo entre pastas). A raiz pode mudar pelo secret
+// CLOUDINARY_ROOT_FOLDER, sem novo deploy.
+const MASTER_FOLDER = `${Deno.env.get("CLOUDINARY_ROOT_FOLDER") ?? "fdigital"}/master`;
 
 // Palavras que não ajudam a identificar QUAL produto é (tamanho, unidade,
 // embalagem genérica) — excluídas do ranqueamento, pra não distrair o match por coisas que várias bebidas diferentes têm em

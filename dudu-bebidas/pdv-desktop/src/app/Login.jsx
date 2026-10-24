@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { getVersion } from "@tauri-apps/api/app";
 import { supabase } from "../shared/supabase/Supabaseclient";
 
-export default function Login({ theme, onToggleTheme }) {
+export default function Login({ theme, onToggleTheme, accessError }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -51,7 +51,7 @@ export default function Login({ theme, onToggleTheme }) {
         </h1>
         <p className="adm-subtitle">Entre com sua conta de administrador da loja.</p>
 
-        {errorMsg && <div className="adm-modal-error">⚠️ {errorMsg}</div>}
+        {(errorMsg || accessError) && <div className="adm-modal-error">⚠️ {errorMsg || accessError}</div>}
 
         <div className="adm-form-field">
           <label>E-mail</label>

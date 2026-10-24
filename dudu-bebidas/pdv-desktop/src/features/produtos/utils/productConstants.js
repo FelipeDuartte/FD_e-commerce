@@ -1,9 +1,7 @@
-export const CATEGORIES = ["cerveja", "vinho", "destilado", "refrigerante", "energetico", "outros"];
-
 export const EMPTY_PRODUCT = {
   id: "",
   name: "",
-  category: "cerveja",
+  category: "", // categorias vêm do banco (cada loja tem as suas)
   price: "",
   old_price: "",
   image: "",

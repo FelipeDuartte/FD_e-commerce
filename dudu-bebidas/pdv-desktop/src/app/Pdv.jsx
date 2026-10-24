@@ -16,6 +16,7 @@ import HistorySalesList from "../features/historico/components/HistorySalesList"
 import ClientesView from "../features/clientes/components/ClientesView";
 import CloseSessionModal from "../features/caixa/components/CloseSessionModal";
 import CancelSaleModal from "../shared/components/CancelSaleModal";
+import { getCurrentStore } from "../shared/supabase/Supabaseclient";
 
 // Abas menos usadas no dia a dia (Venda/Histórico/Clientes ficam eager,
 // são as de uso constante) — carregadas sob demanda só quando o operador
@@ -59,6 +60,7 @@ const SHORTCUT_BY_VIEW = Object.fromEntries(
 );
 
 export default function Pdv({ theme, onToggleTheme }) {
+  const storeName = getCurrentStore()?.name ?? "";
   const [pdvView, setPdvView] = useState("venda");
 
   const cashSession = useCashSession();
@@ -123,7 +125,7 @@ export default function Pdv({ theme, onToggleTheme }) {
         <div className="pdv-topbar">
           <span className="pdv-topbar-brand">
             <img src="/fdigital-logo.png" alt="FDigital" className="pdv-topbar-logo" />
-            FDigital — Dudu Bebidas
+            FDigital — {storeName}
           </span>
           {themeToggleBtn}
         </div>
@@ -141,7 +143,7 @@ export default function Pdv({ theme, onToggleTheme }) {
         <div className="pdv-topbar">
           <span className="pdv-topbar-brand">
             <img src="/fdigital-logo.png" alt="FDigital" className="pdv-topbar-logo" />
-            FDigital — Dudu Bebidas
+            FDigital — {storeName}
           </span>
           {themeToggleBtn}
         </div>
@@ -161,7 +163,7 @@ export default function Pdv({ theme, onToggleTheme }) {
       <div className="pdv-topbar">
         <span className="pdv-topbar-brand">
           <img src="/fdigital-logo.png" alt="FDigital" className="pdv-topbar-logo" />
-          FDigital — Dudu Bebidas
+          FDigital — {storeName}
         </span>
         <div className="pdv-topbar-status">
           <span>
