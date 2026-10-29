@@ -8,7 +8,7 @@ const STATUS_LABEL = {
   on_the_way: { icon: "🛵", label: "Em entrega", next: "Entreguei" },
 };
 
-export default function CourierOrderCard({ order, onAdvance }) {
+export default function CourierOrderCard({ order, onAdvance, onNavigate }) {
   const [advancing, setAdvancing] = useState(false);
   const [error, setError] = useState("");
   const cfg = STATUS_LABEL[order.status];
@@ -51,18 +51,17 @@ export default function CourierOrderCard({ order, onAdvance }) {
       {error && <div className="ent-error">⚠️ {error}</div>}
 
       <div className="ent-card-actions">
-        <a
-          className="ent-btn-map"
-          href={mapsUrlFor(order.address)}
-          target="_blank"
-          rel="noreferrer"
-        >
-          🗺️ Abrir no mapa
-        </a>
+        <button type="button" className="ent-btn-nav" onClick={() => onNavigate(order)}>
+          🧭 Navegar aqui
+        </button>
         <button className="ent-btn-advance" onClick={handleAdvance} disabled={advancing}>
           {advancing ? "Atualizando..." : `✓ ${cfg?.next}`}
         </button>
       </div>
+      {/* No app do Google Maps a página pausa e o cliente para de ver a moto */}
+      <a className="ent-btn-map-link" href={mapsUrlFor(order.address)} target="_blank" rel="noreferrer">
+        Abrir no Google Maps
+      </a>
     </div>
   );
 }

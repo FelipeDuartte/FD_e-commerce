@@ -1,7 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { listMyDeliveries, advanceDeliveryStatus } from "../services/courierService";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { listMyDeliveries, advanceDeliveryStatus, destinationFor } from "../services/courierService";
 import { useLocationSharing } from "../hooks/useLocationSharing";
+import { useWakeLock } from "../hooks/useWakeLock";
 import CourierOrderCard from "./CourierOrderCard";
+import { unlockSpeech } from "../utils/speech";
+
+// O mapa de navegação (mapbox-gl) é pesado — só baixa quando abre
+const CourierNavigation = lazy(() => import("./CourierNavigation"));
 
 // Corte de segurança: se um pedido ficar "em entrega" por tempo demais
 // (ex: admin esqueceu de marcar como entregue), para de compartilhar
@@ -22,6 +27,8 @@ export default function CourierOrderList() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [nav, setNav] = useState(null); // { destination, label }
+  const [navError, setNavError] = useState("");
 
   const reload = useCallback(async () => {
     try {
@@ -51,6 +58,21 @@ export default function CourierOrderList() {
     [orders],
   );
   const { permissionDenied } = useLocationSharing(hasActiveDelivery);
+  // Tela acesa durante a entrega: com a tela bloqueada a página pausa e o
+  // cliente para de ver a moto
+  useWakeLock(hasActiveDelivery);
+
+  const handleNavigate = async (order) => {
+    unlockSpeech(); // precisa ser no toque, senão o iPhone não fala depois
+    setNavError("");
+    const destination = await destinationFor(order);
+    if (!destination) {
+      setNavError("Não encontramos esse endereço no mapa. Use o Google Maps para este pedido.");
+      return;
+    }
+    const a = order.address ?? {};
+    setNav({ destination, label: [a.street, a.number].filter(Boolean).join(", ") || "Cliente" });
+  };
 
   if (loading) {
     return <div className="ent-loading">Carregando suas entregas...</div>;
@@ -71,6 +93,12 @@ export default function CourierOrderList() {
 
   return (
     <div className="ent-list">
+      {nav && (
+        <Suspense fallback={<div className="ent-nav ent-nav-loading">Abrindo o mapa…</div>}>
+          <CourierNavigation destination={nav.destination} label={nav.label} onClose={() => setNav(null)} />
+        </Suspense>
+      )}
+      {navError && <div className="ent-error">⚠️ {navError}</div>}
       {hasActiveDelivery && permissionDenied && (
         <div className="ent-error">
           ⚠️ Ative a localização do navegador pra compartilhar sua posição com o cliente. Você ainda pode ver e avançar suas entregas normalmente.
@@ -80,7 +108,7 @@ export default function CourierOrderList() {
         <div className="ent-location-badge">📍 Compartilhando sua localização</div>
       )}
       {orders.map((order) => (
-        <CourierOrderCard key={order.id} order={order} onAdvance={handleAdvance} />
+        <CourierOrderCard key={order.id} order={order} onAdvance={handleAdvance} onNavigate={handleNavigate} />
       ))}
     </div>
   );

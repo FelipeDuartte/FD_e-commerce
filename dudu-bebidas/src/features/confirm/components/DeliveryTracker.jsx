@@ -8,6 +8,7 @@ import { whatsappLink } from "../../../shared/utils/storeContact";
 // fechado, sem sinal, ou pedido esquecido em "em entrega"), troca o mapa
 // por um aviso — em vez de deixar um pino parado parecendo "ao vivo".
 const STALE_THRESHOLD_MS = 3 * 60 * 1000;
+const LAST_KNOWN_MAX_MIN = 20;
 
 
 export default function DeliveryTracker({
@@ -40,6 +41,15 @@ export default function DeliveryTracker({
     hasLiveLocation &&
     courierLocationUpdatedAt != null &&
     Date.now() - new Date(courierLocationUpdatedAt).getTime() > STALE_THRESHOLD_MS;
+  const minutesSinceUpdate =
+    courierLocationUpdatedAt != null
+      ? // eslint-disable-next-line react-hooks/purity -- relógio de propósito (re-render pelo tick acima)
+        Math.floor((Date.now() - new Date(courierLocationUpdatedAt).getTime()) / 60000)
+      : null;
+  // Posição atrasada mas recente (o celular do entregador pausou a página,
+  // ex: tela bloqueada): continua mostrando o último ponto no mapa com o
+  // aviso de quando foi. Só depois de muito tempo troca pela mensagem.
+  const showLastKnown = isStale && minutesSinceUpdate != null && minutesSinceUpdate <= LAST_KNOWN_MAX_MIN;
   const hasDestination = typeof deliveryLat === "number" && typeof deliveryLng === "number";
   const etaMinutes =
     hasLiveLocation && !isStale && hasDestination
@@ -129,7 +139,7 @@ export default function DeliveryTracker({
 
           {status === "on_the_way" && (
             <div className="cf-delivery-map-wrap">
-              {hasLiveLocation && isStale ? (
+              {hasLiveLocation && isStale && !showLastKnown ? (
                 <div className="cf-map-stale">
                   <span className="cf-map-stale-icon">📡</span>
                   <p>
@@ -150,6 +160,11 @@ export default function DeliveryTracker({
                   />
                   {etaMinutes && (
                     <p className="cf-eta">🕐 Chegada estimada: ~{etaMinutes} min (aproximado)</p>
+                  )}
+                  {showLastKnown && (
+                    <p className="cf-eta">
+                      📡 Última posição do entregador há {minutesSinceUpdate} min — seu pedido continua a caminho.
+                    </p>
                   )}
                 </>
               ) : (
