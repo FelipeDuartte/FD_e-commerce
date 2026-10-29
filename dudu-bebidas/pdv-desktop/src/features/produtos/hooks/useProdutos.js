@@ -23,7 +23,7 @@ import { findSimilarProducts, normalizeProductName } from "../utils/productNameM
 // busca da Venda até reiniciar o app).
 export function useProdutos(onProductsChanged) {
   const {
-    products, setProducts, loading: productsLoading, error: loadError, reload: fetchProducts,
+    products, allProducts, setProducts, loading: productsLoading, error: loadError, reload: fetchProducts,
   } = useLiveProducts();
   const [actionError, setActionError] = useState("");
   const productsError = actionError || loadError;
@@ -69,7 +69,7 @@ export function useProdutos(onProductsChanged) {
   );
 
   const openNewProduct = () => {
-    setModalForm({ ...EMPTY_PRODUCT, id: generateProductId(products) });
+    setModalForm({ ...EMPTY_PRODUCT, id: generateProductId(allProducts) });
     setModalError("");
     setDuplicateWarning(null);
     setProductModal("new");
@@ -190,8 +190,15 @@ export function useProdutos(onProductsChanged) {
     setDeleting(true);
     setDeleteError("");
     try {
-      await deleteAdminProduct(productToDelete);
-      setProducts((prev) => prev.filter((p) => p.id !== productToDelete.id));
+      const { archived } = await deleteAdminProduct(productToDelete);
+      // Arquivado continua na lista completa (código não se repete), só escondido
+      setProducts((prev) =>
+        archived
+          ? prev.map((p) =>
+              p.id === productToDelete.id ? { ...p, deleted_at: new Date().toISOString(), is_active: false } : p,
+            )
+          : prev.filter((p) => p.id !== productToDelete.id),
+      );
       onProductsChanged?.();
       setProductToDelete(null);
     } catch (error) {

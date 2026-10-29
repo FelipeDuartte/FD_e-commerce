@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { listAdminProducts } from "../../features/produtos/services/productService";
 import { useProductsRealtime } from "./useProductsRealtime";
 
@@ -68,5 +68,10 @@ export function useLiveProducts() {
 
   useProductsRealtime(applyRows, reload);
 
-  return { products, setProducts, loading, error, reload };
+  // Produto excluído com histórico (deleted_at) fica guardado mas não aparece
+  // em lista nenhuma. allProducts (com eles) serve pra gerar o próximo código
+  // sem repetir o de um excluído.
+  const visibleProducts = useMemo(() => products.filter((p) => !p.deleted_at), [products]);
+
+  return { products: visibleProducts, allProducts: products, setProducts, loading, error, reload };
 }

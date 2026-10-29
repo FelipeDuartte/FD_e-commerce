@@ -229,20 +229,45 @@ export async function toggleAdminProductActive(product) {
   return { ...product, is_active: nextActive };
 }
 
+// Excluir produto. Sem histórico: apaga de verdade. Com histórico (vendas,
+// movimentações, créditos de fiado apontam pra ele): marca deleted_at — some
+// do PDV, da venda e do site, mas o histórico e os relatórios continuam
+// certos (ver migration 0052). Retorna { archived } pra tela saber qual foi.
 export async function deleteAdminProduct(product) {
+  const { data: packs, error: packsError } = await supabase
+    .from("products")
+    .select("name")
+    .eq("store_id", product.store_id)
+    .eq("pack_of_product_id", product.id)
+    .is("deleted_at", null);
+  if (packsError) {
+    throw new AdminServiceError("Não foi possível excluir o produto.", packsError);
+  }
+  if (packs?.length) {
+    throw new AdminServiceError(
+      `Esse produto é a unidade do fardo "${packs[0].name}". Exclua o fardo primeiro.`,
+    );
+  }
+
   const { error } = await supabase
     .from("products")
     .delete()
     .eq("id", product.id)
     .eq("store_id", product.store_id);
 
-  if (error) {
-    if (error.code === "23503") {
-      throw new AdminServiceError(
-        "Esse produto tem vendas ou movimentações de estoque registradas — desative em vez de excluir.",
-        error,
-      );
-    }
+  if (!error) return { archived: false };
+  if (error.code !== "23503") {
     throw new AdminServiceError("Não foi possível excluir o produto.", error);
   }
+
+  // 23503 = tem histórico apontando pra ele → arquiva
+  const { error: archiveError } = await supabase
+    .from("products")
+    .update({ deleted_at: new Date().toISOString(), is_active: false, show_on_site: false })
+    .eq("id", product.id)
+    .eq("store_id", product.store_id);
+  if (archiveError) {
+    throw new AdminServiceError("Não foi possível excluir o produto.", archiveError);
+  }
+  return { archived: true };
 }

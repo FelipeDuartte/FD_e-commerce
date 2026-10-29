@@ -5,8 +5,8 @@ export default function DeleteProductModal({ product, deleting, deleteError, onC
       <div className="adm-modal" role="dialog" aria-modal="true">
         <h2 className="adm-store-section-title">Excluir produto</h2>
         <p className="adm-store-section-desc">
-          Excluir <strong>{product.name}</strong> permanentemente? Só funciona se ele não tiver nenhuma venda ou
-          movimentação de estoque registrada — se tiver, desative em vez de excluir.
+          Excluir <strong>{product.name}</strong>? Ele sai do PDV e do site. Se já tiver vendas ou movimentações de
+          estoque, esse histórico continua guardado nos relatórios.
         </p>
 
         {deleteError && <div className="adm-modal-error">⚠️ {deleteError}</div>}
