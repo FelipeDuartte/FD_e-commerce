@@ -38,6 +38,7 @@ export default function OrderCard({
   const statuses = getStatuses(order);
   const statusMap = getStatusMap(order);
   const isPending = order.status === "pending";
+  const isClosed = ["rejected", "cancelled"].includes(order.status);
   // Atribuir entregador só faz sentido pra pedido de entrega já aceito
   // (a partir de "preparing") e ainda não rejeitado/cancelado.
   const canAssignCourier =
@@ -244,7 +245,15 @@ export default function OrderCard({
               {pickup ? "🔄 Status da Retirada" : "🔄 Alterar Status"}
             </div>
 
-            {isPending && pixAwaitingPayment ? (
+            {isClosed ? (
+              // Rejeitado/cancelado já devolveu o estoque — reabrir pelo
+              // status deixaria o pedido ativo sem baixa de estoque.
+              <div className="adm-delivered-msg">
+                {order.status === "rejected"
+                  ? "❌ Pedido rejeitado — estoque devolvido"
+                  : "🚫 Pedido cancelado"}
+              </div>
+            ) : isPending && pixAwaitingPayment ? (
               <div className="adm-accept-reject-detail">
                 <p className="adm-delivered-msg">
                   💰 Aguardando confirmação do pagamento — confirme abaixo pra

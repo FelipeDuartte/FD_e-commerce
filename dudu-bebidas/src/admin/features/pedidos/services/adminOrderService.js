@@ -1,4 +1,4 @@
-import { supabase } from "../../../../shared/supabase/Supabaseclient";
+import { supabase, getCurrentStoreId } from "../../../../shared/supabase/Supabaseclient";
 import { PAGE_SIZE, isPhantomMercadoPagoOrder } from "../orderStatus";
 import { AdminServiceError } from "../../../shared/services/AdminServiceError";
 import { geocodeAddress, formatAddressText } from "../../../../shared/utils/geo";
@@ -130,15 +130,18 @@ export async function assignCourierToOrder(orderId, courier, address) {
 }
 
 export async function rejectAdminOrder(orderId) {
-  // Antes apagava o pedido e os itens; agora só marca como "rejected" —
-  // o pedido continua no histórico (e some do painel depois de 24h, igual
-  // aos outros status, via shouldRemoveOrder/listAdminOrders).
-  const { error } = await supabase
-    .from("orders")
-    .update({ status: "rejected" })
-    .eq("id", orderId);
+  // RPC reject_order (0053): marca "rejected" e devolve o estoque na mesma
+  // transação. O pedido continua no histórico (some do painel depois de
+  // 24h, igual aos outros status).
+  const { data, error } = await supabase.rpc("reject_order", {
+    p_order_id: orderId,
+    p_store_id: getCurrentStoreId(),
+  });
 
-  if (error) {
-    throw new AdminServiceError("Erro ao rejeitar pedido.", error);
+  if (error || !data?.success) {
+    throw new AdminServiceError(
+      data?.error ?? "Erro ao rejeitar pedido.",
+      error ?? data,
+    );
   }
 }
