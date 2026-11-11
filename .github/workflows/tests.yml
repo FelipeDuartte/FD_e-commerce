@@ -1,0 +1,28 @@
+name: Testes
+
+# Roda o lint (ESLint) e os testes automáticos (Vitest) a cada push e pull request.
+# Não usa nenhum segredo: os testes não acessam banco, Meta nem Mercado Pago.
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  vitest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: dudu-bebidas
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: dudu-bebidas/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test

@@ -18,14 +18,29 @@ export default defineConfig(async ({ mode }) => {
     plugins: [react(), brandHtmlPlugin(brand, slug)],
     resolve: {
       alias: { '@brand': brandFile },
+      // O PDV (pdv-desktop/) tem o próprio node_modules com outra cópia do
+      // React; duas cópias juntas quebram os hooks nos testes. Usa sempre a
+      // da raiz (no CI só existe ela).
+      dedupe: ['react', 'react-dom'],
     },
     base: '/',
     test: {
       environment: 'node',
       include: [
         'src/**/*.test.{js,jsx}',
+        'pdv-desktop/src/**/*.test.{js,jsx}',
         'supabase/functions/**/*.test.ts',
       ],
+      // Horário de Brasília em qualquer máquina (CI roda em UTC) — regras
+      // de "aberto agora" e feriado dependem do fuso.
+      env: { TZ: 'America/Sao_Paulo' },
+      // Cada teste começa com mocks/stubs/relógio limpos
+      restoreMocks: true,
+      unstubGlobals: true,
+      unstubEnvs: true,
+      // Edge functions importam o Supabase por URL (Deno); nos testes
+      // (Node) usa o mesmo pacote instalado pelo npm.
+      alias: { 'https://esm.sh/@supabase/supabase-js@2': '@supabase/supabase-js' },
     },
   }
 })
