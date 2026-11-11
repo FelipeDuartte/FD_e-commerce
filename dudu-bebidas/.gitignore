@@ -45,3 +45,7 @@ dist/
 
 # Migrations ficam só locais (repositório público)
 supabase/migrations/
+
+# Testes do banco (pgTAP): cópia da estrutura do banco de teste — fica só local,
+# como as migrations
+db-tests/supabase/migrations/00000000000001_estrutura_teste.sql
