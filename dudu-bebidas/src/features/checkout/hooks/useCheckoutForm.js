@@ -5,6 +5,7 @@ import {
   loadLastDeliveryAddress,
   saveLastDeliveryAddress,
 } from "../utils/checkoutAddressStorage";
+import { validateCheckoutForm } from "../utils/checkoutValidation";
 import { INITIAL_ADDRESS, DEFAULT_INSTALLMENT_FEE_RATE, roundCents } from "../checkoutConstants";
 
 // Concentra todo o estado e as regras do checkout: endereço/CEP, forma de
@@ -164,24 +165,7 @@ export function useCheckoutForm({
   };
 
   // ── Validação ─────────────────────────────────────────
-  const validateForm = () => {
-    if (!address.name.trim()) return "Por favor, informe seu nome.";
-
-    const phoneDigits = address.phone.replace(/\D/g, "");
-    if (!phoneDigits || phoneDigits.length < 10)
-      return "Por favor, informe um telefone válido com DDD.";
-
-    if (isRetirada) return null;
-
-    const cepDigits = cep.replace(/\D/g, "");
-    if (cepDigits.length !== 8) return "Por favor, informe um CEP válido.";
-    if (cepError) return "Por favor, verifique o CEP informado.";
-    if (!address.street.trim()) return "Por favor, informe o endereço.";
-    if (!address.number.trim()) return "Por favor, informe o número.";
-    if (!address.district.trim()) return "Por favor, informe o bairro.";
-
-    return null;
-  };
+  const validateForm = () => validateCheckoutForm({ address, cep, cepError, isRetirada });
 
   // ── Submit ────────────────────────────────────────────
   const handleConfirmOrder = async () => {

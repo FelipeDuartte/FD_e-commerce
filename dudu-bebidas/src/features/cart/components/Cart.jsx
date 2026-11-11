@@ -16,6 +16,7 @@ import "./Cart.css";
 import { imgProduto } from "../../../shared/utils/Cloudnary";
 import { useStoreStatus, useStoreHoursData } from "../../../shared/context/useStoreStatus";
 import { useDeliveryZones } from "../hooks/useDeliveryZones";
+import { calcCartTotals } from "../utils/cartTotals";
 
 /** Converte "HH:MM:SS" ou "HH:MM" do banco para "HH:MM" de exibição */
 function sliceTime(t) {
@@ -57,20 +58,16 @@ export default function Cart({
   const [avisoEstoque, setAvisoEstoque] = useState(null);
   const dropdownRef = useRef(null);
 
-  const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.preco * item.quantity,
-    0,
-  );
-
   // Frete grátis a partir de X (store_config.free_shipping_threshold,
   // configurado em Taxa por Bairro no admin) — vale pra loja inteira, não
-  // depende do bairro escolhido. null/0 = desativado.
+  // depende do bairro escolhido. null/0 = desativado. Cálculo em
+  // utils/cartTotals.js (testado em cartTotals.test.js).
   const freeShippingThreshold = hoursData?.config?.free_shipping_threshold ?? null;
-  const qualifiesForFreeShipping =
-    freeShippingThreshold != null && freeShippingThreshold > 0 && subtotal >= freeShippingThreshold;
-  const rawFrete = bairroSelecionado ? bairroSelecionado.frete : null;
-  const frete = rawFrete !== null && qualifiesForFreeShipping ? 0 : rawFrete;
-  const total = frete !== null ? subtotal + frete : subtotal;
+  const { subtotal, qualifiesForFreeShipping, frete, total } = calcCartTotals(
+    cartItems,
+    bairroSelecionado,
+    freeShippingThreshold,
+  );
   // isRetirada: normaliza campo do banco (is_retirada) e legado (isRetirada)
   const isRetirada = bairroSelecionado?.isRetirada ?? bairroSelecionado?.is_retirada ?? false;
 

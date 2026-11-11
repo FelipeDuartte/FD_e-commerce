@@ -69,7 +69,13 @@ export const HOLIDAYS = [
   ...generateHolidays(now.getFullYear() + 1),
 ];
 
+// Calcula pelo ano da própria data — antes só conhecia o ano atual e o
+// próximo (datas de outros anos nunca eram feriado). Guarda cada ano já
+// calculado pra não refazer a conta a cada chamada.
+const holidaysByYear = new Map();
+
 export function isHoliday(date = new Date()) {
-  const iso = localISODate(date);
-  return HOLIDAYS.includes(iso);
+  const year = date.getFullYear();
+  if (!holidaysByYear.has(year)) holidaysByYear.set(year, new Set(generateHolidays(year)));
+  return holidaysByYear.get(year).has(localISODate(date));
 }
