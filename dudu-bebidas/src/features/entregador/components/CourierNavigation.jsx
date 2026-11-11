@@ -241,7 +241,6 @@ export default function CourierNavigation({ destination, label, onClose }) {
 
   useEffect(() => {
     if (!("geolocation" in navigator)) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setStatus("error");
       setError("Este celular não informa a localização.");
       return undefined;

@@ -10,7 +10,9 @@ import { supabase } from "../../../shared/supabase/Supabaseclient";
 // objeto = entregador válido.
 export function useCourierAuth() {
   const [session, setSession] = useState(undefined);
-  const [courier, setCourier] = useState(undefined);
+  // Resultado da busca, marcado com o usuário a que se refere — assim uma
+  // troca de login nunca mostra o entregador do login anterior.
+  const [lookup, setLookup] = useState(null); // { userId, courier }
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session ?? null));
@@ -19,24 +21,26 @@ export function useCourierAuth() {
   }, []);
 
   useEffect(() => {
-    if (session === undefined) return;
-    if (!session) {
-      setCourier(false);
-      return;
-    }
+    if (!session) return;
+    const userId = session.user.id;
     let cancelled = false;
-    setCourier(undefined);
     supabase
       .from("couriers")
       .select("id, name, phone, is_active")
-      .eq("user_id", session.user.id)
+      .eq("user_id", userId)
       .maybeSingle()
       .then(({ data }) => {
         if (cancelled) return;
-        setCourier(data && data.is_active ? data : false);
+        setLookup({ userId, courier: data && data.is_active ? data : false });
       });
     return () => { cancelled = true; };
   }, [session]);
+
+  const courier =
+    session === undefined ? undefined // ainda verificando a sessão
+    : session === null ? false // sem login
+    : lookup?.userId === session.user.id ? lookup.courier
+    : undefined; // buscando o cadastro deste login
 
   const login = async (email, password) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });

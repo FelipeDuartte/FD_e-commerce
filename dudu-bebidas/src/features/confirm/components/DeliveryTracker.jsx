@@ -27,11 +27,12 @@ export default function DeliveryTracker({
 
   // O timestamp da última localização não muda enquanto ela ficar
   // desatualizada (o poll continua devolvendo o mesmo valor) — sem esse
-  // "tick" próprio, o React nunca re-renderiza sozinho pra perceber que o
-  // tempo passou e a mensagem de "desatualizado" precisa aparecer.
-  const [, forceTick] = useState(0);
+  // relógio próprio, o React nunca re-renderiza sozinho pra perceber que o
+  // tempo passou e a mensagem de "desatualizado" precisa aparecer. A hora
+  // fica no estado (atualizada a cada 10s) pra o render não chamar Date.now().
+  const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    const interval = setInterval(() => forceTick((t) => t + 1), 10000);
+    const interval = setInterval(() => setNow(Date.now()), 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -40,11 +41,10 @@ export default function DeliveryTracker({
   const isStale =
     hasLiveLocation &&
     courierLocationUpdatedAt != null &&
-    Date.now() - new Date(courierLocationUpdatedAt).getTime() > STALE_THRESHOLD_MS;
+    now - new Date(courierLocationUpdatedAt).getTime() > STALE_THRESHOLD_MS;
   const minutesSinceUpdate =
     courierLocationUpdatedAt != null
-      ? // eslint-disable-next-line react-hooks/purity -- relógio de propósito (re-render pelo tick acima)
-        Math.floor((Date.now() - new Date(courierLocationUpdatedAt).getTime()) / 60000)
+      ? Math.floor((now - new Date(courierLocationUpdatedAt).getTime()) / 60000)
       : null;
   // Posição atrasada mas recente (o celular do entregador pausou a página,
   // ex: tela bloqueada): continua mostrando o último ponto no mapa com o

@@ -41,7 +41,6 @@ export default function Confirmacao() {
     customerClaimedPaidAt,
     setCustomerClaimedPaidAt,
     courierName,
-    courierPhone,
     courierLat,
     courierLng,
     deliveryLat,

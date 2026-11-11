@@ -14,7 +14,6 @@ export function useOrderStatusPolling(orderId) {
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [customerClaimedPaidAt, setCustomerClaimedPaidAt] = useState(null);
   const [courierName, setCourierName] = useState(null);
-  const [courierPhone, setCourierPhone] = useState(null);
   const [courierLat, setCourierLat] = useState(null);
   const [courierLng, setCourierLng] = useState(null);
   const [deliveryLat, setDeliveryLat] = useState(null);
@@ -75,7 +74,6 @@ export function useOrderStatusPolling(orderId) {
       setPaymentStatus(data.payment_status ?? null);
       setCustomerClaimedPaidAt(data.customer_claimed_paid_at ?? null);
       setCourierName(data.courier_name ?? null);
-      setCourierPhone(data.courier_phone ?? null);
       setCourierLat(data.courier_lat ?? null);
       setCourierLng(data.courier_lng ?? null);
       setDeliveryLat(data.delivery_lat ?? null);
@@ -109,7 +107,6 @@ export function useOrderStatusPolling(orderId) {
     customerClaimedPaidAt,
     setCustomerClaimedPaidAt,
     courierName,
-    courierPhone,
     courierLat,
     courierLng,
     deliveryLat,

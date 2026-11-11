@@ -41,6 +41,8 @@ export default function CourierOrderList() {
   }, []);
 
   useEffect(() => {
+    // Busca inicial — o setState só acontece depois do await (resposta do banco)
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     reload();
     // Sem Realtime de propósito (Fase 1) — atualiza sozinho de tempos em
     // tempos, suficiente pra pegar um pedido novo atribuído pelo admin.

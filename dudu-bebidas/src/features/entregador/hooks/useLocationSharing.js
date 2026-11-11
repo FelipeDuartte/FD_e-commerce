@@ -19,7 +19,6 @@ export function useLocationSharing(active) {
   useEffect(() => {
     if (!active || !("geolocation" in navigator)) return undefined;
 
-    setPermissionDenied(false);
     let sentFirst = false;
 
     const watchId = navigator.geolocation.watchPosition(
@@ -60,6 +59,8 @@ export function useLocationSharing(active) {
       clearInterval(sendLoop);
       document.removeEventListener("visibilitychange", onVisibility);
       lastPositionRef.current = null;
+      // Zera o aviso ao parar — na próxima vez que compartilhar, começa limpo
+      setPermissionDenied(false);
     };
   }, [active]);
 
