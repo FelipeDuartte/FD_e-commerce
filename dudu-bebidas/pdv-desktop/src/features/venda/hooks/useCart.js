@@ -1,5 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { getPdvPrice, getPdvPromoPrice } from "../utils/pricing";
+import { roundCents } from "../utils/creditFee";
+import { calcDiscount, calcSubtotal } from "../utils/saleMath";
 
 // Itens do carrinho + desconto. Não sabe nada sobre forma de pagamento ou
 // submissão da venda — só "o que está sendo vendido e por quanto".
@@ -66,19 +68,15 @@ export function useCart({ ignoreStockLimit = false } = {}) {
   const removeFromCart = useCallback((id) => setCart((prev) => prev.filter((i) => i.id !== id)), []);
   const clearCart = useCallback(() => setCart([]), []);
 
-  const subtotal = useMemo(
-    () => cart.reduce((sum, i) => sum + i.price * i.quantity, 0),
-    [cart]
+  // Contas em utils/saleMath.js (arredondadas em centavos)
+  const subtotal = useMemo(() => calcSubtotal(cart), [cart]);
+
+  const discountAmount = useMemo(
+    () => calcDiscount(subtotal, discountMode, discountInput),
+    [discountInput, discountMode, subtotal],
   );
 
-  const discountAmount = useMemo(() => {
-    const raw = Number(discountInput);
-    if (!Number.isFinite(raw) || raw <= 0) return 0;
-    const amount = discountMode === "percent" ? subtotal * (raw / 100) : raw;
-    return Math.min(Math.max(0, amount), subtotal);
-  }, [discountInput, discountMode, subtotal]);
-
-  const cartTotal = subtotal - discountAmount;
+  const cartTotal = roundCents(subtotal - discountAmount);
 
   return {
     cart, addToCart, updateQuantity, removeFromCart, clearCart,

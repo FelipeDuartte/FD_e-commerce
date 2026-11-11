@@ -7,6 +7,7 @@ import {
   listSessionFiadoPayments,
 } from "../../../shared/services/salesService";
 import { applyCreditCardFee, DEFAULT_INSTALLMENT_FEE_RATE } from "../utils/creditFee";
+import { calcChange, summarizeSplit } from "../utils/saleMath";
 import { useSaleRealtime } from "./useSaleRealtime";
 
 const EMPTY_DELIVERY_ADDRESS = { name: "", street: "", number: "", complement: "", district: "", phone: "" };
@@ -102,12 +103,10 @@ export function useSale(
   );
   const cardFeeAmount = useMemo(() => Math.round((saleTotal - cartTotal) * 100) / 100, [saleTotal, cartTotal]);
 
-  const changeAmount = useMemo(() => {
-    if (paymentMethod !== "cash" || receivedAmountInput === "") return null;
-    const received = Number(receivedAmountInput);
-    if (!Number.isFinite(received)) return null;
-    return received - cartTotal;
-  }, [paymentMethod, receivedAmountInput, cartTotal]);
+  const changeAmount = useMemo(
+    () => (paymentMethod === "cash" ? calcChange(receivedAmountInput, cartTotal) : null),
+    [paymentMethod, receivedAmountInput, cartTotal],
+  );
 
   const insufficientCash = paymentMethod === "cash" && changeAmount !== null && changeAmount < 0;
   const missingFiadoCustomer = paymentMethod === "fiado" && !fiadoCustomer;
@@ -140,17 +139,11 @@ export function useSale(
     setSplitPayments((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const splitTotal = useMemo(
-    () => splitPayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0),
-    [splitPayments],
-  );
-
-  const splitRemaining = useMemo(() => Math.round((cartTotal - splitTotal) * 100) / 100, [cartTotal, splitTotal]);
-
-  const splitValid =
-    splitPayments.length >= 2 &&
-    splitPayments.every((p) => p.method && Number(p.amount) > 0) &&
-    Math.abs(splitRemaining) < 0.01;
+  const {
+    paid: splitTotal,
+    remaining: splitRemaining,
+    valid: splitValid,
+  } = useMemo(() => summarizeSplit(splitPayments, cartTotal), [splitPayments, cartTotal]);
 
   const handleFinalizeSale = async () => {
     if (cart.length === 0 || !sessionId) return;
