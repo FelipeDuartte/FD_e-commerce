@@ -22,7 +22,7 @@ function sanitizeAscii(str: string, maxLen: number): string {
 
 // CRC16/CCITT-FALSE — exigido pelo campo final do BR Code (poli 0x1021,
 // início 0xFFFF, sem reflexão, sem XOR de saída).
-function crc16(payload: string): string {
+export function crc16(payload: string): string {
   let crc = 0xffff;
   for (let i = 0; i < payload.length; i++) {
     crc ^= payload.charCodeAt(i) << 8;
