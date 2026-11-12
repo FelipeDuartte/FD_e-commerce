@@ -87,11 +87,11 @@ select is(pg_temp.estoque('loja_a', 'brahma'), 0, 'última unidade vendida: esto
 select is((select is_active from products where store_id = tests.id('loja_a') and id = 'brahma'), false,
   'estoque zerado: produto sai do site');
 
--- ── Baixa adiada (cartão online / fiado com produtos) ───────
+-- ── Baixa adiada (pagamento online / fiado com produtos) ─────
 set local role service_role;
 insert into resultado values ('adiado', public.create_order_atomic(tests.id('loja_a'),
-  '{"total": 6, "payment_method": "mercadopago_card", "status": "pending", "channel": "online",
-    "payment_status": "aguardando_pagamento", "payment_provider": "mercadopago"}',
+  '{"total": 6, "payment_method": "infinitepay", "status": "pending", "channel": "online",
+    "payment_status": "aguardando_pagamento", "payment_provider": "infinitepay", "stock_pending": true}',
   '[{"product_id": "heineken", "name": "Heineken Lata", "price": 6, "quantity": 1}]',
   '[]', false));
 reset role;
@@ -103,11 +103,9 @@ select is(public.reject_order(tests.id('pedido_a1'), tests.id('loja_a'))->>'stoc
   'admin rejeita o pedido A1');
 select is(public.reject_order(tests.id('pedido_a1'), tests.id('loja_a'))->>'already_closed', 'true',
   'rejeitar de novo não faz nada');
-select is(
-  public.reject_order((select (valor->>'order_id')::uuid from resultado where nome = 'adiado'), tests.id('loja_a'))->>'stock_restored',
-  'false', 'cartão online não pago rejeitado: não devolve o que nunca saiu');
+select public.reject_order((select (valor->>'order_id')::uuid from resultado where nome = 'adiado'), tests.id('loja_a'));
 reset role;
-select is(pg_temp.estoque('loja_a', 'heineken'), 9, 'as 2 Heineken do pedido A1 voltaram uma vez só (7 → 9)');
+select is(pg_temp.estoque('loja_a', 'heineken'), 9, 'as 2 Heineken do A1 voltaram uma vez só, e o pagamento online não pago não devolveu nada (7 → 9)');
 select is((select status from orders where id = tests.id('pedido_a1')), 'rejected', 'pedido A1 rejeitado');
 
 -- ── Cliente cancelando o próprio pedido (tela de confirmação) ─

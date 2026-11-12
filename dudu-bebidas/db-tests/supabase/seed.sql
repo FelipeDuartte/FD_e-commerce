@@ -41,9 +41,9 @@ insert into public.product_costs (store_id, product_id, cost_price, supplier) va
   (tests.id('loja_b'), 'heineken', 3.00, 'Distribuidora B');
 
 -- ── Configurações com segredo (chaves falsas) ────────────────
-insert into public.store_payment_configs (store_id, pix_key, pix_key_type, mercadopago_access_token, mercadopago_webhook_secret) values
-  (tests.id('loja_a'), 'pix-a@teste.local', 'email', 'TOKEN-SECRETO-A', 'WEBHOOK-SECRETO-A'),
-  (tests.id('loja_b'), 'pix-b@teste.local', 'email', 'TOKEN-SECRETO-B', 'WEBHOOK-SECRETO-B');
+insert into public.store_payment_configs (store_id, infinitepay_handle, infinitepay_api_key) values
+  (tests.id('loja_a'), null, null),            -- 07_infinitepay liga a InfinitePay da A
+  (tests.id('loja_b'), 'loja-b', 'inchk_SECRETO-B');
 
 insert into public.whatsapp_configs (store_id, phone_number_id, access_token) values
   (tests.id('loja_a'), '111', 'META-TOKEN-SECRETO-A');

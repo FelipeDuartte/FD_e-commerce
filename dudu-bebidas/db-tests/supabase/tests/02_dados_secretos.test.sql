@@ -19,15 +19,15 @@ select tests.como(tests.id('admin_a'), tests.id('loja_a'));
 select is(tests.linhas_visiveis('store_payment_configs'), 1, 'admin A: lê a configuração de pagamento da própria loja');
 select is((select count(*)::int from store_payment_configs where store_id = tests.id('loja_b')), 0, 'admin A: não lê a da loja B');
 select is(tests.linhas_visiveis('whatsapp_configs'), 0, 'admin: o token da Meta só é lido pelas edge functions (service role)');
-update store_payment_configs set pix_key = 'golpe@pix' where store_id = tests.id('loja_b');
+update store_payment_configs set infinitepay_handle = 'golpista' where store_id = tests.id('loja_b');
 reset role;
-select is((select pix_key from store_payment_configs where store_id = tests.id('loja_b')), 'pix-b@teste.local', 'admin A: não troca a chave Pix da loja B');
+select is((select infinitepay_handle from store_payment_configs where store_id = tests.id('loja_b')), 'loja-b', 'admin A: não troca a conta de pagamento da loja B');
 
 -- ── Funções públicas não vazam segredo ──────────────────────
 select tests.como(null, tests.id('loja_a'));
 select ok(
-  public.get_mercadopago_public_config(tests.id('loja_a'))::text not like '%SECRETO%',
-  'config pública do Mercado Pago: não devolve access token nem segredo do webhook');
+  public.get_online_payment_config(tests.id('loja_b'))::text not like '%SECRETO%',
+  'config pública de pagamento online: não devolve a chave da InfinitePay');
 
 select is(
   (public.get_order_status(tests.id('pedido_a1'), tests.id('loja_b')))->>'success', 'false',
