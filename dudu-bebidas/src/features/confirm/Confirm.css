@@ -588,6 +588,16 @@
   text-transform: uppercase;
   letter-spacing: 1px;
 }
+.cf-summary {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #222;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cf-summary-row { display: flex; justify-content: space-between; font-size: 14px; color: #aaa; }
+.cf-summary + .cf-total-row { margin-top: 12px; padding-top: 12px; }
 .cf-total-value { font-family: var(--font-display); font-size: 24px; font-weight: 800; color: var(--c-accent); }
 
 /* ─── ENDEREÇO ───────────────────────────────────────────────────── */
@@ -813,52 +823,11 @@
 }
 
 /* ── Pix pendente ─────────────────────────────────────── */
-.cf-pix-block {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  text-align: center;
-}
 
-.cf-pix-instructions {
-  color: var(--c-text-muted);
-  font-size: 14px;
-  max-width: 380px;
-}
 
-.cf-pix-qr {
-  width: 220px;
-  height: 220px;
-  border-radius: var(--r-lg);
-  background: #fff;
-  padding: 12px;
-}
 
-.cf-pix-value {
-  font-size: 24px;
-  font-weight: 800;
-  color: var(--c-accent);
-}
 
-.cf-pix-code-row {
-  display: flex;
-  gap: 8px;
-  width: 100%;
-  max-width: 420px;
-}
 
-.cf-pix-code-input {
-  flex: 1;
-  min-width: 0;
-  padding: 10px 12px;
-  border-radius: var(--r-lg);
-  border: 1px solid var(--c-border);
-  background: var(--c-bg);
-  color: var(--c-text);
-  font-size: 12px;
-  font-family: monospace;
-}
 
 .cf-pix-waiting {
   text-align: center;

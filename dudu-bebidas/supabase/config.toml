@@ -10,7 +10,7 @@ verify_jwt = true
 [functions.create-courier]
 verify_jwt = true
 
-[functions.mercadopago-webhook]
-verify_jwt = false
 [functions.whatsapp-webhook]
+verify_jwt = false
+[functions.infinitepay-webhook]
 verify_jwt = false

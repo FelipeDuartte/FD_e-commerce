@@ -35,7 +35,7 @@ export const EMPTY_ORDER = {
   orderNumber: null,
   cartItems: [],
   total: 0,
-  payment: "pix",
+  payment: "infinitepay",
   installments: null,
   address: {},
   isRetirada: false,

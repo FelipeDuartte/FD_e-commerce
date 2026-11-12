@@ -73,7 +73,6 @@ export default function Admin({ isAdmin }) {
             counts={orders.counts}
             advanceStatus={orders.advanceStatus}
             setStatus={orders.setStatus}
-            markPaid={orders.markPaid}
             couriers={orders.couriers}
             assignCourier={orders.assignCourier}
             onReject={(order) => orders.setRejectModal(order)}

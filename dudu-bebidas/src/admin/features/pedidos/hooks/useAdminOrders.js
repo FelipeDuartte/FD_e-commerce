@@ -43,14 +43,14 @@ export function useAdminOrders(isAdmin) {
 
   const {
     updating, rejectModal, setRejectModal, rejecting, rejectError,
-    advanceStatus, setStatus, markPaid, assignCourier, confirmReject, closeRejectModal,
+    advanceStatus, setStatus, assignCourier, confirmReject, closeRejectModal,
   } = useOrderActions({ setOrders, updateOrderStatusLocally, setOrdersError });
 
   return {
     orders, loading, loadingMore, hasMore, page, totalCount, ordersError, updating,
     filterStatus, setFilterStatus, expandedId, setExpandedId, metrics, couriers,
     rejectModal, setRejectModal, rejecting, rejectError,
-    advanceStatus, setStatus, markPaid, assignCourier, confirmReject, closeRejectModal, handleLoadMore,
+    advanceStatus, setStatus, assignCourier, confirmReject, closeRejectModal, handleLoadMore,
     counts,
   };
 }

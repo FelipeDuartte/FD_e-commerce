@@ -1,5 +1,5 @@
 import { supabase, getCurrentStoreId } from "../../../../shared/supabase/Supabaseclient";
-import { PAGE_SIZE, isPhantomMercadoPagoOrder } from "../orderStatus";
+import { PAGE_SIZE, isHiddenUnpaidOrder } from "../orderStatus";
 import { AdminServiceError } from "../../../shared/services/AdminServiceError";
 import { geocodeAddress, formatAddressText } from "../../../../shared/utils/geo";
 
@@ -11,7 +11,6 @@ const ORDER_SELECT = `
   payment_method,
   payment_status,
   payment_provider,
-  customer_claimed_paid_at,
   installments,
   address,
   status,
@@ -87,8 +86,8 @@ export async function getTodayOrderMetrics() {
 
   // Cartão online recusado/cancelado/expirado nunca virou venda de verdade —
   // não deve contar em "pedidos hoje" nem em "vendas hoje" (mesmo critério
-  // usado pra escondê-lo da lista de pedidos, ver isPhantomMercadoPagoOrder).
-  const realOrders = (data ?? []).filter((o) => !isPhantomMercadoPagoOrder(o));
+  // usado pra escondê-lo da lista de pedidos, ver isHiddenUnpaidOrder).
+  const realOrders = (data ?? []).filter((o) => !isHiddenUnpaidOrder(o));
 
   return {
     count: realOrders.length,

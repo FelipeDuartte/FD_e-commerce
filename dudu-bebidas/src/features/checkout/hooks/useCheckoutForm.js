@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { saveOrder } from "../services/saveOrder";
-import { saveMercadoPagoOrder } from "../services/saveMercadoPagoOrder";
 import {
   loadLastDeliveryAddress,
   saveLastDeliveryAddress,
@@ -19,7 +18,9 @@ export function useCheckoutForm({
   const isProcessingRef = useRef(false);
 
   const [orderProcessed, setOrderProcessed] = useState(false);
-  const [payment, setPayment] = useState("pix");
+  // Pagamento online por padrão; o Checkout troca pra primeira forma
+  // disponível se a loja não tiver (ou desligar) alguma
+  const [payment, setPayment] = useState("infinitepay");
   const [installments, setInstallments] = useState(1);
 
   // Total já com a taxa da maquininha embutida (só quando for crédito) —
@@ -220,6 +221,7 @@ export function useCheckoutForm({
           orderNumber,
           cartItems,
           total: finalTotal,
+          deliveryFee: DELIVERY,
           payment,
           installments: payment === "credit_card" ? installments : null,
           address: addressToSave,
@@ -235,102 +237,6 @@ export function useCheckoutForm({
     }
   };
 
-  // ── Submit via Mercado Pago (Card Payment Brick) ───────
-  // Chamado pelo onSubmit do próprio Brick, já com o cartão tokenizado —
-  // não existe botão "Confirmar Pedido" nesse caminho, o botão é o do Brick.
-  //
-  // Precisa de identidade de função ESTÁVEL entre renders (por isso o
-  // padrão de ref abaixo, em vez de só useCallback): o SDK do Card Payment
-  // Brick usa a referência de onSubmit como dependência interna pra saber
-  // quando reinicializar o iframe seguro. Como esse componente reagia a
-  // toda letra digitada em QUALQUER campo do formulário (nome, endereço,
-  // etc — tudo re-renderiza o Checkout inteiro), uma função recriada a
-  // cada render fazia o Brick reiniciar em loop, piscando e impedindo
-  // digitar no cartão. Com a ref, a função exposta nunca muda de
-  // identidade, mas sempre executa a versão mais recente da lógica.
-  const handleMercadoPagoSubmitImpl = async (cardData) => {
-    if (isProcessingRef.current || orderProcessed || loading) return;
-    setErrorMsg("");
-
-    const validationError = validateForm();
-    if (validationError) {
-      showError(validationError);
-      return;
-    }
-
-    isProcessingRef.current = true;
-    setLoading(true);
-
-    try {
-      const addressToSave = isRetirada
-        ? { name: address.name, phone: address.phone, isRetirada: true }
-        : { ...address, cep, bairro: bairroCarrinho };
-
-      const { orderId, orderNumber, paymentStatus, total: chargedTotal, error } = await saveMercadoPagoOrder({
-        address: addressToSave,
-        cartItems,
-        cardData,
-        deliveryFee: DELIVERY,
-      });
-
-      if (error) {
-        showError(error);
-        isProcessingRef.current = false;
-        setLoading(false);
-        return;
-      }
-
-      if (paymentStatus === "rejected") {
-        showError("Pagamento recusado pela operadora do cartão. Tente outro cartão ou forma de pagamento.");
-        isProcessingRef.current = false;
-        setLoading(false);
-        return;
-      }
-
-      if (user?.id && !isRetirada) {
-        saveLastDeliveryAddress(user.id, addressToSave);
-      }
-
-      setOrderProcessed(true);
-      clearCart();
-      navigate("/confirmacao", {
-        state: {
-          orderId,
-          orderNumber,
-          cartItems,
-          // total real cobrado, com a taxa do Mercado Pago já embutida
-          // (calculada no servidor conforme o parcelamento escolhido dentro
-          // do Brick — pode ser diferente de finalTotal, que é só a
-          // estimativa sem taxa mostrada antes do cliente escolher).
-          total: chargedTotal ?? finalTotal,
-          payment: "mercadopago_card",
-          installments: cardData.installments,
-          address: addressToSave,
-          isRetirada,
-        },
-        replace: true,
-      });
-    } catch (err) {
-      console.error("Erro ao processar pagamento:", err);
-      showError("Ocorreu um erro ao processar o pagamento. Tente novamente.");
-      isProcessingRef.current = false;
-      setLoading(false);
-    }
-  };
-
-  const handleMercadoPagoSubmitRef = useRef(handleMercadoPagoSubmitImpl);
-  // Atualiza a ref num efeito, não direto no corpo do render — mutar
-  // ref.current durante o render é proibido (quebra a pureza exigida por
-  // renderização concorrente); só precisa estar atualizada antes do
-  // próximo clique no botão do Brick, então useEffect simples já resolve.
-  useEffect(() => {
-    handleMercadoPagoSubmitRef.current = handleMercadoPagoSubmitImpl;
-  });
-  const handleMercadoPagoSubmit = useCallback(
-    (cardData) => handleMercadoPagoSubmitRef.current(cardData),
-    [],
-  );
-
   // ── Derivados ─────────────────────────────────────────
   const isDisabled = loading || orderProcessed;
   const phoneDigits = address.phone.replace(/\D/g, "");
@@ -340,16 +246,18 @@ export function useCheckoutForm({
     ? "Processando..."
     : orderProcessed
       ? "Confirmado ✓"
-      : isRetirada
-        ? "Confirmar Retirada →"
-        : "Confirmar Pedido →";
+      : payment === "infinitepay"
+        ? "Ir para o pagamento →"
+        : isRetirada
+          ? "Confirmar Retirada →"
+          : "Confirmar Pedido →";
 
   return {
     errorRef, payment, setPayment, installments, setInstallments,
     baseTotal, cardFee, finalTotal, loading, errorMsg, setErrorMsg,
     cep, cepLoading, cepError, address, lastAddress, lastAddressMessage,
     handleAddressChange, handleCepChange, handleCepBlur, handlePhoneChange,
-    handleUseLastAddress, handleConfirmOrder, handleMercadoPagoSubmit,
+    handleUseLastAddress, handleConfirmOrder,
     isDisabled, phoneDigits, cepDigits, ctaLabel,
   };
 }

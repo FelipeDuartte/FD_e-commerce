@@ -1,8 +1,8 @@
 // Supabase de mentira pros testes das edge functions: devolve respostas
 // fixas por tabela/rpc e registra o que a function pediu (tabela, filtros,
 // rpc + parâmetros) pro teste conferir. Só a fatia da API que as functions
-// usam: from().select().eq().in().order().limit().maybeSingle()/single()
-// (ou await direto) e rpc().
+// usam: from().select()/update().eq().in().order().limit()
+// .maybeSingle()/single() (ou await direto) e rpc().
 //
 // Não é importado por nenhum index.ts — nunca vai junto no deploy.
 
@@ -11,6 +11,7 @@ type Result = { data: unknown; error: unknown };
 export interface FakeQuery {
   table: string;
   filters: Record<string, unknown>;
+  update?: Record<string, unknown>; // valores de um .update()
 }
 
 export interface FakeSupabase {
@@ -47,6 +48,10 @@ export function createFakeSupabase(
       const result = () => Promise.resolve(resultFor(table));
       const builder = {
         select: () => builder,
+        update: (values: Record<string, unknown>) => {
+          query.update = values;
+          return builder;
+        },
         eq: (column: string, value: unknown) => {
           query.filters[column] = value;
           return builder;

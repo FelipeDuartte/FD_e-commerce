@@ -6,7 +6,7 @@ import { handleCreateOrder } from "./handler.ts";
 const STORE = "store-a";
 const ORDER = {
   cartItems: [{ id: "p1", name: "Heineken", quantity: 2 }],
-  paymentMethod: "pix",
+  paymentMethod: "infinitepay",
   deliveryFee: 5,
   address: { street: "Rua A", number: "10", district: "Centro", cep: "30110000" },
 };
@@ -53,12 +53,36 @@ describe("create-order", () => {
   });
 
   it.each([
-    ["pix", "pix_manual"],
+    ["infinitepay", "infinitepay"],
     ["cash", null],
     ["credit_card", null],
   ])("pagamento %s → provider %s", async (paymentMethod, provider) => {
     await handleCreateOrder(post({ ...ORDER, paymentMethod }), deps());
     expect(fulfillOrder.mock.calls[0][1].paymentProvider).toBe(provider);
+  });
+
+  it.each(["pix", "mercadopago_card", "fiado", undefined])(
+    "forma que o site não oferece mais (%s): 400 e nada é gravado",
+    async (paymentMethod) => {
+      const res = await handleCreateOrder(post({ ...ORDER, paymentMethod }), deps());
+      expect(res.status).toBe(400);
+      expect(fulfillOrder).not.toHaveBeenCalled();
+    },
+  );
+
+  it("pagar online (InfinitePay): aguarda pagamento e só baixa estoque quando pagar", async () => {
+    await handleCreateOrder(post({ ...ORDER, paymentMethod: "infinitepay" }), deps());
+    expect(fulfillOrder.mock.calls[0][1]).toMatchObject({
+      paymentMethod: "infinitepay",
+      paymentProvider: "infinitepay",
+      paymentStatus: "aguardando_pagamento",
+      skipStockDecrement: true,
+    });
+  });
+
+  it("pagamento na entrega continua baixando estoque na hora", async () => {
+    await handleCreateOrder(post({ ...ORDER, paymentMethod: "cash" }), deps());
+    expect(fulfillOrder.mock.calls[0][1].skipStockDecrement).toBe(false);
   });
 
   it("frete ausente vale zero", async () => {

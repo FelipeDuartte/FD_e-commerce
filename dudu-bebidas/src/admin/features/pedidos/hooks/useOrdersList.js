@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { shouldRemoveOrder, isPhantomMercadoPagoOrder } from "../orderStatus";
+import { shouldRemoveOrder, isHiddenUnpaidOrder } from "../orderStatus";
 import { listAdminOrders } from "../services/adminOrderService";
 
 // Fetch paginado + filtro por status + a expiração automática (24h+) que
@@ -32,7 +32,7 @@ export function useOrdersList(isAdmin) {
         // filtra pedidos de cartão online recusados/cancelados/expirados —
         // nunca foram vendas de verdade.
         const visibleOrders = result.orders.filter(
-          (o) => !shouldRemoveOrder(o) && !isPhantomMercadoPagoOrder(o),
+          (o) => !shouldRemoveOrder(o) && !isHiddenUnpaidOrder(o),
         );
         const removedNow = result.orders.length - visibleOrders.length;
 
@@ -71,7 +71,7 @@ export function useOrdersList(isAdmin) {
     if (!isAdmin) return;
     const interval = setInterval(() => {
       setOrders((prev) => {
-        const updated = prev.filter((o) => !shouldRemoveOrder(o) && !isPhantomMercadoPagoOrder(o));
+        const updated = prev.filter((o) => !shouldRemoveOrder(o) && !isHiddenUnpaidOrder(o));
         const removed = prev.length - updated.length;
         if (removed > 0) {
           setTotalCount((count) => Math.max(0, count - removed));
@@ -83,17 +83,14 @@ export function useOrdersList(isAdmin) {
   }, [isAdmin]);
 
   // patch é mesclado no pedido existente antes de reavaliar se ele deve
-  // sumir da lista — precisa receber payment_status/payment_provider (não só
-  // status) pra pegar o caso do cartão Mercado Pago que nasce como
-  // "processando_pagamento" (ainda visível) e vira "pagamento_recusado"
-  // pouco depois via UPDATE (webhook/confirmação síncrona).
+  // sumir da lista (status e também payment_status/payment_provider).
   const updateOrderLocally = useCallback(
     (orderId, patch) =>
       setOrders((prev) => {
         const updated = prev.reduce((acc, o) => {
           if (o.id !== orderId) return [...acc, o];
           const nextOrder = { ...o, ...patch };
-          return shouldRemoveOrder(nextOrder) || isPhantomMercadoPagoOrder(nextOrder)
+          return shouldRemoveOrder(nextOrder) || isHiddenUnpaidOrder(nextOrder)
             ? acc
             : [...acc, nextOrder];
         }, []);

@@ -6,7 +6,7 @@ import StoreHoursSection from "./horarios/components/StoreHoursSection";
 import TeamSection from "./equipe/components/TeamSection";
 import EntregadoresSection from "./entregadores/components/EntregadoresSection";
 import PaymentMethodsToggleSection from "./pagamentos/components/PaymentMethodsToggleSection";
-import PixConfigSection from "./pagamentos/components/PixConfigSection";
+import InfinitePayConfigSection from "./pagamentos/components/InfinitePayConfigSection";
 import { STORE_TABS } from "./constants";
 
 export default function AdminStore() {
@@ -36,7 +36,7 @@ export default function AdminStore() {
       {storeTab === "pagamentos" && (
         <>
           <PaymentMethodsToggleSection />
-          <PixConfigSection />
+          <InfinitePayConfigSection />
         </>
       )}
     </>

@@ -5,14 +5,13 @@ import { STATUS_POLL_INTERVAL_MS, TERMINAL_STATUSES } from "../confirmConstants"
 // Status do pedido via polling na RPC get_order_status (não Realtime — ver
 // motivo no comentário original: Realtime exigiria uma policy de SELECT em
 // orders que qualquer anônimo poderia explorar pra listar todos os pedidos
-// da loja). A mesma RPC também devolve payment_status/customer_claimed_paid_at,
-// usados pelo fluxo de Pix (ver usePixCharge).
+// da loja). A mesma RPC também devolve payment_status, usado pelo
+// pagamento online (ver useInfinitePayPayment).
 export function useOrderStatusPolling(orderId) {
   const [status, setStatus] = useState("pending");
   const [statusLoading, setStatusLoading] = useState(true);
   const [animating, setAnimating] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
-  const [customerClaimedPaidAt, setCustomerClaimedPaidAt] = useState(null);
   const [courierName, setCourierName] = useState(null);
   const [courierLat, setCourierLat] = useState(null);
   const [courierLng, setCourierLng] = useState(null);
@@ -72,7 +71,6 @@ export function useOrderStatusPolling(orderId) {
       }
 
       setPaymentStatus(data.payment_status ?? null);
-      setCustomerClaimedPaidAt(data.customer_claimed_paid_at ?? null);
       setCourierName(data.courier_name ?? null);
       setCourierLat(data.courier_lat ?? null);
       setCourierLng(data.courier_lng ?? null);
@@ -104,8 +102,6 @@ export function useOrderStatusPolling(orderId) {
     statusLoading,
     animating,
     paymentStatus,
-    customerClaimedPaidAt,
-    setCustomerClaimedPaidAt,
     courierName,
     courierLat,
     courierLng,

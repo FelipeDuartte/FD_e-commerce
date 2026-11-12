@@ -5,11 +5,10 @@ import "./Confirm.css";
 import { EMPTY_ORDER } from "./confirmConstants";
 import { resolveOrderData } from "./confirmUtils";
 import { useOrderStatusPolling } from "./hooks/useOrderStatusPolling";
-import { usePixCharge } from "./hooks/usePixCharge";
 import CancelOrderModal from "./components/CancelOrderModal";
 import OrderOutcomeModal from "./components/OrderOutcomeModal";
-import PixPendingCard from "./components/PixPendingCard";
-import MercadoPagoProcessingCard from "./components/MercadoPagoProcessingCard";
+import OnlinePaymentCard from "./components/OnlinePaymentCard";
+import { useInfinitePayPayment } from "./hooks/useInfinitePayPayment";
 import DeliveryTracker from "./components/DeliveryTracker";
 import PickupCard from "./components/PickupCard";
 import OrderItemsCard from "./components/OrderItemsCard";
@@ -28,7 +27,7 @@ export default function Confirmacao() {
 
   const [orderData] = useState(() => resolveOrderData(location.state));
 
-  const { orderId, orderNumber, cartItems, total, payment, installments, address, isRetirada } = {
+  const { orderId, orderNumber, cartItems, total, deliveryFee, payment, installments, address, isRetirada } = {
     ...EMPTY_ORDER,
     ...orderData,
   };
@@ -38,8 +37,6 @@ export default function Confirmacao() {
     statusLoading,
     animating,
     paymentStatus,
-    customerClaimedPaidAt,
-    setCustomerClaimedPaidAt,
     courierName,
     courierLat,
     courierLng,
@@ -50,31 +47,13 @@ export default function Confirmacao() {
     showCancelledModal,
   } = useOrderStatusPolling(orderId);
 
-  const isPixPending = payment === "pix" && paymentStatus === "aguardando_pagamento";
-  // Cartão online (Mercado Pago): a confirmação é automática via webhook,
-  // não tem QR nem "já paguei" — só um estado de espera/erro enquanto
-  // payment_status ainda não virou 'pago'.
-  const isMercadoPagoPending =
-    payment === "mercadopago_card" &&
-    ["processando_pagamento", "aguardando_pagamento"].includes(paymentStatus);
-  const isMercadoPagoRejected =
-    payment === "mercadopago_card" && paymentStatus === "pagamento_recusado";
-
-  const {
-    pixCharge,
-    pixQrImage,
-    pixLoading,
-    pixError,
-    claimingPaid,
-    copied,
-    handleMarkPaid,
-    handleCopyPixCode,
-  } = usePixCharge({
-    orderId,
-    isPixPending,
-    customerClaimedPaidAt,
-    onMarkPaid: () => setCustomerClaimedPaidAt(new Date().toISOString()),
-  });
+  // Pagamento online (InfinitePay) ainda não pago — o pedido só vai pra
+  // loja depois que pagar (ver useInfinitePayPayment)
+  const isOnlinePending =
+    payment === "infinitepay" &&
+    paymentStatus === "aguardando_pagamento" &&
+    !["cancelled", "rejected"].includes(status);
+  const onlinePayment = useInfinitePayPayment({ orderId, active: isOnlinePending });
 
   // ── Modal cancelamento ────────────────────────────
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -91,6 +70,7 @@ export default function Confirmacao() {
           orderNumber,
           cartItems,
           total,
+          deliveryFee,
           payment,
           installments,
           address,
@@ -99,7 +79,7 @@ export default function Confirmacao() {
         }),
       );
     }
-  }, [orderId, orderNumber, cartItems, total, payment, installments, address, isRetirada]);
+  }, [orderId, orderNumber, cartItems, total, deliveryFee, payment, installments, address, isRetirada]);
 
   // ── Cancelamento ──────────────────────────────────
   const handleCancelOrder = async () => {
@@ -224,25 +204,16 @@ export default function Confirmacao() {
           </div>
         </div>
 
-        {isPixPending && (
-          <PixPendingCard
-            customerClaimedPaidAt={customerClaimedPaidAt}
-            pixLoading={pixLoading}
-            pixError={pixError}
-            pixCharge={pixCharge}
-            pixQrImage={pixQrImage}
-            copied={copied}
-            claimingPaid={claimingPaid}
-            onCopyCode={handleCopyPixCode}
-            onMarkPaid={handleMarkPaid}
+        {isOnlinePending && (
+          <OnlinePaymentCard
+            starting={onlinePayment.starting}
+            checking={onlinePayment.checking}
+            error={onlinePayment.error}
+            onPayNow={onlinePayment.payNow}
           />
         )}
 
-        {(isMercadoPagoPending || isMercadoPagoRejected) && (
-          <MercadoPagoProcessingCard rejected={isMercadoPagoRejected} />
-        )}
-
-        {!isRetirada && !isPixPending && !isMercadoPagoPending && !isMercadoPagoRejected && (
+        {!isRetirada && !isOnlinePending && (
           <DeliveryTracker
             status={status}
             statusLoading={statusLoading}
@@ -256,12 +227,12 @@ export default function Confirmacao() {
           />
         )}
 
-        {isRetirada && !isPixPending && !isMercadoPagoPending && !isMercadoPagoRejected && <PickupCard />}
+        {isRetirada && !isOnlinePending && <PickupCard />}
 
         {/* GRID */}
         <div className="cf-grid">
           <div className="cf-col">
-            <OrderItemsCard cartItems={cartItems} total={total} />
+            <OrderItemsCard cartItems={cartItems} total={total} deliveryFee={deliveryFee} isRetirada={isRetirada} />
             {!isRetirada && address?.name && <DeliveryAddressCard address={address} />}
           </div>
 

@@ -1,10 +1,9 @@
 import { useCallback, useState } from "react";
 import { getNext } from "../orderStatus";
 import { rejectAdminOrder, updateAdminOrderStatus, assignCourierToOrder } from "../services/adminOrderService";
-import { markOrderPaid } from "../../loja/pagamentos/services/paymentConfigService";
 
-// Ações de mutação sobre um pedido: avançar status, definir status, marcar
-// pago, rejeitar (com o modal de confirmação). Recebe setOrders/
+// Ações de mutação sobre um pedido: avançar status, definir status,
+// atribuir entregador, rejeitar (com o modal de confirmação). Recebe setOrders/
 // updateOrderStatusLocally/setOrdersError de useOrdersList — não é dono da
 // lista, só a atualiza depois de cada ação.
 export function useOrderActions({ setOrders, updateOrderStatusLocally, setOrdersError }) {
@@ -46,23 +45,6 @@ export function useOrderActions({ setOrders, updateOrderStatusLocally, setOrders
     },
     [updateOrderStatusLocally, setOrdersError],
   );
-
-  // Pix Fase 1: só registro informativo — não mexe em estoque nem no status
-  // de preparo/entrega, só marca payment_status como pago.
-  const markPaid = useCallback(async (orderId) => {
-    setUpdating(orderId);
-    setOrdersError("");
-    try {
-      await markOrderPaid(orderId);
-      setOrders((prev) =>
-        prev.map((o) => (o.id === orderId ? { ...o, payment_status: "pago" } : o)),
-      );
-    } catch (error) {
-      console.error(error);
-      setOrdersError(error.message);
-    }
-    setUpdating(null);
-  }, [setOrders, setOrdersError]);
 
   const assignCourier = useCallback(async (orderId, courier, address) => {
     setUpdating(orderId);
@@ -114,6 +96,6 @@ export function useOrderActions({ setOrders, updateOrderStatusLocally, setOrders
 
   return {
     updating, rejectModal, setRejectModal, rejecting, rejectError,
-    advanceStatus, setStatus, markPaid, assignCourier, confirmReject, closeRejectModal,
+    advanceStatus, setStatus, assignCourier, confirmReject, closeRejectModal,
   };
 }

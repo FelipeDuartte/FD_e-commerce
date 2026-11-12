@@ -53,14 +53,12 @@ export interface FulfillOrderParams {
   // exemplo — venda de balcão já é paga no ato). Só create-order passa
   // 'aguardando_pagamento' pra pix/pagamento na entrega.
   paymentStatus?: string;
-  // null = sem gateway (pix da própria loja, pagamento na entrega);
-  // 'pix_manual' ou 'mercadopago'.
+  // null = sem gateway (pagamento na entrega, balcão); 'infinitepay' =
+  // pagamento online.
   paymentProvider?: string | null;
-  // Fase 2 (cartão online MP): o estoque só pode ser baixado quando o
-  // pagamento for de fato aprovado, nunca no momento da criação do pedido
-  // (diferente de todo o resto — pix/entrega baixam na hora, Fase 1). Quem
-  // chama com true precisa baixar o estoque depois via a RPC
-  // confirm_mercadopago_payment, no momento da aprovação.
+  // Pagamento online (InfinitePay) e fiado com baixa adiada: o estoque só
+  // é baixado depois (confirm_infinitepay_payment / settle_fiado_stock),
+  // nunca na criação do pedido.
   skipStockDecrement?: boolean;
   // Pagamento dividido (só PDV/balcão) — ex: parte em dinheiro, parte no
   // cartão. Quando informado (2+ entradas), `paymentMethod` é ignorado e o
@@ -160,13 +158,6 @@ export async function fulfillOrder(
     installmentsToSave = Number.isInteger(installments) && (installments as number) >= 1 && (installments as number) <= 8
       ? (installments as number)
       : 1;
-  } else if (!isSplitPayment && paymentMethod === "mercadopago_card") {
-    // Cartão online JÁ libera parcelamento de verdade — quem decide quantas
-    // vezes é o próprio Card Payment Brick (baseado no que a bandeira/emissor
-    // permite), não a regra fixa de 1x do cartão físico acima.
-    installmentsToSave = Number.isInteger(installments) && (installments as number) > 0
-      ? (installments as number)
-      : 1;
   }
 
   // Buscar preços reais no banco — ignora qualquer total enviado pelo
@@ -249,10 +240,9 @@ export async function fulfillOrder(
   );
   const totalAfterDiscount = totalBeforeFee - normalizedDiscount;
 
-  // Cartão online (Mercado Pago) NÃO entra aqui — a taxa dele é dinâmica
-  // (varia por bandeira/emissor do cartão, consultada em tempo real na API
-  // do MP) e é aplicada depois, em mercadopago-create-payment, via um
-  // UPDATE no total do pedido assim que o valor real com juros é conhecido.
+  // Pagamento online (InfinitePay) NÃO entra aqui — a taxa e os juros do
+  // cartão são do cliente e só se sabem depois que ele paga (registrados
+  // por confirm_infinitepay_payment).
   const chargesCardFee = applyCardFee && paymentMethod === "credit_card";
   let cardFeeRate = 0;
   if (chargesCardFee) {
@@ -316,10 +306,10 @@ export async function fulfillOrder(
       payment_provider: paymentProvider,
       pdv_customer_id: pdvCustomerId,
       // Marca que o estoque ainda não foi baixado pra esse pedido — tanto
-      // faz o motivo (cartão MP aguardando aprovação, ou pedido fiado com
+      // faz o motivo (pagamento online aguardando, ou pedido fiado com
       // baixa adiada pro pagamento): quem settar `skipStockDecrement` é
       // responsável por baixar o estoque depois e zerar essa flag (ver
-      // confirm_mercadopago_payment e settle_fiado_stock).
+      // confirm_infinitepay_payment e settle_fiado_stock).
       stock_pending: skipStockDecrement,
       stock_deferred: skipStockDecrement && effectivePaymentMethod === "fiado",
     },

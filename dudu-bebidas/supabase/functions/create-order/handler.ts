@@ -6,6 +6,8 @@ import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { fulfillOrder as realFulfillOrder, FulfillmentError } from "../_shared/orderFulfillment.ts";
 import { corsHeaders, jsonResponse } from "../_shared/http.ts";
 
+export const SITE_PAYMENT_METHODS = ["infinitepay", "credit_card", "debit_card", "pix_entrega", "cash"];
+
 export interface CreateOrderDeps {
   /** Cliente com service role (ignora RLS). */
   serviceClient(): SupabaseClient;
@@ -35,6 +37,13 @@ export async function handleCreateOrder(req: Request, deps: CreateOrderDeps): Pr
       return jsonResponse({ error: "Loja não identificada (header x-store-id ausente)." }, 400);
     }
 
+    // Formas aceitas no site: pagamento online (InfinitePay) ou na entrega.
+    // Pix manual e cartão do Mercado Pago não existem mais — um site antigo
+    // em cache não consegue criar pedido que ninguém conseguiria pagar.
+    if (!SITE_PAYMENT_METHODS.includes(paymentMethod)) {
+      return jsonResponse({ error: "Forma de pagamento indisponível. Atualize a página e tente de novo." }, 400);
+    }
+
     // Usa service role — bypassa RLS completamente
     const supabase = deps.serviceClient();
 
@@ -56,13 +65,13 @@ export async function handleCreateOrder(req: Request, deps: CreateOrderDeps): Pr
       return jsonResponse({ error: "Loja inválida ou inativa." }, 400);
     }
 
-    // Fase 1 de pagamentos: todo pedido online nasce "aguardando_pagamento"
-    // (dinheiro/cartão na entrega inclusos — o dinheiro só troca de mãos na
-    // entrega mesmo, então isso é só um registro informativo, não bloqueia
-    // nada do fluxo atual). pix usa a chave da própria loja (sem gateway),
-    // por isso o provider é 'pix_manual' — não confundir com uma futura
-    // integração via Mercado Pago.
-    const paymentProvider = paymentMethod === "pix" ? "pix_manual" : null;
+    // Todo pedido do site nasce "aguardando_pagamento" (na entrega é só
+    // registro — o dinheiro troca de mãos na entrega). "infinitepay" (Pix
+    // ou cartão na página da InfinitePay): estoque só baixa quando o
+    // pagamento for confirmado (confirm_infinitepay_payment) — pedido não
+    // pago some sozinho.
+    const isInfinitePay = paymentMethod === "infinitepay";
+    const paymentProvider = isInfinitePay ? "infinitepay" : null;
 
     const { orderId, orderNumber } = await fulfillOrder(supabase, {
       storeId,
@@ -77,6 +86,7 @@ export async function handleCreateOrder(req: Request, deps: CreateOrderDeps): Pr
       applyCardFee: true,
       paymentStatus: "aguardando_pagamento",
       paymentProvider,
+      skipStockDecrement: isInfinitePay,
     });
 
     return jsonResponse({ orderId, orderNumber }, 200);

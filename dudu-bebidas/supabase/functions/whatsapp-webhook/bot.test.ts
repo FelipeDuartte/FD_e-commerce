@@ -32,7 +32,8 @@ const HOURS = [0, 1, 2, 3, 4, 5, 6].map((d) => ({
 const CONFIG = {
   close_on_holidays: true,
   free_shipping_threshold: 150,
-  payment_methods_enabled: { pix: true, cash: true, credit_card: true, debit_card: false },
+  payment_methods_enabled: { cash: true, credit_card: true, debit_card: false },
+  online_payment: true,
 };
 
 function fakeData(overrides: Partial<BotData> = {}): BotData {
@@ -172,8 +173,27 @@ describe("respostas", () => {
 
   it("pagamento mostra só as formas ligadas", async () => {
     const reply = await buildReply({ kind: "choice", id: "pagamento" }, fakeData(), "553199999999");
-    expect(reply.body).toContain("Pix (pelo site)");
+    expect(reply.body).toContain("Pix ou cartão em até 12x (pelo site)");
+    expect(reply.body).toContain("Dinheiro na entrega");
     expect(reply.body).not.toContain("débito");
+  });
+
+  it("loja sem pagamento online: não oferece Pix pelo site", async () => {
+    const reply = await buildReply(
+      { kind: "choice", id: "pagamento" },
+      fakeData({ config: async () => ({ ...CONFIG, online_payment: false }) }),
+      "553199999999",
+    );
+    expect(reply.body).not.toContain("Pix ou cartão");
+  });
+
+  it("pagamento online desligado pela loja: não oferece", async () => {
+    const reply = await buildReply(
+      { kind: "choice", id: "pagamento" },
+      fakeData({ config: async () => ({ ...CONFIG, payment_methods_enabled: { ...CONFIG.payment_methods_enabled, infinitepay: false } }) }),
+      "553199999999",
+    );
+    expect(reply.body).not.toContain("Pix ou cartão");
   });
 
   it("produto encontrado mostra preço, promoção e link do site", async () => {

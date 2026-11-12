@@ -4,7 +4,7 @@ import { useLegalInfo } from "../legalInfo";
 // Política de Privacidade — texto montado com os dados da loja (marca + banco).
 export default function PrivacyPolicy() {
   const info = useLegalInfo();
-  const onlineCard = info.payments.includes("cartão online");
+  const onlinePayment = info.payments.includes("PIX ou cartão online");
 
   return (
     <LegalLayout
@@ -42,7 +42,7 @@ export default function PrivacyPolicy() {
         items={[
           "Supabase: banco de dados utilizado para armazenar seus dados com segurança.",
           "Google: utilizado exclusivamente para autenticação via login social.",
-          onlineCard && "Mercado Pago: processa os pagamentos com cartão online; os dados do cartão não passam pelo nosso sistema.",
+          onlinePayment && "InfinitePay: processa os pagamentos online (Pix e cartão); os dados do cartão não passam pelo nosso sistema.",
         ]}
       />
 

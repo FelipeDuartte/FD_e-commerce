@@ -18,7 +18,7 @@ const STAT_FILTERS = [
 export default function OrdersTab({
   orders, loading, loadingMore, hasMore, totalCount, ordersError, updating,
   filterStatus, setFilterStatus, expandedId, setExpandedId, metrics, counts,
-  advanceStatus, setStatus, markPaid, couriers, assignCourier, onReject, handleLoadMore,
+  advanceStatus, setStatus, couriers, assignCourier, onReject, handleLoadMore,
 }) {
   const { containerRef, totalHeight, offsets, start, end, measureRef } =
     useVariableVirtualList(orders.length, 90, 3);
@@ -116,7 +116,6 @@ export default function OrdersTab({
                       onReject={() => onReject(order)}
                       onAdvance={() => advanceStatus(order)}
                       onSetStatus={(s) => setStatus(order.id, s)}
-                      onMarkPaid={() => markPaid(order.id)}
                       couriers={couriers}
                       onAssignCourier={(courier) => assignCourier(order.id, courier, order.address)}
                     />

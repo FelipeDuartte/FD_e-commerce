@@ -1,7 +1,7 @@
 name: Testes
 
 # Roda o lint (ESLint) e os testes automáticos (Vitest) a cada push e pull request.
-# Não usa nenhum segredo: os testes não acessam banco, Meta nem Mercado Pago.
+# Não usa nenhum segredo: os testes não acessam banco, Meta nem InfinitePay.
 on:
   push:
   pull_request:

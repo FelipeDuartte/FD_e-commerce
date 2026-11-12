@@ -55,16 +55,20 @@ export const getStatuses = (order) =>
   isPickup(order) ? PICKUP_STATUS_ORDER : DELIVERY_STATUS_ORDER;
 export const getNext = (order) => getConfig(order).next;
 
-// Pedidos de cartão online (Mercado Pago) cuja cobrança falhou nunca viraram
-// venda de verdade — o cliente nunca pagou, o estoque nunca foi baixado. Não
+// Pagamento online não pago (ou que falhou) nunca virou venda de verdade —
+// o cliente não pagou, o estoque não foi baixado. Não
 // faz sentido aparecer no painel como se fosse um pedido esperando ação do
 // admin, então esses nem chegam a entrar na lista (diferente de
 // shouldRemoveOrder, que é sobre "idade" — aqui é "nunca deveria ter
 // aparecido").
-const MERCADOPAGO_FAILED_STATUSES = ["pagamento_recusado", "pagamento_cancelado", "pagamento_expirado"];
+const FAILED_PAYMENT_STATUSES = ["pagamento_recusado", "pagamento_cancelado", "pagamento_expirado"];
 
-export const isPhantomMercadoPagoOrder = (order) =>
-  order.payment_provider === "mercadopago" && MERCADOPAGO_FAILED_STATUSES.includes(order.payment_status);
+export const isHiddenUnpaidOrder = (order) =>
+  // Pagamento online que falhou (inclui pedidos antigos do Mercado Pago)
+  FAILED_PAYMENT_STATUSES.includes(order.payment_status) ||
+  // Pagamento online (InfinitePay) ainda não pago: o cliente pode nem
+  // pagar — só entra na lista quando o pagamento for confirmado.
+  (order.payment_provider === "infinitepay" && order.payment_status !== "pago");
 
 export const shouldRemoveOrder = (order) => {
   // Some do painel 24h depois de criado, pra qualquer status — exceto

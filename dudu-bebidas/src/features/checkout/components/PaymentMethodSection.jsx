@@ -1,6 +1,5 @@
 import {
   deliveryPaymentOptions,
-  onlinePaymentOptions,
   MAX_INSTALLMENTS,
   INSTALLMENT_OPTIONS,
   DEFAULT_INSTALLMENT_FEE_RATE,
@@ -11,7 +10,7 @@ function PayOptionGrid({ options, payment, setPayment, setInstallments, isDisabl
   return (
     <div className="co-pay-grid">
       {options.map((opt) => (
-        <div className="co-pay-option" key={opt.value}>
+        <div className={`co-pay-option${opt.wide ? " co-pay-option--wide" : ""}`} key={opt.value}>
           <input
             type="radio"
             id={opt.value}
@@ -36,7 +35,9 @@ function PayOptionGrid({ options, payment, setPayment, setInstallments, isDisabl
 
 export default function PaymentMethodSection({
   payment, setPayment, installments, setInstallments, isDisabled, baseTotal,
-  extraOnlineOptions = [], enabledMethods, children,
+  enabledMethods,
+  // Pagamento online (InfinitePay) — vazio quando a loja não configurou
+  onlineOptions: onlineOptionsProp = [],
   installmentFeeRate = DEFAULT_INSTALLMENT_FEE_RATE,
 }) {
   // enabledMethods vem do store_config (payment_methods_enabled) — método
@@ -45,7 +46,7 @@ export default function PaymentMethodSection({
   const isEnabled = (value) => enabledMethods?.[value] !== false;
 
   const deliveryOptions = deliveryPaymentOptions.filter((opt) => isEnabled(opt.value));
-  const onlineOptions = [...onlinePaymentOptions, ...extraOnlineOptions].filter((opt) => isEnabled(opt.value));
+  const onlineOptions = onlineOptionsProp.filter((opt) => isEnabled(opt.value));
 
   return (
     <>
@@ -114,8 +115,6 @@ export default function PaymentMethodSection({
           />
         </>
       )}
-
-      {payment === "mercadopago_card" && children}
     </>
   );
 }

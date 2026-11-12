@@ -7,16 +7,7 @@ import {
   PAYMENT_LABEL,
 } from "../orderStatus";
 import { formatDate, formatBRL } from "../../../shared/utils/adminFormat";
-import { usePaymentGating } from "../hooks/usePaymentGating";
 import { pickupAddress } from "../../../../shared/utils/storeContact";
-
-const PAYMENT_STATUS_LABEL = {
-  aguardando_pagamento: "⏳ Aguardando pagamento",
-  processando_pagamento: "⏳ Processando pagamento",
-  pagamento_recusado: "❌ Pagamento recusado",
-  pagamento_cancelado: "🚫 Pagamento cancelado",
-  pagamento_expirado: "⌛ Pagamento expirado",
-};
 
 export default function OrderCard({
   order,
@@ -27,7 +18,6 @@ export default function OrderCard({
   onReject,
   onAdvance,
   onSetStatus,
-  onMarkPaid,
   couriers,
   onAssignCourier,
 }) {
@@ -43,27 +33,11 @@ export default function OrderCard({
   // (a partir de "preparing") e ainda não rejeitado/cancelado.
   const canAssignCourier =
     !pickup && !isPending && !["rejected", "cancelled"].includes(order.status);
-  const { pixAwaitingPayment, mercadopagoNotPaid, paymentBlocksAcceptance } = usePaymentGating(order);
   const payment = PAYMENT_LABEL[order.payment_method] ?? {
     icon: "💳",
     label: order.payment_method,
   };
   const shortId = order.order_number ? String(order.order_number) : order.id.slice(-8).toUpperCase();
-
-  // Uma única mensagem de status de pagamento, não duas competindo pelo
-  // mesmo espaço: "aguardando pagamento" (cliente não fez nada ainda) e
-  // "cliente informou pagamento" (cliente JÁ apertou "já paguei") são
-  // estados diferentes — mostrar os dois juntos parecia contraditório.
-  const claimedAt = order.customer_claimed_paid_at
-    ? new Date(order.customer_claimed_paid_at).toLocaleTimeString("pt-BR", {
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : null;
-  const paymentStatusText =
-    pixAwaitingPayment && claimedAt
-      ? `🔔 Cliente informou pagamento às ${claimedAt}`
-      : (PAYMENT_STATUS_LABEL[order.payment_status] ?? order.payment_status);
 
   return (
     <li className={`adm-order adm-order-${order.status}`}>
@@ -100,16 +74,9 @@ export default function OrderCard({
         <div className="adm-order-payment">
           <span>
             {payment.icon} {payment.label}
-            {["credit_card", "mercadopago_card"].includes(order.payment_method) && order.installments > 1
+            {["credit_card", "online_card"].includes(order.payment_method) && order.installments > 1
               ? ` · ${order.installments}x`
               : ""}
-            {["pix", "mercadopago_card"].includes(order.payment_method) &&
-              order.payment_status &&
-              order.payment_status !== "pago" && (
-                <span className={claimedAt ? "adm-order-claimed" : "adm-order-discount"}>
-                  {" "}· {paymentStatusText}
-                </span>
-              )}
           </span>
           <span className="adm-order-total">
             {formatBRL(order.total)}
@@ -119,25 +86,9 @@ export default function OrderCard({
           </span>
         </div>
 
-        {pixAwaitingPayment && (
-          <div className="adm-order-actions" onClick={(e) => e.stopPropagation()}>
-            <button className="adm-btn-accept" onClick={onMarkPaid} disabled={isUpdating}>
-              {isUpdating ? "..." : "✅ Marcar como pago"}
-            </button>
-          </div>
-        )}
 
-        {mercadopagoNotPaid && (
-          <div className="adm-order-actions" onClick={(e) => e.stopPropagation()}>
-            <span className="adm-order-discount">
-              {order.payment_status === "pagamento_recusado"
-                ? "❌ Pagamento recusado pela operadora"
-                : "⏳ Aguardando confirmação automática do pagamento"}
-            </span>
-          </div>
-        )}
 
-        {isPending && !paymentBlocksAcceptance && (
+        {isPending && (
           <div
             className="adm-order-actions"
             onClick={(e) => e.stopPropagation()}
@@ -252,26 +203,6 @@ export default function OrderCard({
                 {order.status === "rejected"
                   ? "❌ Pedido rejeitado — estoque devolvido"
                   : "🚫 Pedido cancelado"}
-              </div>
-            ) : isPending && pixAwaitingPayment ? (
-              <div className="adm-accept-reject-detail">
-                <p className="adm-delivered-msg">
-                  💰 Aguardando confirmação do pagamento — confirme abaixo pra
-                  liberar aceitar/rejeitar.
-                </p>
-                <button
-                  className="adm-btn-accept-lg"
-                  onClick={onMarkPaid}
-                  disabled={isUpdating}
-                >
-                  {isUpdating ? "Processando..." : "✅ Marcar como pago"}
-                </button>
-              </div>
-            ) : isPending && mercadopagoNotPaid ? (
-              <div className="adm-delivered-msg">
-                {order.payment_status === "pagamento_recusado"
-                  ? "❌ Pagamento recusado — nada a preparar."
-                  : "⏳ Aguardando confirmação automática do pagamento pelo Mercado Pago."}
               </div>
             ) : isPending ? (
               <div className="adm-accept-reject-detail">

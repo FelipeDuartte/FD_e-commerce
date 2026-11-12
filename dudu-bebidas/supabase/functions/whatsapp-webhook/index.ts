@@ -93,13 +93,17 @@ async function loadBotData(db: SupabaseClient, storeId: string): Promise<BotData
       (await db.from("store_hours").select("day_of_week, is_open, open_time, close_time").eq("store_id", storeId))
         .data ?? []
     ),
-    config: once(async () =>
-      (await db
-        .from("store_config")
-        .select("close_on_holidays, free_shipping_threshold, payment_methods_enabled")
-        .eq("store_id", storeId)
-        .maybeSingle()).data
-    ),
+    config: once(async () => {
+      const [{ data: config }, { data: online }] = await Promise.all([
+        db
+          .from("store_config")
+          .select("close_on_holidays, free_shipping_threshold, payment_methods_enabled")
+          .eq("store_id", storeId)
+          .maybeSingle(),
+        db.rpc("get_online_payment_config", { p_store_id: storeId }),
+      ]);
+      return config ? { ...config, online_payment: Boolean(online?.infinitepay) } : null;
+    }),
     zones: once(async () =>
       (await db
         .from("delivery_zones")

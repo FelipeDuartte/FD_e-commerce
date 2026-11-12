@@ -27,6 +27,7 @@ export interface StoreConfig {
   close_on_holidays: boolean | null;
   free_shipping_threshold: number | null;
   payment_methods_enabled: Record<string, boolean> | null;
+  online_payment?: boolean; // loja com pagamento online (InfinitePay) configurado
 }
 
 export interface DeliveryZone {
@@ -307,9 +308,8 @@ function deliveryReply(
   return lines.join("\n");
 }
 
+const ONLINE_PAYMENT_LABEL = "Pix ou cartão em até 12x (pelo site)";
 const PAYMENT_LABELS: Record<string, string> = {
-  pix: "Pix (pelo site)",
-  mercadopago_card: "Cartão online (pelo site)",
   pix_entrega: "Pix na entrega",
   cash: "Dinheiro na entrega",
   debit_card: "Cartão de débito na entrega",
@@ -318,9 +318,12 @@ const PAYMENT_LABELS: Record<string, string> = {
 
 function paymentReply(config: StoreConfig | null): string {
   const enabled = config?.payment_methods_enabled ?? {};
-  const methods = Object.keys(PAYMENT_LABELS).filter((k) => enabled[k]);
-  if (!methods.length) return "💳 Fale com o atendente para saber as formas de pagamento.";
-  return ["💳 *Formas de pagamento*", "", ...methods.map((k) => `• ${PAYMENT_LABELS[k]}`)].join("\n");
+  const labels = [
+    ...(config?.online_payment && enabled.infinitepay !== false ? [ONLINE_PAYMENT_LABEL] : []),
+    ...Object.keys(PAYMENT_LABELS).filter((k) => enabled[k]).map((k) => PAYMENT_LABELS[k]),
+  ];
+  if (!labels.length) return "💳 Fale com o atendente para saber as formas de pagamento.";
+  return ["💳 *Formas de pagamento*", "", ...labels.map((l) => `• ${l}`)].join("\n");
 }
 
 // ── Texto do cliente → palavras ─────────────────────────────

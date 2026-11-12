@@ -61,6 +61,16 @@ interface OrderRow {
   status: string;
   created_at: string;
   channel: string;
+  payment_status?: string;
+  payment_provider?: string | null;
+}
+
+/**
+ * Pagamento online (InfinitePay) ainda não pago: o cliente pode nem pagar —
+ * a loja só é avisada quando o pagamento confirmar (ver UPDATE abaixo).
+ */
+function isUnpaidOnlineOrder(order: OrderRow): boolean {
+  return order.payment_provider === "infinitepay" && order.payment_status !== "pago";
 }
 
 interface DatabaseWebhookPayload {
@@ -328,10 +338,21 @@ Deno.serve(async (req) => {
     }
 
     if (payload.type === "INSERT") {
+      if (isUnpaidOnlineOrder(payload.record)) {
+        return jsonResponse({ skipped: true, reason: "online_payment_pending" });
+      }
       return await handleNewOrder(payload.record);
     }
 
     if (payload.type === "UPDATE") {
+      // Pagamento online acabou de ser confirmado: agora sim é pedido novo
+      if (
+        payload.record.payment_provider === "infinitepay" &&
+        payload.record.payment_status === "pago" &&
+        payload.old_record?.payment_status !== "pago"
+      ) {
+        return await handleNewOrder(payload.record);
+      }
       return await handleStatusChange(payload.record, payload.old_record);
     }
 

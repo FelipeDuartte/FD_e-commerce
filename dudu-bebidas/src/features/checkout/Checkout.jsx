@@ -1,16 +1,15 @@
 import "./Checkout.css";
-import { useCallback, useEffect } from "react";
+import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useStoreStatus, useStoreHoursData } from "../../shared/context/useStoreStatus";
 import { useCheckoutForm } from "./hooks/useCheckoutForm";
-import { useMercadoPagoConfig } from "./hooks/useMercadoPagoConfig";
+import { useOnlinePaymentConfig } from "./hooks/useOnlinePaymentConfig";
 import { PAYMENT_METHODS } from "../../shared/utils/paymentMethods";
-import { deliveryPaymentOptions, onlinePaymentOptions } from "./checkoutConstants";
+import { deliveryPaymentOptions } from "./checkoutConstants";
 import DeliveryFields from "./components/DeliveryFields";
 import PaymentMethodSection from "./components/PaymentMethodSection";
 import OrderSummaryCard from "./components/OrderSummaryCard";
 import ConfirmCta from "./components/ConfirmCta";
-import MercadoPagoCardBrick from "./components/MercadoPagoCardBrick";
 
 export default function Checkout({ user, clearCart }) {
   const navigate = useNavigate();
@@ -39,38 +38,29 @@ export default function Checkout({ user, clearCart }) {
     baseTotal, cardFee, finalTotal, errorMsg, setErrorMsg,
     cep, cepLoading, cepError, address, lastAddress, lastAddressMessage,
     handleAddressChange, handleCepChange, handleCepBlur, handlePhoneChange,
-    handleUseLastAddress, handleConfirmOrder, handleMercadoPagoSubmit,
+    handleUseLastAddress, handleConfirmOrder,
     isDisabled, phoneDigits, cepDigits, ctaLabel,
   } = useCheckoutForm({
     user, cartItems, cartTotal, DELIVERY, isRetirada, bairroCarrinho, clearCart, navigate,
     installmentFeeRate,
   });
 
-  const mpConfig = useMercadoPagoConfig();
-  const mpExtraOnlineOption = mpConfig.enabled && isMethodEnabled("mercadopago_card")
-    ? [{ value: "mercadopago_card", icon: PAYMENT_METHODS.mercadopago_card.icon, name: PAYMENT_METHODS.mercadopago_card.label }]
+  // Pagamento online: só aparece se a loja configurou a InfinitePay
+  const onlineConfig = useOnlinePaymentConfig();
+  const onlineOptions = onlineConfig.infinitepay
+    ? [{ value: "infinitepay", icon: PAYMENT_METHODS.infinitepay.icon, name: "Pix ou cartão em até 12x", wide: true }]
     : [];
-  const isMercadoPagoSelected = payment === "mercadopago_card";
 
   // Se a forma selecionada foi desligada pelo admin enquanto o cliente
   // estava na tela (ou já veio desligada), troca pra primeira disponível
   // em vez de deixar o checkout "preso" numa opção que sumiu da grade.
   useEffect(() => {
-    if (isMethodEnabled(payment)) return;
-    const firstAvailable = [...deliveryPaymentOptions, ...onlinePaymentOptions, ...mpExtraOnlineOption]
-      .find((opt) => isMethodEnabled(opt.value));
-    if (firstAvailable) setPayment(firstAvailable.value);
+    if (!onlineConfig.loaded) return; // espera saber se tem pagamento online
+    const available = [...onlineOptions, ...deliveryPaymentOptions].filter((opt) => isMethodEnabled(opt.value));
+    if (available.some((opt) => opt.value === payment)) return;
+    if (available[0]) setPayment(available[0].value);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabledMethods]);
-
-  // Identidade estável de propósito (mesmo motivo do handleMercadoPagoSubmit
-  // em useCheckoutForm.js): o Brick reinicializa sempre que onError muda de
-  // referência, e uma arrow function inline aqui seria recriada a cada
-  // render do Checkout inteiro.
-  const handleMpBrickError = useCallback((err) => {
-    console.error("[MercadoPagoCardBrick] erro:", err);
-    setErrorMsg("Verifique os dados do cartão e tente novamente.");
-  }, [setErrorMsg]);
+  }, [enabledMethods, onlineConfig.loaded, onlineConfig.infinitepay]);
 
   return (
     <div className="co-root">
@@ -235,18 +225,10 @@ export default function Checkout({ user, clearCart }) {
               setInstallments={setInstallments}
               isDisabled={isDisabled}
               baseTotal={baseTotal}
-              extraOnlineOptions={mpExtraOnlineOption}
+              onlineOptions={onlineOptions}
               enabledMethods={enabledMethods}
               installmentFeeRate={installmentFeeRate}
-            >
-              <MercadoPagoCardBrick
-                publicKey={mpConfig.publicKey}
-                amount={finalTotal}
-                disabled={isDisabled}
-                onSubmit={handleMercadoPagoSubmit}
-                onError={handleMpBrickError}
-              />
-            </PaymentMethodSection>
+            />
           </div>
 
           {/* ── SUMMARY ── */}
@@ -263,17 +245,14 @@ export default function Checkout({ user, clearCart }) {
             onConfirm={handleConfirmOrder}
             isDisabled={isDisabled}
             closed={closed}
-            hideConfirmButton={isMercadoPagoSelected}
           />
         </div>
       </div>
 
       {/* ── BOTÃO FIXO MOBILE ── */}
-      {!isMercadoPagoSelected && (
-        <div className="co-cta-wrap">
-          <ConfirmCta label={ctaLabel} onClick={handleConfirmOrder} disabled={isDisabled || closed} />
-        </div>
-      )}
+      <div className="co-cta-wrap">
+        <ConfirmCta label={ctaLabel} onClick={handleConfirmOrder} disabled={isDisabled || closed} />
+      </div>
     </div>
   );
 }

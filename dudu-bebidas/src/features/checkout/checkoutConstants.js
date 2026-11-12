@@ -12,10 +12,8 @@ const buildOptions = (values) =>
 // automática nem tela de "aguardando confirmação".
 export const deliveryPaymentOptions = buildOptions(["credit_card", "debit_card", "pix_entrega", "cash"]);
 
-// Pago no ato do checkout, antes de qualquer entrega — Pix mostra QR na
-// tela de confirmação; Cartão online (Mercado Pago) só aparece se a loja
-// já configurou as credenciais (ver mpConfig.enabled em Checkout.jsx).
-export const onlinePaymentOptions = buildOptions(["pix"]);
+// Pagamento online (InfinitePay: Pix ou cartão) é montado no Checkout.jsx,
+// só quando a loja configurou — ver useOnlinePaymentConfig.
 
 // Pagamento é feito na entrega (maquininha do entregador) — isso só define
 // em quantas vezes o cliente PRETENDE parcelar, pra facilitar quem vai

@@ -361,6 +361,11 @@
   position: relative;
 }
 
+/* Opção sozinha na linha (pagamento online): largura toda, ícone ao lado */
+.co-pay-option--wide { grid-column: 1 / -1; }
+.co-pay-option--wide .co-pay-label { flex-direction: row; justify-content: center; }
+.co-pay-option--wide .co-pay-name { font-size: 13px; }
+
 .co-pay-option input[type="radio"] {
   position: absolute;
   opacity: 0;
@@ -443,41 +448,6 @@
   margin: 10px 0 0;
   font-size: 11.5px;
   color: #777;
-  line-height: 1.4;
-}
-
-/* ─── MERCADO PAGO (Card Payment Brick) ────────────────── */
-.co-mp-brick {
-  margin-top: 14px;
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.co-mp-brick-disabled {
-  pointer-events: none;
-  opacity: 0.6;
-}
-
-.co-mp-cta-hint {
-  margin: 14px 0 0;
-  text-align: center;
-  font-size: 12.5px;
-  color: #999;
-  line-height: 1.4;
-}
-
-.co-mp-fee-notice {
-  margin-bottom: 12px;
-  padding: 12px 14px;
-  background: rgba(var(--brand-rgb), 0.05);
-  border: 1px solid rgba(var(--brand-rgb), 0.15);
-  border-radius: 10px;
-}
-
-.co-mp-fee-notice-text {
-  margin: 0;
-  font-size: 11.5px;
-  color: #999;
   line-height: 1.4;
 }
 
@@ -889,10 +859,6 @@
     font-size: 11px;
     line-height: 1.2;
     text-align: center;
-  }
-
-  .co-mp-brick {
-    margin-bottom: 8px;
   }
 
   .co-summary {

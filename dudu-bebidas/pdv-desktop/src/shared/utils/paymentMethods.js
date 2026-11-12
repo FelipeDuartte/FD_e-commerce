@@ -5,6 +5,8 @@ export const PAYMENT_METHODS = {
   credit_card: { icon: "💳", label: "Crédito" },
   cash: { icon: "💵", label: "Dinheiro" },
   pix: { icon: "⚡", label: "Pix" },
+  // Pedidos do site pagos na InfinitePay (aparecem nos relatórios)
+  online_card: { icon: "💳", label: "Cartão online" },
   // Venda sem cobrança na hora — vira dívida do cliente (ver pdv_customers).
   fiado: { icon: "📝", label: "Em Aberto" },
 };
