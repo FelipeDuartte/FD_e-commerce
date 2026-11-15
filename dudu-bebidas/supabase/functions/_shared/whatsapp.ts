@@ -135,41 +135,73 @@ export async function getStoreWhatsAppConfig(
  * @param to Telefone de destino já normalizado (ex: "5531999450717")
  * @param templateName Nome exato do template aprovado no WhatsApp Manager
  * @param bodyParams Valores de cada variável nomeada do corpo
- * @param languageCode Código do idioma do template (default: pt_BR)
+ * @param options Idioma (default pt_BR) e o final do link do botão de URL
  */
-export async function sendWhatsAppTemplate(
-  config: StoreWhatsAppConfig,
+export interface TemplateOptions {
+  languageCode?: string;
+  /**
+   * Final do link de um botão de URL dinâmica do template — ex: o código do
+   * pedido em ".../confirmacao?pedido={{1}}". O botão precisa ser o 1º do
+   * template (índice 0).
+   */
+  urlButtonParam?: string;
+}
+
+/** Corpo da chamada à Cloud API (separado pra ser testado). */
+export function buildTemplatePayload(
   to: string,
   templateName: string,
   bodyParams: Record<string, string>,
-  languageCode = "pt_BR",
-): Promise<SendTemplateResult> {
-  const url = `https://graph.facebook.com/${META_API_VERSION}/${config.phoneNumberId}/messages`;
-
+  { languageCode = "pt_BR", urlButtonParam }: TemplateOptions = {},
+) {
   const paramEntries = Object.entries(bodyParams);
-
-  const payload = {
+  const components: Record<string, unknown>[] = [];
+  if (paramEntries.length > 0) {
+    components.push({
+      type: "body",
+      parameters: paramEntries.map(([name, text]) => ({ type: "text", parameter_name: name, text })),
+    });
+  }
+  if (urlButtonParam) {
+    components.push({
+      type: "button",
+      sub_type: "url",
+      index: "0",
+      parameters: [{ type: "text", text: urlButtonParam }],
+    });
+  }
+  return {
     messaging_product: "whatsapp",
     to,
     type: "template",
     template: {
       name: templateName,
       language: { code: languageCode },
-      components:
-        paramEntries.length > 0
-          ? [
-              {
-                type: "body",
-                parameters: paramEntries.map(([name, text]) => ({
-                  type: "text",
-                  parameter_name: name,
-                  text,
-                })),
-              },
-            ]
-          : undefined,
+      components: components.length ? components : undefined,
     },
   };
+}
+
+// Erros da Meta quando os parâmetros enviados não batem com o template
+// aprovado (ex: mandou o código do botão, mas o template ainda não tem o
+// botão aprovado).
+const PARAMETER_MISMATCH_CODES = new Set([100, 131008, 131009, 132000, 132012]);
+
+export function isParameterMismatch(body: unknown): boolean {
+  // deno-lint-ignore no-explicit-any
+  const code = (body as any)?.error?.code;
+  return typeof code === "number" && PARAMETER_MISMATCH_CODES.has(code);
+}
+
+export async function sendWhatsAppTemplate(
+  config: StoreWhatsAppConfig,
+  to: string,
+  templateName: string,
+  bodyParams: Record<string, string>,
+  options: TemplateOptions = {},
+): Promise<SendTemplateResult> {
+  const url = `https://graph.facebook.com/${META_API_VERSION}/${config.phoneNumberId}/messages`;
+  const payload = buildTemplatePayload(to, templateName, bodyParams, options);
 
   try {
     const res = await fetch(url, {

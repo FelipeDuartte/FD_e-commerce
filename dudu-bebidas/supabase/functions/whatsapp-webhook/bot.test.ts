@@ -85,6 +85,11 @@ describe("intenção do texto", () => {
     ["oi", "menu"],
     ["Boa noite!", "menu"],
     ["ola, bom dia", "menu"],
+    ["Ver menu", "menu"], // botão do template de pedido aceito
+    ["Abrir o menu", "menu"],
+    ["Falar com atendente", "atendente"], // botão do template de rejeitado
+    ["Falar com a loja", "atendente"],
+    ["Meu pedido", "pedido"],
     ["oi tudo bem?", "menu"],
     ["obrigado", "thanks"],
     ["vocês abrem que horas?", "horario"],

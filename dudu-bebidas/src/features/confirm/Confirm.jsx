@@ -25,9 +25,12 @@ export default function Confirmacao() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [orderData] = useState(() => resolveOrderData(location.state));
+  const [orderData] = useState(() => resolveOrderData(location.state, location.search));
 
-  const { orderId, orderNumber, cartItems, total, deliveryFee, payment, installments, address, isRetirada } = {
+  const {
+    orderId, orderNumber: savedOrderNumber, cartItems, total, deliveryFee, payment: savedPayment,
+    installments, address, isRetirada: savedIsRetirada, fromLink,
+  } = {
     ...EMPTY_ORDER,
     ...orderData,
   };
@@ -37,6 +40,9 @@ export default function Confirmacao() {
     statusLoading,
     animating,
     paymentStatus,
+    paymentMethod: serverPaymentMethod,
+    orderNumber: serverOrderNumber,
+    isPickup: serverIsPickup,
     courierName,
     courierLat,
     courierLng,
@@ -46,6 +52,12 @@ export default function Confirmacao() {
     showRejectedModal,
     showCancelledModal,
   } = useOrderStatusPolling(orderId);
+
+  // Aberto pelo link do WhatsApp (sem o pedido salvo neste navegador): o que
+  // falta vem do servidor
+  const payment = savedPayment ?? serverPaymentMethod;
+  const orderNumber = savedOrderNumber ?? serverOrderNumber;
+  const isRetirada = fromLink ? Boolean(serverIsPickup) : savedIsRetirada;
 
   // Pagamento online (InfinitePay) ainda não pago — o pedido só vai pra
   // loja depois que pagar (ver useInfinitePayPayment)
@@ -62,6 +74,9 @@ export default function Confirmacao() {
 
   // ── Persiste no localStorage ──────────────────────
   useEffect(() => {
+    // Aberto pelo link sem os dados do pedido: não sobrescreve a última
+    // compra salva neste navegador
+    if (fromLink) return;
     if (orderId || cartItems.length > 0) {
       localStorage.setItem(
         "lastOrder",
@@ -79,7 +94,7 @@ export default function Confirmacao() {
         }),
       );
     }
-  }, [orderId, orderNumber, cartItems, total, deliveryFee, payment, installments, address, isRetirada]);
+  }, [fromLink, orderId, orderNumber, cartItems, total, deliveryFee, payment, installments, address, isRetirada]);
 
   // ── Cancelamento ──────────────────────────────────
   const handleCancelOrder = async () => {
@@ -232,12 +247,14 @@ export default function Confirmacao() {
         {/* GRID */}
         <div className="cf-grid">
           <div className="cf-col">
-            <OrderItemsCard cartItems={cartItems} total={total} deliveryFee={deliveryFee} isRetirada={isRetirada} />
+            {cartItems.length > 0 && (
+              <OrderItemsCard cartItems={cartItems} total={total} deliveryFee={deliveryFee} isRetirada={isRetirada} />
+            )}
             {!isRetirada && address?.name && <DeliveryAddressCard address={address} />}
           </div>
 
           <div className="cf-col">
-            <PaymentMethodCard payment={payment} installments={installments} />
+            {payment && <PaymentMethodCard payment={payment} installments={installments} />}
 
             <button className="cf-btn-home" onClick={() => navigate("/")}>
               🏠 Voltar para a loja

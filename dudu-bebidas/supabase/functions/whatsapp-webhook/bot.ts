@@ -595,6 +595,7 @@ const GREETING_WORDS = new Set([
   "oi", "oii", "oie", "ola", "opa", "eai", "e", "ai", "bom", "boa", "dia", "tarde", "noite", "tudo", "bem",
   "hello", "hi", "salve", "pessoal", "galera", "menu", "inicio", "ajuda", "opcoes", "opcao", "voltar",
   "comecar", "como", "vai", "voces", "estao", "beleza", "amigo", "amiga", "moco", "moca", "boas",
+  "ver", "abrir", "mostrar", "o", // botões dos templates: "Ver menu", "Abrir o menu"
 ]);
 // Precisa de pelo menos uma destas ("tudo bem" sozinho não basta)
 const GREETING_CORE = new Set([

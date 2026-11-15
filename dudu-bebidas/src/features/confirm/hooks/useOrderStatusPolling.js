@@ -12,6 +12,11 @@ export function useOrderStatusPolling(orderId) {
   const [statusLoading, setStatusLoading] = useState(true);
   const [animating, setAnimating] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
+  // Também vêm do servidor — usados quando a página abre pelo link do
+  // WhatsApp, sem o pedido salvo no navegador
+  const [paymentMethod, setPaymentMethod] = useState(null);
+  const [orderNumber, setOrderNumber] = useState(null);
+  const [isPickup, setIsPickup] = useState(null);
   const [courierName, setCourierName] = useState(null);
   const [courierLat, setCourierLat] = useState(null);
   const [courierLng, setCourierLng] = useState(null);
@@ -71,6 +76,9 @@ export function useOrderStatusPolling(orderId) {
       }
 
       setPaymentStatus(data.payment_status ?? null);
+      setPaymentMethod(data.payment_method ?? null);
+      setOrderNumber(data.order_number ?? null);
+      setIsPickup(typeof data.is_pickup === "boolean" ? data.is_pickup : null);
       setCourierName(data.courier_name ?? null);
       setCourierLat(data.courier_lat ?? null);
       setCourierLng(data.courier_lng ?? null);
@@ -102,6 +110,9 @@ export function useOrderStatusPolling(orderId) {
     statusLoading,
     animating,
     paymentStatus,
+    paymentMethod,
+    orderNumber,
+    isPickup,
     courierName,
     courierLat,
     courierLng,

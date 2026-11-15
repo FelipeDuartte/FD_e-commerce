@@ -27,6 +27,7 @@
 
 import {
   sendWhatsAppTemplate,
+  isParameterMismatch,
   normalizePhoneBR,
   getStoreWhatsAppConfig,
   type StoreWhatsAppConfig,
@@ -184,7 +185,16 @@ async function handleStatusChange(
       ? { customer_name: customerName, order_id: shortId, estimated_time: "30-40 minutos" }
       : { customer_name: customerName, order_id: shortId };
 
-  const result = await sendWhatsAppTemplate(config, customerPhone, templateName, bodyParams);
+  // "Saiu para entrega": botão "Acompanhar pedido" com o link do pedido
+  // (/confirmacao?pedido=<código>). Se o template ainda não tem o botão
+  // aprovado, a Meta recusa o parâmetro a mais — aí reenvia sem ele, pra o
+  // aviso nunca deixar de sair.
+  const urlButtonParam = order.status === "on_the_way" ? order.id : undefined;
+  let result = await sendWhatsAppTemplate(config, customerPhone, templateName, bodyParams, { urlButtonParam });
+  if (!result.ok && urlButtonParam && isParameterMismatch(result.body)) {
+    console.warn(`[notify-whatsapp] Template ${templateName} sem o botão de link aprovado — reenviando sem o link.`);
+    result = await sendWhatsAppTemplate(config, customerPhone, templateName, bodyParams);
+  }
 
   return jsonResponse({
     event: "status_change",

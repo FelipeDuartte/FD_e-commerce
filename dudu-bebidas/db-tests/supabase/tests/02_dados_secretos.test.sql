@@ -38,6 +38,12 @@ select is(
 select ok(
   not (public.get_order_status(tests.id('pedido_a1'), tests.id('loja_a')) ? 'address'),
   'status do pedido: não devolve o endereço do cliente');
+select is(
+  (public.get_order_status(tests.id('pedido_a1'), tests.id('loja_a')))->>'is_pickup', 'false',
+  'status do pedido: diz se é retirada (sim/não), sem o endereço');
+select ok(
+  (public.get_order_status(tests.id('pedido_a1'), tests.id('loja_a')))->>'order_number' is not null,
+  'status do pedido: devolve o número do pedido (link do WhatsApp)');
 
 select ok(
   not (public.get_order_status(tests.id('pedido_a2'), tests.id('loja_a')) ? 'courier_phone'),

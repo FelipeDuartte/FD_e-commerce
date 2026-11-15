@@ -1,20 +1,36 @@
 import { EMPTY_ORDER } from "./confirmConstants";
 
-// Lê o pedido do location.state (veio direto do Checkout) ou, se a página
-// recarregar, do localStorage (última compra salva).
-export function resolveOrderData(locationState) {
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function readSavedOrder() {
+  try {
+    const saved = localStorage.getItem("lastOrder");
+    return saved ? JSON.parse(saved) : null;
+  } catch (error) {
+    console.warn("Pedido salvo inválido.", error);
+    return null;
+  }
+}
+
+/**
+ * De onde vem o pedido mostrado na página:
+ *   1. location.state — veio direto do Checkout;
+ *   2. ?pedido=<código> — link do WhatsApp ("Acompanhar pedido"), que
+ *      costuma abrir num navegador sem o pedido salvo: só o código; status,
+ *      número e forma de pagamento vêm do servidor (get_order_status);
+ *   3. localStorage — a página recarregou no mesmo navegador da compra.
+ */
+export function resolveOrderData(locationState, search = "") {
   if (locationState?.orderId || locationState?.cartItems) return locationState;
   if (locationState?.pedido) return locationState.pedido;
 
-  const saved = localStorage.getItem("lastOrder");
-  if (saved) {
-    try {
-      return JSON.parse(saved);
-    } catch (error) {
-      console.warn("Pedido salvo inválido.", error);
-    }
+  const saved = readSavedOrder();
+  const linkId = new URLSearchParams(search).get("pedido");
+  if (linkId && UUID_RE.test(linkId)) {
+    if (saved?.orderId === linkId) return saved; // mesmo navegador: dados completos
+    return { ...EMPTY_ORDER, orderId: linkId, payment: null, fromLink: true };
   }
-  return EMPTY_ORDER;
+  return saved ?? EMPTY_ORDER;
 }
 
 export { formatBRL } from "../../shared/utils/format";
