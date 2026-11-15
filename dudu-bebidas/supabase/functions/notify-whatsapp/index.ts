@@ -20,6 +20,9 @@
 //
 // Pedidos de retirada (address.isRetirada === true) NÃO recebem notificação
 // de status (somente o alerta de novo pedido, igual aos de entrega).
+//
+// Só envia. Mensagens dos clientes e status de entrega da Meta chegam na
+// edge function whatsapp-webhook (endereço do webhook no app da Meta).
 // ─────────────────────────────────────────────────────────────
 
 import {
@@ -34,14 +37,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Verify Token usado no handshake de verificação do Webhook da Meta.
-// Precisa ser EXATAMENTE o mesmo valor preenchido no campo "Verificar token"
-// em developers.facebook.com → seu app → WhatsApp → Configuração → Webhooks.
-const META_WEBHOOK_VERIFY_TOKEN = Deno.env.get("META_WEBHOOK_VERIFY_TOKEN") ?? "";
-
 // Segredo compartilhado entre os triggers do banco (orders → notify-whatsapp-*)
-// e esta function. `verify_jwt = false` é obrigatório aqui (Meta e o Database
-// Webhook do Supabase não mandam um JWT de usuário), então SEM isso qualquer
+// e esta function. `verify_jwt = false` é obrigatório aqui (o Database
+// Webhook do Supabase não manda um JWT de usuário), então SEM isso qualquer
 // pessoa podia forjar um POST com formato de Database Webhook e disparar
 // mensagens de WhatsApp (custo + spam) pro número que quiser.
 const WEBHOOK_SHARED_SECRET = Deno.env.get("WEBHOOK_SHARED_SECRET") ?? "";
@@ -196,95 +194,6 @@ async function handleStatusChange(
   });
 }
 
-/**
- * Handshake de verificação do Webhook da Meta.
- * Quando você clica em "Verificar e salvar" no painel da Meta, ela faz uma
- * requisição GET com esses parâmetros — precisamos ecoar o "challenge" de
- * volta se o "verify_token" enviado bater com o nosso.
- */
-function handleMetaVerification(req: Request): Response {
-  const url = new URL(req.url);
-  const mode = url.searchParams.get("hub.mode");
-  const token = url.searchParams.get("hub.verify_token");
-  const challenge = url.searchParams.get("hub.challenge");
-
-  if (mode === "subscribe" && token === META_WEBHOOK_VERIFY_TOKEN && challenge) {
-    console.log("[notify-whatsapp] Webhook da Meta verificado com sucesso.");
-    return new Response(challenge, { status: 200 });
-  }
-
-  console.error("[notify-whatsapp] Falha na verificação do webhook da Meta (token não confere).");
-  return new Response("Forbidden", { status: 403 });
-}
-
-interface MetaStatusError {
-  code?: number;
-  title?: string;
-  message?: string;
-  error_data?: { details?: string };
-}
-
-interface MetaStatus {
-  id?: string;
-  status?: string;
-  recipient_id?: string;
-  errors?: MetaStatusError[];
-}
-
-// Códigos de falha mais comuns, pra o log já dizer o que fazer.
-const META_ERROR_HINTS: Record<number, string> = {
-  131042: "problema de PAGAMENTO na conta do WhatsApp Business (Meta → Cobrança e pagamentos)",
-  131049: "Meta limitou mensagens pra esse contato (comum em template de Marketing)",
-  131026: "número não pode receber a mensagem (sem WhatsApp, bloqueou ou app desatualizado)",
-  131047: "janela de 24h fechada — só template pode ser enviado",
-  132015: "template PAUSADO por baixa qualidade",
-  132016: "template DESATIVADO",
-  131031: "conta do WhatsApp Business bloqueada/restrita",
-};
-
-/**
- * Trata webhooks recebidos DA META (mensagens de clientes, status de entrega,
- * aprovação de templates, etc).
- *
- * A Cloud API responde "accepted" na hora do envio, mas a entrega real só é
- * confirmada depois, por aqui. Por isso falhas de entrega (status "failed")
- * são logadas como ERRO com código e motivo — sem isso uma conta com
- * pagamento atrasado parava todas as mensagens sem nenhum erro visível.
- */
-function handleMetaWebhookEvent(payload: unknown): Response {
-  // deno-lint-ignore no-explicit-any
-  const entries = (payload as any)?.entry ?? [];
-  let failures = 0;
-
-  for (const entry of Array.isArray(entries) ? entries : []) {
-    for (const change of entry?.changes ?? []) {
-      const value = change?.value ?? {};
-      const phoneNumberId = value?.metadata?.phone_number_id ?? "?";
-      const statuses: MetaStatus[] = value?.statuses ?? [];
-
-      for (const st of statuses) {
-        if (st.status !== "failed") continue;
-        failures++;
-        for (const err of st.errors?.length ? st.errors : [{}]) {
-          const hint = err.code ? META_ERROR_HINTS[err.code] : undefined;
-          console.error(
-            `[notify-whatsapp] FALHA NA ENTREGA → ${st.recipient_id ?? "?"}` +
-              ` | código ${err.code ?? "?"}: ${err.title ?? err.message ?? "sem detalhe"}` +
-              (hint ? ` | ${hint}` : "") +
-              (err.error_data?.details ? ` | ${err.error_data.details}` : "") +
-              ` | phone_number_id ${phoneNumberId} | msg ${st.id ?? "?"}`,
-          );
-        }
-      }
-    }
-  }
-
-  if (failures === 0) {
-    console.log("[notify-whatsapp] Evento recebido da Meta:", JSON.stringify(payload));
-  }
-  return jsonResponse({ received: true });
-}
-
 function isSupabaseDatabaseWebhook(payload: unknown): payload is DatabaseWebhookPayload {
   return (
     typeof payload === "object" &&
@@ -300,11 +209,6 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  // Handshake de verificação do Webhook da Meta
-  if (req.method === "GET") {
-    return handleMetaVerification(req);
-  }
-
   if (req.method !== "POST") {
     return jsonResponse({ error: "method_not_allowed" }, 405);
   }
@@ -312,10 +216,9 @@ Deno.serve(async (req) => {
   try {
     const payload = await req.json();
 
-    // Diferencia: isso veio do Database Webhook do Supabase (orders) ou
-    // de um evento real da Meta (mensagem recebida / status de entrega)?
+    // Só aceita o formato do Database Webhook do Supabase (orders)
     if (!isSupabaseDatabaseWebhook(payload)) {
-      return handleMetaWebhookEvent(payload);
+      return jsonResponse({ skipped: true, reason: "not_database_webhook" }, 400);
     }
 
     // Só o trigger do banco conhece esse segredo. Sem essa checagem,
