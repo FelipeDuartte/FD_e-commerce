@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   getOpenCashSession,
   openCashSession,
@@ -19,15 +19,17 @@ export function useCashSession() {
   const [closeError, setCloseError] = useState("");
   const [closeResult, setCloseResult] = useState(null);
 
-  const loadSession = useCallback(async () => {
-    setSessionLoading(true);
+  // silent: recarrega sem a tela de "Verificando caixa..." — essa tela
+  // desmonta o resto do PDV, inclusive a janela do fechamento de caixa.
+  const loadSession = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setSessionLoading(true);
     try {
       setSession(await getOpenCashSession());
       setSessionError("");
     } catch (e) {
       setSessionError(e.message);
     }
-    setSessionLoading(false);
+    if (!silent) setSessionLoading(false);
   }, []);
 
   useEffect(() => {
@@ -38,8 +40,19 @@ export function useCashSession() {
   }, [loadSession]);
 
   // Outro terminal fechou ou abriu o caixa — reflete aqui sem precisar
-  // reiniciar o app (ver useCashSessionRealtime).
-  useCashSessionRealtime(loadSession);
+  // reiniciar o app (ver useCashSessionRealtime). O próprio fechamento
+  // também dispara isso: enquanto a janela do fechamento estiver aberta,
+  // espera — senão o resumo sumia e, ao fechá-lo depois, o PDV "esquecia"
+  // o caixa novo já aberto ("já existe um caixa aberto" até reiniciar).
+  const closeModalOpenRef = useRef(false);
+  useEffect(() => {
+    closeModalOpenRef.current = closeModalOpen;
+  }, [closeModalOpen]);
+  const handleRemoteChange = useCallback(() => {
+    if (closeModalOpenRef.current) return;
+    loadSession({ silent: true });
+  }, [loadSession]);
+  useCashSessionRealtime(handleRemoteChange);
 
   const handleOpenSession = async () => {
     const amount = Number(openingAmountInput);
@@ -53,7 +66,15 @@ export function useCashSession() {
       setSession(await openCashSession(amount));
       setOpeningAmountInput("");
     } catch (e) {
-      setSessionError(e.message);
+      // Já tem caixa aberto (ex: outro terminal abriu agora): entra nele em
+      // vez de travar na tela de abrir caixa
+      const existing = await getOpenCashSession().catch(() => null);
+      if (existing) {
+        setSession(existing);
+        setOpeningAmountInput("");
+      } else {
+        setSessionError(e.message);
+      }
     }
     setOpeningSession(false);
   };
@@ -68,7 +89,7 @@ export function useCashSession() {
     setCloseError("");
     try {
       const result = await closeCashSession(session.id, amount);
-      setCloseResult(result);
+      setCloseResult({ ...result, sessionId: session.id });
     } catch (e) {
       setCloseError(e.message);
     }
@@ -76,13 +97,16 @@ export function useCashSession() {
   };
 
   const resetCloseModal = () => {
-    const wasClosed = closeResult !== null;
+    const closedSessionId = closeResult?.sessionId ?? null;
     setCloseModalOpen(false);
     setDeclaredAmountInput("");
     setCloseError("");
     setCloseResult(null);
-    if (wasClosed) {
-      setSession(null);
+    if (closedSessionId) {
+      // Só "esquece" o caixa que foi fechado — nunca um caixa aberto depois
+      setSession((prev) => (prev?.id === closedSessionId ? null : prev));
+      // e confere no banco (outro terminal pode ter aberto um novo)
+      loadSession({ silent: true });
     }
   };
 
