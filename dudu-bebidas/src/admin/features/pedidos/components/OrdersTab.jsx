@@ -4,6 +4,7 @@ import { formatBRL } from "../../../shared/utils/adminFormat";
 import { useVariableVirtualList } from "../useVariableVirtualList";
 import OrderCard from "./OrderCard";
 import CourierMapOverview from "./CourierMapOverview";
+import OrderReceipt from "./OrderReceipt";
 
 const STAT_FILTERS = [
   { key: "all", icon: null, countKey: "all", label: "Total" },
@@ -25,8 +26,17 @@ export default function OrdersTab({
 
   const [showMap, setShowMap] = useState(false);
 
+  // Notinha: renderiza o pedido escondido e abre a impressão do navegador
+  // (a impressora térmica precisa ser a escolhida nessa janela)
+  const [printingOrder, setPrintingOrder] = useState(null);
+  const handlePrint = (order) => {
+    setPrintingOrder(order);
+    setTimeout(() => window.print(), 60);
+  };
+
   return (
     <>
+      <OrderReceipt order={printingOrder} />
       <div className="adm-title-row">
         <div>
           <h1 className="adm-title">Painel de Pedidos</h1>
@@ -118,6 +128,7 @@ export default function OrdersTab({
                       onSetStatus={(s) => setStatus(order.id, s)}
                       couriers={couriers}
                       onAssignCourier={(courier) => assignCourier(order.id, courier, order.address)}
+                      onPrint={() => handlePrint(order)}
                     />
                   </div>
                 );

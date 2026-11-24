@@ -1344,3 +1344,61 @@ button:disabled {
     font-size: 8.5px;
   }
 }
+
+
+/* ─── Notinha do pedido (impressão) ──────────────────────────
+   Invisível na tela — vira a única coisa visível quando window.print()
+   dispara (ver handlePrint em OrdersTab). Mesmo layout da notinha do PDV
+   (pdv-desktop/src/shared/styles/Pdv.css), pra bobina térmica de 80mm —
+   pra 58mm, troque as duas larguras (@page e .adm-print-receipt). */
+.adm-btn-print {
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid #2a2a2a;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+.adm-btn-print:hover { border-color: var(--c-accent, #5bc8e6); }
+
+.adm-print-receipt { display: none; }
+.adm-receipt-logo { display: block; width: 28mm; margin: 0 auto 2mm; }
+.adm-receipt-header { text-align: center; }
+.adm-receipt-divider { border-top: 1px dashed #000; margin: 6px 0; }
+.adm-receipt-total { display: flex; justify-content: space-between; margin: 4px 0; }
+.adm-receipt-row { display: flex; justify-content: space-between; gap: 8px; }
+.adm-receipt-item { font-size: 10px; line-height: 1.45; }
+.adm-receipt-item-name { overflow-wrap: anywhere; }
+.adm-receipt-item-price { white-space: nowrap; }
+.adm-receipt-delivery { margin: 4px 0; }
+.adm-receipt-paid { margin-top: 4px; text-align: center; font-size: 14px; }
+
+@media print {
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+  body * { visibility: hidden; }
+  .adm-print-receipt,
+  .adm-print-receipt * { visibility: visible; }
+  .adm-print-receipt {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 80mm;
+    box-sizing: border-box;
+    padding: 3mm 6mm; /* a térmica de 80mm só imprime ~72mm no meio */
+    color: #000;
+    background: #fff;
+    font-family: "Courier New", monospace;
+    font-size: 12px;
+    font-weight: 700; /* fino saía apagado na térmica */
+    line-height: 1.5;
+  }
+  .adm-receipt-header strong { font-size: 15px; }
+  .adm-receipt-delivery strong { font-size: 14px; }
+  .adm-receipt-total { font-size: 14px; }
+  .adm-receipt-total strong { font-size: 16px; }
+}

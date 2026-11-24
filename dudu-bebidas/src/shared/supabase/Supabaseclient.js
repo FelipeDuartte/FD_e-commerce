@@ -54,7 +54,7 @@ export async function resolveStore() {
 
   const { data, error } = await supabase
     .from("stores")
-    .select("id, slug, name, type, whatsapp, instagram, pickup_address, pickup_address_detail, age_gate")
+    .select("id, slug, name, type, whatsapp, instagram, pickup_address, pickup_address_detail, age_gate, phone, logo_url")
     .eq("slug", STORE_SLUG)
     .eq("is_active", true)
     .single();

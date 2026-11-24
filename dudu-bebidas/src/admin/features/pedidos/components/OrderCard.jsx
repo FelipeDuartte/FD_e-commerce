@@ -16,6 +16,7 @@ export default function OrderCard({
   onToggle,
   onAccept,
   onReject,
+  onPrint,
   onAdvance,
   onSetStatus,
   couriers,
@@ -110,6 +111,15 @@ export default function OrderCard({
             </button>
           </div>
         )}
+
+        <button
+          className="adm-btn-print"
+          onClick={(e) => { e.stopPropagation(); onPrint?.(); }}
+          title="Imprimir notinha"
+          aria-label="Imprimir notinha"
+        >
+          🖨️
+        </button>
 
         <span className="adm-order-date">{formatDate(order.created_at)}</span>
         <span

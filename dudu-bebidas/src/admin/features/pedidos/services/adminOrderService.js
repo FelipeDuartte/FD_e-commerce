@@ -8,6 +8,7 @@ const ORDER_SELECT = `
   order_number,
   total,
   discount_amount,
+  card_fee_amount,
   payment_method,
   payment_status,
   payment_provider,
